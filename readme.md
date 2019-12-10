@@ -40,7 +40,9 @@ Il définit ensuite les dates de son séjour et forme les journées. Il valide e
 
 Le logiciel est disponible sous la forme d'une **application web** accessible par mail/password.
 
-- Table **utilisateurs** : id, password, mail (optionnel : nom_prenom, fournisseur_accessibles)
+- Table **utilisateurs** : id, password, mail (optionnel : nom_prenom)
+
+- Table **utilisateurs_fournisseurs**: id_utilisateur, id_fournisseur
 
 - Table **produits_par_defaut** : id_utilisateur, id_ingredient, id_produit
 
