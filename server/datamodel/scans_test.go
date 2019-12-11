@@ -7,30 +7,30 @@ import (
 	"math/rand"
 )
 
-
 func randUtilisateur() Utilisateur {
-	return Utilisateur{ 
-		Id: rand.Int63n(1<<20),
-		Password: randstring(),
-		Mail: randstring(),
+	return Utilisateur{
+		Id:        rand.Int63n(1 << 20),
+		Password:  randstring(),
+		Mail:      randstring(),
 		PrenomNom: randstring(),
 	}
 }
 
 func queriesUtilisateur(tx *sql.Tx, item Utilisateur) (Utilisateur, error) {
 	item, err := item.Insert(tx)
+
 	if err != nil {
 		return item, err
 	}
 	return item.Update(tx)
+
 }
 
-
 func randIngredient() Ingredient {
-	return Ingredient{ 
-		Id: rand.Int63n(1<<20),
-		Nom: randstring(),
-		Unite: randUnite(),
+	return Ingredient{
+		Id:        rand.Int63n(1 << 20),
+		Nom:       randstring(),
+		Unite:     randUnite(),
 		Categorie: randstring(),
 		Callories: randCallories(),
 	}
@@ -38,118 +38,179 @@ func randIngredient() Ingredient {
 
 func queriesIngredient(tx *sql.Tx, item Ingredient) (Ingredient, error) {
 	item, err := item.Insert(tx)
+
 	if err != nil {
 		return item, err
 	}
 	return item.Update(tx)
+
 }
 
-
 func randRecette() Recette {
-	return Recette{ 
-		Id: rand.Int63n(1<<20),
-		IdProprietaire: rand.Int63n(1<<20),
-		Nom: randstring(),
-		ModeEmploi: randstring(),
+	return Recette{
+		Id:             rand.Int63n(1 << 20),
+		IdProprietaire: rand.Int63n(1 << 20),
+		Nom:            randstring(),
+		ModeEmploi:     randstring(),
 	}
 }
 
 func queriesRecette(tx *sql.Tx, item Recette) (Recette, error) {
 	item, err := item.Insert(tx)
+
 	if err != nil {
 		return item, err
 	}
 	return item.Update(tx)
+
 }
 
+func randRecetteIngredient() RecetteIngredient {
+	return RecetteIngredient{
+		IdRecette:    rand.Int63n(1 << 20),
+		IdIngredient: rand.Int63n(1 << 20),
+		Quantite:     randfloat64(),
+		Cuisson:      randstring(),
+	}
+}
+
+func queriesRecetteIngredient(tx *sql.Tx, item RecetteIngredient) (RecetteIngredient, error) {
+	item, err := item.Insert(tx)
+	return item, err
+}
 
 func randMenu() Menu {
-	return Menu{ 
-		Id: rand.Int63n(1<<20),
-		IdProprietaire: rand.Int63n(1<<20),
-		Commentaire: randstring(),
+	return Menu{
+		Id:             rand.Int63n(1 << 20),
+		IdProprietaire: rand.Int63n(1 << 20),
+		Commentaire:    randstring(),
 	}
 }
 
 func queriesMenu(tx *sql.Tx, item Menu) (Menu, error) {
 	item, err := item.Insert(tx)
+
 	if err != nil {
 		return item, err
 	}
 	return item.Update(tx)
+
 }
 
+func randMenuIngredient() MenuIngredient {
+	return MenuIngredient{
+		IdMenu:       rand.Int63n(1 << 20),
+		IdIngredient: rand.Int63n(1 << 20),
+		Quantite:     randfloat64(),
+		Cuisson:      randstring(),
+	}
+}
+
+func queriesMenuIngredient(tx *sql.Tx, item MenuIngredient) (MenuIngredient, error) {
+	item, err := item.Insert(tx)
+	return item, err
+}
+
+func randMenuRecette() MenuRecette {
+	return MenuRecette{
+		IdMenu:    rand.Int63n(1 << 20),
+		IdRecette: rand.Int63n(1 << 20),
+	}
+}
+
+func queriesMenuRecette(tx *sql.Tx, item MenuRecette) (MenuRecette, error) {
+	item, err := item.Insert(tx)
+	return item, err
+}
 
 func randSejour() Sejour {
-	return Sejour{ 
-		Id: rand.Int63n(1<<20),
-		IdProprietaire: rand.Int63n(1<<20),
-		DateDebut: randTime(),
-		Nom: randstring(),
+	return Sejour{
+		Id:             rand.Int63n(1 << 20),
+		IdProprietaire: rand.Int63n(1 << 20),
+		DateDebut:      randTime(),
+		Nom:            randstring(),
 	}
 }
 
 func queriesSejour(tx *sql.Tx, item Sejour) (Sejour, error) {
 	item, err := item.Insert(tx)
+
 	if err != nil {
 		return item, err
 	}
 	return item.Update(tx)
+
 }
 
+func randSejourMenu() SejourMenu {
+	return SejourMenu{
+		IdSejour:    rand.Int63n(1 << 20),
+		IdMenu:      rand.Int63n(1 << 20),
+		NbPersonnes: rand.Int63n(1 << 20),
+		JourOffset:  rand.Int63n(1 << 20),
+		Horaire:     randHoraire(),
+	}
+}
+
+func queriesSejourMenu(tx *sql.Tx, item SejourMenu) (SejourMenu, error) {
+	item, err := item.Insert(tx)
+	return item, err
+}
 
 func randFournisseur() Fournisseur {
-	return Fournisseur{ 
-		Id: rand.Int63n(1<<20),
-		Nom: randstring(),
-		DelaiCommande: rand.Int63n(1<<20),
+	return Fournisseur{
+		Id:             rand.Int63n(1 << 20),
+		Nom:            randstring(),
+		DelaiCommande:  rand.Int63n(1 << 20),
 		JoursLivraison: randJoursLivraison(),
 	}
 }
 
 func queriesFournisseur(tx *sql.Tx, item Fournisseur) (Fournisseur, error) {
 	item, err := item.Insert(tx)
+
 	if err != nil {
 		return item, err
 	}
 	return item.Update(tx)
+
 }
 
-
 func randProduit() Produit {
-	return Produit{ 
-		Id: rand.Int63n(1<<20),
-		IdFournisseur: rand.Int63n(1<<20),
-		Nom: randstring(),
-		Conditionnement: randConditionnement(),
-		Prix: randfloat64(),
+	return Produit{
+		Id:                   rand.Int63n(1 << 20),
+		IdFournisseur:        rand.Int63n(1 << 20),
+		Nom:                  randstring(),
+		Conditionnement:      randConditionnement(),
+		Prix:                 randfloat64(),
 		ReferenceFournisseur: randstring(),
 	}
 }
 
 func queriesProduit(tx *sql.Tx, item Produit) (Produit, error) {
 	item, err := item.Insert(tx)
+
 	if err != nil {
 		return item, err
 	}
 	return item.Update(tx)
+
 }
 
-
 func randCommande() Commande {
-	return Commande{ 
-		Id: rand.Int63n(1<<20),
-		IdProprietaire: rand.Int63n(1<<20),
-		DateLivraison: randTime(),
+	return Commande{
+		Id:             rand.Int63n(1 << 20),
+		IdProprietaire: rand.Int63n(1 << 20),
+		DateLivraison:  randTime(),
 	}
 }
 
 func queriesCommande(tx *sql.Tx, item Commande) (Commande, error) {
 	item, err := item.Insert(tx)
+
 	if err != nil {
 		return item, err
 	}
 	return item.Update(tx)
+
 }
-
-

@@ -81,3 +81,11 @@ func randConditionnement() Conditionnement {
 		Unite:    randUnite(),
 	}
 }
+
+func randHoraire() Horaire {
+	t := randTime()
+	return Horaire{
+		Heure:  t.Hour(),
+		Minute: t.Minute(),
+	}
+}

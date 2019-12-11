@@ -2,7 +2,11 @@
 
 package datamodel
 
-import "database/sql"
+import (
+	"database/sql"
+
+	"github.com/lib/pq"
+)
 
 func ScanUtilisateur(r *sql.Row) (Utilisateur, error) {
 	var s Utilisateur
@@ -17,8 +21,18 @@ func ScanUtilisateur(r *sql.Row) (Utilisateur, error) {
 	return s, nil
 }
 
-func ScanUtilisateurs(rs *sql.Rows) ([]Utilisateur, error) {
-	structs := make([]Utilisateur, 0, 16)
+type Utilisateurs map[int64]Utilisateur
+
+func (m Utilisateurs) Ids() pq.Int64Array {
+	out := make(pq.Int64Array, 0, len(m))
+	for i := range m {
+		out = append(out, i)
+	}
+	return out
+}
+
+func ScanUtilisateurs(rs *sql.Rows) (Utilisateurs, error) {
+	structs := make(Utilisateurs, 16)
 	var err error
 	for rs.Next() {
 		var s Utilisateur
@@ -30,7 +44,7 @@ func ScanUtilisateurs(rs *sql.Rows) ([]Utilisateur, error) {
 		); err != nil {
 			return nil, err
 		}
-		structs = append(structs, s)
+		structs[s.Id] = s
 	}
 	if err = rs.Err(); err != nil {
 		return nil, err
@@ -46,7 +60,7 @@ func (item Utilisateur) Insert(tx *sql.Tx) (out Utilisateur, err error) {
 		$1,$2,$3
 		) RETURNING 
 		id,password,mail,prenom_nom;
-		`,item.Password,item.Mail,item.PrenomNom)
+		`, item.Password, item.Mail, item.PrenomNom)
 	return ScanUtilisateur(r)
 }
 
@@ -58,7 +72,7 @@ func (item Utilisateur) Update(tx *sql.Tx) (out Utilisateur, err error) {
 		$2,$3,$4
 		) WHERE id = $1 RETURNING 
 		id,password,mail,prenom_nom;
-		`,item.Id,item.Password,item.Mail,item.PrenomNom)
+		`, item.Id, item.Password, item.Mail, item.PrenomNom)
 	return ScanUtilisateur(r)
 }
 
@@ -85,8 +99,18 @@ func ScanIngredient(r *sql.Row) (Ingredient, error) {
 	return s, nil
 }
 
-func ScanIngredients(rs *sql.Rows) ([]Ingredient, error) {
-	structs := make([]Ingredient, 0, 16)
+type Ingredients map[int64]Ingredient
+
+func (m Ingredients) Ids() pq.Int64Array {
+	out := make(pq.Int64Array, 0, len(m))
+	for i := range m {
+		out = append(out, i)
+	}
+	return out
+}
+
+func ScanIngredients(rs *sql.Rows) (Ingredients, error) {
+	structs := make(Ingredients, 16)
 	var err error
 	for rs.Next() {
 		var s Ingredient
@@ -99,7 +123,7 @@ func ScanIngredients(rs *sql.Rows) ([]Ingredient, error) {
 		); err != nil {
 			return nil, err
 		}
-		structs = append(structs, s)
+		structs[s.Id] = s
 	}
 	if err = rs.Err(); err != nil {
 		return nil, err
@@ -115,7 +139,7 @@ func (item Ingredient) Insert(tx *sql.Tx) (out Ingredient, err error) {
 		$1,$2,$3,$4
 		) RETURNING 
 		id,nom,unite,categorie,callories;
-		`,item.Nom,item.Unite,item.Categorie,item.Callories)
+		`, item.Nom, item.Unite, item.Categorie, item.Callories)
 	return ScanIngredient(r)
 }
 
@@ -127,7 +151,7 @@ func (item Ingredient) Update(tx *sql.Tx) (out Ingredient, err error) {
 		$2,$3,$4,$5
 		) WHERE id = $1 RETURNING 
 		id,nom,unite,categorie,callories;
-		`,item.Id,item.Nom,item.Unite,item.Categorie,item.Callories)
+		`, item.Id, item.Nom, item.Unite, item.Categorie, item.Callories)
 	return ScanIngredient(r)
 }
 
@@ -153,8 +177,18 @@ func ScanRecette(r *sql.Row) (Recette, error) {
 	return s, nil
 }
 
-func ScanRecettes(rs *sql.Rows) ([]Recette, error) {
-	structs := make([]Recette, 0, 16)
+type Recettes map[int64]Recette
+
+func (m Recettes) Ids() pq.Int64Array {
+	out := make(pq.Int64Array, 0, len(m))
+	for i := range m {
+		out = append(out, i)
+	}
+	return out
+}
+
+func ScanRecettes(rs *sql.Rows) (Recettes, error) {
+	structs := make(Recettes, 16)
 	var err error
 	for rs.Next() {
 		var s Recette
@@ -166,7 +200,7 @@ func ScanRecettes(rs *sql.Rows) ([]Recette, error) {
 		); err != nil {
 			return nil, err
 		}
-		structs = append(structs, s)
+		structs[s.Id] = s
 	}
 	if err = rs.Err(); err != nil {
 		return nil, err
@@ -182,7 +216,7 @@ func (item Recette) Insert(tx *sql.Tx) (out Recette, err error) {
 		$1,$2,$3
 		) RETURNING 
 		id,id_proprietaire,nom,mode_emploi;
-		`,item.IdProprietaire,item.Nom,item.ModeEmploi)
+		`, item.IdProprietaire, item.Nom, item.ModeEmploi)
 	return ScanRecette(r)
 }
 
@@ -194,7 +228,7 @@ func (item Recette) Update(tx *sql.Tx) (out Recette, err error) {
 		$2,$3,$4
 		) WHERE id = $1 RETURNING 
 		id,id_proprietaire,nom,mode_emploi;
-		`,item.Id,item.IdProprietaire,item.Nom,item.ModeEmploi)
+		`, item.Id, item.IdProprietaire, item.Nom, item.ModeEmploi)
 	return ScanRecette(r)
 }
 
@@ -205,6 +239,62 @@ func (item Recette) Delete(tx *sql.Tx) (int64, error) {
 	r := tx.QueryRow("DELETE FROM recettes WHERE id = $1 RETURNING id;", item.Id)
 	err := r.Scan(&deleted_id)
 	return deleted_id, err
+}
+
+func ScanRecetteIngredient(r *sql.Row) (RecetteIngredient, error) {
+	var s RecetteIngredient
+	if err := r.Scan(
+		&s.IdRecette,
+		&s.IdIngredient,
+		&s.Quantite,
+		&s.Cuisson,
+	); err != nil {
+		return RecetteIngredient{}, err
+	}
+	return s, nil
+}
+
+type RecetteIngredients map[int64]RecetteIngredient
+
+func (m RecetteIngredients) Ids() pq.Int64Array {
+	out := make(pq.Int64Array, 0, len(m))
+	for i := range m {
+		out = append(out, i)
+	}
+	return out
+}
+
+func ScanRecetteIngredients(rs *sql.Rows) ([]RecetteIngredient, error) {
+	structs := make([]RecetteIngredient, 0, 16)
+	var err error
+	for rs.Next() {
+		var s RecetteIngredient
+		if err = rs.Scan(
+			&s.IdRecette,
+			&s.IdIngredient,
+			&s.Quantite,
+			&s.Cuisson,
+		); err != nil {
+			return nil, err
+		}
+		structs = append(structs, s)
+	}
+	if err = rs.Err(); err != nil {
+		return nil, err
+	}
+	return structs, nil
+}
+
+// Insert RecetteIngredient in the database and returns the item with id filled.
+func (item RecetteIngredient) Insert(tx *sql.Tx) (out RecetteIngredient, err error) {
+	r := tx.QueryRow(`INSERT INTO recette_ingredients (
+		id_recette,id_ingredient,quantite,cuisson
+		) VALUES (
+		$1,$2,$3,$4
+		) RETURNING 
+		id_recette,id_ingredient,quantite,cuisson;
+		`, item.IdRecette, item.IdIngredient, item.Quantite, item.Cuisson)
+	return ScanRecetteIngredient(r)
 }
 
 func ScanMenu(r *sql.Row) (Menu, error) {
@@ -219,8 +309,18 @@ func ScanMenu(r *sql.Row) (Menu, error) {
 	return s, nil
 }
 
-func ScanMenus(rs *sql.Rows) ([]Menu, error) {
-	structs := make([]Menu, 0, 16)
+type Menus map[int64]Menu
+
+func (m Menus) Ids() pq.Int64Array {
+	out := make(pq.Int64Array, 0, len(m))
+	for i := range m {
+		out = append(out, i)
+	}
+	return out
+}
+
+func ScanMenus(rs *sql.Rows) (Menus, error) {
+	structs := make(Menus, 16)
 	var err error
 	for rs.Next() {
 		var s Menu
@@ -231,7 +331,7 @@ func ScanMenus(rs *sql.Rows) ([]Menu, error) {
 		); err != nil {
 			return nil, err
 		}
-		structs = append(structs, s)
+		structs[s.Id] = s
 	}
 	if err = rs.Err(); err != nil {
 		return nil, err
@@ -247,7 +347,7 @@ func (item Menu) Insert(tx *sql.Tx) (out Menu, err error) {
 		$1,$2
 		) RETURNING 
 		id,id_proprietaire,commentaire;
-		`,item.IdProprietaire,item.Commentaire)
+		`, item.IdProprietaire, item.Commentaire)
 	return ScanMenu(r)
 }
 
@@ -259,7 +359,7 @@ func (item Menu) Update(tx *sql.Tx) (out Menu, err error) {
 		$2,$3
 		) WHERE id = $1 RETURNING 
 		id,id_proprietaire,commentaire;
-		`,item.Id,item.IdProprietaire,item.Commentaire)
+		`, item.Id, item.IdProprietaire, item.Commentaire)
 	return ScanMenu(r)
 }
 
@@ -270,6 +370,114 @@ func (item Menu) Delete(tx *sql.Tx) (int64, error) {
 	r := tx.QueryRow("DELETE FROM menus WHERE id = $1 RETURNING id;", item.Id)
 	err := r.Scan(&deleted_id)
 	return deleted_id, err
+}
+
+func ScanMenuIngredient(r *sql.Row) (MenuIngredient, error) {
+	var s MenuIngredient
+	if err := r.Scan(
+		&s.IdMenu,
+		&s.IdIngredient,
+		&s.Quantite,
+		&s.Cuisson,
+	); err != nil {
+		return MenuIngredient{}, err
+	}
+	return s, nil
+}
+
+type MenuIngredients map[int64]MenuIngredient
+
+func (m MenuIngredients) Ids() pq.Int64Array {
+	out := make(pq.Int64Array, 0, len(m))
+	for i := range m {
+		out = append(out, i)
+	}
+	return out
+}
+
+func ScanMenuIngredients(rs *sql.Rows) ([]MenuIngredient, error) {
+	structs := make([]MenuIngredient, 0, 16)
+	var err error
+	for rs.Next() {
+		var s MenuIngredient
+		if err = rs.Scan(
+			&s.IdMenu,
+			&s.IdIngredient,
+			&s.Quantite,
+			&s.Cuisson,
+		); err != nil {
+			return nil, err
+		}
+		structs = append(structs, s)
+	}
+	if err = rs.Err(); err != nil {
+		return nil, err
+	}
+	return structs, nil
+}
+
+// Insert MenuIngredient in the database and returns the item with id filled.
+func (item MenuIngredient) Insert(tx *sql.Tx) (out MenuIngredient, err error) {
+	r := tx.QueryRow(`INSERT INTO menu_ingredients (
+		id_menu,id_ingredient,quantite,cuisson
+		) VALUES (
+		$1,$2,$3,$4
+		) RETURNING 
+		id_menu,id_ingredient,quantite,cuisson;
+		`, item.IdMenu, item.IdIngredient, item.Quantite, item.Cuisson)
+	return ScanMenuIngredient(r)
+}
+
+func ScanMenuRecette(r *sql.Row) (MenuRecette, error) {
+	var s MenuRecette
+	if err := r.Scan(
+		&s.IdMenu,
+		&s.IdRecette,
+	); err != nil {
+		return MenuRecette{}, err
+	}
+	return s, nil
+}
+
+type MenuRecettes map[int64]MenuRecette
+
+func (m MenuRecettes) Ids() pq.Int64Array {
+	out := make(pq.Int64Array, 0, len(m))
+	for i := range m {
+		out = append(out, i)
+	}
+	return out
+}
+
+func ScanMenuRecettes(rs *sql.Rows) ([]MenuRecette, error) {
+	structs := make([]MenuRecette, 0, 16)
+	var err error
+	for rs.Next() {
+		var s MenuRecette
+		if err = rs.Scan(
+			&s.IdMenu,
+			&s.IdRecette,
+		); err != nil {
+			return nil, err
+		}
+		structs = append(structs, s)
+	}
+	if err = rs.Err(); err != nil {
+		return nil, err
+	}
+	return structs, nil
+}
+
+// Insert MenuRecette in the database and returns the item with id filled.
+func (item MenuRecette) Insert(tx *sql.Tx) (out MenuRecette, err error) {
+	r := tx.QueryRow(`INSERT INTO menu_recettes (
+		id_menu,id_recette
+		) VALUES (
+		$1,$2
+		) RETURNING 
+		id_menu,id_recette;
+		`, item.IdMenu, item.IdRecette)
+	return ScanMenuRecette(r)
 }
 
 func ScanSejour(r *sql.Row) (Sejour, error) {
@@ -285,8 +493,18 @@ func ScanSejour(r *sql.Row) (Sejour, error) {
 	return s, nil
 }
 
-func ScanSejours(rs *sql.Rows) ([]Sejour, error) {
-	structs := make([]Sejour, 0, 16)
+type Sejours map[int64]Sejour
+
+func (m Sejours) Ids() pq.Int64Array {
+	out := make(pq.Int64Array, 0, len(m))
+	for i := range m {
+		out = append(out, i)
+	}
+	return out
+}
+
+func ScanSejours(rs *sql.Rows) (Sejours, error) {
+	structs := make(Sejours, 16)
 	var err error
 	for rs.Next() {
 		var s Sejour
@@ -298,7 +516,7 @@ func ScanSejours(rs *sql.Rows) ([]Sejour, error) {
 		); err != nil {
 			return nil, err
 		}
-		structs = append(structs, s)
+		structs[s.Id] = s
 	}
 	if err = rs.Err(); err != nil {
 		return nil, err
@@ -314,7 +532,7 @@ func (item Sejour) Insert(tx *sql.Tx) (out Sejour, err error) {
 		$1,$2,$3
 		) RETURNING 
 		id,id_proprietaire,date_debut,nom;
-		`,item.IdProprietaire,item.DateDebut,item.Nom)
+		`, item.IdProprietaire, item.DateDebut, item.Nom)
 	return ScanSejour(r)
 }
 
@@ -326,7 +544,7 @@ func (item Sejour) Update(tx *sql.Tx) (out Sejour, err error) {
 		$2,$3,$4
 		) WHERE id = $1 RETURNING 
 		id,id_proprietaire,date_debut,nom;
-		`,item.Id,item.IdProprietaire,item.DateDebut,item.Nom)
+		`, item.Id, item.IdProprietaire, item.DateDebut, item.Nom)
 	return ScanSejour(r)
 }
 
@@ -337,6 +555,64 @@ func (item Sejour) Delete(tx *sql.Tx) (int64, error) {
 	r := tx.QueryRow("DELETE FROM sejours WHERE id = $1 RETURNING id;", item.Id)
 	err := r.Scan(&deleted_id)
 	return deleted_id, err
+}
+
+func ScanSejourMenu(r *sql.Row) (SejourMenu, error) {
+	var s SejourMenu
+	if err := r.Scan(
+		&s.IdSejour,
+		&s.IdMenu,
+		&s.NbPersonnes,
+		&s.JourOffset,
+		&s.Horaire,
+	); err != nil {
+		return SejourMenu{}, err
+	}
+	return s, nil
+}
+
+type SejourMenus map[int64]SejourMenu
+
+func (m SejourMenus) Ids() pq.Int64Array {
+	out := make(pq.Int64Array, 0, len(m))
+	for i := range m {
+		out = append(out, i)
+	}
+	return out
+}
+
+func ScanSejourMenus(rs *sql.Rows) ([]SejourMenu, error) {
+	structs := make([]SejourMenu, 0, 16)
+	var err error
+	for rs.Next() {
+		var s SejourMenu
+		if err = rs.Scan(
+			&s.IdSejour,
+			&s.IdMenu,
+			&s.NbPersonnes,
+			&s.JourOffset,
+			&s.Horaire,
+		); err != nil {
+			return nil, err
+		}
+		structs = append(structs, s)
+	}
+	if err = rs.Err(); err != nil {
+		return nil, err
+	}
+	return structs, nil
+}
+
+// Insert SejourMenu in the database and returns the item with id filled.
+func (item SejourMenu) Insert(tx *sql.Tx) (out SejourMenu, err error) {
+	r := tx.QueryRow(`INSERT INTO sejour_menus (
+		id_sejour,id_menu,nb_personnes,jour_offset,horaire
+		) VALUES (
+		$1,$2,$3,$4,$5
+		) RETURNING 
+		id_sejour,id_menu,nb_personnes,jour_offset,horaire;
+		`, item.IdSejour, item.IdMenu, item.NbPersonnes, item.JourOffset, item.Horaire)
+	return ScanSejourMenu(r)
 }
 
 func ScanFournisseur(r *sql.Row) (Fournisseur, error) {
@@ -352,8 +628,18 @@ func ScanFournisseur(r *sql.Row) (Fournisseur, error) {
 	return s, nil
 }
 
-func ScanFournisseurs(rs *sql.Rows) ([]Fournisseur, error) {
-	structs := make([]Fournisseur, 0, 16)
+type Fournisseurs map[int64]Fournisseur
+
+func (m Fournisseurs) Ids() pq.Int64Array {
+	out := make(pq.Int64Array, 0, len(m))
+	for i := range m {
+		out = append(out, i)
+	}
+	return out
+}
+
+func ScanFournisseurs(rs *sql.Rows) (Fournisseurs, error) {
+	structs := make(Fournisseurs, 16)
 	var err error
 	for rs.Next() {
 		var s Fournisseur
@@ -365,7 +651,7 @@ func ScanFournisseurs(rs *sql.Rows) ([]Fournisseur, error) {
 		); err != nil {
 			return nil, err
 		}
-		structs = append(structs, s)
+		structs[s.Id] = s
 	}
 	if err = rs.Err(); err != nil {
 		return nil, err
@@ -381,7 +667,7 @@ func (item Fournisseur) Insert(tx *sql.Tx) (out Fournisseur, err error) {
 		$1,$2,$3
 		) RETURNING 
 		id,nom,delai_commande,jours_livraison;
-		`,item.Nom,item.DelaiCommande,item.JoursLivraison)
+		`, item.Nom, item.DelaiCommande, item.JoursLivraison)
 	return ScanFournisseur(r)
 }
 
@@ -393,7 +679,7 @@ func (item Fournisseur) Update(tx *sql.Tx) (out Fournisseur, err error) {
 		$2,$3,$4
 		) WHERE id = $1 RETURNING 
 		id,nom,delai_commande,jours_livraison;
-		`,item.Id,item.Nom,item.DelaiCommande,item.JoursLivraison)
+		`, item.Id, item.Nom, item.DelaiCommande, item.JoursLivraison)
 	return ScanFournisseur(r)
 }
 
@@ -421,8 +707,18 @@ func ScanProduit(r *sql.Row) (Produit, error) {
 	return s, nil
 }
 
-func ScanProduits(rs *sql.Rows) ([]Produit, error) {
-	structs := make([]Produit, 0, 16)
+type Produits map[int64]Produit
+
+func (m Produits) Ids() pq.Int64Array {
+	out := make(pq.Int64Array, 0, len(m))
+	for i := range m {
+		out = append(out, i)
+	}
+	return out
+}
+
+func ScanProduits(rs *sql.Rows) (Produits, error) {
+	structs := make(Produits, 16)
 	var err error
 	for rs.Next() {
 		var s Produit
@@ -436,7 +732,7 @@ func ScanProduits(rs *sql.Rows) ([]Produit, error) {
 		); err != nil {
 			return nil, err
 		}
-		structs = append(structs, s)
+		structs[s.Id] = s
 	}
 	if err = rs.Err(); err != nil {
 		return nil, err
@@ -452,7 +748,7 @@ func (item Produit) Insert(tx *sql.Tx) (out Produit, err error) {
 		$1,$2,$3,$4,$5
 		) RETURNING 
 		id,id_fournisseur,nom,conditionnement,prix,reference_fournisseur;
-		`,item.IdFournisseur,item.Nom,item.Conditionnement,item.Prix,item.ReferenceFournisseur)
+		`, item.IdFournisseur, item.Nom, item.Conditionnement, item.Prix, item.ReferenceFournisseur)
 	return ScanProduit(r)
 }
 
@@ -464,7 +760,7 @@ func (item Produit) Update(tx *sql.Tx) (out Produit, err error) {
 		$2,$3,$4,$5,$6
 		) WHERE id = $1 RETURNING 
 		id,id_fournisseur,nom,conditionnement,prix,reference_fournisseur;
-		`,item.Id,item.IdFournisseur,item.Nom,item.Conditionnement,item.Prix,item.ReferenceFournisseur)
+		`, item.Id, item.IdFournisseur, item.Nom, item.Conditionnement, item.Prix, item.ReferenceFournisseur)
 	return ScanProduit(r)
 }
 
@@ -489,8 +785,18 @@ func ScanCommande(r *sql.Row) (Commande, error) {
 	return s, nil
 }
 
-func ScanCommandes(rs *sql.Rows) ([]Commande, error) {
-	structs := make([]Commande, 0, 16)
+type Commandes map[int64]Commande
+
+func (m Commandes) Ids() pq.Int64Array {
+	out := make(pq.Int64Array, 0, len(m))
+	for i := range m {
+		out = append(out, i)
+	}
+	return out
+}
+
+func ScanCommandes(rs *sql.Rows) (Commandes, error) {
+	structs := make(Commandes, 16)
 	var err error
 	for rs.Next() {
 		var s Commande
@@ -501,7 +807,7 @@ func ScanCommandes(rs *sql.Rows) ([]Commande, error) {
 		); err != nil {
 			return nil, err
 		}
-		structs = append(structs, s)
+		structs[s.Id] = s
 	}
 	if err = rs.Err(); err != nil {
 		return nil, err
@@ -517,7 +823,7 @@ func (item Commande) Insert(tx *sql.Tx) (out Commande, err error) {
 		$1,$2
 		) RETURNING 
 		id,id_proprietaire,date_livraison;
-		`,item.IdProprietaire,item.DateLivraison)
+		`, item.IdProprietaire, item.DateLivraison)
 	return ScanCommande(r)
 }
 
@@ -529,7 +835,7 @@ func (item Commande) Update(tx *sql.Tx) (out Commande, err error) {
 		$2,$3
 		) WHERE id = $1 RETURNING 
 		id,id_proprietaire,date_livraison;
-		`,item.Id,item.IdProprietaire,item.DateLivraison)
+		`, item.Id, item.IdProprietaire, item.DateLivraison)
 	return ScanCommande(r)
 }
 
@@ -541,5 +847,3 @@ func (item Commande) Delete(tx *sql.Tx) (int64, error) {
 	err := r.Scan(&deleted_id)
 	return deleted_id, err
 }
-
-

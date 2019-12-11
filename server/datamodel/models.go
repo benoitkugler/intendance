@@ -30,11 +30,31 @@ type Recette struct {
 	ModeEmploi string `json:"mode_emploi"`
 }
 
+type RecetteIngredient struct {
+	IdRecette    int64
+	IdIngredient int64
+	Quantite     float64
+	Cuisson      string
+}
+
 type Menu struct {
 	Id             int64 `json:"id"`
 	IdProprietaire int64 `json:"id_proprietaire"`
 
 	Commentaire string `json:"commentaire"`
+}
+
+type MenuIngredient struct {
+	IdMenu       int64
+	IdIngredient int64
+
+	Quantite float64
+	Cuisson  string
+}
+
+type MenuRecette struct {
+	IdMenu    int64
+	IdRecette int64
 }
 
 type Sejour struct {
@@ -46,6 +66,14 @@ type Sejour struct {
 	// relatif à cette date.
 	DateDebut time.Time `json:"date_debut"`
 	Nom       string    `json:"nom"`
+}
+
+type SejourMenu struct {
+	IdSejour    int64
+	IdMenu      int64
+	NbPersonnes int64
+	JourOffset  int64
+	Horaire     Horaire
 }
 
 type Fournisseur struct {

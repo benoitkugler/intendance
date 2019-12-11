@@ -21,6 +21,6 @@ type Conditionnement struct {
 // Horaire définie l'horaire d'un repas.
 // Le frontend peut définir certains horaires classiques.
 type Horaire struct {
-	Heure  uint8
-	Minute uint8
+	Heure  int
+	Minute int
 }

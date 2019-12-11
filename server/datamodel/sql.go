@@ -64,6 +64,14 @@ func (s Conditionnement) Value() (driver.Value, error) {
 	return dumpJSON(s)
 }
 
+func (s *Horaire) Scan(src interface{}) error {
+	return loadJSON(s, src)
+}
+
+func (s Horaire) Value() (driver.Value, error) {
+	return dumpJSON(s)
+}
+
 func (s *JoursLivraison) Scan(src interface{}) error {
 	tmp := pq.BoolArray{}
 	if err := tmp.Scan(src); err != nil {
