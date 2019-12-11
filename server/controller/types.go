@@ -1,4 +1,4 @@
-package views
+package controller
 
 import "github.com/benoitkugler/intendance/server/datamodel"
 
