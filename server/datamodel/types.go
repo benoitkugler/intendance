@@ -1,8 +1,26 @@
 package datamodel
 
+const (
+	Litres Unite = "L"
+	Kilos  Unite = "Kg"
+	Piece  Unite = "P"
+)
+
+type Unite string
+
 type Callories struct{}
 
 // Lundi = 0, Mardi = 1 , etc...
 type JoursLivraison [7]bool
 
-type Conditionnement struct{}
+type Conditionnement struct {
+	Quantite float64
+	Unite    Unite
+}
+
+// Horaire définie l'horaire d'un repas.
+// Le frontend peut définir certains horaires classiques.
+type Horaire struct {
+	Heure  uint8
+	Minute uint8
+}

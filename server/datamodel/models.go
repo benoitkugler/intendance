@@ -2,72 +2,72 @@
 package datamodel
 
 import (
-	"database/sql"
-
-	"github.com/lib/pq"
+	"time"
 )
 
 type Utilisateur struct {
-	Id       int64
-	Password string
-	Mail     string
+	Id       int64  `json:"id"`
+	Password string `json:"password"`
+	Mail     string `json:"mail"`
 
-	PrenomNom sql.NullString
+	PrenomNom string `json:"prenom_nom"`
 }
 
 type Ingredient struct {
-	Id    int64
-	Nom   string
-	Unite string
+	Id    int64  `json:"id"`
+	Nom   string `json:"nom"`
+	Unite Unite  `json:"unite"`
 
-	Categorie sql.NullString
-	Callories Callories
+	Categorie string    `json:"categorie"`
+	Callories Callories `json:"callories"`
 }
 
 type Recette struct {
-	Id             int64
-	IdProprietaire int64
-	Nom            string
+	Id             int64  `json:"id"`
+	IdProprietaire int64  `json:"id_proprietaire"`
+	Nom            string `json:"nom"`
 
-	ModeEmploi sql.NullString
+	ModeEmploi string `json:"mode_emploi"`
 }
 
 type Menu struct {
-	Id             int64
-	IdProprietaire int64
+	Id             int64 `json:"id"`
+	IdProprietaire int64 `json:"id_proprietaire"`
+
+	Commentaire string `json:"commentaire"`
 }
 
-type Sejours struct {
-	Id             int64
-	IdProprietaire int64
+type Sejour struct {
+	Id             int64 `json:"id"`
+	IdProprietaire int64 `json:"id_proprietaire"`
 
 	// Fixe l'origine du séjour.
 	// Une journée est déterminé par un "offset"
 	// relatif à cette date.
-	DateDebut pq.NullTime
-	Nom       sql.NullString
+	DateDebut time.Time `json:"date_debut"`
+	Nom       string    `json:"nom"`
 }
 
 type Fournisseur struct {
-	Id  int64
-	Nom string
+	Id  int64  `json:"id"`
+	Nom string `json:"nom"`
 
-	DelaiCommande  sql.NullInt64
-	JoursLivraison JoursLivraison
+	DelaiCommande  int64          `json:"delai_commande"`
+	JoursLivraison JoursLivraison `json:"jours_livraison"`
 }
 
 type Produit struct {
-	Id              int64
-	IdFournisseur   int64
-	Nom             string
-	Conditionnement Conditionnement
-	Prix            float64
+	Id              int64           `json:"id"`
+	IdFournisseur   int64           `json:"id_fournisseur"`
+	Nom             string          `json:"nom"`
+	Conditionnement Conditionnement `json:"conditionnement"`
+	Prix            float64         `json:"prix"`
 
-	ReferenceFournisseur sql.NullString
+	ReferenceFournisseur string `json:"reference_fournisseur"`
 }
 
 type Commande struct {
-	Id             int64
-	IdProprietaire int64
-	DateLivraison  pq.NullTime
+	Id             int64     `json:"id"`
+	IdProprietaire int64     `json:"id_proprietaire"`
+	DateLivraison  time.Time `json:"date_livraison"`
 }
