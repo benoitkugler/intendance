@@ -18,6 +18,10 @@ type Conditionnement struct {
 	Unite    Unite
 }
 
+func (c Conditionnement) IsNull() bool {
+	return c == Conditionnement{}
+}
+
 // Horaire définie l'horaire d'un repas.
 // Le frontend peut définir certains horaires classiques.
 type Horaire struct {

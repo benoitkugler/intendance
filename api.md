@@ -32,6 +32,10 @@
 
     *returns* AgendaUtilisateur
 
+- /ingredients **DELETE** // sous condition
+    - id: int 
+    - remove_liens_produits: bool
+
 ### Recettes
 
 - /recettes **PUT**:
