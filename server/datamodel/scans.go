@@ -93,6 +93,7 @@ func ScanIngredient(r *sql.Row) (Ingredient, error) {
 		&s.Unite,
 		&s.Categorie,
 		&s.Callories,
+		&s.Conditionnement,
 	); err != nil {
 		return Ingredient{}, err
 	}
@@ -120,6 +121,7 @@ func ScanIngredients(rs *sql.Rows) (Ingredients, error) {
 			&s.Unite,
 			&s.Categorie,
 			&s.Callories,
+			&s.Conditionnement,
 		); err != nil {
 			return nil, err
 		}
@@ -134,24 +136,24 @@ func ScanIngredients(rs *sql.Rows) (Ingredients, error) {
 // Insert Ingredient in the database and returns the item with id filled.
 func (item Ingredient) Insert(tx *sql.Tx) (out Ingredient, err error) {
 	r := tx.QueryRow(`INSERT INTO ingredients (
-		nom,unite,categorie,callories
+		nom,unite,categorie,callories,conditionnement
 		) VALUES (
-		$1,$2,$3,$4
+		$1,$2,$3,$4,$5
 		) RETURNING 
-		id,nom,unite,categorie,callories;
-		`, item.Nom, item.Unite, item.Categorie, item.Callories)
+		id,nom,unite,categorie,callories,conditionnement;
+		`, item.Nom, item.Unite, item.Categorie, item.Callories, item.Conditionnement)
 	return ScanIngredient(r)
 }
 
 // Update Ingredient in the database and returns the new version.
 func (item Ingredient) Update(tx *sql.Tx) (out Ingredient, err error) {
 	r := tx.QueryRow(`UPDATE ingredients SET (
-		nom,unite,categorie,callories
+		nom,unite,categorie,callories,conditionnement
 		) = (
-		$2,$3,$4,$5
+		$2,$3,$4,$5,$6
 		) WHERE id = $1 RETURNING 
-		id,nom,unite,categorie,callories;
-		`, item.Id, item.Nom, item.Unite, item.Categorie, item.Callories)
+		id,nom,unite,categorie,callories,conditionnement;
+		`, item.Id, item.Nom, item.Unite, item.Categorie, item.Callories, item.Conditionnement)
 	return ScanIngredient(r)
 }
 
@@ -285,16 +287,23 @@ func ScanRecetteIngredients(rs *sql.Rows) ([]RecetteIngredient, error) {
 	return structs, nil
 }
 
-// Insert RecetteIngredient in the database and returns the item with id filled.
-func (item RecetteIngredient) Insert(tx *sql.Tx) (out RecetteIngredient, err error) {
-	r := tx.QueryRow(`INSERT INTO recette_ingredients (
+// Insert the link RecetteIngredient in the database.
+func (item RecetteIngredient) Insert(tx *sql.Tx) error {
+	_, err := tx.Exec(`INSERT INTO recette_ingredients (
 		id_recette,id_ingredient,quantite,cuisson
 		) VALUES (
 		$1,$2,$3,$4
-		) RETURNING 
-		id_recette,id_ingredient,quantite,cuisson;
+		);
 		`, item.IdRecette, item.IdIngredient, item.Quantite, item.Cuisson)
-	return ScanRecetteIngredient(r)
+	return err
+}
+
+// Delete the link RecetteIngredient in the database.
+// Only the 'IdRecette' 'IdIngredient' fields are used.
+func (item RecetteIngredient) Delete(tx *sql.Tx) error {
+	_, err := tx.Exec(`DELETE FROM recette_ingredients WHERE 
+	id_recette = $1 AND id_ingredient = $2;`, item.IdRecette, item.IdIngredient)
+	return err
 }
 
 func ScanMenu(r *sql.Row) (Menu, error) {
@@ -416,16 +425,23 @@ func ScanMenuIngredients(rs *sql.Rows) ([]MenuIngredient, error) {
 	return structs, nil
 }
 
-// Insert MenuIngredient in the database and returns the item with id filled.
-func (item MenuIngredient) Insert(tx *sql.Tx) (out MenuIngredient, err error) {
-	r := tx.QueryRow(`INSERT INTO menu_ingredients (
+// Insert the link MenuIngredient in the database.
+func (item MenuIngredient) Insert(tx *sql.Tx) error {
+	_, err := tx.Exec(`INSERT INTO menu_ingredients (
 		id_menu,id_ingredient,quantite,cuisson
 		) VALUES (
 		$1,$2,$3,$4
-		) RETURNING 
-		id_menu,id_ingredient,quantite,cuisson;
+		);
 		`, item.IdMenu, item.IdIngredient, item.Quantite, item.Cuisson)
-	return ScanMenuIngredient(r)
+	return err
+}
+
+// Delete the link MenuIngredient in the database.
+// Only the 'IdMenu' 'IdIngredient' fields are used.
+func (item MenuIngredient) Delete(tx *sql.Tx) error {
+	_, err := tx.Exec(`DELETE FROM menu_ingredients WHERE 
+	id_menu = $1 AND id_ingredient = $2;`, item.IdMenu, item.IdIngredient)
+	return err
 }
 
 func ScanMenuRecette(r *sql.Row) (MenuRecette, error) {
@@ -468,16 +484,23 @@ func ScanMenuRecettes(rs *sql.Rows) ([]MenuRecette, error) {
 	return structs, nil
 }
 
-// Insert MenuRecette in the database and returns the item with id filled.
-func (item MenuRecette) Insert(tx *sql.Tx) (out MenuRecette, err error) {
-	r := tx.QueryRow(`INSERT INTO menu_recettes (
+// Insert the link MenuRecette in the database.
+func (item MenuRecette) Insert(tx *sql.Tx) error {
+	_, err := tx.Exec(`INSERT INTO menu_recettes (
 		id_menu,id_recette
 		) VALUES (
 		$1,$2
-		) RETURNING 
-		id_menu,id_recette;
+		);
 		`, item.IdMenu, item.IdRecette)
-	return ScanMenuRecette(r)
+	return err
+}
+
+// Delete the link MenuRecette in the database.
+// Only the 'IdMenu' 'IdRecette' fields are used.
+func (item MenuRecette) Delete(tx *sql.Tx) error {
+	_, err := tx.Exec(`DELETE FROM menu_recettes WHERE 
+	id_menu = $1 AND id_recette = $2;`, item.IdMenu, item.IdRecette)
+	return err
 }
 
 func ScanSejour(r *sql.Row) (Sejour, error) {
@@ -603,16 +626,23 @@ func ScanSejourMenus(rs *sql.Rows) ([]SejourMenu, error) {
 	return structs, nil
 }
 
-// Insert SejourMenu in the database and returns the item with id filled.
-func (item SejourMenu) Insert(tx *sql.Tx) (out SejourMenu, err error) {
-	r := tx.QueryRow(`INSERT INTO sejour_menus (
+// Insert the link SejourMenu in the database.
+func (item SejourMenu) Insert(tx *sql.Tx) error {
+	_, err := tx.Exec(`INSERT INTO sejour_menus (
 		id_sejour,id_menu,nb_personnes,jour_offset,horaire
 		) VALUES (
 		$1,$2,$3,$4,$5
-		) RETURNING 
-		id_sejour,id_menu,nb_personnes,jour_offset,horaire;
+		);
 		`, item.IdSejour, item.IdMenu, item.NbPersonnes, item.JourOffset, item.Horaire)
-	return ScanSejourMenu(r)
+	return err
+}
+
+// Delete the link SejourMenu in the database.
+// Only the 'IdSejour' 'IdMenu' fields are used.
+func (item SejourMenu) Delete(tx *sql.Tx) error {
+	_, err := tx.Exec(`DELETE FROM sejour_menus WHERE 
+	id_sejour = $1 AND id_menu = $2;`, item.IdSejour, item.IdMenu)
+	return err
 }
 
 func ScanFournisseur(r *sql.Row) (Fournisseur, error) {
@@ -701,6 +731,7 @@ func ScanProduit(r *sql.Row) (Produit, error) {
 		&s.Conditionnement,
 		&s.Prix,
 		&s.ReferenceFournisseur,
+		&s.Colisage,
 	); err != nil {
 		return Produit{}, err
 	}
@@ -729,6 +760,7 @@ func ScanProduits(rs *sql.Rows) (Produits, error) {
 			&s.Conditionnement,
 			&s.Prix,
 			&s.ReferenceFournisseur,
+			&s.Colisage,
 		); err != nil {
 			return nil, err
 		}
@@ -743,24 +775,24 @@ func ScanProduits(rs *sql.Rows) (Produits, error) {
 // Insert Produit in the database and returns the item with id filled.
 func (item Produit) Insert(tx *sql.Tx) (out Produit, err error) {
 	r := tx.QueryRow(`INSERT INTO produits (
-		id_fournisseur,nom,conditionnement,prix,reference_fournisseur
+		id_fournisseur,nom,conditionnement,prix,reference_fournisseur,colisage
 		) VALUES (
-		$1,$2,$3,$4,$5
+		$1,$2,$3,$4,$5,$6
 		) RETURNING 
-		id,id_fournisseur,nom,conditionnement,prix,reference_fournisseur;
-		`, item.IdFournisseur, item.Nom, item.Conditionnement, item.Prix, item.ReferenceFournisseur)
+		id,id_fournisseur,nom,conditionnement,prix,reference_fournisseur,colisage;
+		`, item.IdFournisseur, item.Nom, item.Conditionnement, item.Prix, item.ReferenceFournisseur, item.Colisage)
 	return ScanProduit(r)
 }
 
 // Update Produit in the database and returns the new version.
 func (item Produit) Update(tx *sql.Tx) (out Produit, err error) {
 	r := tx.QueryRow(`UPDATE produits SET (
-		id_fournisseur,nom,conditionnement,prix,reference_fournisseur
+		id_fournisseur,nom,conditionnement,prix,reference_fournisseur,colisage
 		) = (
-		$2,$3,$4,$5,$6
+		$2,$3,$4,$5,$6,$7
 		) WHERE id = $1 RETURNING 
-		id,id_fournisseur,nom,conditionnement,prix,reference_fournisseur;
-		`, item.Id, item.IdFournisseur, item.Nom, item.Conditionnement, item.Prix, item.ReferenceFournisseur)
+		id,id_fournisseur,nom,conditionnement,prix,reference_fournisseur,colisage;
+		`, item.Id, item.IdFournisseur, item.Nom, item.Conditionnement, item.Prix, item.ReferenceFournisseur, item.Colisage)
 	return ScanProduit(r)
 }
 

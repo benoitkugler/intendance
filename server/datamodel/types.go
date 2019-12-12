@@ -1,5 +1,7 @@
 package datamodel
 
+import "fmt"
+
 const (
 	Litres Unite = "L"
 	Kilos  Unite = "Kg"
@@ -7,6 +9,18 @@ const (
 )
 
 type Unite string
+
+func (u Unite) String() string {
+	switch u {
+	case Litres:
+		return "L"
+	case Kilos:
+		return "Kg"
+	case Piece:
+		return "Pièce(s)"
+	}
+	return "unité inconnue"
+}
 
 type Callories struct{}
 
@@ -16,6 +30,10 @@ type JoursLivraison [7]bool
 type Conditionnement struct {
 	Quantite float64
 	Unite    Unite
+}
+
+func (c Conditionnement) String() string {
+	return fmt.Sprintf("%02.f %s", c.Quantite, c.Unite)
 }
 
 func (c Conditionnement) IsNull() bool {

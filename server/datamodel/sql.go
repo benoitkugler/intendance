@@ -27,6 +27,20 @@ func ConnectDB(credences logs.SQL) (*sql.DB, error) {
 	return db, nil
 }
 
+// ------------------- Helpers --------------------------------
+
+// GetProduits renvoie les produits associé à l'ingrédient.
+// Seul le champ 'Id' est utilisé
+func (ig Ingredient) GetProduits(tx *sql.Tx) (Produits, error) {
+	rows, err := tx.Query(`SELECT produits.* FROM produits 
+		JOIN ingredient_produits ON ingredient_produits.id_produit = produits.id 
+		WHERE ingredient_produits.id_ingredient = $1`, ig.Id)
+	if err != nil {
+		return nil, err
+	}
+	return ScanProduits(rows)
+}
+
 // ------------------- Json encoding of custom types --------------------------
 
 func loadJSON(out interface{}, src interface{}) error {

@@ -2,12 +2,30 @@ package controller
 
 import (
 	"database/sql"
+	"fmt"
 
 	"github.com/benoitkugler/intendance/server/datamodel"
 )
 
 type Server struct {
 	db *sql.DB
+}
+
+// rollback the current transaction, caused by `err`, and
+// handles the possible error from tx.Rollback()
+func rollback(tx *sql.Tx, origin error) error {
+	if err := tx.Rollback(); err != nil {
+		origin = fmt.Errorf("Rollback impossible. Erreur originale : %s", origin)
+	}
+	return ErrorSQL(origin)
+}
+
+// commit the transaction and try to rollback on error
+func commit(tx *sql.Tx) error {
+	if err := tx.Commit(); err != nil {
+		return rollback(tx, err)
+	}
+	return nil
 }
 
 func (s Server) loadAgendaUtilisateur(idUtilisateur int64) (out AgendaUtilisateur, err error) {
@@ -28,8 +46,8 @@ func (s Server) loadAgendaUtilisateur(idUtilisateur int64) (out AgendaUtilisateu
 	}
 
 	rows, err = tx.Query(`SELECT menus.* FROM menus 
-	JOIN sejours_menus ON sejours_menus.id_menu = menus.id 
-	WHERE sejours_menus.id_sejour = ANY($1)`, sejours.Ids())
+	JOIN sejour_menus ON sejour_menus.id_menu = menus.id 
+	WHERE sejour_menus.id_sejour = ANY($1)`, sejours.Ids())
 	menus, err := datamodel.ScanMenus(rows)
 	if err != nil {
 		err = ErrorSQL(err)
@@ -37,8 +55,8 @@ func (s Server) loadAgendaUtilisateur(idUtilisateur int64) (out AgendaUtilisateu
 	}
 
 	rows, err = tx.Query(`SELECT recettes.* FROM recettes 
-	JOIN menus_recettes ON menus_recettes.id_recette = recettes.id 
-	WHERE menus_recettes.id_menu = ANY($1)`, menus.Ids())
+	JOIN menu_recettes ON menu_recettes.id_recette = recettes.id 
+	WHERE menu_recettes.id_menu = ANY($1)`, menus.Ids())
 	recettes, err := datamodel.ScanRecettes(rows)
 	if err != nil {
 		err = ErrorSQL(err)
@@ -46,12 +64,12 @@ func (s Server) loadAgendaUtilisateur(idUtilisateur int64) (out AgendaUtilisateu
 	}
 
 	rows, err = tx.Query(`SELECT ingredients.* FROM ingredients 
-		JOIN menus_ingredients ON menus_ingredients.id_ingredient = ingredients.id 
-		WHERE menus_ingredients.id_menu = ANY($1)
+		JOIN menu_ingredients ON menu_ingredients.id_ingredient = ingredients.id 
+		WHERE menu_ingredients.id_menu = ANY($1)
 		UNION
 		SELECT ingredients.* FROM ingredients 
-		JOIN recettes_ingredients ON recettes_ingredients.id_ingredient = ingredients.id 
-		WHERE recettes_ingredients.id_recette = ANY($2)`, menus.Ids(), recettes.Ids())
+		JOIN recette_ingredients ON recette_ingredients.id_ingredient = ingredients.id 
+		WHERE recette_ingredients.id_recette = ANY($2)`, menus.Ids(), recettes.Ids())
 	ingredients, err := datamodel.ScanIngredients(rows)
 	if err != nil {
 		err = ErrorSQL(err)
@@ -62,7 +80,7 @@ func (s Server) loadAgendaUtilisateur(idUtilisateur int64) (out AgendaUtilisateu
 	for k, v := range recettes {
 		resolvedRecettes[k] = &Recette{Recette: v}
 	}
-	rows, err = tx.Query(`SELECT * FROM recettes_ingredients WHERE id_recette = ANY($1)`, recettes.Ids())
+	rows, err = tx.Query(`SELECT * FROM recette_ingredients WHERE id_recette = ANY($1)`, recettes.Ids())
 	if err != nil {
 		err = ErrorSQL(err)
 		return
@@ -84,7 +102,7 @@ func (s Server) loadAgendaUtilisateur(idUtilisateur int64) (out AgendaUtilisateu
 	for k, v := range menus {
 		resolvedMenus[k] = &Menu{Menu: v}
 	}
-	rows, err = tx.Query(`SELECT * FROM menus_recettes WHERE id_menu = ANY($1)`, menus.Ids())
+	rows, err = tx.Query(`SELECT * FROM menu_recettes WHERE id_menu = ANY($1)`, menus.Ids())
 	if err != nil {
 		err = ErrorSQL(err)
 		return
@@ -98,7 +116,7 @@ func (s Server) loadAgendaUtilisateur(idUtilisateur int64) (out AgendaUtilisateu
 		resolvedMenus[l.IdMenu].Recettes = append(resolvedMenus[l.IdMenu].Recettes, *resolvedRecettes[l.IdRecette])
 	}
 
-	rows, err = tx.Query(`SELECT * FROM menus_ingredients WHERE id_menu = ANY($1)`, menus.Ids())
+	rows, err = tx.Query(`SELECT * FROM menu_ingredients WHERE id_menu = ANY($1)`, menus.Ids())
 	if err != nil {
 		err = ErrorSQL(err)
 		return
@@ -120,7 +138,7 @@ func (s Server) loadAgendaUtilisateur(idUtilisateur int64) (out AgendaUtilisateu
 	for k, v := range sejours {
 		resolvedSejours[k] = &Sejour{Sejour: v, Journees: map[int64]Journee{}}
 	}
-	rows, err = tx.Query(`SELECT * FROM sejours_menus WHERE id_sejour = ANY($1)`, sejours.Ids())
+	rows, err = tx.Query(`SELECT * FROM sejour_menus WHERE id_sejour = ANY($1)`, sejours.Ids())
 	if err != nil {
 		err = ErrorSQL(err)
 		return
@@ -168,13 +186,7 @@ func (s Server) updateIngredient(ig datamodel.Ingredient) error {
 		return ErrorSQL(err)
 	}
 	// vérification de la compatilibité des unités et des contionnements
-	rows, err := tx.Query(`SELECT produits.* FROM produits 
-	JOIN ingredients_produits ON ingredients_produits.id_produit = produits.id 
-	WHERE ingredients_produits = $1`, ig.Id)
-	if err != nil {
-		return ErrorSQL(err)
-	}
-	produits, err := datamodel.ScanProduits(rows)
+	produits, err := ig.GetProduits(tx)
 	if err != nil {
 		return ErrorSQL(err)
 	}
@@ -192,17 +204,62 @@ func (s Server) updateIngredient(ig datamodel.Ingredient) error {
 	if err != nil {
 		return ErrorSQL(err)
 	}
-	if err = tx.Commit(); err != nil {
-		return ErrorSQL(err)
-	}
-	return nil
+	return commit(tx)
 }
 
-func (s Server) deleteIngredient(id int64) error {
+func (s Server) deleteIngredient(id int64, removeLiensProduits bool) error {
 	tx, err := s.db.Begin()
 	if err != nil {
 		return ErrorSQL(err)
 	}
 
-	rows, err := tx.Query("SELECT recettes.* JOIN ")
+	var check ErrorIngredientUsed
+	rows, err := tx.Query(`SELECT recettes.* FROM recettes 
+	JOIN recette_ingredients ON recette_ingredients.id_recette = recettes.id 
+	WHERE recette_ingredients.id_ingredient = $1`, id)
+	if err != nil {
+		return ErrorSQL(err)
+	}
+	check.recettes, err = datamodel.ScanRecettes(rows)
+	if err != nil {
+		return ErrorSQL(err)
+	}
+
+	rows, err = tx.Query(`SELECT menus.* FROM menus 
+	JOIN menu_ingredients ON menu_ingredients.id_menu = menus.id 
+	WHERE menu_ingredients.id_ingredient = $1`, id)
+	if err != nil {
+		return ErrorSQL(err)
+	}
+	check.menus, err = datamodel.ScanMenus(rows)
+	if err != nil {
+		return ErrorSQL(err)
+	}
+
+	ing := datamodel.Ingredient{Id: id}
+	check.produits, err = ing.GetProduits(tx)
+	if err != nil {
+		return ErrorSQL(err)
+	}
+
+	if removeLiensProduits { // on regarde uniquement les recettes et menus
+		if len(check.recettes)+len(check.menus) > 0 {
+			check.produits = nil
+			return check
+		}
+
+		_, err = tx.Exec(`DELETE FROM ingredient_produits WHERE id_ingredient = $1`, id)
+		if err != nil {
+			return ErrorSQL(err)
+		}
+	} else { // on regarde aussi les produits
+		if len(check.recettes)+len(check.menus)+len(check.produits) > 0 {
+			return check
+		}
+	}
+	// tout bon, on peut supprimer
+	if _, err = ing.Delete(tx); err != nil {
+		return rollback(tx, err)
+	}
+	return commit(tx)
 }
