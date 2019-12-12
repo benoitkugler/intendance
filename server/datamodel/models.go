@@ -20,6 +20,8 @@ type Ingredient struct {
 
 	Categorie string    `json:"categorie"`
 	Callories Callories `json:"callories"`
+	// optionnel, zero signifie pas de contrainte
+	Conditionnement Conditionnement `json:"conditionnement, omitempty"`
 }
 
 type Recette struct {
@@ -92,6 +94,8 @@ type Produit struct {
 	Prix            float64         `json:"prix"`
 
 	ReferenceFournisseur string `json:"reference_fournisseur"`
+	// zero signifie pas de contrainte
+	Colisage int `json:"colisage"`
 }
 
 type Commande struct {

@@ -36,6 +36,16 @@ Remarque: _L'association ingrédient -> produit peut être repoussée, mais sera
 
 Il définit ensuite les dates de son séjour et forme les journées. Il valide ensuite les commandes nécessaires, puis peut exporter une liste de commandes effectives (jour par jour).
 
+## Unités
+
+Pour simplifier la gestion des recettes, un ingrédient défini son unité, et est utilisé ensuite en précisant un nombre qui se réfère à cette unité.
+Les produits associés à un ingrédient doivent être de la même unité.
+L'unité "Piece" est un cas particulier. Elle permet de ne pas vraiment spécifier d'unité, mais de renvoyer directement au produit.
+Les ingrédients à la pièce peuvent définir un conditionnement, qui devra être vérifié par tout produit associé.
+Exemples : 
+- l'ingrédient "Jus d'orange - brique 25cl" aura typiquement l'unité "Piece", et le conditionnement 0.25 L
+- l'ingrédient "Paille" aura l'unité "Pièce" mais pas de conditionnement.
+
 ## Organisation des tables (base de données)
 
 Le logiciel est disponible sous la forme d'une **application web** accessible par mail/password.
@@ -79,7 +89,7 @@ Les séjours sont _privés_, mais les journées formées peuvent être copiées.
 
 -   Table **fournisseurs** : id, nom, delai_commande, jours_livraison
 
--   Table **produits** : id, nom, conditionnement (quantité + unité), prix (pour le conditionnement), id_fournisseur, reference_fournisseur
+-   Table **produits** : id, nom, conditionnement (quantité + unité), colisage (quantité minimal), prix (pour le conditionnement), id_fournisseur, reference_fournisseur
 
 -   Table **commandes**: id, id_proprietaire, jour_livraison
 
