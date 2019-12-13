@@ -33,10 +33,10 @@ type Recette struct {
 }
 
 type RecetteIngredient struct {
-	IdRecette    int64
-	IdIngredient int64
-	Quantite     float64
-	Cuisson      string
+	IdRecette    int64   `json:"-"`
+	IdIngredient int64   `json:"-"`
+	Quantite     float64 `json:"quantite"`
+	Cuisson      string  `json:"cuisson"`
 }
 
 type Menu struct {

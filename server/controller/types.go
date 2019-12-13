@@ -4,9 +4,7 @@ import "github.com/benoitkugler/intendance/server/datamodel"
 
 type IngredientRecette struct {
 	datamodel.Ingredient
-
-	Quantite float64 `json:"quantite"`
-	Cuisson  string  `json:"cuisson"`
+	datamodel.RecetteIngredient
 }
 
 type Recette struct {

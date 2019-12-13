@@ -29,6 +29,22 @@ func ConnectDB(credences logs.SQL) (*sql.DB, error) {
 
 // ------------------- Helpers --------------------------------
 
+func ScanInts(rs *sql.Rows) ([]int64, error) {
+	ints := make([]int64, 0, 16)
+	var err error
+	for rs.Next() {
+		var s int64
+		if err = rs.Scan(&s); err != nil {
+			return nil, err
+		}
+		ints = append(ints, s)
+	}
+	if err = rs.Err(); err != nil {
+		return nil, err
+	}
+	return ints, nil
+}
+
 // GetProduits renvoie les produits associé à l'ingrédient.
 // Seul le champ 'Id' est utilisé
 func (ig Ingredient) GetProduits(tx *sql.Tx) (Produits, error) {

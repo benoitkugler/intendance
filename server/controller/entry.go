@@ -7,8 +7,15 @@ import (
 	"github.com/benoitkugler/intendance/server/datamodel"
 )
 
+// Server est le controller principal, partagé par toutes les requêtes.
 type Server struct {
 	db *sql.DB
+}
+
+// Requete est créé pour chaque requête.
+type Requete struct {
+	tx             *sql.Tx
+	idProprietaire int64
 }
 
 // rollback the current transaction, caused by `err`, and
@@ -28,13 +35,9 @@ func commit(tx *sql.Tx) error {
 	return nil
 }
 
-func (s Server) loadAgendaUtilisateur(idUtilisateur int64) (out AgendaUtilisateur, err error) {
-	tx, err := s.db.Begin()
-	if err != nil {
-		err = ErrorSQL(err)
-		return
-	}
-	rows, err := tx.Query("SELECT * FROM sejours WHERE id_proprietaire = $1", idUtilisateur)
+func (s Server) loadAgendaUtilisateur(req Requete) (out AgendaUtilisateur, err error) {
+	tx := req.tx
+	rows, err := tx.Query("SELECT * FROM sejours WHERE id_proprietaire = $1", req.idProprietaire)
 	if err != nil {
 		err = ErrorSQL(err)
 		return
@@ -165,26 +168,21 @@ func (s Server) loadAgendaUtilisateur(idUtilisateur int64) (out AgendaUtilisateu
 	return out, nil
 }
 
-func (s Server) createIngredient() (out datamodel.Ingredient, err error) {
-	tx, err := s.db.Begin()
+// ------------------------------------------------------------------------
+// --------------------- Ingrédients --------------------------------------
+
+func (s Server) createIngredient(ct Requete) (out datamodel.Ingredient, err error) {
+	out, err = out.Insert(ct.tx)
 	if err != nil {
 		err = ErrorSQL(err)
 		return
 	}
-	out, err = out.Insert(tx)
-	if err != nil {
-		err = ErrorSQL(err)
-		return
-	}
-	err = tx.Commit()
+	err = commit(ct.tx)
 	return
 }
 
-func (s Server) updateIngredient(ig datamodel.Ingredient) error {
-	tx, err := s.db.Begin()
-	if err != nil {
-		return ErrorSQL(err)
-	}
+func (s Server) updateIngredient(ct Requete, ig datamodel.Ingredient) error {
+	tx := ct.tx
 	// vérification de la compatilibité des unités et des contionnements
 	produits, err := ig.GetProduits(tx)
 	if err != nil {
@@ -207,11 +205,8 @@ func (s Server) updateIngredient(ig datamodel.Ingredient) error {
 	return commit(tx)
 }
 
-func (s Server) deleteIngredient(id int64, removeLiensProduits bool) error {
-	tx, err := s.db.Begin()
-	if err != nil {
-		return ErrorSQL(err)
-	}
+func (s Server) deleteIngredient(ct Requete, id int64, removeLiensProduits bool) error {
+	tx := ct.tx
 
 	var check ErrorIngredientUsed
 	rows, err := tx.Query(`SELECT recettes.* FROM recettes 
@@ -262,4 +257,64 @@ func (s Server) deleteIngredient(id int64, removeLiensProduits bool) error {
 		return rollback(tx, err)
 	}
 	return commit(tx)
+}
+
+// ------------------------------------------------------------------------
+// ------------------------ Recettes --------------------------------------
+
+func (s Server) createRecette(ct Requete) (out datamodel.Recette, err error) {
+	tx := ct.tx
+	out.IdProprietaire = ct.idProprietaire
+	out, err = out.Insert(tx)
+	if err != nil {
+		err = ErrorSQL(err)
+		return
+	}
+	err = commit(ct.tx)
+	return
+}
+
+func (s Server) updateRecette(ct Requete, in datamodel.Recette, ings []IngredientRecette) error {
+	if err := s.proprioRecette(ct, in.Id); err != nil {
+		return err
+	}
+	tx := ct.tx
+	//TODO: notification aux utilisateurs avec possibilité de copie
+	in, err := in.Update(tx)
+	if err != nil {
+		return ErrorSQL(err)
+	}
+	_, err = tx.Exec("DELETE FROM recette_ingredients WHERE id_recette = $1", in.Id)
+	if err != nil {
+		return rollback(tx, err)
+	}
+	tx.Query("INSERT INTO ")
+}
+
+func (s Server) deleteRecette(ct Requete, id int64) error {
+	if err := s.proprioRecette(ct, id); err != nil {
+		return err
+	}
+	rows, err := ct.tx.Query(`SELECT menus.id_proprietaire FROM menus 
+	JOIN menu_recettes ON menu_recettes.id_menu = menus.id
+	WHERE menu_recettes.id_recette = $1`, id)
+	if err != nil {
+		return ErrorSQL(err)
+	}
+	ids, err := datamodel.ScanInts(rows)
+	if err != nil {
+		return ErrorSQL(err)
+	}
+	//TODO: notification aux utilisateurs avec possibilité de copie
+	// nécessite de rassembler les données nécessaires à la re-création
+
+	if L := len(ids); L > 0 {
+		return fmt.Errorf(`Cette recette est présente dans <b>%d menu(s)</b>.
+		Si vous souhaitez vraiment la supprimer, il faudra d'abord l'en retirer.`, L)
+	}
+	_, err = datamodel.Recette{Id: id}.Delete(ct.tx)
+	if err != nil {
+		return ErrorSQL(err)
+	}
+	return commit(ct.tx)
 }
