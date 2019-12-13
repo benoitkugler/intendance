@@ -28,8 +28,8 @@ type Callories struct{}
 type JoursLivraison [7]bool
 
 type Conditionnement struct {
-	Quantite float64
-	Unite    Unite
+	Quantite float64 `json:"quantite"`
+	Unite    Unite   `json:"unite"`
 }
 
 func (c Conditionnement) String() string {
@@ -43,6 +43,6 @@ func (c Conditionnement) IsNull() bool {
 // Horaire définie l'horaire d'un repas.
 // Le frontend peut définir certains horaires classiques.
 type Horaire struct {
-	Heure  int
-	Minute int
+	Heure  int `json:"heure"`
+	Minute int `json:"minute"`
 }
