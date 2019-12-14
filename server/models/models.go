@@ -2,6 +2,7 @@
 package models
 
 import (
+	"database/sql"
 	"time"
 )
 
@@ -25,9 +26,9 @@ type Ingredient struct {
 }
 
 type Recette struct {
-	Id             int64  `json:"id"`
-	IdProprietaire int64  `json:"id_proprietaire"`
-	Nom            string `json:"nom"`
+	Id             int64         `json:"id"`
+	IdProprietaire sql.NullInt64 `json:"id_proprietaire"`
+	Nom            string        `json:"nom"`
 
 	ModeEmploi string `json:"mode_emploi"`
 }
@@ -40,18 +41,18 @@ type RecetteIngredient struct {
 }
 
 type Menu struct {
-	Id             int64 `json:"id"`
-	IdProprietaire int64 `json:"id_proprietaire"`
+	Id             int64         `json:"id"`
+	IdProprietaire sql.NullInt64 `json:"id_proprietaire"`
 
 	Commentaire string `json:"commentaire"`
 }
 
 type MenuIngredient struct {
-	IdMenu       int64
-	IdIngredient int64
+	IdMenu       int64 `json:"-"`
+	IdIngredient int64 `json:"-"`
 
-	Quantite float64
-	Cuisson  string
+	Quantite float64 `json:"quantite"`
+	Cuisson  string  `json:"cuisson"`
 }
 
 type MenuRecette struct {
@@ -96,6 +97,11 @@ type Produit struct {
 	ReferenceFournisseur string `json:"reference_fournisseur"`
 	// zero signifie pas de contrainte
 	Colisage int64 `json:"colisage"`
+}
+
+type IngredientProduit struct {
+	IdIngredient int64 `json:"id_ingredient"`
+	IdProduit    int64 `json:"id_produit"`
 }
 
 type Commande struct {

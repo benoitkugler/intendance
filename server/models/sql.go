@@ -28,6 +28,9 @@ func ConnectDB(credences logs.SQL) (*sql.DB, error) {
 }
 
 // ------------------- Helpers --------------------------------
+func NullId(id int64) sql.NullInt64 {
+	return sql.NullInt64{Valid: true, Int64: id}
+}
 
 func ScanInts(rs *sql.Rows) ([]int64, error) {
 	ints := make([]int64, 0, 16)

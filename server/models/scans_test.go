@@ -4,6 +4,7 @@ package models
 
 import (
 	"database/sql"
+	"fmt"
 	"math/rand"
 )
 
@@ -18,6 +19,7 @@ func randUtilisateur() Utilisateur {
 
 func queriesUtilisateur(tx *sql.Tx, item Utilisateur) (Utilisateur, error) {
 	item, err := item.Insert(tx)
+
 	if err != nil {
 		return item, err
 	}
@@ -25,10 +27,12 @@ func queriesUtilisateur(tx *sql.Tx, item Utilisateur) (Utilisateur, error) {
 	if err != nil {
 		return item, err
 	}
-	_, err = ScanUtilisateurs(rows)
+	items, err := ScanUtilisateurs(rows)
 	if err != nil {
 		return item, err
 	}
+
+	_ = items.Ids()
 
 	item, err = item.Update(tx)
 	if err != nil {
@@ -53,6 +57,7 @@ func randIngredient() Ingredient {
 
 func queriesIngredient(tx *sql.Tx, item Ingredient) (Ingredient, error) {
 	item, err := item.Insert(tx)
+
 	if err != nil {
 		return item, err
 	}
@@ -60,10 +65,12 @@ func queriesIngredient(tx *sql.Tx, item Ingredient) (Ingredient, error) {
 	if err != nil {
 		return item, err
 	}
-	_, err = ScanIngredients(rows)
+	items, err := ScanIngredients(rows)
 	if err != nil {
 		return item, err
 	}
+
+	_ = items.Ids()
 
 	item, err = item.Update(tx)
 	if err != nil {
@@ -78,7 +85,7 @@ func queriesIngredient(tx *sql.Tx, item Ingredient) (Ingredient, error) {
 func randRecette() Recette {
 	return Recette{
 		Id:             rand.Int63n(1 << 20),
-		IdProprietaire: rand.Int63n(1 << 20),
+		IdProprietaire: randNullInt64(),
 		Nom:            randstring(),
 		ModeEmploi:     randstring(),
 	}
@@ -86,6 +93,7 @@ func randRecette() Recette {
 
 func queriesRecette(tx *sql.Tx, item Recette) (Recette, error) {
 	item, err := item.Insert(tx)
+
 	if err != nil {
 		return item, err
 	}
@@ -93,10 +101,12 @@ func queriesRecette(tx *sql.Tx, item Recette) (Recette, error) {
 	if err != nil {
 		return item, err
 	}
-	_, err = ScanRecettes(rows)
+	items, err := ScanRecettes(rows)
 	if err != nil {
 		return item, err
 	}
+
+	_ = items.Ids()
 
 	item, err = item.Update(tx)
 	if err != nil {
@@ -118,7 +128,7 @@ func randRecetteIngredient() RecetteIngredient {
 }
 
 func queriesRecetteIngredient(tx *sql.Tx, item RecetteIngredient) (RecetteIngredient, error) {
-	err := item.Insert(tx)
+	err := InsertManyRecetteIngredients(tx, []RecetteIngredient{item})
 	if err != nil {
 		return item, err
 	}
@@ -126,10 +136,12 @@ func queriesRecetteIngredient(tx *sql.Tx, item RecetteIngredient) (RecetteIngred
 	if err != nil {
 		return item, err
 	}
-	_, err = ScanRecetteIngredients(rows)
+	items, err := ScanRecetteIngredients(rows)
 	if err != nil {
 		return item, err
 	}
+
+	fmt.Println(len(items))
 
 	row := tx.QueryRow(`SELECT * FROM recette_ingredients WHERE 
 		id_recette = $1 AND id_ingredient = $2;`, item.IdRecette, item.IdIngredient)
@@ -141,13 +153,14 @@ func queriesRecetteIngredient(tx *sql.Tx, item RecetteIngredient) (RecetteIngred
 func randMenu() Menu {
 	return Menu{
 		Id:             rand.Int63n(1 << 20),
-		IdProprietaire: rand.Int63n(1 << 20),
+		IdProprietaire: randNullInt64(),
 		Commentaire:    randstring(),
 	}
 }
 
 func queriesMenu(tx *sql.Tx, item Menu) (Menu, error) {
 	item, err := item.Insert(tx)
+
 	if err != nil {
 		return item, err
 	}
@@ -155,10 +168,12 @@ func queriesMenu(tx *sql.Tx, item Menu) (Menu, error) {
 	if err != nil {
 		return item, err
 	}
-	_, err = ScanMenus(rows)
+	items, err := ScanMenus(rows)
 	if err != nil {
 		return item, err
 	}
+
+	_ = items.Ids()
 
 	item, err = item.Update(tx)
 	if err != nil {
@@ -180,7 +195,7 @@ func randMenuIngredient() MenuIngredient {
 }
 
 func queriesMenuIngredient(tx *sql.Tx, item MenuIngredient) (MenuIngredient, error) {
-	err := item.Insert(tx)
+	err := InsertManyMenuIngredients(tx, []MenuIngredient{item})
 	if err != nil {
 		return item, err
 	}
@@ -188,10 +203,12 @@ func queriesMenuIngredient(tx *sql.Tx, item MenuIngredient) (MenuIngredient, err
 	if err != nil {
 		return item, err
 	}
-	_, err = ScanMenuIngredients(rows)
+	items, err := ScanMenuIngredients(rows)
 	if err != nil {
 		return item, err
 	}
+
+	fmt.Println(len(items))
 
 	row := tx.QueryRow(`SELECT * FROM menu_ingredients WHERE 
 		id_menu = $1 AND id_ingredient = $2;`, item.IdMenu, item.IdIngredient)
@@ -208,7 +225,7 @@ func randMenuRecette() MenuRecette {
 }
 
 func queriesMenuRecette(tx *sql.Tx, item MenuRecette) (MenuRecette, error) {
-	err := item.Insert(tx)
+	err := InsertManyMenuRecettes(tx, []MenuRecette{item})
 	if err != nil {
 		return item, err
 	}
@@ -216,10 +233,12 @@ func queriesMenuRecette(tx *sql.Tx, item MenuRecette) (MenuRecette, error) {
 	if err != nil {
 		return item, err
 	}
-	_, err = ScanMenuRecettes(rows)
+	items, err := ScanMenuRecettes(rows)
 	if err != nil {
 		return item, err
 	}
+
+	fmt.Println(len(items))
 
 	row := tx.QueryRow(`SELECT * FROM menu_recettes WHERE 
 		id_menu = $1 AND id_recette = $2;`, item.IdMenu, item.IdRecette)
@@ -239,6 +258,7 @@ func randSejour() Sejour {
 
 func queriesSejour(tx *sql.Tx, item Sejour) (Sejour, error) {
 	item, err := item.Insert(tx)
+
 	if err != nil {
 		return item, err
 	}
@@ -246,10 +266,12 @@ func queriesSejour(tx *sql.Tx, item Sejour) (Sejour, error) {
 	if err != nil {
 		return item, err
 	}
-	_, err = ScanSejours(rows)
+	items, err := ScanSejours(rows)
 	if err != nil {
 		return item, err
 	}
+
+	_ = items.Ids()
 
 	item, err = item.Update(tx)
 	if err != nil {
@@ -272,7 +294,7 @@ func randSejourMenu() SejourMenu {
 }
 
 func queriesSejourMenu(tx *sql.Tx, item SejourMenu) (SejourMenu, error) {
-	err := item.Insert(tx)
+	err := InsertManySejourMenus(tx, []SejourMenu{item})
 	if err != nil {
 		return item, err
 	}
@@ -280,10 +302,12 @@ func queriesSejourMenu(tx *sql.Tx, item SejourMenu) (SejourMenu, error) {
 	if err != nil {
 		return item, err
 	}
-	_, err = ScanSejourMenus(rows)
+	items, err := ScanSejourMenus(rows)
 	if err != nil {
 		return item, err
 	}
+
+	fmt.Println(len(items))
 
 	row := tx.QueryRow(`SELECT * FROM sejour_menus WHERE 
 		id_sejour = $1 AND id_menu = $2;`, item.IdSejour, item.IdMenu)
@@ -303,6 +327,7 @@ func randFournisseur() Fournisseur {
 
 func queriesFournisseur(tx *sql.Tx, item Fournisseur) (Fournisseur, error) {
 	item, err := item.Insert(tx)
+
 	if err != nil {
 		return item, err
 	}
@@ -310,10 +335,12 @@ func queriesFournisseur(tx *sql.Tx, item Fournisseur) (Fournisseur, error) {
 	if err != nil {
 		return item, err
 	}
-	_, err = ScanFournisseurs(rows)
+	items, err := ScanFournisseurs(rows)
 	if err != nil {
 		return item, err
 	}
+
+	_ = items.Ids()
 
 	item, err = item.Update(tx)
 	if err != nil {
@@ -339,6 +366,7 @@ func randProduit() Produit {
 
 func queriesProduit(tx *sql.Tx, item Produit) (Produit, error) {
 	item, err := item.Insert(tx)
+
 	if err != nil {
 		return item, err
 	}
@@ -346,10 +374,12 @@ func queriesProduit(tx *sql.Tx, item Produit) (Produit, error) {
 	if err != nil {
 		return item, err
 	}
-	_, err = ScanProduits(rows)
+	items, err := ScanProduits(rows)
 	if err != nil {
 		return item, err
 	}
+
+	_ = items.Ids()
 
 	item, err = item.Update(tx)
 	if err != nil {
@@ -358,6 +388,36 @@ func queriesProduit(tx *sql.Tx, item Produit) (Produit, error) {
 	row := tx.QueryRow("SELECT * FROM produits WHERE id = $1", item.Id)
 
 	_, err = ScanProduit(row)
+	return item, err
+}
+
+func randIngredientProduit() IngredientProduit {
+	return IngredientProduit{
+		IdIngredient: rand.Int63n(1 << 20),
+		IdProduit:    rand.Int63n(1 << 20),
+	}
+}
+
+func queriesIngredientProduit(tx *sql.Tx, item IngredientProduit) (IngredientProduit, error) {
+	err := InsertManyIngredientProduits(tx, []IngredientProduit{item})
+	if err != nil {
+		return item, err
+	}
+	rows, err := tx.Query("SELECT * FROM ingredient_produits")
+	if err != nil {
+		return item, err
+	}
+	items, err := ScanIngredientProduits(rows)
+	if err != nil {
+		return item, err
+	}
+
+	fmt.Println(len(items))
+
+	row := tx.QueryRow(`SELECT * FROM ingredient_produits WHERE 
+		id_ingredient = $1 AND id_produit = $2;`, item.IdIngredient, item.IdProduit)
+
+	_, err = ScanIngredientProduit(row)
 	return item, err
 }
 
@@ -371,6 +431,7 @@ func randCommande() Commande {
 
 func queriesCommande(tx *sql.Tx, item Commande) (Commande, error) {
 	item, err := item.Insert(tx)
+
 	if err != nil {
 		return item, err
 	}
@@ -378,10 +439,12 @@ func queriesCommande(tx *sql.Tx, item Commande) (Commande, error) {
 	if err != nil {
 		return item, err
 	}
-	_, err = ScanCommandes(rows)
+	items, err := ScanCommandes(rows)
 	if err != nil {
 		return item, err
 	}
+
+	_ = items.Ids()
 
 	item, err = item.Update(tx)
 	if err != nil {

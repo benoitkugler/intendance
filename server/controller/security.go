@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"database/sql"
 	"fmt"
 )
 
@@ -13,11 +14,11 @@ import (
 
 func (s Server) proprioRecette(ct Requete, idRecette int64) error {
 	row := ct.tx.QueryRow("SELECT id_proprietaire FROM recettes WHERE id = $1", idRecette)
-	var trueProp int64
+	var trueProp sql.NullInt64
 	if err := row.Scan(&trueProp); err != nil {
 		return ErrorSQL(err)
 	}
-	if trueProp != ct.idProprietaire {
+	if trueProp.Valid && trueProp.Int64 != ct.idProprietaire {
 		return fmt.Errorf(`Votre requête est impossible car la <b>recette</b> 
 		concernée ne vous <b>appartient pas</b> !`)
 	}

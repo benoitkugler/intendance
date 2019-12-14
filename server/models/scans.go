@@ -256,16 +256,6 @@ func ScanRecetteIngredient(r *sql.Row) (RecetteIngredient, error) {
 	return s, nil
 }
 
-type RecetteIngredients map[int64]RecetteIngredient
-
-func (m RecetteIngredients) Ids() pq.Int64Array {
-	out := make(pq.Int64Array, 0, len(m))
-	for i := range m {
-		out = append(out, i)
-	}
-	return out
-}
-
 func ScanRecetteIngredients(rs *sql.Rows) ([]RecetteIngredient, error) {
 	structs := make([]RecetteIngredient, 0, 16)
 	var err error
@@ -287,15 +277,30 @@ func ScanRecetteIngredients(rs *sql.Rows) ([]RecetteIngredient, error) {
 	return structs, nil
 }
 
-// Insert the link RecetteIngredient in the database.
-func (item RecetteIngredient) Insert(tx *sql.Tx) error {
-	_, err := tx.Exec(`INSERT INTO recette_ingredients (
-		id_recette,id_ingredient,quantite,cuisson
-		) VALUES (
-		$1,$2,$3,$4
-		);
-		`, item.IdRecette, item.IdIngredient, item.Quantite, item.Cuisson)
-	return err
+// Insert the links RecetteIngredient in the database.
+func InsertManyRecetteIngredients(tx *sql.Tx, items []RecetteIngredient) error {
+	stmt, err := tx.Prepare(pq.CopyIn("recette_ingredients",
+		"id_recette", "id_ingredient", "quantite", "cuisson",
+	))
+	if err != nil {
+		return err
+	}
+
+	for _, item := range items {
+		_, err = stmt.Exec(item.IdRecette, item.IdIngredient, item.Quantite, item.Cuisson)
+		if err != nil {
+			return err
+		}
+	}
+
+	if _, err = stmt.Exec(); err != nil {
+		return err
+	}
+
+	if err = stmt.Close(); err != nil {
+		return err
+	}
+	return nil
 }
 
 // Delete the link RecetteIngredient in the database.
@@ -394,16 +399,6 @@ func ScanMenuIngredient(r *sql.Row) (MenuIngredient, error) {
 	return s, nil
 }
 
-type MenuIngredients map[int64]MenuIngredient
-
-func (m MenuIngredients) Ids() pq.Int64Array {
-	out := make(pq.Int64Array, 0, len(m))
-	for i := range m {
-		out = append(out, i)
-	}
-	return out
-}
-
 func ScanMenuIngredients(rs *sql.Rows) ([]MenuIngredient, error) {
 	structs := make([]MenuIngredient, 0, 16)
 	var err error
@@ -425,15 +420,30 @@ func ScanMenuIngredients(rs *sql.Rows) ([]MenuIngredient, error) {
 	return structs, nil
 }
 
-// Insert the link MenuIngredient in the database.
-func (item MenuIngredient) Insert(tx *sql.Tx) error {
-	_, err := tx.Exec(`INSERT INTO menu_ingredients (
-		id_menu,id_ingredient,quantite,cuisson
-		) VALUES (
-		$1,$2,$3,$4
-		);
-		`, item.IdMenu, item.IdIngredient, item.Quantite, item.Cuisson)
-	return err
+// Insert the links MenuIngredient in the database.
+func InsertManyMenuIngredients(tx *sql.Tx, items []MenuIngredient) error {
+	stmt, err := tx.Prepare(pq.CopyIn("menu_ingredients",
+		"id_menu", "id_ingredient", "quantite", "cuisson",
+	))
+	if err != nil {
+		return err
+	}
+
+	for _, item := range items {
+		_, err = stmt.Exec(item.IdMenu, item.IdIngredient, item.Quantite, item.Cuisson)
+		if err != nil {
+			return err
+		}
+	}
+
+	if _, err = stmt.Exec(); err != nil {
+		return err
+	}
+
+	if err = stmt.Close(); err != nil {
+		return err
+	}
+	return nil
 }
 
 // Delete the link MenuIngredient in the database.
@@ -455,16 +465,6 @@ func ScanMenuRecette(r *sql.Row) (MenuRecette, error) {
 	return s, nil
 }
 
-type MenuRecettes map[int64]MenuRecette
-
-func (m MenuRecettes) Ids() pq.Int64Array {
-	out := make(pq.Int64Array, 0, len(m))
-	for i := range m {
-		out = append(out, i)
-	}
-	return out
-}
-
 func ScanMenuRecettes(rs *sql.Rows) ([]MenuRecette, error) {
 	structs := make([]MenuRecette, 0, 16)
 	var err error
@@ -484,15 +484,30 @@ func ScanMenuRecettes(rs *sql.Rows) ([]MenuRecette, error) {
 	return structs, nil
 }
 
-// Insert the link MenuRecette in the database.
-func (item MenuRecette) Insert(tx *sql.Tx) error {
-	_, err := tx.Exec(`INSERT INTO menu_recettes (
-		id_menu,id_recette
-		) VALUES (
-		$1,$2
-		);
-		`, item.IdMenu, item.IdRecette)
-	return err
+// Insert the links MenuRecette in the database.
+func InsertManyMenuRecettes(tx *sql.Tx, items []MenuRecette) error {
+	stmt, err := tx.Prepare(pq.CopyIn("menu_recettes",
+		"id_menu", "id_recette",
+	))
+	if err != nil {
+		return err
+	}
+
+	for _, item := range items {
+		_, err = stmt.Exec(item.IdMenu, item.IdRecette)
+		if err != nil {
+			return err
+		}
+	}
+
+	if _, err = stmt.Exec(); err != nil {
+		return err
+	}
+
+	if err = stmt.Close(); err != nil {
+		return err
+	}
+	return nil
 }
 
 // Delete the link MenuRecette in the database.
@@ -594,16 +609,6 @@ func ScanSejourMenu(r *sql.Row) (SejourMenu, error) {
 	return s, nil
 }
 
-type SejourMenus map[int64]SejourMenu
-
-func (m SejourMenus) Ids() pq.Int64Array {
-	out := make(pq.Int64Array, 0, len(m))
-	for i := range m {
-		out = append(out, i)
-	}
-	return out
-}
-
 func ScanSejourMenus(rs *sql.Rows) ([]SejourMenu, error) {
 	structs := make([]SejourMenu, 0, 16)
 	var err error
@@ -626,15 +631,30 @@ func ScanSejourMenus(rs *sql.Rows) ([]SejourMenu, error) {
 	return structs, nil
 }
 
-// Insert the link SejourMenu in the database.
-func (item SejourMenu) Insert(tx *sql.Tx) error {
-	_, err := tx.Exec(`INSERT INTO sejour_menus (
-		id_sejour,id_menu,nb_personnes,jour_offset,horaire
-		) VALUES (
-		$1,$2,$3,$4,$5
-		);
-		`, item.IdSejour, item.IdMenu, item.NbPersonnes, item.JourOffset, item.Horaire)
-	return err
+// Insert the links SejourMenu in the database.
+func InsertManySejourMenus(tx *sql.Tx, items []SejourMenu) error {
+	stmt, err := tx.Prepare(pq.CopyIn("sejour_menus",
+		"id_sejour", "id_menu", "nb_personnes", "jour_offset", "horaire",
+	))
+	if err != nil {
+		return err
+	}
+
+	for _, item := range items {
+		_, err = stmt.Exec(item.IdSejour, item.IdMenu, item.NbPersonnes, item.JourOffset, item.Horaire)
+		if err != nil {
+			return err
+		}
+	}
+
+	if _, err = stmt.Exec(); err != nil {
+		return err
+	}
+
+	if err = stmt.Close(); err != nil {
+		return err
+	}
+	return nil
 }
 
 // Delete the link SejourMenu in the database.
@@ -803,6 +823,70 @@ func (item Produit) Delete(tx *sql.Tx) (int64, error) {
 	r := tx.QueryRow("DELETE FROM produits WHERE id = $1 RETURNING id;", item.Id)
 	err := r.Scan(&deleted_id)
 	return deleted_id, err
+}
+
+func ScanIngredientProduit(r *sql.Row) (IngredientProduit, error) {
+	var s IngredientProduit
+	if err := r.Scan(
+		&s.IdIngredient,
+		&s.IdProduit,
+	); err != nil {
+		return IngredientProduit{}, err
+	}
+	return s, nil
+}
+
+func ScanIngredientProduits(rs *sql.Rows) ([]IngredientProduit, error) {
+	structs := make([]IngredientProduit, 0, 16)
+	var err error
+	for rs.Next() {
+		var s IngredientProduit
+		if err = rs.Scan(
+			&s.IdIngredient,
+			&s.IdProduit,
+		); err != nil {
+			return nil, err
+		}
+		structs = append(structs, s)
+	}
+	if err = rs.Err(); err != nil {
+		return nil, err
+	}
+	return structs, nil
+}
+
+// Insert the links IngredientProduit in the database.
+func InsertManyIngredientProduits(tx *sql.Tx, items []IngredientProduit) error {
+	stmt, err := tx.Prepare(pq.CopyIn("ingredient_produits",
+		"id_ingredient", "id_produit",
+	))
+	if err != nil {
+		return err
+	}
+
+	for _, item := range items {
+		_, err = stmt.Exec(item.IdIngredient, item.IdProduit)
+		if err != nil {
+			return err
+		}
+	}
+
+	if _, err = stmt.Exec(); err != nil {
+		return err
+	}
+
+	if err = stmt.Close(); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Delete the link IngredientProduit in the database.
+// Only the 'IdIngredient' 'IdProduit' fields are used.
+func (item IngredientProduit) Delete(tx *sql.Tx) error {
+	_, err := tx.Exec(`DELETE FROM ingredient_produits WHERE 
+	id_ingredient = $1 AND id_produit = $2;`, item.IdIngredient, item.IdProduit)
+	return err
 }
 
 func ScanCommande(r *sql.Row) (Commande, error) {

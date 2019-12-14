@@ -13,12 +13,17 @@ type Recette struct {
 	Ingredients []IngredientRecette `json:"ingredients"`
 }
 
+type IngredientMenu struct {
+	models.Ingredient
+	models.MenuIngredient
+}
+
 type Menu struct {
 	models.Menu
 
-	Recettes    []Recette           `json:"recettes"`
-	Ingredients []IngredientRecette `json:"ingredients"`
-	NbPersonnes int64               `json:"nb_personnes"`
+	Recettes    []Recette        `json:"recettes"`
+	Ingredients []IngredientMenu `json:"ingredients"`
+	NbPersonnes int64            `json:"nb_personnes"`
 	Horaire     models.Horaire   `json:"horaire"`
 }
 

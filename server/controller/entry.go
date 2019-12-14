@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/benoitkugler/intendance/server/models"
-	"github.com/lib/pq"
 )
 
 // Server est le controller principal, partagé par toutes les requêtes.
@@ -34,6 +33,14 @@ func commit(tx *sql.Tx) error {
 		return rollback(tx, err)
 	}
 	return nil
+}
+
+func (s Server) NewRequete(idUtilisateur int64) (Requete, error) {
+	tx, err := s.db.Begin()
+	if err != nil {
+		return Requete{}, ErrorSQL(err)
+	}
+	return Requete{tx: tx, idProprietaire: idUtilisateur}, nil
 }
 
 func (s Server) loadAgendaUtilisateur(req Requete) (out AgendaUtilisateur, err error) {
@@ -96,9 +103,8 @@ func (s Server) loadAgendaUtilisateur(req Requete) (out AgendaUtilisateur, err e
 	}
 	for _, l := range ris {
 		resolvedRecettes[l.IdRecette].Ingredients = append(resolvedRecettes[l.IdRecette].Ingredients, IngredientRecette{
-			Ingredient: ingredients[l.IdIngredient],
-			Quantite:   l.Quantite,
-			Cuisson:    l.Cuisson,
+			Ingredient:        ingredients[l.IdIngredient],
+			RecetteIngredient: l,
 		})
 	}
 
@@ -131,10 +137,9 @@ func (s Server) loadAgendaUtilisateur(req Requete) (out AgendaUtilisateur, err e
 		return
 	}
 	for _, l := range mis {
-		resolvedMenus[l.IdMenu].Ingredients = append(resolvedMenus[l.IdMenu].Ingredients, IngredientRecette{
-			Ingredient: ingredients[l.IdIngredient],
-			Quantite:   l.Quantite,
-			Cuisson:    l.Cuisson,
+		resolvedMenus[l.IdMenu].Ingredients = append(resolvedMenus[l.IdMenu].Ingredients, IngredientMenu{
+			Ingredient:     ingredients[l.IdIngredient],
+			MenuIngredient: l,
 		})
 	}
 
@@ -265,7 +270,7 @@ func (s Server) deleteIngredient(ct Requete, id int64, removeLiensProduits bool)
 
 func (s Server) createRecette(ct Requete) (out models.Recette, err error) {
 	tx := ct.tx
-	out.IdProprietaire = ct.idProprietaire
+	out.IdProprietaire = models.NullId(ct.idProprietaire)
 	out, err = out.Insert(tx)
 	if err != nil {
 		err = ErrorSQL(err)
@@ -289,37 +294,12 @@ func (s Server) updateRecette(ct Requete, in models.Recette, ings []models.Recet
 	if err != nil {
 		return rollback(tx, err)
 	}
-
-	stmt, err := tx.Prepare(pq.CopyIn("recette_ingredients", "id_recette", "id_ingredient", "quantite", "cuisson"))
+	err = models.InsertManyRecetteIngredients(tx, ings)
 	if err != nil {
-		ErrorSQL(err)
+		return rollback(tx, err)
 	}
-
-	for _, user := range users {
-		_, err = stmt.Exec(user.Name, int64(user.Age))
-		if err != nil {
-			ErrorSQL(err)
-		}
-	}
-
-	_, err = stmt.Exec()
-	if err != nil {
-		ErrorSQL(err)
-	}
-
-	err = stmt.Close()
-	if err != nil {
-		ErrorSQL(err)
-	}
-
-	err = tx.Commit()
-	if err != nil {
-		ErrorSQL(err)
-	}
-
+	return nil
 }
-
-func InsertMany(tx *sql.Tx, []models.RecetteIngredient)
 
 func (s Server) deleteRecette(ct Requete, id int64) error {
 	if err := s.proprioRecette(ct, id); err != nil {

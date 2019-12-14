@@ -33,7 +33,7 @@ type Conditionnement struct {
 }
 
 func (c Conditionnement) String() string {
-	return fmt.Sprintf("%02.f %s", c.Quantite, c.Unite)
+	return fmt.Sprintf("%.02f %s", c.Quantite, c.Unite)
 }
 
 func (c Conditionnement) IsNull() bool {
