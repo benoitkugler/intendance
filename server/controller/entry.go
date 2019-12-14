@@ -43,9 +43,8 @@ func (s Server) NewRequete(idUtilisateur int64) (Requete, error) {
 	return Requete{tx: tx, idProprietaire: idUtilisateur}, nil
 }
 
-func (s Server) loadAgendaUtilisateur(req Requete) (out AgendaUtilisateur, err error) {
-	tx := req.tx
-	rows, err := tx.Query("SELECT * FROM sejours WHERE id_proprietaire = $1", req.idProprietaire)
+func (s Server) loadAgendaUtilisateur(idProprietaire int64) (out AgendaUtilisateur, err error) {
+	rows, err := s.db.Query("SELECT * FROM sejours WHERE id_proprietaire = $1", idProprietaire)
 	if err != nil {
 		err = ErrorSQL(err)
 		return
@@ -56,7 +55,7 @@ func (s Server) loadAgendaUtilisateur(req Requete) (out AgendaUtilisateur, err e
 		return
 	}
 
-	rows, err = tx.Query(`SELECT menus.* FROM menus 
+	rows, err = s.db.Query(`SELECT menus.* FROM menus 
 	JOIN sejour_menus ON sejour_menus.id_menu = menus.id 
 	WHERE sejour_menus.id_sejour = ANY($1)`, sejours.Ids())
 	menus, err := models.ScanMenus(rows)
@@ -65,7 +64,7 @@ func (s Server) loadAgendaUtilisateur(req Requete) (out AgendaUtilisateur, err e
 		return
 	}
 
-	rows, err = tx.Query(`SELECT recettes.* FROM recettes 
+	rows, err = s.db.Query(`SELECT recettes.* FROM recettes 
 	JOIN menu_recettes ON menu_recettes.id_recette = recettes.id 
 	WHERE menu_recettes.id_menu = ANY($1)`, menus.Ids())
 	recettes, err := models.ScanRecettes(rows)
@@ -74,7 +73,7 @@ func (s Server) loadAgendaUtilisateur(req Requete) (out AgendaUtilisateur, err e
 		return
 	}
 
-	rows, err = tx.Query(`SELECT ingredients.* FROM ingredients 
+	rows, err = s.db.Query(`SELECT ingredients.* FROM ingredients 
 		JOIN menu_ingredients ON menu_ingredients.id_ingredient = ingredients.id 
 		WHERE menu_ingredients.id_menu = ANY($1)
 		UNION
@@ -91,7 +90,7 @@ func (s Server) loadAgendaUtilisateur(req Requete) (out AgendaUtilisateur, err e
 	for k, v := range recettes {
 		resolvedRecettes[k] = &Recette{Recette: v}
 	}
-	rows, err = tx.Query(`SELECT * FROM recette_ingredients WHERE id_recette = ANY($1)`, recettes.Ids())
+	rows, err = s.db.Query(`SELECT * FROM recette_ingredients WHERE id_recette = ANY($1)`, recettes.Ids())
 	if err != nil {
 		err = ErrorSQL(err)
 		return
@@ -112,7 +111,7 @@ func (s Server) loadAgendaUtilisateur(req Requete) (out AgendaUtilisateur, err e
 	for k, v := range menus {
 		resolvedMenus[k] = &Menu{Menu: v}
 	}
-	rows, err = tx.Query(`SELECT * FROM menu_recettes WHERE id_menu = ANY($1)`, menus.Ids())
+	rows, err = s.db.Query(`SELECT * FROM menu_recettes WHERE id_menu = ANY($1)`, menus.Ids())
 	if err != nil {
 		err = ErrorSQL(err)
 		return
@@ -126,7 +125,7 @@ func (s Server) loadAgendaUtilisateur(req Requete) (out AgendaUtilisateur, err e
 		resolvedMenus[l.IdMenu].Recettes = append(resolvedMenus[l.IdMenu].Recettes, *resolvedRecettes[l.IdRecette])
 	}
 
-	rows, err = tx.Query(`SELECT * FROM menu_ingredients WHERE id_menu = ANY($1)`, menus.Ids())
+	rows, err = s.db.Query(`SELECT * FROM menu_ingredients WHERE id_menu = ANY($1)`, menus.Ids())
 	if err != nil {
 		err = ErrorSQL(err)
 		return
@@ -147,7 +146,7 @@ func (s Server) loadAgendaUtilisateur(req Requete) (out AgendaUtilisateur, err e
 	for k, v := range sejours {
 		resolvedSejours[k] = &Sejour{Sejour: v, Journees: map[int64]Journee{}}
 	}
-	rows, err = tx.Query(`SELECT * FROM sejour_menus WHERE id_sejour = ANY($1)`, sejours.Ids())
+	rows, err = s.db.Query(`SELECT * FROM sejour_menus WHERE id_sejour = ANY($1)`, sejours.Ids())
 	if err != nil {
 		err = ErrorSQL(err)
 		return
