@@ -1,5 +1,5 @@
 // Définit les structures et types utilisés par le serveur.
-package datamodel
+package models
 
 import (
 	"time"

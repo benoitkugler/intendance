@@ -1,25 +1,25 @@
 package controller
 
-import "github.com/benoitkugler/intendance/server/datamodel"
+import "github.com/benoitkugler/intendance/server/models"
 
 type IngredientRecette struct {
-	datamodel.Ingredient
-	datamodel.RecetteIngredient
+	models.Ingredient
+	models.RecetteIngredient
 }
 
 type Recette struct {
-	datamodel.Recette
+	models.Recette
 
 	Ingredients []IngredientRecette `json:"ingredients"`
 }
 
 type Menu struct {
-	datamodel.Menu
+	models.Menu
 
 	Recettes    []Recette           `json:"recettes"`
 	Ingredients []IngredientRecette `json:"ingredients"`
 	NbPersonnes int64               `json:"nb_personnes"`
-	Horaire     datamodel.Horaire   `json:"horaire"`
+	Horaire     models.Horaire   `json:"horaire"`
 }
 
 type Journee struct {
@@ -28,7 +28,7 @@ type Journee struct {
 }
 
 type Sejour struct {
-	datamodel.Sejour
+	models.Sejour
 	Journees map[int64]Journee `json:"journees"`
 }
 

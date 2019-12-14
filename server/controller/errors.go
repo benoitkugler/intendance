@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/benoitkugler/intendance/server/datamodel"
+	"github.com/benoitkugler/intendance/server/models"
 )
 
 type ErrorIngredientProduitUnite struct {
-	ingredient datamodel.Ingredient
-	produit    datamodel.Produit
+	ingredient models.Ingredient
+	produit    models.Produit
 }
 
 func (e ErrorIngredientProduitUnite) Error() string {
@@ -23,8 +23,8 @@ func (e ErrorIngredientProduitUnite) Error() string {
 }
 
 type ErrorIngredientProduitConditionnement struct {
-	ingredient datamodel.Ingredient
-	produit    datamodel.Produit
+	ingredient models.Ingredient
+	produit    models.Produit
 }
 
 func (e ErrorIngredientProduitConditionnement) Error() string {
@@ -39,9 +39,9 @@ func (e ErrorIngredientProduitConditionnement) Error() string {
 }
 
 type ErrorIngredientUsed struct {
-	recettes datamodel.Recettes
-	menus    datamodel.Menus
-	produits datamodel.Produits
+	recettes models.Recettes
+	menus    models.Menus
+	produits models.Produits
 }
 
 func (e ErrorIngredientUsed) Error() string {

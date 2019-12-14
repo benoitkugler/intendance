@@ -6,11 +6,11 @@ import (
 	"testing"
 
 	"github.com/benoitkugler/intendance/logs"
-	"github.com/benoitkugler/intendance/server/datamodel"
+	"github.com/benoitkugler/intendance/server/models"
 )
 
 func TestLoadData(t *testing.T) {
-	db, err := datamodel.ConnectDB(logs.DB_DEV)
+	db, err := models.ConnectDB(logs.DB_DEV)
 	defer db.Close()
 	if err != nil {
 		t.Fatal(err)

@@ -4,7 +4,8 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/benoitkugler/intendance/server/datamodel"
+	"github.com/benoitkugler/intendance/server/models"
+	"github.com/lib/pq"
 )
 
 // Server est le controller principal, partagé par toutes les requêtes.
@@ -42,7 +43,7 @@ func (s Server) loadAgendaUtilisateur(req Requete) (out AgendaUtilisateur, err e
 		err = ErrorSQL(err)
 		return
 	}
-	sejours, err := datamodel.ScanSejours(rows)
+	sejours, err := models.ScanSejours(rows)
 	if err != nil {
 		err = ErrorSQL(err)
 		return
@@ -51,7 +52,7 @@ func (s Server) loadAgendaUtilisateur(req Requete) (out AgendaUtilisateur, err e
 	rows, err = tx.Query(`SELECT menus.* FROM menus 
 	JOIN sejour_menus ON sejour_menus.id_menu = menus.id 
 	WHERE sejour_menus.id_sejour = ANY($1)`, sejours.Ids())
-	menus, err := datamodel.ScanMenus(rows)
+	menus, err := models.ScanMenus(rows)
 	if err != nil {
 		err = ErrorSQL(err)
 		return
@@ -60,7 +61,7 @@ func (s Server) loadAgendaUtilisateur(req Requete) (out AgendaUtilisateur, err e
 	rows, err = tx.Query(`SELECT recettes.* FROM recettes 
 	JOIN menu_recettes ON menu_recettes.id_recette = recettes.id 
 	WHERE menu_recettes.id_menu = ANY($1)`, menus.Ids())
-	recettes, err := datamodel.ScanRecettes(rows)
+	recettes, err := models.ScanRecettes(rows)
 	if err != nil {
 		err = ErrorSQL(err)
 		return
@@ -73,7 +74,7 @@ func (s Server) loadAgendaUtilisateur(req Requete) (out AgendaUtilisateur, err e
 		SELECT ingredients.* FROM ingredients 
 		JOIN recette_ingredients ON recette_ingredients.id_ingredient = ingredients.id 
 		WHERE recette_ingredients.id_recette = ANY($2)`, menus.Ids(), recettes.Ids())
-	ingredients, err := datamodel.ScanIngredients(rows)
+	ingredients, err := models.ScanIngredients(rows)
 	if err != nil {
 		err = ErrorSQL(err)
 		return
@@ -88,7 +89,7 @@ func (s Server) loadAgendaUtilisateur(req Requete) (out AgendaUtilisateur, err e
 		err = ErrorSQL(err)
 		return
 	}
-	ris, err := datamodel.ScanRecetteIngredients(rows)
+	ris, err := models.ScanRecetteIngredients(rows)
 	if err != nil {
 		err = ErrorSQL(err)
 		return
@@ -110,7 +111,7 @@ func (s Server) loadAgendaUtilisateur(req Requete) (out AgendaUtilisateur, err e
 		err = ErrorSQL(err)
 		return
 	}
-	mrs, err := datamodel.ScanMenuRecettes(rows)
+	mrs, err := models.ScanMenuRecettes(rows)
 	if err != nil {
 		err = ErrorSQL(err)
 		return
@@ -124,7 +125,7 @@ func (s Server) loadAgendaUtilisateur(req Requete) (out AgendaUtilisateur, err e
 		err = ErrorSQL(err)
 		return
 	}
-	mis, err := datamodel.ScanMenuIngredients(rows)
+	mis, err := models.ScanMenuIngredients(rows)
 	if err != nil {
 		err = ErrorSQL(err)
 		return
@@ -146,7 +147,7 @@ func (s Server) loadAgendaUtilisateur(req Requete) (out AgendaUtilisateur, err e
 		err = ErrorSQL(err)
 		return
 	}
-	sms, err := datamodel.ScanSejourMenus(rows)
+	sms, err := models.ScanSejourMenus(rows)
 	if err != nil {
 		err = ErrorSQL(err)
 		return
@@ -171,7 +172,7 @@ func (s Server) loadAgendaUtilisateur(req Requete) (out AgendaUtilisateur, err e
 // ------------------------------------------------------------------------
 // --------------------- Ingrédients --------------------------------------
 
-func (s Server) createIngredient(ct Requete) (out datamodel.Ingredient, err error) {
+func (s Server) createIngredient(ct Requete) (out models.Ingredient, err error) {
 	out, err = out.Insert(ct.tx)
 	if err != nil {
 		err = ErrorSQL(err)
@@ -181,7 +182,7 @@ func (s Server) createIngredient(ct Requete) (out datamodel.Ingredient, err erro
 	return
 }
 
-func (s Server) updateIngredient(ct Requete, ig datamodel.Ingredient) error {
+func (s Server) updateIngredient(ct Requete, ig models.Ingredient) error {
 	tx := ct.tx
 	// vérification de la compatilibité des unités et des contionnements
 	produits, err := ig.GetProduits(tx)
@@ -189,7 +190,7 @@ func (s Server) updateIngredient(ct Requete, ig datamodel.Ingredient) error {
 		return ErrorSQL(err)
 	}
 	for _, prod := range produits {
-		if ig.Unite != datamodel.Piece && ig.Unite != prod.Conditionnement.Unite {
+		if ig.Unite != models.Piece && ig.Unite != prod.Conditionnement.Unite {
 			return ErrorIngredientProduitUnite{ingredient: ig, produit: prod}
 		}
 		if !ig.Conditionnement.IsNull() && ig.Conditionnement != prod.Conditionnement {
@@ -215,7 +216,7 @@ func (s Server) deleteIngredient(ct Requete, id int64, removeLiensProduits bool)
 	if err != nil {
 		return ErrorSQL(err)
 	}
-	check.recettes, err = datamodel.ScanRecettes(rows)
+	check.recettes, err = models.ScanRecettes(rows)
 	if err != nil {
 		return ErrorSQL(err)
 	}
@@ -226,12 +227,12 @@ func (s Server) deleteIngredient(ct Requete, id int64, removeLiensProduits bool)
 	if err != nil {
 		return ErrorSQL(err)
 	}
-	check.menus, err = datamodel.ScanMenus(rows)
+	check.menus, err = models.ScanMenus(rows)
 	if err != nil {
 		return ErrorSQL(err)
 	}
 
-	ing := datamodel.Ingredient{Id: id}
+	ing := models.Ingredient{Id: id}
 	check.produits, err = ing.GetProduits(tx)
 	if err != nil {
 		return ErrorSQL(err)
@@ -262,7 +263,7 @@ func (s Server) deleteIngredient(ct Requete, id int64, removeLiensProduits bool)
 // ------------------------------------------------------------------------
 // ------------------------ Recettes --------------------------------------
 
-func (s Server) createRecette(ct Requete) (out datamodel.Recette, err error) {
+func (s Server) createRecette(ct Requete) (out models.Recette, err error) {
 	tx := ct.tx
 	out.IdProprietaire = ct.idProprietaire
 	out, err = out.Insert(tx)
@@ -274,7 +275,7 @@ func (s Server) createRecette(ct Requete) (out datamodel.Recette, err error) {
 	return
 }
 
-func (s Server) updateRecette(ct Requete, in datamodel.Recette, ings []IngredientRecette) error {
+func (s Server) updateRecette(ct Requete, in models.Recette, ings []models.RecetteIngredient) error {
 	if err := s.proprioRecette(ct, in.Id); err != nil {
 		return err
 	}
@@ -288,8 +289,37 @@ func (s Server) updateRecette(ct Requete, in datamodel.Recette, ings []Ingredien
 	if err != nil {
 		return rollback(tx, err)
 	}
-	tx.Query("INSERT INTO ")
+
+	stmt, err := tx.Prepare(pq.CopyIn("recette_ingredients", "id_recette", "id_ingredient", "quantite", "cuisson"))
+	if err != nil {
+		ErrorSQL(err)
+	}
+
+	for _, user := range users {
+		_, err = stmt.Exec(user.Name, int64(user.Age))
+		if err != nil {
+			ErrorSQL(err)
+		}
+	}
+
+	_, err = stmt.Exec()
+	if err != nil {
+		ErrorSQL(err)
+	}
+
+	err = stmt.Close()
+	if err != nil {
+		ErrorSQL(err)
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		ErrorSQL(err)
+	}
+
 }
+
+func InsertMany(tx *sql.Tx, []models.RecetteIngredient)
 
 func (s Server) deleteRecette(ct Requete, id int64) error {
 	if err := s.proprioRecette(ct, id); err != nil {
@@ -301,7 +331,7 @@ func (s Server) deleteRecette(ct Requete, id int64) error {
 	if err != nil {
 		return ErrorSQL(err)
 	}
-	ids, err := datamodel.ScanInts(rows)
+	ids, err := models.ScanInts(rows)
 	if err != nil {
 		return ErrorSQL(err)
 	}
@@ -312,7 +342,7 @@ func (s Server) deleteRecette(ct Requete, id int64) error {
 		return fmt.Errorf(`Cette recette est présente dans <b>%d menu(s)</b>.
 		Si vous souhaitez vraiment la supprimer, il faudra d'abord l'en retirer.`, L)
 	}
-	_, err = datamodel.Recette{Id: id}.Delete(ct.tx)
+	_, err = models.Recette{Id: id}.Delete(ct.tx)
 	if err != nil {
 		return ErrorSQL(err)
 	}

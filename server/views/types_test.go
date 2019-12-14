@@ -7,7 +7,8 @@ import (
 )
 
 func TestJson(t *testing.T) {
-	var s []string
-	te, _ := json.Marshal(s)
+	// var s []string
+	var g [0]int
+	te, _ := json.Marshal(g)
 	fmt.Println(string(te))
 }

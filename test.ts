@@ -1,10 +1,10 @@
 // this file was automatically generated, DO NOT EDIT
 // structs
-// struct2ts:github.com/benoitkugler/intendance/server/datamodel.Callories
+// struct2ts:github.com/benoitkugler/intendance/server/models.Callories
 export interface Callories {
 }
 
-// struct2ts:github.com/benoitkugler/intendance/server/datamodel.Conditionnement
+// struct2ts:github.com/benoitkugler/intendance/server/models.Conditionnement
 export interface Conditionnement {
 	quantite: number;
 	unite: string;
@@ -31,7 +31,7 @@ export interface Recette {
 	ingredients: IngredientRecette[] | null;
 }
 
-// struct2ts:github.com/benoitkugler/intendance/server/datamodel.Horaire
+// struct2ts:github.com/benoitkugler/intendance/server/models.Horaire
 export interface Horaire {
 	heure: number;
 	minute: number;
