@@ -55,8 +55,8 @@ export interface Horaire {
 	minute: number;
 }
 
-// struct2ts:github.com/benoitkugler/intendance/server/controller.Menu
-export interface Menu {
+// struct2ts:github.com/benoitkugler/intendance/server/controller.Repas
+export interface Repas {
 	id: number;
 	id_proprietaire: NullInt64;
 	commentaire: string;
@@ -69,7 +69,7 @@ export interface Menu {
 // struct2ts:github.com/benoitkugler/intendance/server/controller.Journee
 export interface Journee {
 	jour_offset: number;
-	menus: Menu[] | null;
+	menus: Repas[] | null;
 }
 
 // struct2ts:github.com/benoitkugler/intendance/server/controller.Sejour

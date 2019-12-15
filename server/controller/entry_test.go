@@ -16,7 +16,7 @@ func TestLoadData(t *testing.T) {
 		t.Fatal(err)
 	}
 	s := Server{db: db}
-	a, err := s.loadAgendaUtilisateur(2)
+	a, err := s.LoadAgendaUtilisateur(2)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -71,17 +71,17 @@ func TestCRUD(t *testing.T) {
 	s := Server{db: db}
 	r := RequeteContext{idProprietaire: 2}
 
-	ig, err := s.createIngredient(r)
+	ig, err := s.CreateIngredient(r)
 	if err != nil {
 		t.Fatal(err)
 	}
 	ig.Nom = "Tom acs tesd sdl sddddds ddsd35"
 	ig.Unite = models.Kilos
-	err = s.updateIngredient(r, ig)
+	err = s.UpdateIngredient(r, ig)
 	if err != nil {
 		t.Fatal(err)
 	}
-	re, err := s.createRecette(r)
+	re, err := s.CreateRecette(r)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -89,18 +89,18 @@ func TestCRUD(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = s.updateRecette(r, re, []models.RecetteIngredient{
+	err = s.UpdateRecette(r, re, []models.RecetteIngredient{
 		{IdIngredient: ig.Id, IdRecette: re.Id, Quantite: 4},
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
-	m, err := s.createMenu(r)
+	m, err := s.CreateMenu(r)
 	if err != nil {
 		t.Fatal(err)
 	}
 	m.Commentaire = "Un menu bien équilibré"
-	err = s.updateMenu(r, m, []models.MenuRecette{
+	err = s.UpdateMenu(r, m, []models.MenuRecette{
 		{IdMenu: m.Id, IdRecette: re.Id},
 	}, []models.MenuIngredient{
 		{IdMenu: m.Id, IdIngredient: ig.Id},
@@ -108,42 +108,42 @@ func TestCRUD(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	sej, err := s.createSejour(r)
+	sej, err := s.CreateSejour(r)
 	if err != nil {
 		t.Fatal(err)
 	}
 	sej.Nom = "C2"
-	if err = s.updateSejour(r, sej); err != nil {
+	if err = s.UpdateSejour(r, sej); err != nil {
 		t.Fatal(err)
 	}
-	rep, err := s.createRepas(r, sej.Id, m.Id)
+	rep, err := s.CreateRepas(r, sej.Id, m.Id)
 	if err != nil {
 		t.Fatal(err)
 	}
 	rep.NbPersonnes = 55
 	rep.Horaire = models.Horaire{Heure: 12, Minute: 5}
-	if err = s.updateManyRepas(r, []models.Repas{rep}); err != nil {
+	if err = s.UpdateManyRepas(r, []models.Repas{rep}); err != nil {
 		t.Fatal(err)
 	}
 
-	a, err := s.loadAgendaUtilisateur(2)
+	a, err := s.LoadAgendaUtilisateur(2)
 	if err != nil {
 		t.Fatal(err)
 	}
 	fmt.Println(a)
-	if err = s.deleteRepas(r, rep.Id); err != nil {
+	if err = s.DeleteRepas(r, rep.Id); err != nil {
 		t.Fatal(err)
 	}
-	if err = s.deleteSejour(r, sej.Id); err != nil {
+	if err = s.DeleteSejour(r, sej.Id); err != nil {
 		t.Fatal(err)
 	}
-	if err = s.deleteMenu(r, m.Id); err != nil {
+	if err = s.DeleteMenu(r, m.Id); err != nil {
 		t.Fatal(err)
 	}
-	if err = s.deleteRecette(r, re.Id); err != nil {
+	if err = s.DeleteRecette(r, re.Id); err != nil {
 		t.Fatal(err)
 	}
-	if err = s.deleteIngredient(r, ig.Id, true); err != nil {
+	if err = s.DeleteIngredient(r, ig.Id, true); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -156,7 +156,7 @@ func TestMisc(t *testing.T) {
 	}
 	s := Server{db: db}
 	r := RequeteContext{idProprietaire: 2}
-	if err = s.deleteRecette(r, 48); err != nil {
+	if err = s.DeleteRecette(r, 48); err != nil {
 		t.Fatal(err)
 	}
 }

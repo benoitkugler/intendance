@@ -1,11 +1,119 @@
 package controller
 
 import (
+	"crypto/aes"
+	"crypto/cipher"
+	"crypto/rand"
 	"database/sql"
+	"encoding/base64"
+	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
+	mathRand "math/rand"
+	"net/http"
+	"strconv"
+	"time"
 
+	"github.com/benoitkugler/intendance/logs"
 	"github.com/benoitkugler/intendance/server/models"
 )
+
+const DeltaToken = 24 * time.Hour
+
+func encrypt(data []byte) (string, error) {
+	block, _ := aes.NewCipher(logs.PASSPHRASE)
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return "", err
+	}
+	nonce := make([]byte, gcm.NonceSize())
+	if _, err = io.ReadFull(rand.Reader, nonce); err != nil {
+		return "", err
+	}
+	ciphertext := gcm.Seal(nonce, nonce, data, nil)
+	return base64.RawURLEncoding.EncodeToString(ciphertext), nil
+}
+
+func decrypt(dataStr string) ([]byte, error) {
+	data, err := base64.RawURLEncoding.DecodeString(dataStr)
+	if err != nil {
+		return nil, err
+	}
+	block, err := aes.NewCipher(logs.PASSPHRASE)
+	if err != nil {
+		return nil, err
+	}
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return nil, err
+	}
+	nonceSize := gcm.NonceSize()
+	if len(data) <= nonceSize {
+		return nil, errors.New("data too short")
+	}
+	nonce, ciphertext := data[:nonceSize], data[nonceSize:]
+	plaintext, err := gcm.Open(nil, nonce, ciphertext, nil)
+	if err != nil {
+		return nil, err
+	}
+	return plaintext, nil
+}
+
+type tokenData struct {
+	Salt          int32
+	Time          time.Time
+	IdUtilisateur int64
+}
+
+func creeToken(idUtilisateur int64) (string, error) {
+	t := tokenData{
+		Time:          time.Now(),
+		IdUtilisateur: idUtilisateur,
+		Salt:          mathRand.Int31(),
+	}
+	b, err := json.Marshal(t)
+	if err != nil {
+		return "", ErrorAuth(err)
+	}
+	return encrypt(b)
+}
+
+func refreshToken(token string, idUtilisateur int64) (newToken string, err error) {
+	b, err := decrypt(token)
+	if err != nil {
+		return "", err
+	}
+	var data tokenData
+	if err = json.Unmarshal(b, &data); err != nil {
+		return "", err
+	}
+	if idUtilisateur != data.IdUtilisateur {
+		return "", errors.New("Token corrompu : utilisateur invalide.")
+	}
+	diff := time.Since(data.Time)
+	if diff > DeltaToken {
+		diff = diff.Truncate(time.Second)
+		return "", fmt.Errorf("Session écoulée (dernière action il y a %s). Veuillez vous reconnecter.", diff)
+	}
+	return creeToken(idUtilisateur)
+}
+
+func (s Server) Authentifie(r *http.Request) (ct RequeteContext, err error) {
+	idString, token, _ := r.BasicAuth()
+	if s.devMode && idString == "*" { // utilisateur arbitraire
+		return RequeteContext{idProprietaire: 2}, nil
+	}
+	id, err := strconv.Atoi(idString)
+	if err != nil {
+		return ct, ErrorAuth(err)
+	}
+	token, err = refreshToken(token, int64(id))
+	if err != nil {
+		return ct, ErrorAuth(err)
+	}
+	return RequeteContext{idProprietaire: int64(id), token: token}, nil
+}
 
 // Plusieurs items sont liées à un propriétaire.
 // Comme les ids sont transmis, en clair,

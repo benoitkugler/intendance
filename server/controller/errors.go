@@ -7,6 +7,11 @@ import (
 	"github.com/benoitkugler/intendance/server/models"
 )
 
+func ErrorAuth(err error) error {
+	return fmt.Errorf(`Impossible d'authentifier votre requête.<br/>
+	Détails : <i>%s</i>`, err)
+}
+
 type ErrorIngredientProduitUnite struct {
 	ingredient models.Ingredient
 	produit    models.Produit

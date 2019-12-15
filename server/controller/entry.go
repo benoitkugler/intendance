@@ -10,13 +10,19 @@ import (
 
 // Server est le controller principal, partagé par toutes les requêtes.
 type Server struct {
-	db *sql.DB
+	db      *sql.DB
+	devMode bool // contourne l'authentification
+}
+
+func NewServer(db *sql.DB, devMode bool) Server {
+	return Server{db: db, devMode: devMode}
 }
 
 // RequeteContext est créé pour chaque requête.
 type RequeteContext struct {
 	idProprietaire int64
 	tx             *sql.Tx // a créer
+	token          string  // à remplir pendant la phase d'authentification
 }
 
 // rollback the current transaction, caused by `err`, and
@@ -47,8 +53,8 @@ func (ct *RequeteContext) setup(s Server) (err error) {
 	return nil
 }
 
-func (s Server) loadAgendaUtilisateur(idProprietaire int64) (out AgendaUtilisateur, err error) {
-	rows, err := s.db.Query("SELECT * FROM sejours WHERE id_proprietaire = $1", idProprietaire)
+func (s Server) LoadAgendaUtilisateur(ct RequeteContext) (out AgendaUtilisateur, err error) {
+	rows, err := s.db.Query("SELECT * FROM sejours WHERE id_proprietaire = $1", ct.idProprietaire)
 	if err != nil {
 		err = ErrorSQL(err)
 		return
@@ -185,7 +191,7 @@ func (s Server) loadAgendaUtilisateur(idProprietaire int64) (out AgendaUtilisate
 // --------------------- Ingrédients --------------------------------------
 // ------------------------------------------------------------------------
 
-func (s Server) createIngredient(ct RequeteContext) (out models.Ingredient, err error) {
+func (s Server) CreateIngredient(ct RequeteContext) (out models.Ingredient, err error) {
 	if err = ct.setup(s); err != nil {
 		return
 	}
@@ -199,7 +205,7 @@ func (s Server) createIngredient(ct RequeteContext) (out models.Ingredient, err 
 	return
 }
 
-func (s Server) updateIngredient(ct RequeteContext, ig models.Ingredient) error {
+func (s Server) UpdateIngredient(ct RequeteContext, ig models.Ingredient) error {
 	if err := ct.setup(s); err != nil {
 		return err
 	}
@@ -226,7 +232,7 @@ func (s Server) updateIngredient(ct RequeteContext, ig models.Ingredient) error 
 	return ct.commit()
 }
 
-func (s Server) deleteIngredient(ct RequeteContext, id int64, removeLiensProduits bool) error {
+func (s Server) DeleteIngredient(ct RequeteContext, id int64, removeLiensProduits bool) error {
 	if err := ct.setup(s); err != nil {
 		return err
 	}
@@ -287,7 +293,7 @@ func (s Server) deleteIngredient(ct RequeteContext, id int64, removeLiensProduit
 // ------------------------ Recettes --------------------------------------
 // ------------------------------------------------------------------------
 
-func (s Server) createRecette(ct RequeteContext) (out models.Recette, err error) {
+func (s Server) CreateRecette(ct RequeteContext) (out models.Recette, err error) {
 	if err = ct.setup(s); err != nil {
 		return
 	}
@@ -303,7 +309,7 @@ func (s Server) createRecette(ct RequeteContext) (out models.Recette, err error)
 	return
 }
 
-func (s Server) updateRecette(ct RequeteContext, in models.Recette, ings []models.RecetteIngredient) error {
+func (s Server) UpdateRecette(ct RequeteContext, in models.Recette, ings []models.RecetteIngredient) error {
 	for _, r := range ings {
 		if r.IdRecette != in.Id {
 			return fmt.Errorf("L'ingrédient %d n'est pas associé à la recette fournie !", r.IdIngredient)
@@ -332,7 +338,7 @@ func (s Server) updateRecette(ct RequeteContext, in models.Recette, ings []model
 	return ct.commit()
 }
 
-func (s Server) deleteRecette(ct RequeteContext, id int64) error {
+func (s Server) DeleteRecette(ct RequeteContext, id int64) error {
 	if err := ct.setup(s); err != nil {
 		return err
 	}
@@ -371,7 +377,7 @@ func (s Server) deleteRecette(ct RequeteContext, id int64) error {
 // ----------------------------- Menus ------------------------------------
 // ------------------------------------------------------------------------
 
-func (s Server) createMenu(ct RequeteContext) (out models.Menu, err error) {
+func (s Server) CreateMenu(ct RequeteContext) (out models.Menu, err error) {
 	if err = ct.setup(s); err != nil {
 		return
 	}
@@ -386,7 +392,7 @@ func (s Server) createMenu(ct RequeteContext) (out models.Menu, err error) {
 	return
 }
 
-func (s Server) updateMenu(ct RequeteContext, in models.Menu,
+func (s Server) UpdateMenu(ct RequeteContext, in models.Menu,
 	recettes []models.MenuRecette, ings []models.MenuIngredient) error {
 	for _, r := range recettes {
 		if r.IdMenu != in.Id {
@@ -429,7 +435,7 @@ func (s Server) updateMenu(ct RequeteContext, in models.Menu,
 	return ct.commit()
 }
 
-func (s Server) deleteMenu(ct RequeteContext, id int64) error {
+func (s Server) DeleteMenu(ct RequeteContext, id int64) error {
 	if err := ct.setup(s); err != nil {
 		return err
 	}
@@ -472,7 +478,7 @@ func (s Server) deleteMenu(ct RequeteContext, id int64) error {
 // ----------------------- Séjour et repas --------------------------------
 // ------------------------------------------------------------------------
 
-func (s Server) createSejour(ct RequeteContext) (out models.Sejour, err error) {
+func (s Server) CreateSejour(ct RequeteContext) (out models.Sejour, err error) {
 	if err = ct.setup(s); err != nil {
 		return
 	}
@@ -487,7 +493,7 @@ func (s Server) createSejour(ct RequeteContext) (out models.Sejour, err error) {
 	return
 }
 
-func (s Server) updateSejour(ct RequeteContext, in models.Sejour) error {
+func (s Server) UpdateSejour(ct RequeteContext, in models.Sejour) error {
 	if err := ct.setup(s); err != nil {
 		return err
 	}
@@ -502,7 +508,7 @@ func (s Server) updateSejour(ct RequeteContext, in models.Sejour) error {
 	return ct.commit()
 }
 
-func (s Server) deleteSejour(ct RequeteContext, id int64) error {
+func (s Server) DeleteSejour(ct RequeteContext, id int64) error {
 	if err := ct.setup(s); err != nil {
 		return err
 	}
@@ -521,7 +527,7 @@ func (s Server) deleteSejour(ct RequeteContext, id int64) error {
 	return ct.commit()
 }
 
-func (s Server) createRepas(ct RequeteContext, idSejour, idMenu int64) (out models.Repas, err error) {
+func (s Server) CreateRepas(ct RequeteContext, idSejour, idMenu int64) (out models.Repas, err error) {
 	if err = ct.setup(s); err != nil {
 		return
 	}
@@ -540,7 +546,7 @@ func (s Server) createRepas(ct RequeteContext, idSejour, idMenu int64) (out mode
 	return
 }
 
-func (s Server) updateManyRepas(ct RequeteContext, repass []models.Repas) error {
+func (s Server) UpdateManyRepas(ct RequeteContext, repass []models.Repas) error {
 	if err := ct.setup(s); err != nil {
 		return err
 	}
@@ -555,7 +561,7 @@ func (s Server) updateManyRepas(ct RequeteContext, repass []models.Repas) error 
 	return ct.commit()
 }
 
-func (s Server) deleteRepas(ct RequeteContext, id int64) error {
+func (s Server) DeleteRepas(ct RequeteContext, id int64) error {
 	if err := ct.setup(s); err != nil {
 		return err
 	}
