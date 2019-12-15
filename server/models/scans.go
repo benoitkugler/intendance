@@ -595,26 +595,38 @@ func (item Sejour) Delete(tx *sql.Tx) (int64, error) {
 	return deleted_id, err
 }
 
-func ScanSejourMenu(r *sql.Row) (SejourMenu, error) {
-	var s SejourMenu
+func ScanRepas(r *sql.Row) (Repas, error) {
+	var s Repas
 	if err := r.Scan(
+		&s.Id,
 		&s.IdSejour,
 		&s.IdMenu,
 		&s.NbPersonnes,
 		&s.JourOffset,
 		&s.Horaire,
 	); err != nil {
-		return SejourMenu{}, err
+		return Repas{}, err
 	}
 	return s, nil
 }
 
-func ScanSejourMenus(rs *sql.Rows) ([]SejourMenu, error) {
-	structs := make([]SejourMenu, 0, 16)
+type Repass map[int64]Repas
+
+func (m Repass) Ids() pq.Int64Array {
+	out := make(pq.Int64Array, 0, len(m))
+	for i := range m {
+		out = append(out, i)
+	}
+	return out
+}
+
+func ScanRepass(rs *sql.Rows) (Repass, error) {
+	structs := make(Repass, 16)
 	var err error
 	for rs.Next() {
-		var s SejourMenu
+		var s Repas
 		if err = rs.Scan(
+			&s.Id,
 			&s.IdSejour,
 			&s.IdMenu,
 			&s.NbPersonnes,
@@ -623,7 +635,7 @@ func ScanSejourMenus(rs *sql.Rows) ([]SejourMenu, error) {
 		); err != nil {
 			return nil, err
 		}
-		structs = append(structs, s)
+		structs[s.Id] = s
 	}
 	if err = rs.Err(); err != nil {
 		return nil, err
@@ -631,38 +643,37 @@ func ScanSejourMenus(rs *sql.Rows) ([]SejourMenu, error) {
 	return structs, nil
 }
 
-// Insert the links SejourMenu in the database.
-func InsertManySejourMenus(tx *sql.Tx, items []SejourMenu) error {
-	stmt, err := tx.Prepare(pq.CopyIn("sejour_menus",
-		"id_sejour", "id_menu", "nb_personnes", "jour_offset", "horaire",
-	))
-	if err != nil {
-		return err
-	}
-
-	for _, item := range items {
-		_, err = stmt.Exec(item.IdSejour, item.IdMenu, item.NbPersonnes, item.JourOffset, item.Horaire)
-		if err != nil {
-			return err
-		}
-	}
-
-	if _, err = stmt.Exec(); err != nil {
-		return err
-	}
-
-	if err = stmt.Close(); err != nil {
-		return err
-	}
-	return nil
+// Insert Repas in the database and returns the item with id filled.
+func (item Repas) Insert(tx *sql.Tx) (out Repas, err error) {
+	r := tx.QueryRow(`INSERT INTO repass (
+		id_sejour,id_menu,nb_personnes,jour_offset,horaire
+		) VALUES (
+		$1,$2,$3,$4,$5
+		) RETURNING 
+		id,id_sejour,id_menu,nb_personnes,jour_offset,horaire;
+		`, item.IdSejour, item.IdMenu, item.NbPersonnes, item.JourOffset, item.Horaire)
+	return ScanRepas(r)
 }
 
-// Delete the link SejourMenu in the database.
-// Only the 'IdSejour' 'IdMenu' fields are used.
-func (item SejourMenu) Delete(tx *sql.Tx) error {
-	_, err := tx.Exec(`DELETE FROM sejour_menus WHERE 
-	id_sejour = $1 AND id_menu = $2;`, item.IdSejour, item.IdMenu)
-	return err
+// Update Repas in the database and returns the new version.
+func (item Repas) Update(tx *sql.Tx) (out Repas, err error) {
+	r := tx.QueryRow(`UPDATE repass SET (
+		id_sejour,id_menu,nb_personnes,jour_offset,horaire
+		) = (
+		$2,$3,$4,$5,$6
+		) WHERE id = $1 RETURNING 
+		id,id_sejour,id_menu,nb_personnes,jour_offset,horaire;
+		`, item.Id, item.IdSejour, item.IdMenu, item.NbPersonnes, item.JourOffset, item.Horaire)
+	return ScanRepas(r)
+}
+
+// Delete Repas in the database and the return the id.
+// Only the field 'Id' is used.
+func (item Repas) Delete(tx *sql.Tx) (int64, error) {
+	var deleted_id int64
+	r := tx.QueryRow("DELETE FROM repass WHERE id = $1 RETURNING id;", item.Id)
+	err := r.Scan(&deleted_id)
+	return deleted_id, err
 }
 
 func ScanFournisseur(r *sql.Row) (Fournisseur, error) {

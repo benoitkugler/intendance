@@ -3,6 +3,8 @@ package controller
 import (
 	"database/sql"
 	"fmt"
+
+	"github.com/benoitkugler/intendance/server/models"
 )
 
 // Plusieurs items sont liées à un propriétaire.
@@ -12,8 +14,9 @@ import (
 // Les routines ci-dessous renvoient `nil` si et seulement si
 // l'accès est légitimite.
 
-func (s Server) proprioRecette(ct Requete, idRecette int64) error {
-	row := ct.tx.QueryRow("SELECT id_proprietaire FROM recettes WHERE id = $1", idRecette)
+// ct doit déjà être setup
+func (s Server) proprioRecette(ct RequeteContext, recette models.Recette, checkProprioField bool) error {
+	row := ct.tx.QueryRow("SELECT id_proprietaire FROM recettes WHERE id = $1", recette.Id)
 	var trueProp sql.NullInt64
 	if err := row.Scan(&trueProp); err != nil {
 		return ErrorSQL(err)
@@ -21,6 +24,59 @@ func (s Server) proprioRecette(ct Requete, idRecette int64) error {
 	if trueProp.Valid && trueProp.Int64 != ct.idProprietaire {
 		return fmt.Errorf(`Votre requête est impossible car la <b>recette</b> 
 		concernée ne vous <b>appartient pas</b> !`)
+	}
+	if checkProprioField && trueProp.Valid && ct.idProprietaire != recette.IdProprietaire.Int64 {
+		return fmt.Errorf(`Votre requête est impossible car le propriétaire indiqué
+		est <b>invalide</b> !`)
+	}
+	return nil
+}
+
+func (s Server) proprioMenu(ct RequeteContext, menu models.Menu, checkProprioField bool) error {
+	row := ct.tx.QueryRow("SELECT id_proprietaire FROM menus WHERE id = $1", menu.Id)
+	var trueProp sql.NullInt64
+	if err := row.Scan(&trueProp); err != nil {
+		return ErrorSQL(err)
+	}
+	if trueProp.Valid && trueProp.Int64 != ct.idProprietaire {
+		return fmt.Errorf(`Votre requête est impossible car le <b>menu</b> 
+		concerné ne vous <b>appartient pas</b> !`)
+	}
+	if checkProprioField && trueProp.Valid && ct.idProprietaire != menu.IdProprietaire.Int64 {
+		return fmt.Errorf(`Votre requête est impossible car le propriétaire indiqué
+		est <b>invalide</b> !`)
+	}
+	return nil
+}
+
+func (s Server) proprioSejour(ct RequeteContext, sejour models.Sejour, checkProprioField bool) error {
+	row := ct.tx.QueryRow("SELECT id_proprietaire FROM sejours WHERE id = $1", sejour.Id)
+	var trueProp int64
+	if err := row.Scan(&trueProp); err != nil {
+		return ErrorSQL(err)
+	}
+	if trueProp != ct.idProprietaire {
+		return fmt.Errorf(`Votre requête est impossible car le <b>séjour</b> 
+		concerné ne vous <b>appartient pas</b> !`)
+	}
+	if checkProprioField && ct.idProprietaire != sejour.IdProprietaire {
+		return fmt.Errorf(`Votre requête est impossible car le propriétaire indiqué
+		est <b>invalide</b> !`)
+	}
+	return nil
+}
+
+func (s Server) proprioRepas(ct RequeteContext, idRepas int64) error {
+	row := ct.tx.QueryRow(`SELECT sejours.id_proprietaire FROM sejours 
+	JOIN repass ON repass.id_sejour = sejours.id
+	WHERE repass.id = $1`, idRepas)
+	var trueProp int64
+	if err := row.Scan(&trueProp); err != nil {
+		return ErrorSQL(err)
+	}
+	if trueProp != ct.idProprietaire {
+		return fmt.Errorf(`Votre requête est impossible car le <b>séjour</b> 
+		concerné ne vous <b>appartient pas</b> !`)
 	}
 	return nil
 }

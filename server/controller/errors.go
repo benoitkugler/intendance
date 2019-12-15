@@ -65,9 +65,15 @@ func (e ErrorIngredientUsed) Error() string {
 	return b.String()
 }
 
-func ErrorSQL(err error) error {
-	return fmt.Errorf(`La requête SQL correspondant à votre demande a échoué.
+type errorSQL struct {
+	error
+}
+
+func (e errorSQL) Error() string {
+	return fmt.Sprintf(`La requête SQL correspondant à votre demande a échoué.
 		Détails : 
 		<i>%s</i>
-	`, err)
+	`, e.error)
 }
+
+func ErrorSQL(err error) error { return errorSQL{err} }

@@ -71,12 +71,13 @@ type Sejour struct {
 	Nom       string    `json:"nom"`
 }
 
-type SejourMenu struct {
-	IdSejour    int64
-	IdMenu      int64
-	NbPersonnes int64
-	JourOffset  int64
-	Horaire     Horaire
+type Repas struct {
+	Id          int64   `json:"id"`
+	IdSejour    int64   `json:"id_sejour"`
+	IdMenu      int64   `json:"id_menu"`
+	NbPersonnes int64   `json:"nb_personnes"`
+	JourOffset  int64   `json:"jour_offset"`
+	Horaire     Horaire `json:"horaire"`
 }
 
 type Fournisseur struct {

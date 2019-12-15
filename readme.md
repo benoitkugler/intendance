@@ -83,7 +83,7 @@ On propose donc de ne pas utiliser de table "journée", mais de construire (dyna
 
 - Table **sejours** : id, id_proprietaire, date_debut
 
-- Table **sejours_menus** : id_sejour, id_menu, nb_personnes,jour_offset, horaire (matin, midi, goûter, soir, etc...)
+- Table **repas** : id, id_sejour, id_menu, nb_personnes,jour_offset, horaire (matin, midi, goûter, soir, etc...)
 
 Les séjours sont _privés_, mais les journées formées peuvent être copiées.
 

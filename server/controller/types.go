@@ -18,7 +18,7 @@ type IngredientMenu struct {
 	models.MenuIngredient
 }
 
-type Menu struct {
+type Repas struct {
 	models.Menu
 
 	Recettes    []Recette        `json:"recettes"`
@@ -28,8 +28,8 @@ type Menu struct {
 }
 
 type Journee struct {
-	JourOffset int64  `json:"jour_offset"`
-	Menus      []Menu `json:"menus"`
+	JourOffset int64   `json:"jour_offset"`
+	Menus      []Repas `json:"menus"`
 }
 
 type Sejour struct {

@@ -98,10 +98,10 @@ func TestSql(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	l4 := randSejourMenu()
+	l4 := randRepas()
 	l4.IdSejour = i5.Id
 	l4.IdMenu = i4.Id
-	l4, err = queriesSejourMenu(tx, l4)
+	l4, err = queriesRepas(tx, l4)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -124,7 +124,7 @@ func TestSql(t *testing.T) {
 	if err := l3.Delete(tx); err != nil {
 		t.Fatal(err)
 	}
-	if err := l4.Delete(tx); err != nil {
+	if _, err := l4.Delete(tx); err != nil {
 		t.Fatal(err)
 	}
 	if err := l5.Delete(tx); err != nil {

@@ -2,53 +2,83 @@
 
 ## Identification
 
-- /login **POST**: 
-    - email: string
-    - password: string 
+- /login **POST**:
 
-    *returns* {valid: bool, id_utilisateur: string, token: string}
+  - email: string
+  - password: string
+
+  _returns_ {valid: bool, id_utilisateur: string, token: string}
 
 ### Les url suivantes demande une authentification de la forme {username: id_utilisateur, password: token}
 
 - /agenda **GET**:
 
-    *returns* AgendaUtilisateur
+  _returns_ AgendaUtilisateur
 
 ### Ingredients
 
 - /ingredients **PUT**
 
-    *returns* Ingredient
+  _returns_ Ingredient
 
-- /ingredients **POST** 
-    - id: int
-    - nom: string 
-    - categorie string    
-	- callories Callories 
+- /ingredients **POST**
+  { Menu } // `unite` et `conditionnement` sous condition
 
-    // sous condition
-	- unite: Unite  
-    - conditionnement: Conditionnement 
-
-    *returns* AgendaUtilisateur
+  _returns_ AgendaUtilisateur
 
 - /ingredients **DELETE** // sous condition
-    - id: int 
-    - remove_liens_produits: bool
+  - id: int
+  - remove_liens_produits: bool
 
 ### Recettes
 
 - /recettes **PUT**:
 
-    *returns* Recette
-    
-- /recettes **POST**:
-    -  id: int
-    -  ingredients: []{id_ingredient, quantite}
-    - nom: string
-    - mode_emploi: string
+  _returns_ Recette
 
-    *returns* AgendaUtilisateur
+- /recettes **POST**:
+
+  - recette : Recette
+  - ingredients: []RecetteIngredient
+
+  _returns_ AgendaUtilisateur
 
 - /recettes **DELETE**:
-    - id_recette: int
+  - id: int
+
+### Menus
+
+- /menus **PUT**:
+
+  _returns_ Menu
+
+- /menus **POST**:
+
+  - menu: Menu
+  - recettes: []MenuRecette
+  - ingredients []RecetteIngredient
+
+  _returns_ AgendaUtilisateur
+
+- /menus **DELETE**:
+  - id: int
+
+### Sejours
+
+- /sejours **PUT**:
+  _returns_ Sejour
+
+- /sejours **POST**:
+  { models.Sejour }
+
+- /sejours \*_DELETE_:
+  id: int
+
+- /sejours/repas **PUT**:
+  _returns_ models.Repas
+
+- /sejours/repas **POST**: // modifie les champs du menu lié au séjour
+  { []models.Repas }
+
+- /sejours/repas **DELETE**:
+  id: int

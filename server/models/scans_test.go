@@ -283,8 +283,9 @@ func queriesSejour(tx *sql.Tx, item Sejour) (Sejour, error) {
 	return item, err
 }
 
-func randSejourMenu() SejourMenu {
-	return SejourMenu{
+func randRepas() Repas {
+	return Repas{
+		Id:          rand.Int63n(1 << 20),
 		IdSejour:    rand.Int63n(1 << 20),
 		IdMenu:      rand.Int63n(1 << 20),
 		NbPersonnes: rand.Int63n(1 << 20),
@@ -293,26 +294,30 @@ func randSejourMenu() SejourMenu {
 	}
 }
 
-func queriesSejourMenu(tx *sql.Tx, item SejourMenu) (SejourMenu, error) {
-	err := InsertManySejourMenus(tx, []SejourMenu{item})
+func queriesRepas(tx *sql.Tx, item Repas) (Repas, error) {
+	item, err := item.Insert(tx)
+
 	if err != nil {
 		return item, err
 	}
-	rows, err := tx.Query("SELECT * FROM sejour_menus")
+	rows, err := tx.Query("SELECT * FROM repass")
 	if err != nil {
 		return item, err
 	}
-	items, err := ScanSejourMenus(rows)
+	items, err := ScanRepass(rows)
 	if err != nil {
 		return item, err
 	}
 
-	fmt.Println(len(items))
+	_ = items.Ids()
 
-	row := tx.QueryRow(`SELECT * FROM sejour_menus WHERE 
-		id_sejour = $1 AND id_menu = $2;`, item.IdSejour, item.IdMenu)
+	item, err = item.Update(tx)
+	if err != nil {
+		return item, err
+	}
+	row := tx.QueryRow("SELECT * FROM repass WHERE id = $1", item.Id)
 
-	_, err = ScanSejourMenu(row)
+	_, err = ScanRepas(row)
 	return item, err
 }
 

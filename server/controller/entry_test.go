@@ -16,11 +16,7 @@ func TestLoadData(t *testing.T) {
 		t.Fatal(err)
 	}
 	s := Server{db: db}
-	r, err := s.NewRequete(2)
-	if err != nil {
-		t.Fatal(err)
-	}
-	a, err := s.loadAgendaUtilisateur(r)
+	a, err := s.loadAgendaUtilisateur(2)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -46,6 +42,19 @@ func (a AgendaUtilisateur) String() string {
 		out.indent++
 		for _, j := range s.Journees {
 			out.Printf("Journée %d", j.JourOffset)
+			out.indent++
+			for _, men := range j.Menus {
+				out.Printf("Menu pour %d", men.NbPersonnes)
+				out.indent++
+				for _, re := range men.Recettes {
+					out.Printf("Recette %s", re.Recette.Nom)
+				}
+				for _, re := range men.Ingredients {
+					out.Printf("Ingredient %s", re.Ingredient.Nom)
+				}
+				out.indent--
+			}
+			out.indent--
 		}
 		out.indent--
 	}
@@ -53,29 +62,101 @@ func (a AgendaUtilisateur) String() string {
 	return out.s.String()
 }
 
-func TestIngredients(t *testing.T) {
+func TestCRUD(t *testing.T) {
 	db, err := models.ConnectDB(logs.DB_DEV)
 	defer db.Close()
 	if err != nil {
 		t.Fatal(err)
 	}
 	s := Server{db: db}
-	r, err := s.NewRequete(2)
+	r := RequeteContext{idProprietaire: 2}
+
+	ig, err := s.createIngredient(r)
 	if err != nil {
 		t.Fatal(err)
 	}
-	ig, err := s.createIngredient(r)
-	ig.Nom = "Tomates"
+	ig.Nom = "Tom acs tesd sdl sddddds ddsd35"
 	ig.Unite = models.Kilos
 	err = s.updateIngredient(r, ig)
+	if err != nil {
+		t.Fatal(err)
+	}
 	re, err := s.createRecette(r)
-	re.Nom = "Tomates farcies"
+	if err != nil {
+		t.Fatal(err)
+	}
+	re.Nom = "Toma tes f a rcies2"
+	if err != nil {
+		t.Fatal(err)
+	}
 	err = s.updateRecette(r, re, []models.RecetteIngredient{
 		{IdIngredient: ig.Id, IdRecette: re.Id, Quantite: 4},
 	})
-	r.tx.Commit()
-	err = r.tx.Rollback()
 	if err != nil {
+		t.Fatal(err)
+	}
+	m, err := s.createMenu(r)
+	if err != nil {
+		t.Fatal(err)
+	}
+	m.Commentaire = "Un menu bien équilibré"
+	err = s.updateMenu(r, m, []models.MenuRecette{
+		{IdMenu: m.Id, IdRecette: re.Id},
+	}, []models.MenuIngredient{
+		{IdMenu: m.Id, IdIngredient: ig.Id},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	sej, err := s.createSejour(r)
+	if err != nil {
+		t.Fatal(err)
+	}
+	sej.Nom = "C2"
+	if err = s.updateSejour(r, sej); err != nil {
+		t.Fatal(err)
+	}
+	rep, err := s.createRepas(r, sej.Id, m.Id)
+	if err != nil {
+		t.Fatal(err)
+	}
+	rep.NbPersonnes = 55
+	rep.Horaire = models.Horaire{Heure: 12, Minute: 5}
+	if err = s.updateManyRepas(r, []models.Repas{rep}); err != nil {
+		t.Fatal(err)
+	}
+
+	a, err := s.loadAgendaUtilisateur(2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	fmt.Println(a)
+	if err = s.deleteRepas(r, rep.Id); err != nil {
+		t.Fatal(err)
+	}
+	if err = s.deleteSejour(r, sej.Id); err != nil {
+		t.Fatal(err)
+	}
+	if err = s.deleteMenu(r, m.Id); err != nil {
+		t.Fatal(err)
+	}
+	if err = s.deleteRecette(r, re.Id); err != nil {
+		t.Fatal(err)
+	}
+	if err = s.deleteIngredient(r, ig.Id, true); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestMisc(t *testing.T) {
+	db, err := models.ConnectDB(logs.DB_DEV)
+	defer db.Close()
+	if err != nil {
+		t.Fatal(err)
+	}
+	s := Server{db: db}
+	r := RequeteContext{idProprietaire: 2}
+	if err = s.deleteRecette(r, 48); err != nil {
 		t.Fatal(err)
 	}
 }
