@@ -16,7 +16,7 @@ func TestLoadData(t *testing.T) {
 		t.Fatal(err)
 	}
 	s := Server{db: db}
-	a, err := s.LoadAgendaUtilisateur(2)
+	a, err := s.LoadAgendaUtilisateur(RequeteContext{idProprietaire: 2})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -126,7 +126,7 @@ func TestCRUD(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	a, err := s.LoadAgendaUtilisateur(2)
+	a, err := s.LoadAgendaUtilisateur(RequeteContext{idProprietaire: 2})
 	if err != nil {
 		t.Fatal(err)
 	}

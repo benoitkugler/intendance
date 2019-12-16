@@ -22,7 +22,7 @@ func NewServer(db *sql.DB, devMode bool) Server {
 type RequeteContext struct {
 	idProprietaire int64
 	tx             *sql.Tx // a créer
-	token          string  // à remplir pendant la phase d'authentification
+	Token          string  // à remplir pendant la phase d'authentification
 }
 
 // rollback the current transaction, caused by `err`, and

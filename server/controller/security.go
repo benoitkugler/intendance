@@ -112,7 +112,7 @@ func (s Server) Authentifie(r *http.Request) (ct RequeteContext, err error) {
 	if err != nil {
 		return ct, ErrorAuth(err)
 	}
-	return RequeteContext{idProprietaire: int64(id), token: token}, nil
+	return RequeteContext{idProprietaire: int64(id), Token: token}, nil
 }
 
 // Plusieurs items sont liées à un propriétaire.

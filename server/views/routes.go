@@ -18,5 +18,5 @@ func GetAgenda(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	return c.JSON(200, out)
+	return c.JSON(200, OutAgenda{Token: ct.Token, Agenda: out})
 }

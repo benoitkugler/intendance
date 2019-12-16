@@ -44,5 +44,5 @@ func main() {
 }
 
 func routes(e *echo.Echo) {
-	e.GET("/agenda", views.GetAgenda)
+	e.GET("/api/agenda", views.GetAgenda)
 }
