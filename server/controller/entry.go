@@ -78,83 +78,83 @@ func (s Server) LoadAgendaUtilisateur(ct RequeteContext) (out AgendaUtilisateur,
 		return
 	}
 
-	rows, err = s.db.Query(`SELECT recettes.* FROM recettes 
-	JOIN menu_recettes ON menu_recettes.id_recette = recettes.id 
-	WHERE menu_recettes.id_menu = ANY($1)`, menus.Ids())
-	recettes, err := models.ScanRecettes(rows)
-	if err != nil {
-		err = ErrorSQL(err)
-		return
-	}
+	// rows, err = s.db.Query(`SELECT recettes.* FROM recettes
+	// JOIN menu_recettes ON menu_recettes.id_recette = recettes.id
+	// WHERE menu_recettes.id_menu = ANY($1)`, menus.Ids())
+	// recettes, err := models.ScanRecettes(rows)
+	// if err != nil {
+	// 	err = ErrorSQL(err)
+	// 	return
+	// }
 
-	rows, err = s.db.Query(`SELECT ingredients.* FROM ingredients 
-		JOIN menu_ingredients ON menu_ingredients.id_ingredient = ingredients.id 
-		WHERE menu_ingredients.id_menu = ANY($1)
-		UNION
-		SELECT ingredients.* FROM ingredients 
-		JOIN recette_ingredients ON recette_ingredients.id_ingredient = ingredients.id 
-		WHERE recette_ingredients.id_recette = ANY($2)`, menus.Ids(), recettes.Ids())
-	ingredients, err := models.ScanIngredients(rows)
-	if err != nil {
-		err = ErrorSQL(err)
-		return
-	}
+	// rows, err = s.db.Query(`SELECT ingredients.* FROM ingredients
+	// 	JOIN menu_ingredients ON menu_ingredients.id_ingredient = ingredients.id
+	// 	WHERE menu_ingredients.id_menu = ANY($1)
+	// 	UNION
+	// 	SELECT ingredients.* FROM ingredients
+	// 	JOIN recette_ingredients ON recette_ingredients.id_ingredient = ingredients.id
+	// 	WHERE recette_ingredients.id_recette = ANY($2)`, menus.Ids(), recettes.Ids())
+	// ingredients, err := models.ScanIngredients(rows)
+	// if err != nil {
+	// 	err = ErrorSQL(err)
+	// 	return
+	// }
 
-	resolvedRecettes := make(map[int64]*Recette, len(recettes))
-	for k, v := range recettes {
-		resolvedRecettes[k] = &Recette{Recette: v}
-	}
-	rows, err = s.db.Query(`SELECT * FROM recette_ingredients WHERE id_recette = ANY($1)`, recettes.Ids())
-	if err != nil {
-		err = ErrorSQL(err)
-		return
-	}
-	ris, err := models.ScanRecetteIngredients(rows)
-	if err != nil {
-		err = ErrorSQL(err)
-		return
-	}
-	for _, l := range ris {
-		resolvedRecettes[l.IdRecette].Ingredients = append(resolvedRecettes[l.IdRecette].Ingredients, IngredientRecette{
-			Ingredient:        ingredients[l.IdIngredient],
-			RecetteIngredient: l,
-		})
-	}
+	// resolvedRecettes := make(map[int64]*Recette, len(recettes))
+	// for k, v := range recettes {
+	// 	resolvedRecettes[k] = &Recette{Recette: v}
+	// }
+	// rows, err = s.db.Query(`SELECT * FROM recette_ingredients WHERE id_recette = ANY($1)`, recettes.Ids())
+	// if err != nil {
+	// 	err = ErrorSQL(err)
+	// 	return
+	// }
+	// ris, err := models.ScanRecetteIngredients(rows)
+	// if err != nil {
+	// 	err = ErrorSQL(err)
+	// 	return
+	// }
+	// for _, l := range ris {
+	// 	resolvedRecettes[l.IdRecette].Ingredients = append(resolvedRecettes[l.IdRecette].Ingredients, IngredientRecette{
+	// 		Ingredient:        ingredients[l.IdIngredient],
+	// 		RecetteIngredient: l,
+	// 	})
+	// }
 
 	resolvedMenus := make(map[int64]*Repas, len(menus))
 	for k, v := range menus {
-		resolvedMenus[k] = &Repas{Menu: v}
+		resolvedMenus[k] = &Repas{IdMenu: v.Id}
 	}
-	rows, err = s.db.Query(`SELECT * FROM menu_recettes WHERE id_menu = ANY($1)`, menus.Ids())
-	if err != nil {
-		err = ErrorSQL(err)
-		return
-	}
-	mrs, err := models.ScanMenuRecettes(rows)
-	if err != nil {
-		err = ErrorSQL(err)
-		return
-	}
-	for _, l := range mrs {
-		resolvedMenus[l.IdMenu].Recettes = append(resolvedMenus[l.IdMenu].Recettes, *resolvedRecettes[l.IdRecette])
-	}
+	// rows, err = s.db.Query(`SELECT * FROM menu_recettes WHERE id_menu = ANY($1)`, menus.Ids())
+	// if err != nil {
+	// 	err = ErrorSQL(err)
+	// 	return
+	// }
+	// mrs, err := models.ScanMenuRecettes(rows)
+	// if err != nil {
+	// 	err = ErrorSQL(err)
+	// 	return
+	// }
+	// for _, l := range mrs {
+	// 	resolvedMenus[l.IdMenu].Recettes = append(resolvedMenus[l.IdMenu].Recettes, *resolvedRecettes[l.IdRecette])
+	// }
 
-	rows, err = s.db.Query(`SELECT * FROM menu_ingredients WHERE id_menu = ANY($1)`, menus.Ids())
-	if err != nil {
-		err = ErrorSQL(err)
-		return
-	}
-	mis, err := models.ScanMenuIngredients(rows)
-	if err != nil {
-		err = ErrorSQL(err)
-		return
-	}
-	for _, l := range mis {
-		resolvedMenus[l.IdMenu].Ingredients = append(resolvedMenus[l.IdMenu].Ingredients, IngredientMenu{
-			Ingredient:     ingredients[l.IdIngredient],
-			MenuIngredient: l,
-		})
-	}
+	// rows, err = s.db.Query(`SELECT * FROM menu_ingredients WHERE id_menu = ANY($1)`, menus.Ids())
+	// if err != nil {
+	// 	err = ErrorSQL(err)
+	// 	return
+	// }
+	// mis, err := models.ScanMenuIngredients(rows)
+	// if err != nil {
+	// 	err = ErrorSQL(err)
+	// 	return
+	// }
+	// for _, l := range mis {
+	// 	resolvedMenus[l.IdMenu].Ingredients = append(resolvedMenus[l.IdMenu].Ingredients, IngredientMenu{
+	// 		Ingredient:     ingredients[l.IdIngredient],
+	// 		MenuIngredient: l,
+	// 	})
+	// }
 
 	resolvedSejours := make(map[int64]*Sejour, len(sejours))
 	for k, v := range sejours {
@@ -187,8 +187,20 @@ func (s Server) LoadAgendaUtilisateur(ct RequeteContext) (out AgendaUtilisateur,
 	return out, nil
 }
 
+func (s Server) LoadIngredients() (models.Ingredients, error) {
+	rows, err := s.db.Query("SELECT * FROM ingredients")
+	if err != nil {
+		return nil, ErrorSQL(err)
+	}
+	out, err := models.ScanIngredients(rows)
+	if err != nil {
+		return nil, ErrorSQL(err)
+	}
+	return out, nil
+}
+
 // ------------------------------------------------------------------------
-// --------------------- Ingrédients --------------------------------------
+// ---------------------------- Ingrédients -------------------------------
 // ------------------------------------------------------------------------
 
 func (s Server) CreateIngredient(ct RequeteContext) (out models.Ingredient, err error) {
@@ -232,7 +244,7 @@ func (s Server) UpdateIngredient(ct RequeteContext, ig models.Ingredient) error 
 	return ct.commit()
 }
 
-func (s Server) DeleteIngredient(ct RequeteContext, id int64, removeLiensProduits bool) error {
+func (s Server) DeleteIngredient(ct RequeteContext, id int64, checkProduits bool) error {
 	if err := ct.setup(s); err != nil {
 		return err
 	}
@@ -267,7 +279,7 @@ func (s Server) DeleteIngredient(ct RequeteContext, id int64, removeLiensProduit
 		return ErrorSQL(err)
 	}
 
-	if removeLiensProduits { // on regarde uniquement les recettes et menus
+	if !checkProduits { // on regarde uniquement les recettes et menus
 		if len(check.recettes)+len(check.menus) > 0 {
 			check.produits = nil
 			return check

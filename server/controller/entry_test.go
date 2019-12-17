@@ -45,14 +45,6 @@ func (a AgendaUtilisateur) String() string {
 			out.indent++
 			for _, men := range j.Menus {
 				out.Printf("Menu pour %d", men.NbPersonnes)
-				out.indent++
-				for _, re := range men.Recettes {
-					out.Printf("Recette %s", re.Recette.Nom)
-				}
-				for _, re := range men.Ingredients {
-					out.Printf("Ingredient %s", re.Ingredient.Nom)
-				}
-				out.indent--
 			}
 			out.indent--
 		}

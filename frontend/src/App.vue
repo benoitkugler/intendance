@@ -10,7 +10,7 @@
           transition="scale-transition"
           width="40"
         />
-
+        <v-btn @click="storage.loadAgenda">sddsdsd</v-btn>
         <v-img
           alt="Vuetify Name"
           class="shrink mt-1 hidden-sm-and-down"
@@ -32,8 +32,13 @@
         <v-icon>mdi-open-in-new</v-icon>
       </v-btn>
     </v-app-bar>
-
     <v-content>
+      <p>
+        {{ storage.error }}
+      </p>
+      <p>
+        {{ storage.agenda }}
+      </p>
       <HelloWorld />
     </v-content>
   </v-app>
@@ -42,6 +47,7 @@
 <script lang="ts">
 import Vue from "vue";
 import HelloWorld from "./components/HelloWorld.vue";
+import { D } from "./logic/controller";
 
 export default Vue.extend({
   name: "App",
@@ -51,7 +57,7 @@ export default Vue.extend({
   },
 
   data: () => ({
-    //
+    storage: D
   })
 });
 </script>

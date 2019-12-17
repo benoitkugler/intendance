@@ -2,29 +2,32 @@ package controller
 
 import "github.com/benoitkugler/intendance/server/models"
 
-type IngredientRecette struct {
-	models.Ingredient
-	models.RecetteIngredient
-}
+// type IngredientRecette struct {
+// 	models.Ingredient
+// 	models.RecetteIngredient
+// }
 
-type Recette struct {
-	models.Recette
+// type Recette struct {
+// 	models.Recette
 
-	Ingredients []IngredientRecette `json:"ingredients"`
-}
+// 	Ingredients []IngredientRecette `json:"ingredients"`
+// }
 
-type IngredientMenu struct {
-	models.Ingredient
-	models.MenuIngredient
+// type IngredientMenu struct {
+// 	models.Ingredient
+// 	models.MenuIngredient
+// }
+
+type Items struct {
+	Ingredients models.Ingredients `json:"ingredients"`
+	Recettes    models.Recettes    `json:"recettes"`
+	Menus       models.Menus       `json:"menus"`
 }
 
 type Repas struct {
-	models.Menu
-
-	Recettes    []Recette        `json:"recettes"`
-	Ingredients []IngredientMenu `json:"ingredients"`
-	NbPersonnes int64            `json:"nb_personnes"`
-	Horaire     models.Horaire   `json:"horaire"`
+	IdMenu      int64          `json:"id_menu"`
+	NbPersonnes int64          `json:"nb_personnes"`
+	Horaire     models.Horaire `json:"horaire"`
 }
 
 type Journee struct {

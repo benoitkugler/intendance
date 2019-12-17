@@ -22,7 +22,7 @@
   _returns_ Ingredient
 
 - /ingredients **POST**
-  { Menu } // `unite` et `conditionnement` sous condition
+  { Ingredient } // `unite` et `conditionnement` sous condition
 
   _returns_ AgendaUtilisateur
 

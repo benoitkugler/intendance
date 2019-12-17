@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"strconv"
 
@@ -13,6 +14,7 @@ import (
 	"github.com/benoitkugler/intendance/logs"
 	"github.com/benoitkugler/intendance/server/models"
 	"github.com/labstack/echo"
+	"github.com/labstack/echo/middleware"
 )
 
 func main() {
@@ -26,12 +28,24 @@ func main() {
 	views.Server = controller.NewServer(db, *dev)
 
 	e := echo.New()
-	e.Debug = *dev
+
+	// erreurs explicites, même en production
+	e.HTTPErrorHandler = func(err error, c echo.Context) {
+		err = echo.NewHTTPError(400, err.Error())
+		e.DefaultHTTPErrorHandler(err, c)
+	}
+
 	routes(e)
 
 	var adress string
 	if *dev {
 		adress = "localhost:1323"
+		e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+			AllowMethods:  append(middleware.DefaultCORSConfig.AllowMethods, http.MethodOptions),
+			AllowHeaders:  []string{"Authorization", "Content-Type", "Access-Control-Allow-Origin"},
+			ExposeHeaders: []string{"Content-Disposition"},
+		}))
+		fmt.Println("CORS activé.")
 	} else {
 		host := os.Getenv("IP")
 		port, err := strconv.Atoi(os.Getenv("PORT"))
@@ -45,4 +59,6 @@ func main() {
 
 func routes(e *echo.Echo) {
 	e.GET("/api/agenda", views.GetAgenda)
+	e.PUT("/api/ingredients", views.CreateIngredient)
+	e.POST("/api/ingredients", views.UpdateIngredient)
 }
