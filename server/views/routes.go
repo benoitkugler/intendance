@@ -25,6 +25,18 @@ func GetAgenda(c echo.Context) error {
 	return c.JSON(200, OutAgenda{Token: ct.Token, Agenda: out})
 }
 
+func GetIngredients(c echo.Context) error {
+	ct, err := Server.Authentifie(c.Request())
+	if err != nil {
+		return err
+	}
+	out, err := Server.LoadIngredients()
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, OutUpdateIngredient{Token: ct.Token, Ingredients: out})
+}
+
 func CreateIngredient(c echo.Context) error {
 	ct, err := Server.Authentifie(c.Request())
 	if err != nil {

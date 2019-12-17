@@ -101,6 +101,20 @@ class Data {
     }
   };
 
+  loadIngredients = async () => {
+    try {
+      const response: AxiosResponse<OutUpdateIngredient> = await axios.get(
+        ServerURL + "/ingredients",
+        {
+          auth: this.auth()
+        }
+      );
+      this.token = response.data.token;
+      this.ingredients = response.data.ingredients;
+    } catch (error) {
+      this.error = formateError(error);
+    }
+  };
   createIngredient = async (ing: Ingredient) => {
     try {
       const response: AxiosResponse<OutCreateIngredient> = await axios.put(
@@ -112,6 +126,7 @@ class Data {
       );
       ing.id = response.data.ingredient.id;
       await this.updateIngredient(ing);
+      return this.ingredients[ing.id];
     } catch (error) {
       this.error = formateError(error);
     }
