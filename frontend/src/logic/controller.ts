@@ -7,6 +7,7 @@ import {
   OutCreateIngredient,
   OutUpdateIngredient
 } from "./types";
+import { New } from "./types2";
 
 const devMode = process.env.NODE_ENV != "production";
 const host = devMode ? "http://localhost:1323" : window.location.origin;
@@ -115,7 +116,7 @@ class Data {
       this.error = formateError(error);
     }
   };
-  createIngredient = async (ing: Ingredient) => {
+  createIngredient = async (ing: New<Ingredient>) => {
     try {
       const response: AxiosResponse<OutCreateIngredient> = await axios.put(
         ServerURL + "/ingredients",
@@ -125,7 +126,7 @@ class Data {
         }
       );
       ing.id = response.data.ingredient.id;
-      await this.updateIngredient(ing);
+      await this.updateIngredient(<Ingredient>ing);
       return this.ingredients[ing.id];
     } catch (error) {
       this.error = formateError(error);

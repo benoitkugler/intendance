@@ -21,8 +21,7 @@ test("ajoute ingredient", async () => {
     conditionnement: { unite: "L", quantite: 2 },
     callories: {},
     categorie: "",
-    unite: "L",
-    id: 0
+    unite: "L"
   });
   expect(D.error).toBeNull();
   expect(Object.keys(D.ingredients)).toHaveLength(l + 1);
