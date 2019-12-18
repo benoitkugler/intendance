@@ -2,18 +2,21 @@ import axios, { AxiosResponse } from "axios";
 import {
   AgendaUtilisateur,
   Ingredient,
-  Ingredients,
   OutAgenda,
-  OutCreateIngredient,
-  OutUpdateIngredient
+  OutIngredients,
+  OutIngredient,
+  OutRecette,
+  OutMenu,
+  Recette,
+  OutRecettes,
+  OutMenus,
+  Menu
 } from "./types";
-import { New } from "./types2";
+import { New, Ingredients, Recettes, Menus } from "./types2";
 
 const devMode = process.env.NODE_ENV != "production";
 const host = devMode ? "http://localhost:1323" : window.location.origin;
 export const ServerURL = host + "/api";
-
-type Cb = () => void;
 
 interface Error {
   code: number | null;
@@ -66,6 +69,9 @@ function formateError(error: any): Error {
 class Data {
   agenda: AgendaUtilisateur;
   ingredients: Ingredients;
+  recettes: Recettes;
+  menus: Menus;
+
   error: Error | null;
   private token: string;
   private idUtilisateur: number | "*" | null;
@@ -73,6 +79,8 @@ class Data {
   constructor() {
     this.agenda = { sejours: [] };
     this.ingredients = {};
+    this.recettes = {};
+    this.menus = {};
 
     this.token = "";
     this.idUtilisateur = devMode ? "*" : null;
@@ -104,7 +112,7 @@ class Data {
 
   loadIngredients = async () => {
     try {
-      const response: AxiosResponse<OutUpdateIngredient> = await axios.get(
+      const response: AxiosResponse<OutIngredients> = await axios.get(
         ServerURL + "/ingredients",
         {
           auth: this.auth()
@@ -116,42 +124,38 @@ class Data {
       this.error = formateError(error);
     }
   };
-  createIngredient = async (ing: New<Ingredient>) => {
-    try {
-      const response: AxiosResponse<OutCreateIngredient> = await axios.put(
-        ServerURL + "/ingredients",
-        {},
-        {
-          auth: this.auth()
-        }
-      );
-      ing.id = response.data.ingredient.id;
-      await this.updateIngredient(<Ingredient>ing);
-      return this.ingredients[ing.id];
-    } catch (error) {
-      this.error = formateError(error);
-    }
-  };
 
-  updateIngredient = async (ing: Ingredient) => {
+  private createOrUpdateIngredient = async (
+    ing: New<Ingredient>,
+    method: "put" | "post"
+  ) => {
+    const f = method == "put" ? axios.put : axios.post;
     try {
-      const response: AxiosResponse<OutUpdateIngredient> = await axios.post(
+      const response: AxiosResponse<OutIngredient> = await f(
         ServerURL + "/ingredients",
         ing,
         {
           auth: this.auth()
         }
       );
-      this.ingredients = response.data.ingredients;
-      this.token = response.data.token;
+      this.ingredients[response.data.ingredient.id] = response.data.ingredient;
+      return response.data.ingredient;
     } catch (error) {
       this.error = formateError(error);
     }
   };
 
+  createIngredient = async (ing: New<Ingredient>) => {
+    return this.createOrUpdateIngredient(ing, "put");
+  };
+
+  updateIngredient = async (ing: Ingredient) => {
+    return this.createOrUpdateIngredient(ing, "post");
+  };
+
   deleteIngredient = async (ing: Ingredient, checkProduits: boolean) => {
     try {
-      const response: AxiosResponse<OutUpdateIngredient> = await axios.delete(
+      const response: AxiosResponse<OutIngredients> = await axios.delete(
         ServerURL + "/ingredients",
         {
           params: { id: ing.id, check_produits: checkProduits ? "check" : "" },
@@ -159,6 +163,124 @@ class Data {
         }
       );
       this.ingredients = response.data.ingredients;
+      this.token = response.data.token;
+    } catch (error) {
+      this.error = formateError(error);
+    }
+  };
+
+  loadRecettes = async () => {
+    try {
+      const response: AxiosResponse<OutRecettes> = await axios.get(
+        ServerURL + "/recettes",
+        {
+          auth: this.auth()
+        }
+      );
+      this.token = response.data.token;
+      this.recettes = response.data.recettes;
+    } catch (error) {
+      this.error = formateError(error);
+    }
+  };
+
+  private createOrUpdateRecette = async (
+    recette: New<Recette>,
+    method: "put" | "post"
+  ) => {
+    const f = method == "put" ? axios.put : axios.post;
+    try {
+      const response: AxiosResponse<OutRecette> = await f(
+        ServerURL + "/recettes",
+        recette,
+        {
+          auth: this.auth()
+        }
+      );
+      this.recettes[response.data.recette.id] = response.data.recette;
+      return response.data.recette;
+    } catch (error) {
+      this.error = formateError(error);
+    }
+  };
+
+  createRecette = async (recette: New<Recette>) => {
+    return this.createOrUpdateRecette(recette, "put");
+  };
+
+  updateRecette = async (recette: Recette) => {
+    return this.createOrUpdateRecette(recette, "post");
+  };
+
+  deleteRecette = async (recette: Recette) => {
+    try {
+      const response: AxiosResponse<OutRecettes> = await axios.delete(
+        ServerURL + "/recettes",
+        {
+          params: { id: recette.id },
+          auth: this.auth()
+        }
+      );
+      this.recettes = response.data.recettes;
+      this.token = response.data.token;
+    } catch (error) {
+      this.error = formateError(error);
+    }
+  };
+
+  loadMenus = async () => {
+    try {
+      const response: AxiosResponse<OutMenus> = await axios.get(
+        ServerURL + "/menus",
+        {
+          auth: this.auth()
+        }
+      );
+      this.token = response.data.token;
+      this.menus = response.data.menus;
+    } catch (error) {
+      this.error = formateError(error);
+    }
+  };
+
+  private createOrUpdateMenu = async (
+    menu: New<Menu>,
+    method: "put" | "post"
+  ) => {
+    const f = method == "put" ? axios.put : axios.post;
+    try {
+      const response: AxiosResponse<OutMenu> = await f(
+        ServerURL + "/menus",
+        menu,
+        {
+          auth: this.auth()
+        }
+      );
+      this.menus[response.data.menu.id] = response.data.menu;
+      return response.data.menu;
+    } catch (error) {
+      this.error = formateError(error);
+    }
+  };
+
+  createMenu = async (menu: New<Menu>) => {
+    return this.createOrUpdateMenu(menu, "put");
+  };
+
+  updateMenu = async (menu: Menu) => {
+    return this.createOrUpdateMenu(menu, "post");
+  };
+
+  deleteMenu = async (menu: Menu) => {
+    try {
+      const response: AxiosResponse<OutMenus> = await axios.delete(
+        ServerURL + "/menus",
+        {
+          params: { id: menu.id },
+          auth: this.auth()
+        }
+      );
+      this.menus = response.data.menus;
       this.token = response.data.token;
     } catch (error) {
       this.error = formateError(error);

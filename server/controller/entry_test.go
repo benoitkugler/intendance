@@ -69,7 +69,7 @@ func TestCRUD(t *testing.T) {
 	}
 	ig.Nom = "Tom acs tesd sdl sddddds ddsd35"
 	ig.Unite = models.Kilos
-	err = s.UpdateIngredient(r, ig)
+	ig, err = s.UpdateIngredient(r, ig)
 	if err != nil {
 		t.Fatal(err)
 	}

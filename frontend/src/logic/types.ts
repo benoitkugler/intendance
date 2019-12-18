@@ -2,7 +2,6 @@
 // structs
 
 // types
-export type Ingredients = { [key: number]: Ingredient };
 
 // struct2ts:github.com/benoitkugler/intendance/server/models.Horaire
 export interface Horaire {
@@ -37,6 +36,12 @@ export interface AgendaUtilisateur {
   sejours: Sejour[] | null;
 }
 
+// struct2ts:github.com/benoitkugler/intendance/server/views.OutAgenda
+export interface OutAgenda {
+  token: string;
+  agenda: AgendaUtilisateur;
+}
+
 // struct2ts:github.com/benoitkugler/intendance/server/models.Callories
 export interface Callories {}
 
@@ -56,48 +61,84 @@ export interface Ingredient {
   conditionnement: Conditionnement;
 }
 
+// struct2ts:github.com/benoitkugler/intendance/server/views.OutIngredient
+export interface OutIngredient {
+  token: string;
+  ingredient: Ingredient;
+}
+
+// struct2ts:github.com/benoitkugler/intendance/server/views.OutIngredients
+export interface OutIngredients {
+  token: string;
+  ingredients: { [key: number]: Ingredient };
+}
+
 // struct2ts:database/sql.NullInt64
 export interface NullInt64 {
   Int64: number;
   Valid: boolean;
 }
 
-// struct2ts:github.com/benoitkugler/intendance/server/models.Recette
+// struct2ts:github.com/benoitkugler/intendance/server/models.RecetteIngredient
+export interface RecetteIngredient {
+  id_recette: number;
+  id_ingredient: number;
+  quantite: number;
+  cuisson: string;
+}
+
+// struct2ts:github.com/benoitkugler/intendance/server/controller.Recette
 export interface Recette {
   id: number;
   id_proprietaire: NullInt64;
   nom: string;
   mode_emploi: string;
+  ingredients: RecetteIngredient[] | null;
 }
 
-// struct2ts:github.com/benoitkugler/intendance/server/models.Menu
+// struct2ts:github.com/benoitkugler/intendance/server/views.OutRecette
+export interface OutRecette {
+  token: string;
+  recette: Recette;
+}
+
+// struct2ts:github.com/benoitkugler/intendance/server/views.OutRecettes
+export interface OutRecettes {
+  token: string;
+  recettes: { [key: number]: Recette };
+}
+
+// struct2ts:github.com/benoitkugler/intendance/server/models.MenuRecette
+export interface MenuRecette {
+  id_menu: number;
+  id_recette: number;
+}
+
+// struct2ts:github.com/benoitkugler/intendance/server/models.MenuIngredient
+export interface MenuIngredient {
+  id_menu: number;
+  id_ingredient: number;
+  quantite: number;
+  cuisson: string;
+}
+
+// struct2ts:github.com/benoitkugler/intendance/server/controller.Menu
 export interface Menu {
   id: number;
   id_proprietaire: NullInt64;
   commentaire: string;
+  recettes: MenuRecette[] | null;
+  ingredients: MenuIngredient[] | null;
 }
 
-// struct2ts:github.com/benoitkugler/intendance/server/controller.Items
-export interface Items {
-  ingredients: { [key: number]: Ingredient };
-  recettes: { [key: number]: Recette };
+// struct2ts:github.com/benoitkugler/intendance/server/views.OutMenu
+export interface OutMenu {
+  token: string;
+  menu: Menu;
+}
+
+// struct2ts:github.com/benoitkugler/intendance/server/views.OutMenus
+export interface OutMenus {
+  token: string;
   menus: { [key: number]: Menu };
-}
-
-// struct2ts:github.com/benoitkugler/intendance/server/views.OutAgenda
-export interface OutAgenda {
-  token: string;
-  agenda: AgendaUtilisateur;
-}
-
-// struct2ts:github.com/benoitkugler/intendance/server/views.OutCreateIngredient
-export interface OutCreateIngredient {
-  token: string;
-  ingredient: Ingredient;
-}
-
-// struct2ts:github.com/benoitkugler/intendance/server/views.OutUpdateIngredient
-export interface OutUpdateIngredient {
-  token: string;
-  ingredients: { [key: number]: Ingredient };
 }

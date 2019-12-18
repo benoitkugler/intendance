@@ -59,8 +59,19 @@ func main() {
 
 func routes(e *echo.Echo) {
 	e.GET("/api/agenda", views.GetAgenda)
+
 	e.GET("/api/ingredients", views.GetIngredients)
 	e.PUT("/api/ingredients", views.CreateIngredient)
 	e.POST("/api/ingredients", views.UpdateIngredient)
 	e.DELETE("/api/ingredients", views.DeleteIngredient)
+
+	e.GET("/api/recettes", views.GetRecettes)
+	e.PUT("/api/recettes", views.CreateRecette)
+	e.POST("/api/recettes", views.UpdateRecette)
+	e.DELETE("/api/recettes", views.DeleteRecette)
+
+	e.GET("/api/menus", views.GetMenus)
+	e.PUT("/api/menus", views.CreateMenu)
+	e.POST("/api/menus", views.UpdateMenu)
+	e.DELETE("/api/menus", views.DeleteMenu)
 }

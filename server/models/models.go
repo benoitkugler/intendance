@@ -34,8 +34,8 @@ type Recette struct {
 }
 
 type RecetteIngredient struct {
-	IdRecette    int64   `json:"-"`
-	IdIngredient int64   `json:"-"`
+	IdRecette    int64   `json:"id_recette"`
+	IdIngredient int64   `json:"id_ingredient"`
 	Quantite     float64 `json:"quantite"`
 	Cuisson      string  `json:"cuisson"`
 }
@@ -48,16 +48,16 @@ type Menu struct {
 }
 
 type MenuIngredient struct {
-	IdMenu       int64 `json:"-"`
-	IdIngredient int64 `json:"-"`
+	IdMenu       int64 `json:"id_menu"`
+	IdIngredient int64 `json:"id_ingredient"`
 
 	Quantite float64 `json:"quantite"`
 	Cuisson  string  `json:"cuisson"`
 }
 
 type MenuRecette struct {
-	IdMenu    int64
-	IdRecette int64
+	IdMenu    int64 `json:"id_menu"`
+	IdRecette int64 `json:"id_recette"`
 }
 
 type Sejour struct {
