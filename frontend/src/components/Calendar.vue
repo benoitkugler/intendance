@@ -11,12 +11,18 @@
       :start="startWeek1"
       :weekdays="weekdays"
       :events="[
-        { name: 'jejejej', start: '2019-12-20T09:00' },
+        { name: 'jejejej', start: '2019-12-20T09:00', id: '78' },
         { name: 'jejejej', start: '2019-12-20' }
       ]"
       @click:interval="log"
       @click:time="log"
     >
+      <template v-slot:event="prop">
+        <div>sdsdmlù {{ prop }}</div>
+      </template>
+      <template v-slot:day-header="{ date }">
+        <div :data-day="date"></div>
+      </template>
     </v-calendar>
     <v-calendar
       type="week"
