@@ -11,14 +11,10 @@
 
 ### Les url suivantes demande une authentification de la forme {username: id_utilisateur, password: token}
 
-- /agenda **GET**:
-
-  _returns_ AgendaUtilisateur
-
 ### Ingredients
 
 - /ingredients **PUT**
-
+  { models.Ingredient }
   _returns_ Ingredient
 
 - /ingredients **POST**
@@ -33,7 +29,7 @@
 ### Recettes
 
 - /recettes **PUT**:
-
+  { models.Recette }
   _returns_ Recette
 
 - /recettes **POST**:
@@ -49,7 +45,7 @@
 ### Menus
 
 - /menus **PUT**:
-
+  { models.Menu }
   _returns_ Menu
 
 - /menus **POST**:
@@ -65,7 +61,12 @@
 
 ### Sejours
 
+- /agenda **GET**:
+
+  _returns_ AgendaUtilisateur
+
 - /sejours **PUT**:
+  { models.Sejour }
   _returns_ Sejour
 
 - /sejours **POST**:

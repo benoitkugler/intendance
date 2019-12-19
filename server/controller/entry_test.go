@@ -38,13 +38,13 @@ func (a AgendaUtilisateur) String() string {
 	out.Printf("Séjours :")
 	out.indent++
 	for _, s := range a.Sejours {
-		out.Printf("Séjour %s, début : %s", s.Nom, s.DateDebut)
+		out.Printf("Séjour %s, début : %s", s.Sejour.Nom, s.Sejour.DateDebut)
 		out.indent++
 		for _, j := range s.Journees {
 			out.Printf("Journée %d", j.JourOffset)
 			out.indent++
-			for _, men := range j.Menus {
-				out.Printf("Menu pour %d", men.NbPersonnes)
+			for _, men := range j.Repas {
+				out.Printf("Repas %v", men)
 			}
 			out.indent--
 		}
@@ -81,9 +81,9 @@ func TestCRUD(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = s.UpdateRecette(r, re, []models.RecetteIngredient{
+	_, err = s.UpdateRecette(r, Recette{Recette: re, Ingredients: []models.RecetteIngredient{
 		{IdIngredient: ig.Id, IdRecette: re.Id, Quantite: 4},
-	})
+	}})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -92,11 +92,11 @@ func TestCRUD(t *testing.T) {
 		t.Fatal(err)
 	}
 	m.Commentaire = "Un menu bien équilibré"
-	err = s.UpdateMenu(r, m, []models.MenuRecette{
+	_, err = s.UpdateMenu(r, Menu{Menu: m, Recettes: []models.MenuRecette{
 		{IdMenu: m.Id, IdRecette: re.Id},
-	}, []models.MenuIngredient{
+	}, Ingredients: []models.MenuIngredient{
 		{IdMenu: m.Id, IdIngredient: ig.Id},
-	})
+	}})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -105,7 +105,7 @@ func TestCRUD(t *testing.T) {
 		t.Fatal(err)
 	}
 	sej.Nom = "C2"
-	if err = s.UpdateSejour(r, sej); err != nil {
+	if _, err = s.UpdateSejour(r, sej); err != nil {
 		t.Fatal(err)
 	}
 	rep, err := s.CreateRepas(r, sej.Id, m.Id)

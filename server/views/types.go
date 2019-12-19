@@ -39,3 +39,8 @@ type OutMenus struct {
 	Token string                     `json:"token"`
 	Menus map[int64]*controller.Menu `json:"menus"`
 }
+
+type OutSejour struct {
+	Token  string        `json:"token"`
+	Sejour models.Sejour `json:"sejour"`
+}

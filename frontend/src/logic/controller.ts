@@ -2,17 +2,20 @@ import axios, { AxiosResponse } from "axios";
 import {
   AgendaUtilisateur,
   Ingredient,
+  Menu,
   OutAgenda,
-  OutIngredients,
   OutIngredient,
-  OutRecette,
+  OutIngredients,
   OutMenu,
-  Recette,
-  OutRecettes,
   OutMenus,
-  Menu
+  OutRecette,
+  OutRecettes,
+  OutSejour,
+  Recette,
+  Repas,
+  Sejour
 } from "./types";
-import { New, Ingredients, Recettes, Menus } from "./types2";
+import { Ingredients, Menus, New, Recettes } from "./types2";
 
 const devMode = process.env.NODE_ENV != "production";
 const host = devMode ? "http://localhost:1323" : window.location.origin;
@@ -77,7 +80,7 @@ class Data {
   private idUtilisateur: number | "*" | null;
 
   constructor() {
-    this.agenda = { sejours: [] };
+    this.agenda = { sejours: {} };
     this.ingredients = {};
     this.recettes = {};
     this.menus = {};
@@ -94,21 +97,6 @@ class Data {
       password: this.token
     };
   }
-
-  loadAgenda = async () => {
-    try {
-      const response: AxiosResponse<OutAgenda> = await axios.get(
-        ServerURL + "/agenda",
-        {
-          auth: this.auth()
-        }
-      );
-      this.token = response.data.token;
-      this.agenda = response.data.agenda;
-    } catch (error) {
-      this.error = formateError(error);
-    }
-  };
 
   loadIngredients = async () => {
     try {
@@ -139,6 +127,8 @@ class Data {
         }
       );
       this.ingredients[response.data.ingredient.id] = response.data.ingredient;
+      this.token = response.data.token;
+
       return response.data.ingredient;
     } catch (error) {
       this.error = formateError(error);
@@ -198,6 +188,8 @@ class Data {
         }
       );
       this.recettes[response.data.recette.id] = response.data.recette;
+      this.token = response.data.token;
+
       return response.data.recette;
     } catch (error) {
       this.error = formateError(error);
@@ -257,6 +249,8 @@ class Data {
         }
       );
       this.menus[response.data.menu.id] = response.data.menu;
+      this.token = response.data.token;
+
       return response.data.menu;
     } catch (error) {
       this.error = formateError(error);
@@ -281,6 +275,120 @@ class Data {
         }
       );
       this.menus = response.data.menus;
+      this.token = response.data.token;
+    } catch (error) {
+      this.error = formateError(error);
+    }
+  };
+
+  loadAgenda = async () => {
+    try {
+      const response: AxiosResponse<OutAgenda> = await axios.get(
+        ServerURL + "/agenda",
+        {
+          auth: this.auth()
+        }
+      );
+      this.token = response.data.token;
+      this.agenda = response.data.agenda;
+    } catch (error) {
+      this.error = formateError(error);
+    }
+  };
+
+  private createOrUpdateSejour = async (
+    sejour: New<Sejour>,
+    method: "put" | "post"
+  ) => {
+    const f = method == "put" ? axios.put : axios.post;
+    try {
+      const response: AxiosResponse<OutSejour> = await f(
+        ServerURL + "/sejours",
+        sejour,
+        {
+          auth: this.auth()
+        }
+      );
+      const entry = this.agenda.sejours[response.data.sejour.id] || {
+        journees: [],
+        sejour: response.data.sejour
+      };
+      entry.sejour = response.data.sejour;
+      this.agenda.sejours[response.data.sejour.id] = entry;
+      this.token = response.data.token;
+
+      return response.data.sejour;
+    } catch (error) {
+      this.error = formateError(error);
+    }
+  };
+
+  createSejour = async (sejour: New<Sejour>) => {
+    return this.createOrUpdateSejour(sejour, "put");
+  };
+
+  updateSejour = async (sejour: Sejour) => {
+    return this.createOrUpdateSejour(sejour, "post");
+  };
+
+  deleteSejour = async (sejour: Sejour) => {
+    try {
+      const response: AxiosResponse<OutAgenda> = await axios.delete(
+        ServerURL + "/sejours",
+        {
+          params: { id: sejour.id },
+          auth: this.auth()
+        }
+      );
+      this.agenda = response.data.agenda;
+      this.token = response.data.token;
+    } catch (error) {
+      this.error = formateError(error);
+    }
+  };
+
+  createRepas = async (repas: New<Repas>) => {
+    try {
+      const response: AxiosResponse<OutAgenda> = await axios.put(
+        ServerURL + "/sejours/repas",
+        repas,
+        {
+          auth: this.auth()
+        }
+      );
+      this.agenda = response.data.agenda;
+      this.token = response.data.token;
+    } catch (error) {
+      this.error = formateError(error);
+    }
+  };
+
+  updateManyRepas = async (repass: Repas[]) => {
+    try {
+      const response: AxiosResponse<OutAgenda> = await axios.post(
+        ServerURL + "/sejours/repas",
+        repass,
+        {
+          auth: this.auth()
+        }
+      );
+      this.agenda = response.data.agenda;
+      this.token = response.data.token;
+    } catch (error) {
+      this.error = formateError(error);
+    }
+  };
+
+  deleteRepas = async (repas: Repas) => {
+    try {
+      const response: AxiosResponse<OutAgenda> = await axios.delete(
+        ServerURL + "/sejours/repas",
+        {
+          params: { id: repas.id },
+          auth: this.auth()
+        }
+      );
+      this.agenda = response.data.agenda;
       this.token = response.data.token;
     } catch (error) {
       this.error = formateError(error);

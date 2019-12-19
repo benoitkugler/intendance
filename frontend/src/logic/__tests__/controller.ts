@@ -5,7 +5,6 @@ const IdProprietaire = 2;
 test("load agenda", async () => {
   await D.loadAgenda();
   expect(D.error).toBeNull();
-  expect(D.agenda.sejours).toHaveLength(3);
 });
 
 test("crud ingredient", async () => {
@@ -129,4 +128,59 @@ test("crud menu", async () => {
 
   await D.deleteMenu(menu);
   expect(Object.keys(D.menus)).toHaveLength(l);
+});
+
+test("crud sejour", async () => {
+  await D.loadMenus();
+  expect(D.error).toBeNull();
+
+  const l = Object.keys(D.agenda.sejours).length;
+  let sejour = await D.createSejour({
+    date_debut: new Date(),
+    nom: "C2 Again !",
+    id_proprietaire: IdProprietaire
+  });
+  expect(D.error).toBeNull();
+  expect(Object.keys(D.agenda.sejours)).toHaveLength(l + 1);
+  if (!sejour) return;
+
+  sejour.nom = "Ah non C3";
+  sejour.date_debut = new Date();
+  sejour = await D.updateSejour(sejour);
+  expect(D.error).toBeNull();
+  if (!sejour) return;
+  expect(sejour.nom).toBe("Ah non C3");
+
+  await D.deleteSejour(sejour);
+  expect(Object.keys(D.agenda.sejours)).toHaveLength(l);
+});
+
+test("crud repas", async () => {
+  await D.loadMenus();
+  expect(D.error).toBeNull();
+
+  const menuId = Number(Object.keys(D.menus)[0]);
+  const sejourId = Number(Object.keys(D.agenda.sejours)[0]);
+
+  const journee = (D.agenda.sejours[sejourId]?.journees || {})[2];
+  const l = journee?.menus?.length || 0;
+  await D.createRepas({
+    horaire: { heure: 10, minute: 20 },
+    id_menu: menuId,
+    id_sejour: sejourId,
+    jour_offset: 2,
+    nb_personnes: 50
+  });
+  expect(D.error).toBeNull();
+  let menus = D.agenda.sejours[sejourId]!.journees[2]?.menus || [];
+  expect(menus).toHaveLength(l + 1);
+
+  const repas = menus[0];
+  repas.horaire = { heure: 12, minute: 20 };
+  await D.updateManyRepas([repas]);
+  expect(D.error).toBeNull();
+
+  await D.deleteRepas(repas);
+  menus = D.agenda.sejours[sejourId]!.journees[2]?.menus || [];
+  expect(menus).toHaveLength(l);
 });

@@ -47,6 +47,11 @@ func main() {
 		}))
 		fmt.Println("CORS activé.")
 	} else {
+		if err = db.Ping(); err != nil {
+			log.Fatal("DB not responding : %s", err)
+		}
+		fmt.Println("DB OK.")
+
 		host := os.Getenv("IP")
 		port, err := strconv.Atoi(os.Getenv("PORT"))
 		if err != nil {
@@ -58,8 +63,6 @@ func main() {
 }
 
 func routes(e *echo.Echo) {
-	e.GET("/api/agenda", views.GetAgenda)
-
 	e.GET("/api/ingredients", views.GetIngredients)
 	e.PUT("/api/ingredients", views.CreateIngredient)
 	e.POST("/api/ingredients", views.UpdateIngredient)
@@ -74,4 +77,14 @@ func routes(e *echo.Echo) {
 	e.PUT("/api/menus", views.CreateMenu)
 	e.POST("/api/menus", views.UpdateMenu)
 	e.DELETE("/api/menus", views.DeleteMenu)
+
+	e.GET("/api/agenda", views.GetAgenda)
+
+	e.PUT("/api/sejours", views.CreateSejour)
+	e.POST("/api/sejours", views.UpdateSejour)
+	e.DELETE("/api/sejours", views.DeleteSejour)
+
+	e.PUT("/api/sejours/repas", views.CreateRepas)
+	e.POST("/api/sejours/repas", views.UpdateRepas)
+	e.DELETE("/api/sejours/repas", views.DeleteRepas)
 }

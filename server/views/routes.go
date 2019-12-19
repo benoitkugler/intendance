@@ -22,17 +22,9 @@ func getId(c echo.Context) (int64, error) {
 	return id, nil
 }
 
-func GetAgenda(c echo.Context) error {
-	ct, err := Server.Authentifie(c.Request())
-	if err != nil {
-		return err
-	}
-	out, err := Server.LoadAgendaUtilisateur(ct)
-	if err != nil {
-		return err
-	}
-	return c.JSON(200, OutAgenda{Token: ct.Token, Agenda: out})
-}
+// --------------------------------------------------------------------------
+// ------------------------------ Ingredients -------------------------------
+// --------------------------------------------------------------------------
 
 func GetIngredients(c echo.Context) error {
 	ct, err := Server.Authentifie(c.Request())
@@ -103,6 +95,10 @@ func DeleteIngredient(c echo.Context) error {
 	return c.JSON(200, OutIngredients{Token: ct.Token, Ingredients: out})
 }
 
+// --------------------------------------------------------------------------
+// ------------------------------ Recettes ----------------------------------
+// --------------------------------------------------------------------------
+
 func GetRecettes(c echo.Context) error {
 	ct, err := Server.Authentifie(c.Request())
 	if err != nil {
@@ -171,6 +167,10 @@ func DeleteRecette(c echo.Context) error {
 	return c.JSON(200, OutRecettes{Token: ct.Token, Recettes: out})
 }
 
+// --------------------------------------------------------------------------
+// -------------------------------- Menus -----------------------------------
+// --------------------------------------------------------------------------
+
 func GetMenus(c echo.Context) error {
 	ct, err := Server.Authentifie(c.Request())
 	if err != nil {
@@ -237,4 +237,140 @@ func DeleteMenu(c echo.Context) error {
 		return err
 	}
 	return c.JSON(200, OutMenus{Token: ct.Token, Menus: out})
+}
+
+// --------------------------------------------------------------------------
+// ---------------------------- Sejours et repas ----------------------------
+// --------------------------------------------------------------------------
+
+func GetAgenda(c echo.Context) error {
+	ct, err := Server.Authentifie(c.Request())
+	if err != nil {
+		return err
+	}
+	out, err := Server.LoadAgendaUtilisateur(ct)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, OutAgenda{Token: ct.Token, Agenda: out})
+}
+
+func CreateSejour(c echo.Context) error {
+	ct, err := Server.Authentifie(c.Request())
+	if err != nil {
+		return err
+	}
+	var sejourIn models.Sejour
+	if err = c.Bind(&sejourIn); err != nil {
+		return err
+	}
+	newSejour, err := Server.CreateSejour(ct)
+	if err != nil {
+		return err
+	}
+	sejourIn.Id = newSejour.Id // on garde les valeurs d'entrée
+	sejourIn, err = Server.UpdateSejour(ct, sejourIn)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, OutSejour{Token: ct.Token, Sejour: sejourIn})
+}
+
+func UpdateSejour(c echo.Context) error {
+	ct, err := Server.Authentifie(c.Request())
+	if err != nil {
+		return err
+	}
+	var sejour models.Sejour
+	if err = c.Bind(&sejour); err != nil {
+		return err
+	}
+	sejour, err = Server.UpdateSejour(ct, sejour)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, OutSejour{Token: ct.Token, Sejour: sejour})
+}
+
+func DeleteSejour(c echo.Context) error {
+	ct, err := Server.Authentifie(c.Request())
+	if err != nil {
+		return err
+	}
+	id, err := getId(c)
+	if err != nil {
+		return err
+	}
+	if err = Server.DeleteSejour(ct, id); err != nil {
+		return err
+	}
+	out, err := Server.LoadAgendaUtilisateur(ct)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, OutAgenda{Token: ct.Token, Agenda: out})
+}
+
+func CreateRepas(c echo.Context) error {
+	ct, err := Server.Authentifie(c.Request())
+	if err != nil {
+		return err
+	}
+	var repasIn models.Repas
+	if err = c.Bind(&repasIn); err != nil {
+		return err
+	}
+	newRepas, err := Server.CreateRepas(ct, repasIn.IdSejour, repasIn.IdMenu)
+	if err != nil {
+		return err
+	}
+	repasIn.Id = newRepas.Id // on garde les valeurs d'entrée
+	err = Server.UpdateManyRepas(ct, []models.Repas{repasIn})
+	if err != nil {
+		return err
+	}
+	out, err := Server.LoadAgendaUtilisateur(ct)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, OutAgenda{Token: ct.Token, Agenda: out})
+}
+
+func UpdateRepas(c echo.Context) error {
+	ct, err := Server.Authentifie(c.Request())
+	if err != nil {
+		return err
+	}
+	var repass []models.Repas
+	if err = c.Bind(&repass); err != nil {
+		return err
+	}
+	err = Server.UpdateManyRepas(ct, repass)
+	if err != nil {
+		return err
+	}
+	out, err := Server.LoadAgendaUtilisateur(ct)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, OutAgenda{Token: ct.Token, Agenda: out})
+}
+
+func DeleteRepas(c echo.Context) error {
+	ct, err := Server.Authentifie(c.Request())
+	if err != nil {
+		return err
+	}
+	id, err := getId(c)
+	if err != nil {
+		return err
+	}
+	if err = Server.DeleteRepas(ct, id); err != nil {
+		return err
+	}
+	out, err := Server.LoadAgendaUtilisateur(ct)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, OutAgenda{Token: ct.Token, Agenda: out})
 }
