@@ -2,7 +2,7 @@
   <v-app>
     <v-app-bar app color="primary" dark> </v-app-bar>
     <v-content>
-      <calendar />
+      <calendar :start="start" :forceFirstDay="true" />
     </v-content>
   </v-app>
 </template>
@@ -20,7 +20,8 @@ export default Vue.extend({
   },
 
   data: () => ({
-    storage: D
+    storage: D,
+    start: new Date().toISOString()
   })
 });
 </script>
