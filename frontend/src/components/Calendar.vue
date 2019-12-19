@@ -1,7 +1,6 @@
 <template>
-  <div class="two-weeks-calendar">
+  <div class="two-weeks-calendar" ref="weeks">
     <v-calendar
-      ref="week1"
       type="week"
       locale="fr"
       :first-interval="firstInterval"
@@ -11,18 +10,21 @@
       :start="startWeek1"
       :weekdays="weekdays"
       :events="[
-        { name: 'jejejej', start: '2019-12-20T09:00', id: '78' },
-        { name: 'jejejej', start: '2019-12-20' }
+        { name: 'jejejej', start: '2019-12-20T09:00', id_repas: 78 },
+        { name: 'jejejej', start: '2019-12-20', id_repas: 75 }
       ]"
       @click:interval="log"
       @click:time="log"
     >
-      <template v-slot:event="prop">
-        <div>sdsdmlù {{ prop }}</div>
+      <template v-slot:event="{ event }">
+        <div :data-id-repas="event.id_repas">{{ event.name }}</div>
       </template>
       <template v-slot:day-header="{ date }">
         <div :data-day="date"></div>
       </template>
+      <template v-slot:interval
+        ><div @dragover="onDragover" class="dragover"></div
+      ></template>
     </v-calendar>
     <v-calendar
       type="week"
@@ -65,18 +67,14 @@ function getEventStart(r: Repas, sejour: Sejour) {
   );
 }
 
-function onDragStart(event: DragEvent, kind: "repas" | "journee") {
-  if (!event.dataTransfer) return;
-  event.dataTransfer.setData(kind, "TODO");
+function onDragStart(
+  event: DragEvent,
+  kind: "repas" | "journee",
+  arg: string | undefined
+) {
+  if (!event.dataTransfer || !arg) return;
+  event.dataTransfer.setData("text/plain", arg);
   event.dataTransfer.effectAllowed = "move";
-}
-
-function onDragOver(event: DragEvent) {
-  if (!event.dataTransfer) return;
-  const isRepas = event.dataTransfer.types.includes("repas");
-  if (isRepas) {
-    event.preventDefault();
-  }
 }
 
 const Props = Vue.extend({
@@ -120,16 +118,16 @@ export default class Calendar extends Props {
   }
 
   private setupDrag() {
-    const htmlEl: HTMLDivElement = (this.$refs.week1 as any).$el;
-    htmlEl
-      .querySelectorAll<HTMLElement>(".v-calendar-daily_head-day")
-      .forEach(item => {
-        item.draggable = true;
-        item.ondragstart = e => onDragStart(e, "journee");
-      });
-    htmlEl.querySelectorAll<HTMLElement>(".v-event-timed").forEach(item => {
+    const htmlEl = this.$refs.weeks as HTMLDivElement;
+    htmlEl.querySelectorAll<HTMLElement>("[data-day]").forEach(item => {
+      if (!item.parentElement) return;
+      item.parentElement.draggable = true;
+      item.parentElement.ondragstart = e =>
+        onDragStart(e, "journee", item.dataset["day"]);
+    });
+    htmlEl.querySelectorAll<HTMLElement>("[data-id-repas]").forEach(item => {
       item.draggable = true;
-      item.ondragstart = e => onDragStart(e, "repas");
+      item.ondragstart = e => onDragStart(e, "repas", item.dataset["id-repas"]);
     });
   }
 
@@ -140,6 +138,17 @@ export default class Calendar extends Props {
   updated() {
     this.setupDrag();
   }
+
+  onDragover(event: DragEvent) {
+    if (!event.dataTransfer) return;
+    const isRepas = event.dataTransfer.types.includes("repas");
+    const isDay = event.dataTransfer.types.includes("journee");
+    console.log(event);
+    if (isRepas || isDay) {
+      event.preventDefault();
+      event.dataTransfer.dropEffect = "move";
+    }
+  }
 }
 </script>
 
@@ -149,5 +158,8 @@ export default class Calendar extends Props {
 }
 .two-weeks-calendar .v-calendar-daily__day-interval:hover {
   background-color: rgba(34, 182, 187, 0.267);
+}
+.dragover {
+  height: 100%;
 }
 </style>
