@@ -13,61 +13,15 @@ import {
   OutSejour,
   Recette,
   Repas,
-  Sejour
+  Sejour,
+  Horaire
 } from "./types";
 import { Ingredients, Menus, New, Recettes } from "./types2";
+import { Error, NS } from "./notifications";
 
 const devMode = process.env.NODE_ENV != "production";
 const host = devMode ? "http://localhost:1323" : window.location.origin;
 export const ServerURL = host + "/api";
-
-interface Error {
-  code: number | null;
-  kind: string;
-  messageHtml: string;
-}
-
-function arrayBufferToString(buffer: ArrayBuffer) {
-  const uintArray = new Uint8Array(buffer);
-  const encodedString = String.fromCharCode.apply(null, Array.from(uintArray));
-  return decodeURIComponent(escape(encodedString));
-}
-
-function formateError(error: any): Error {
-  let kind: string,
-    messageHtml: string,
-    code = null;
-  if (error.response) {
-    // The request was made and the server responded with a status code
-    // that falls out of the range of 2xx
-    kind = `Erreur côté serveur`;
-    code = error.response.status;
-
-    messageHtml = error.response.data.message;
-    if (!messageHtml) {
-      try {
-        const json = arrayBufferToString(error.response.data);
-        messageHtml = JSON.parse(json).message;
-      } catch (error) {
-        messageHtml = `Impossible de décoder la réponse du serveur. <br/>
-        Détails : <i>${error}</i>`;
-      }
-    }
-  } else if (error.request) {
-    // The request was made but no response was received
-    // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
-    // http.ClientRequest in node.js
-    kind = "Aucune réponse du serveur";
-    messageHtml =
-      "La requête a bien été envoyée, mais le serveur n'a donné aucune réponse...";
-  } else {
-    // Something happened in setting up the request that triggered an Error
-    kind = "Erreur du client";
-    messageHtml = `La requête n'a pu être mise en place. <br/>
-                  Détails :  ${error.message} `;
-  }
-  return { kind, messageHtml, code };
-}
 
 class Data {
   agenda: AgendaUtilisateur;
@@ -75,7 +29,6 @@ class Data {
   recettes: Recettes;
   menus: Menus;
 
-  error: Error | null;
   private token: string;
   private idUtilisateur: number | "*" | null;
 
@@ -87,8 +40,6 @@ class Data {
 
     this.token = "";
     this.idUtilisateur = devMode ? "*" : null;
-
-    this.error = null;
   }
 
   private auth() {
@@ -99,6 +50,7 @@ class Data {
   }
 
   loadIngredients = async () => {
+    NS.startSpin();
     try {
       const response: AxiosResponse<OutIngredients> = await axios.get(
         ServerURL + "/ingredients",
@@ -109,7 +61,7 @@ class Data {
       this.token = response.data.token;
       this.ingredients = response.data.ingredients;
     } catch (error) {
-      this.error = formateError(error);
+      NS.setAxiosError(error);
     }
   };
 
@@ -117,6 +69,7 @@ class Data {
     ing: New<Ingredient>,
     method: "put" | "post"
   ) => {
+    NS.startSpin();
     const f = method == "put" ? axios.put : axios.post;
     try {
       const response: AxiosResponse<OutIngredient> = await f(
@@ -131,7 +84,7 @@ class Data {
 
       return response.data.ingredient;
     } catch (error) {
-      this.error = formateError(error);
+      NS.setAxiosError(error);
     }
   };
 
@@ -144,6 +97,7 @@ class Data {
   };
 
   deleteIngredient = async (ing: Ingredient, checkProduits: boolean) => {
+    NS.startSpin();
     try {
       const response: AxiosResponse<OutIngredients> = await axios.delete(
         ServerURL + "/ingredients",
@@ -155,11 +109,12 @@ class Data {
       this.ingredients = response.data.ingredients;
       this.token = response.data.token;
     } catch (error) {
-      this.error = formateError(error);
+      NS.setAxiosError(error);
     }
   };
 
   loadRecettes = async () => {
+    NS.startSpin();
     try {
       const response: AxiosResponse<OutRecettes> = await axios.get(
         ServerURL + "/recettes",
@@ -170,7 +125,7 @@ class Data {
       this.token = response.data.token;
       this.recettes = response.data.recettes;
     } catch (error) {
-      this.error = formateError(error);
+      NS.setAxiosError(error);
     }
   };
 
@@ -178,6 +133,7 @@ class Data {
     recette: New<Recette>,
     method: "put" | "post"
   ) => {
+    NS.startSpin();
     const f = method == "put" ? axios.put : axios.post;
     try {
       const response: AxiosResponse<OutRecette> = await f(
@@ -192,7 +148,7 @@ class Data {
 
       return response.data.recette;
     } catch (error) {
-      this.error = formateError(error);
+      NS.setAxiosError(error);
     }
   };
 
@@ -205,6 +161,7 @@ class Data {
   };
 
   deleteRecette = async (recette: Recette) => {
+    NS.startSpin();
     try {
       const response: AxiosResponse<OutRecettes> = await axios.delete(
         ServerURL + "/recettes",
@@ -216,11 +173,12 @@ class Data {
       this.recettes = response.data.recettes;
       this.token = response.data.token;
     } catch (error) {
-      this.error = formateError(error);
+      NS.setAxiosError(error);
     }
   };
 
   loadMenus = async () => {
+    NS.startSpin();
     try {
       const response: AxiosResponse<OutMenus> = await axios.get(
         ServerURL + "/menus",
@@ -231,7 +189,7 @@ class Data {
       this.token = response.data.token;
       this.menus = response.data.menus;
     } catch (error) {
-      this.error = formateError(error);
+      NS.setAxiosError(error);
     }
   };
 
@@ -239,6 +197,7 @@ class Data {
     menu: New<Menu>,
     method: "put" | "post"
   ) => {
+    NS.startSpin();
     const f = method == "put" ? axios.put : axios.post;
     try {
       const response: AxiosResponse<OutMenu> = await f(
@@ -253,7 +212,7 @@ class Data {
 
       return response.data.menu;
     } catch (error) {
-      this.error = formateError(error);
+      NS.setAxiosError(error);
     }
   };
 
@@ -266,6 +225,7 @@ class Data {
   };
 
   deleteMenu = async (menu: Menu) => {
+    NS.startSpin();
     try {
       const response: AxiosResponse<OutMenus> = await axios.delete(
         ServerURL + "/menus",
@@ -277,11 +237,12 @@ class Data {
       this.menus = response.data.menus;
       this.token = response.data.token;
     } catch (error) {
-      this.error = formateError(error);
+      NS.setAxiosError(error);
     }
   };
 
   loadAgenda = async () => {
+    NS.startSpin();
     try {
       const response: AxiosResponse<OutAgenda> = await axios.get(
         ServerURL + "/agenda",
@@ -292,7 +253,7 @@ class Data {
       this.token = response.data.token;
       this.agenda = response.data.agenda;
     } catch (error) {
-      this.error = formateError(error);
+      NS.setAxiosError(error);
     }
   };
 
@@ -300,6 +261,7 @@ class Data {
     sejour: New<Sejour>,
     method: "put" | "post"
   ) => {
+    NS.startSpin();
     const f = method == "put" ? axios.put : axios.post;
     try {
       const response: AxiosResponse<OutSejour> = await f(
@@ -319,7 +281,7 @@ class Data {
 
       return response.data.sejour;
     } catch (error) {
-      this.error = formateError(error);
+      NS.setAxiosError(error);
     }
   };
 
@@ -332,6 +294,7 @@ class Data {
   };
 
   deleteSejour = async (sejour: Sejour) => {
+    NS.startSpin();
     try {
       const response: AxiosResponse<OutAgenda> = await axios.delete(
         ServerURL + "/sejours",
@@ -343,11 +306,12 @@ class Data {
       this.agenda = response.data.agenda;
       this.token = response.data.token;
     } catch (error) {
-      this.error = formateError(error);
+      NS.setAxiosError(error);
     }
   };
 
   createRepas = async (repas: New<Repas>) => {
+    NS.startSpin();
     try {
       const response: AxiosResponse<OutAgenda> = await axios.put(
         ServerURL + "/sejours/repas",
@@ -359,11 +323,12 @@ class Data {
       this.agenda = response.data.agenda;
       this.token = response.data.token;
     } catch (error) {
-      this.error = formateError(error);
+      NS.setAxiosError(error);
     }
   };
 
   updateManyRepas = async (repass: Repas[]) => {
+    NS.startSpin();
     try {
       const response: AxiosResponse<OutAgenda> = await axios.post(
         ServerURL + "/sejours/repas",
@@ -375,11 +340,12 @@ class Data {
       this.agenda = response.data.agenda;
       this.token = response.data.token;
     } catch (error) {
-      this.error = formateError(error);
+      NS.setAxiosError(error);
     }
   };
 
   deleteRepas = async (repas: Repas) => {
+    NS.startSpin();
     try {
       const response: AxiosResponse<OutAgenda> = await axios.delete(
         ServerURL + "/sejours/repas",
@@ -391,9 +357,84 @@ class Data {
       this.agenda = response.data.agenda;
       this.token = response.data.token;
     } catch (error) {
-      this.error = formateError(error);
+      NS.setAxiosError(error);
     }
   };
+
+  // gère l'erreur d'un séjour introuvable
+  private getSejour(idSejour: number) {
+    const sejour = this.agenda.sejours[idSejour];
+    if (!sejour) {
+      NS.setError({
+        code: null,
+        kind: "Séjour introuvable",
+        messageHtml: `Le séjour concerné (id ${idSejour}) est <i>introuvable<i> <br/>
+            Il s'agit probablement d'une erreur de synchronisation avec le serveur. <br/>
+            Pour la corriger, merci de <b>recharger la page</b>.`
+      });
+    }
+    return sejour;
+  }
+
+  // vérifie que la date est après le début du séjour et gère l'erreur
+  // si la date est valide, renvoie l'offset correspondant
+  private getOffset(sejour: Sejour, jour: Date) {
+    const dateDebut = new Date(sejour.date_debut);
+    if (jour < dateDebut) {
+      // invalide
+      NS.setError({
+        code: null,
+        kind: "Jour invalide",
+        messageHtml: `La date ciblée (${jour.toLocaleDateString()}) est <i>antérieure</i> au début du séjour.<br/>
+                  Si vous souhaitez déplacer un repas sur cette journée, 
+                  veuillez d'abord <b>modifier la date de début</b> du séjour <b>${
+                    sejour.nom
+                  }</b>`
+      });
+      return;
+    }
+    const offset = Math.ceil(
+      (jour.valueOf() - dateDebut.valueOf()) / (1000 * 60 * 60 * 24)
+    );
+    return offset;
+  }
+
+  // échange les deux journées, en modifiant les dates
+  // des repas concernés pour le séjour donné.
+  async switchDays(idSejour: number, from: Date, to: Date) {
+    const sejour = this.getSejour(idSejour);
+    if (!sejour) return;
+    const offsetTo = this.getOffset(sejour.sejour, to);
+    if (offsetTo === undefined) return;
+    const offsetFrom = this.getOffset(sejour.sejour, from);
+    if (offsetFrom === undefined) return;
+    if (offsetFrom == offsetTo) return;
+    const menusFrom =
+      (sejour.journees[offsetFrom] || { menus: [] }).menus || [];
+    const menusTo = (sejour.journees[offsetTo] || { menus: [] }).menus || [];
+    menusFrom.forEach(m => (m.jour_offset = offsetTo));
+    menusTo.forEach(m => (m.jour_offset = offsetFrom));
+    const modifs = menusFrom.concat(menusTo);
+    if (modifs.length === 0) return;
+    await this.updateManyRepas(modifs);
+    if (NS.getError() === null) {
+      NS.setMessage("Les journées ont étés échangées avec succès.");
+    }
+  }
+
+  // modifie le moment du repas
+  async deplaceRepas(repas: Repas, jour: Date, horaire: Horaire) {
+    const sejour = this.getSejour(repas.id_sejour);
+    if (!sejour) return;
+    const offset = this.getOffset(sejour.sejour, jour);
+    if (offset === undefined) return;
+    repas.jour_offset = offset;
+    repas.horaire = horaire;
+    await this.updateManyRepas([repas]);
+    if (NS.getError() === null) {
+      NS.setMessage("Le repas a été déplacé avec succès.");
+    }
+  }
 }
 
 // Object principal de stockage des données
