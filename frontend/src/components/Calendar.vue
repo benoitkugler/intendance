@@ -10,20 +10,23 @@
       :start="startWeek1"
       :weekdays="weekdays"
       :events="[
-        { name: 'jejejej', start: '2019-12-20T09:00', id_repas: 78 },
-        { name: 'jejejej', start: '2019-12-20', id_repas: 75 }
+        { name: 'jejejej', start: '2019-12-20T09:00', dataRepas: '{ id: 78 }' },
+        { name: 'jejejej', start: '2019-12-20', dataRepas: '{ id: 75 }' }
       ]"
-      @click:interval="log"
-      @click:time="log"
+      @click:time="registerTime"
     >
       <template v-slot:event="{ event }">
-        <div :data-id-repas="event.id_repas">{{ event.name }}</div>
+        <div :data-repas="event.dataRepas">{{ event.name }}</div>
       </template>
       <template v-slot:day-header="{ date }">
         <div :data-day="date"></div>
       </template>
       <template v-slot:interval
-        ><div @dragover="onDragover" class="dragover"></div
+        ><div
+          @dragover="e => onDragover(e, 'repas')"
+          @drop="e => onDrop(e, 'repas')"
+          class="dragover"
+        ></div
       ></template>
     </v-calendar>
     <v-calendar
@@ -35,6 +38,7 @@
       :interval-height="intervalHeight"
       :start="startWeek2"
       :weekdays="weekdays"
+      @click:time="registerTime"
     ></v-calendar>
   </div>
 </template>
@@ -42,10 +46,12 @@
 <script lang="ts">
 import Vue from "vue";
 import Component from "vue-class-component";
-import { Repas, Sejour } from "../logic/types";
+import { Repas, Sejour, Horaire } from "../logic/types";
 import { D } from "../logic/controller";
 
 const _days = [0, 1, 2, 3, 4, 5, 6];
+
+type DragKind = "journee" | "repas";
 
 // renvoie l'ordre des jours pour que `start` soit
 // affiché en premier
@@ -67,16 +73,6 @@ function getEventStart(r: Repas, sejour: Sejour) {
   );
 }
 
-function onDragStart(
-  event: DragEvent,
-  kind: "repas" | "journee",
-  arg: string | undefined
-) {
-  if (!event.dataTransfer || !arg) return;
-  event.dataTransfer.setData("text/plain", arg);
-  event.dataTransfer.effectAllowed = "move";
-}
-
 const Props = Vue.extend({
   props: {
     // Date as string
@@ -85,19 +81,21 @@ const Props = Vue.extend({
   }
 });
 
+interface DateTime {
+  date: string;
+  time: string;
+}
+
 @Component
 export default class Calendar extends Props {
   firstInterval = 2;
   intervalCount = 8;
   intervalMinutes = 120;
   intervalHeight = 25;
+  private lastClickedTime: DateTime | null = null;
 
   get startDate(): Date {
     return new Date(this.start);
-  }
-
-  log(args: any) {
-    console.log(args);
   }
 
   get weekdays() {
@@ -117,20 +115,6 @@ export default class Calendar extends Props {
     return formatDate(out);
   }
 
-  private setupDrag() {
-    const htmlEl = this.$refs.weeks as HTMLDivElement;
-    htmlEl.querySelectorAll<HTMLElement>("[data-day]").forEach(item => {
-      if (!item.parentElement) return;
-      item.parentElement.draggable = true;
-      item.parentElement.ondragstart = e =>
-        onDragStart(e, "journee", item.dataset["day"]);
-    });
-    htmlEl.querySelectorAll<HTMLElement>("[data-id-repas]").forEach(item => {
-      item.draggable = true;
-      item.ondragstart = e => onDragStart(e, "repas", item.dataset["id-repas"]);
-    });
-  }
-
   mounted() {
     this.setupDrag();
   }
@@ -139,15 +123,110 @@ export default class Calendar extends Props {
     this.setupDrag();
   }
 
-  onDragover(event: DragEvent) {
+  // on stocke le moment correspondant au dernier click,
+  // pour contourner le manque d'une méthode getTime(pos)
+  registerTime(time: DateTime) {
+    this.lastClickedTime = time;
+  }
+
+  private setupDrag() {
+    const htmlEl = this.$refs.weeks as HTMLDivElement;
+    htmlEl.querySelectorAll<HTMLElement>("[data-day]").forEach(item => {
+      if (!item.parentElement) return;
+      item.parentElement.draggable = true;
+      item.parentElement.ondragstart = e =>
+        this.onDragStart(e, "journee", item.dataset.day);
+      item.parentElement.ondragover = e => this.onDragover(e, "journee");
+      item.parentElement.ondrop = e => this.onDrop(e, "journee");
+    });
+    htmlEl.querySelectorAll<HTMLElement>("[data-id-repas]").forEach(item => {
+      item.draggable = true;
+      item.ondragstart = e =>
+        this.onDragStart(e, "repas", item.dataset.idRepas);
+    });
+  }
+
+  private onDragStart = (
+    event: DragEvent,
+    kind: DragKind,
+    arg: string | undefined
+  ) => {
+    if (!event.dataTransfer || !arg) return;
+    event.dataTransfer.setData(kind, arg);
+    event.dataTransfer.effectAllowed = "move";
+  };
+
+  onDragover(event: DragEvent, kind: DragKind) {
     if (!event.dataTransfer) return;
     const isRepas = event.dataTransfer.types.includes("repas");
     const isDay = event.dataTransfer.types.includes("journee");
-    console.log(event);
-    if (isRepas || isDay) {
+    if ((kind == "repas" && isRepas) || (kind == "journee" && isDay)) {
       event.preventDefault();
       event.dataTransfer.dropEffect = "move";
     }
+  }
+
+  onDrop(event: DragEvent, kind: DragKind) {
+    if (!event.dataTransfer) return;
+    event.preventDefault();
+    const data = event.dataTransfer.getData(kind);
+    const target = event.currentTarget as HTMLElement;
+    if (kind == "repas") {
+      this.onDropRepas(event, data, target);
+    } else {
+      this.onDropJournee(data, target);
+    }
+  }
+
+  private jobDropRepas(targetTime: DateTime, dataRepas: string) {
+    const repas: Repas = JSON.parse(dataRepas);
+    const jour = new Date(targetTime.date);
+    const horaire: Horaire = {
+      heure: Number(targetTime.time.substr(0, 2)),
+      minute: Number(targetTime.time.substr(3, 2))
+    };
+    D.deplaceRepas(repas, jour, horaire);
+  }
+
+  private onDropRepas(
+    event: DragEvent,
+    dataRepas: string,
+    target: HTMLElement
+  ) {
+    // hack pour contourner les limitations de VCalendar
+    const ev = new MouseEvent("click", {
+      view: window,
+      bubbles: true,
+      cancelable: true,
+      clientX: event.clientX,
+      clientY: event.clientY
+    });
+    this.lastClickedTime = null;
+    target.dispatchEvent(ev);
+    // on attend la gestion de l'évènement par 'registerTime'
+    let currentTry = 0;
+    const afterClick = () => {
+      if (currentTry >= 200) {
+        // on évite une boucle infinie
+        return;
+      }
+      if (!this.lastClickedTime) {
+        currentTry += 1;
+        setTimeout(afterClick, 50); // on ressaie plus tard
+        return;
+      }
+      this.jobDropRepas(this.lastClickedTime, dataRepas);
+    };
+    setTimeout(afterClick, 50);
+  }
+
+  private onDropJournee(data: string, target: HTMLElement) {
+    const customDiv = target.querySelector("[data-day]") as HTMLElement;
+    const dateFrom = new Date(data);
+    if (!customDiv || !customDiv.dataset.day) return;
+    const dateTo = new Date(customDiv.dataset.day);
+    if (isNaN(dateFrom.getTime()) || isNaN(dateTo.getTime())) return;
+    D.switchDays(currentSejour, dateFrom, dateTo);
   }
 }
 </script>
