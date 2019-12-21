@@ -33,7 +33,13 @@ class Data {
   private idUtilisateur: number | "*" | null;
 
   constructor() {
-    this.agenda = { sejours: {} };
+    this.agenda = {
+      sejours: {
+        7: { sejour: { nom: "Tesst" } },
+        8: { sejour: { nom: "Tesdsst" } },
+        3: { sejour: { nom: "sdTesst" } }
+      }
+    };
     this.ingredients = {};
     this.recettes = {};
     this.menus = {};

@@ -2,11 +2,12 @@
   <v-app>
     <v-app-bar app color="primary" dark> </v-app-bar>
     <v-content>
-      <calendar :start="start" :forceFirstDay="true" />
-
-      <spinner-snackbar></spinner-snackbar>
-      <error-dialog></error-dialog>
-      <success-snackbar></success-snackbar>
+      <v-container>
+        <calendar :start="start" :forceFirstDay="true" />
+        <spinner-snackbar></spinner-snackbar>
+        <error-dialog></error-dialog>
+        <success-snackbar></success-snackbar>
+      </v-container>
     </v-content>
   </v-app>
 </template>

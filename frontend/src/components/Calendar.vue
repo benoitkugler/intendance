@@ -1,5 +1,22 @@
 <template>
   <div class="two-weeks-calendar" ref="weeks">
+    <v-toolbar class="calendar-toolbar mb-1">
+      <v-toolbar-title></v-toolbar-title>
+      <v-spacer></v-spacer>
+      <v-toolbar-items>
+        <v-select
+          :items="sejours"
+          label="Séjour courant"
+          hide-details
+          max-width="200"
+          v-model.number="currentSejour"
+        ></v-select>
+        <v-switch
+          label="Se restreindre au séjour courant"
+          v-model="showOnlyCurrent"
+        ></v-switch>
+      </v-toolbar-items>
+    </v-toolbar>
     <v-calendar
       type="week"
       locale="fr"
@@ -11,7 +28,7 @@
       :weekdays="weekdays"
       :events="[
         { name: 'jejejej', start: '2019-12-20T09:00', dataRepas: '{ id: 78 }' },
-        { name: 'jejejej', start: '2019-12-20', dataRepas: '{ id: 75 }' }
+        { name: 'jejejej', start: '2019-12-20T08:00', dataRepas: '{ id: 75 }' }
       ]"
       @click:time="registerTime"
     >
@@ -46,7 +63,7 @@
 <script lang="ts">
 import Vue from "vue";
 import Component from "vue-class-component";
-import { Repas, Sejour, Horaire } from "../logic/types";
+import { Repas, Sejour, Horaire, SejourJournees } from "../logic/types";
 import { D } from "../logic/controller";
 
 const _days = [0, 1, 2, 3, 4, 5, 6];
@@ -88,11 +105,13 @@ interface DateTime {
 
 @Component
 export default class Calendar extends Props {
-  firstInterval = 2;
-  intervalCount = 8;
-  intervalMinutes = 120;
-  intervalHeight = 25;
   private lastClickedTime: DateTime | null = null;
+  private currentSejour: number | null = null;
+  private showOnlyCurrent = true;
+  private firstInterval = 4;
+  private intervalCount = 7;
+  private intervalMinutes = 120;
+  private intervalHeight = 25;
 
   get startDate(): Date {
     return new Date(this.start);
@@ -115,6 +134,15 @@ export default class Calendar extends Props {
     return formatDate(out);
   }
 
+  get sejours() {
+    const items = Object.keys(D.agenda.sejours).map(idSejour => {
+      const sejour = D.agenda.sejours[Number(idSejour)];
+      return { value: idSejour, text: sejour.sejour.nom };
+    });
+    items.sort((a, b) => Number(a.text < b.text));
+    return items;
+  }
+
   mounted() {
     this.setupDrag();
   }
@@ -130,6 +158,7 @@ export default class Calendar extends Props {
   }
 
   private setupDrag() {
+    if (this.currentSejour == null) return; // désactivé si aucun séjour n'est sélectionné.
     const htmlEl = this.$refs.weeks as HTMLDivElement;
     htmlEl.querySelectorAll<HTMLElement>("[data-day]").forEach(item => {
       if (!item.parentElement) return;
@@ -140,7 +169,8 @@ export default class Calendar extends Props {
       item.parentElement.ondrop = e => this.onDrop(e, "journee");
     });
     htmlEl.querySelectorAll<HTMLElement>("[data-repas]").forEach(item => {
-      item.draggable = true;
+      const repas: Repas = JSON.parse(item.dataset.repas || "");
+      item.draggable = repas.id_sejour == this.currentSejour; // uniquement les repas lié au séjour courant
       item.ondragstart = e => this.onDragStart(e, "repas", item.dataset.repas);
     });
   }
@@ -220,12 +250,13 @@ export default class Calendar extends Props {
   }
 
   private onDropJournee(data: string, target: HTMLElement) {
+    if (this.currentSejour == null) return;
     const customDiv = target.querySelector("[data-day]") as HTMLElement;
     const dateFrom = new Date(data);
     if (!customDiv || !customDiv.dataset.day) return;
     const dateTo = new Date(customDiv.dataset.day);
     if (isNaN(dateFrom.getTime()) || isNaN(dateTo.getTime())) return;
-    D.switchDays(currentSejour, dateFrom, dateTo);
+    D.switchDays(this.currentSejour, dateFrom, dateTo);
   }
 }
 </script>
@@ -238,6 +269,16 @@ export default class Calendar extends Props {
   background-color: rgba(34, 182, 187, 0.267);
 }
 .dragover {
+  height: 100%;
+}
+
+.calendar-toolbar .v-input__control {
+  margin: auto;
+}
+.calendar-toolbar .v-input__slot {
+  height: 100%;
+}
+.calendar-toolbar .v-input {
   height: 100%;
 }
 </style>
