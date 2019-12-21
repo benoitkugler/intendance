@@ -139,10 +139,9 @@ export default class Calendar extends Props {
       item.parentElement.ondragover = e => this.onDragover(e, "journee");
       item.parentElement.ondrop = e => this.onDrop(e, "journee");
     });
-    htmlEl.querySelectorAll<HTMLElement>("[data-id-repas]").forEach(item => {
+    htmlEl.querySelectorAll<HTMLElement>("[data-repas]").forEach(item => {
       item.draggable = true;
-      item.ondragstart = e =>
-        this.onDragStart(e, "repas", item.dataset.idRepas);
+      item.ondragstart = e => this.onDragStart(e, "repas", item.dataset.repas);
     });
   }
 
