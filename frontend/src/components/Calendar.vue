@@ -1,20 +1,50 @@
 <template>
   <div class="two-weeks-calendar" ref="weeks">
+    <v-dialog v-model="showPreferences" max-width="800">
+      <v-card>
+        <v-card-title primary-title>
+          Préférences
+        </v-card-title>
+        <v-card-text>
+          <v-switch
+            label="Se restreindre au séjour courant"
+            v-model="showOnlyCurrent"
+            persistent-hint
+            hint="N'afficher que le séjour actuellement sélectionné."
+          ></v-switch>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+
     <v-toolbar class="calendar-toolbar mb-1">
-      <v-toolbar-title></v-toolbar-title>
+      <v-toolbar-title>Séjours</v-toolbar-title>
       <v-spacer></v-spacer>
       <v-toolbar-items>
+        <tooltip-btn
+          tooltip="Ajouter un séjour..."
+          mdi-icon="shape-rectangle-plus"
+          @click="addSejour"
+        ></tooltip-btn>
+        <v-divider vertical></v-divider>
         <v-select
           :items="sejours"
           label="Séjour courant"
           hide-details
           max-width="200"
           v-model.number="currentSejour"
+          class="mx-2"
         ></v-select>
-        <v-switch
-          label="Se restreindre au séjour courant"
-          v-model="showOnlyCurrent"
-        ></v-switch>
+        <tooltip-btn
+          tooltip="Modifier les paramètres du séjour..."
+          mdi-icon="pencil"
+          @click="editSejour"
+        ></tooltip-btn>
+        <v-divider vertical></v-divider>
+        <tooltip-btn
+          tooltip="Préférences d'affichage..."
+          mdi-icon="settings"
+          @click="showPreferences = true"
+        ></tooltip-btn>
       </v-toolbar-items>
     </v-toolbar>
     <v-calendar
@@ -65,6 +95,7 @@ import Vue from "vue";
 import Component from "vue-class-component";
 import { Repas, Sejour, Horaire, SejourJournees } from "../logic/types";
 import { D } from "../logic/controller";
+import TooltipBtn from "./utils/TooltipBtn.vue";
 
 const _days = [0, 1, 2, 3, 4, 5, 6];
 
@@ -103,7 +134,9 @@ interface DateTime {
   time: string;
 }
 
-@Component
+@Component({
+  components: { TooltipBtn }
+})
 export default class Calendar extends Props {
   private lastClickedTime: DateTime | null = null;
   private currentSejour: number | null = null;
@@ -112,6 +145,8 @@ export default class Calendar extends Props {
   private intervalCount = 7;
   private intervalMinutes = 120;
   private intervalHeight = 25;
+
+  private showPreferences = false;
 
   get startDate(): Date {
     return new Date(this.start);
@@ -257,6 +292,10 @@ export default class Calendar extends Props {
     const dateTo = new Date(customDiv.dataset.day);
     if (isNaN(dateFrom.getTime()) || isNaN(dateTo.getTime())) return;
     D.switchDays(this.currentSejour, dateFrom, dateTo);
+  }
+
+  addSejour() {
+    console.log("add");
   }
 }
 </script>
