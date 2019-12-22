@@ -17,7 +17,7 @@ import {
   Horaire
 } from "./types";
 import { Ingredients, Menus, New, Recettes } from "./types2";
-import { Error, NS } from "./notifications";
+import { NS } from "./notifications";
 
 const devMode = process.env.NODE_ENV != "production";
 const host = devMode ? "http://localhost:1323" : window.location.origin;

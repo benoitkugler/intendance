@@ -7,7 +7,7 @@
 export interface Sejour {
   id: number;
   id_proprietaire: number;
-  date_debut: Date;
+  date_debut: Time;
   nom: string;
 }
 

@@ -14,7 +14,7 @@
 
 <script lang="ts">
 import Vue from "vue";
-import Calendar from "./components/Calendar.vue";
+import Calendar from "./components/sejours/Calendar.vue";
 import ErrorDialog from "./components/ErrorDialog.vue";
 import SuccessSnackbar from "./components/SuccessSnackbar.vue";
 import SpinnerSnackbar from "./components/SpinnerSnackbar.vue";
