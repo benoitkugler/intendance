@@ -1,23 +1,21 @@
 <template>
   <div class="two-weeks-calendar" ref="weeks">
     <v-dialog v-model="showPreferences" max-width="800">
-      <v-card>
-        <v-card-title primary-title>
-          Préférences
-        </v-card-title>
-        <v-card-text>
-          <v-switch
-            label="Se restreindre au séjour courant"
-            v-model="showOnlyCurrent"
-            persistent-hint
-            hint="N'afficher que le séjour actuellement sélectionné."
-          ></v-switch>
-        </v-card-text>
-      </v-card>
+      <form-preferences v-model="preferences"></form-preferences>
     </v-dialog>
 
     <v-dialog v-model="showEditFormSejour" max-width="500">
-      <form-sejour :initialSejour="{}" @accept="editSejour"></form-sejour>
+      <form-sejour
+        :initialSejour="getInitialCurrentSejour()"
+        @accept="onEditSejourDone"
+      ></form-sejour>
+    </v-dialog>
+
+    <v-dialog v-model="showEditFormRepas" max-width="500">
+      <form-repas
+        :initialRepas="editedRepas"
+        @accept="onEditRepasDone"
+      ></form-repas>
     </v-dialog>
 
     <v-toolbar class="calendar-toolbar mb-1">
@@ -27,7 +25,10 @@
         <tooltip-btn
           tooltip="Ajouter un séjour..."
           mdi-icon="shape-rectangle-plus"
-          @click="addSejour"
+          @click="
+            editMode = 'new';
+            showEditFormSejour = true;
+          "
         ></tooltip-btn>
         <v-divider vertical></v-divider>
         <v-select
@@ -41,7 +42,10 @@
         <tooltip-btn
           tooltip="Modifier les paramètres du séjour..."
           mdi-icon="pencil"
-          @click="showEditFormSejour = true"
+          @click="
+            editMode = 'edit';
+            showEditFormSejour = true;
+          "
         ></tooltip-btn>
         <v-divider vertical></v-divider>
         <tooltip-btn
@@ -54,17 +58,17 @@
     <v-calendar
       type="week"
       locale="fr"
+      :short-weekdays="false"
       :first-interval="firstInterval"
       :interval-count="intervalCount"
       :interval-minutes="intervalMinutes"
       :interval-height="intervalHeight"
       :start="startWeek1"
       :weekdays="weekdays"
-      :events="[
-        { name: 'jejejej', start: '2019-12-20T09:00', dataRepas: '{ id: 78 }' },
-        { name: 'jejejej', start: '2019-12-20T08:00', dataRepas: '{ id: 75 }' }
-      ]"
-      @click:time="registerTime"
+      :events="events"
+      :event-color="getEventColor"
+      @mousedown:time="registerTime"
+      @click:time="startAddRepas"
     >
       <template v-slot:event="{ event }">
         <div :data-repas="event.dataRepas">{{ event.name }}</div>
@@ -83,13 +87,17 @@
     <v-calendar
       type="week"
       locale="fr"
+      :short-weekdays="false"
       :first-interval="firstInterval"
       :interval-count="intervalCount"
       :interval-minutes="intervalMinutes"
       :interval-height="intervalHeight"
       :start="startWeek2"
       :weekdays="weekdays"
-      @click:time="registerTime"
+      :events="events"
+      :event-color="getEventColor"
+      @mousedown:time="registerTime"
+      @click:time="startAddRepas"
     ></v-calendar>
   </div>
 </template>
@@ -99,13 +107,46 @@ import Vue from "vue";
 import Component from "vue-class-component";
 import { Repas, Sejour, Horaire, SejourJournees } from "../../logic/types";
 import FormSejour from "./FormSejour.vue";
+import FormRepas from "./FormRepas.vue";
+import FormPreferences from "./FormPreferences.vue";
 import { D } from "../../logic/controller";
 import TooltipBtn from "../utils/TooltipBtn.vue";
-import { DetailsSejour } from "../../logic/types2";
+import {
+  DetailsSejour,
+  New,
+  DetailsRepas,
+  PreferencesAgenda
+} from "../../logic/types2";
+import { formatRepasName } from "../../logic/format";
+import { NS } from "../../logic/notifications";
 
 const _days = [0, 1, 2, 3, 4, 5, 6];
 
+const _colors = [
+  "red",
+  "pink",
+  "purple",
+  "indigo",
+  "blue",
+  "cyan",
+  "teal",
+  "green",
+  "lime",
+  "yellow",
+  "amber",
+  "orange",
+  "brown",
+  "grey"
+];
+
 type DragKind = "journee" | "repas";
+
+interface DataEvent {
+  name: string;
+  start: Time;
+  dataRepas: string; // JSON of Repas
+  indexColor: number;
+}
 
 // renvoie l'ordre des jours pour que `start` soit
 // affiché en premier
@@ -118,21 +159,29 @@ function formatDate(d: Date) {
   return d.toISOString().substr(0, 10);
 }
 
-function getEventStart(r: Repas, sejour: Sejour) {
-  const dateDebut = new Date(sejour.date_debut);
-  dateDebut.setDate(dateDebut.getDate() + r.jour_offset);
+function timeToHoraire(time: string): Horaire {
+  return {
+    heure: Number(time.substr(0, 2)),
+    minute: Number(time.substr(3, 2))
+  };
+}
+
+function horaireToTime(horaire: Horaire) {
   return (
-    formatDate(dateDebut) +
-    `T${"00" + r.horaire.heure}:${"00" + r.horaire.minute}`
+    ("00" + horaire.heure).substr(-2, 2) +
+    ":" +
+    ("00" + horaire.minute).substr(-2, 2)
   );
 }
 
+function getEventStart(r: Repas, sejour: Sejour) {
+  const dateDebut = new Date(sejour.date_debut);
+  dateDebut.setDate(dateDebut.getDate() + r.jour_offset);
+  return formatDate(dateDebut) + " " + horaireToTime(r.horaire);
+}
+
 const Props = Vue.extend({
-  props: {
-    // Date as string
-    start: String,
-    forceFirstDay: Boolean
-  }
+  props: {}
 });
 
 interface DateTime {
@@ -141,12 +190,17 @@ interface DateTime {
 }
 
 @Component({
-  components: { TooltipBtn, FormSejour }
+  components: { TooltipBtn, FormSejour, FormRepas, FormPreferences }
 })
 export default class Calendar extends Props {
   private lastClickedTime: DateTime | null = null;
   private currentSejour: number | null = null;
-  private showOnlyCurrent = true;
+
+  private preferences: PreferencesAgenda = {
+    restrictSejourCourant: true,
+    startPremierJour: true
+  };
+
   private firstInterval = 4;
   private intervalCount = 7;
   private intervalMinutes = 120;
@@ -154,13 +208,24 @@ export default class Calendar extends Props {
 
   private showPreferences = false;
   private showEditFormSejour = false;
+  private showEditFormRepas = false;
+  private editMode: "new" | "edit" = "new";
+
+  private editedRepas: DetailsRepas = {
+    horaire: { heure: 0, minute: 0 },
+    id_menu: -1,
+    nb_personnes: 0,
+    jour_offset: 0
+  };
 
   get startDate(): Date {
-    return new Date(this.start);
+    const sejour = this.getCurrentSejour();
+    if (!sejour) return new Date();
+    return new Date(sejour.sejour.date_debut);
   }
 
   get weekdays() {
-    if (this.forceFirstDay) {
+    if (this.preferences.startPremierJour) {
       return weekdaysFromStart(this.startDate);
     }
     return _days;
@@ -177,15 +242,47 @@ export default class Calendar extends Props {
   }
 
   get sejours() {
-    const items = Object.keys(D.agenda.sejours).map(idSejour => {
-      const sejour = D.agenda.sejours[Number(idSejour)];
-      return { value: idSejour, text: sejour.sejour.nom };
+    const items = Object.values(D.agenda.sejours).map(sejour => {
+      return { value: sejour.sejour.id, text: sejour.sejour.nom };
     });
     items.sort((a, b) => Number(a.text < b.text));
     return items;
   }
 
+  get events(): DataEvent[] {
+    const sejours = Object.values(D.agenda.sejours);
+    sejours.sort((a, b) => {
+      return a.sejour.date_debut < b.sejour.date_debut ? 1 : -1;
+    });
+    let out: DataEvent[] = [];
+    sejours.forEach((sejour, sejourIndex) => {
+      Object.values(sejour.journees).forEach(journee => {
+        if (!journee.menus) return;
+        out = out.concat(
+          journee.menus.map(repas => {
+            return {
+              name: formatRepasName(repas),
+              start: getEventStart(repas, sejour.sejour),
+              dataRepas: JSON.stringify(repas),
+              indexColor: sejourIndex
+            };
+          })
+        );
+      });
+    });
+    return out;
+  }
+
+  getEventColor = (event: DataEvent) => {
+    const L = _colors.length;
+    return _colors[event.indexColor % L];
+  };
+
   mounted() {
+    // TODO:
+    D.loadAgenda();
+    D.loadMenus();
+    NS.setMessage("");
     this.setupDrag();
   }
 
@@ -265,7 +362,7 @@ export default class Calendar extends Props {
     target: HTMLElement
   ) {
     // hack pour contourner les limitations de VCalendar
-    const ev = new MouseEvent("click", {
+    const ev = new MouseEvent("mousedown", {
       view: window,
       bubbles: true,
       cancelable: true,
@@ -301,13 +398,73 @@ export default class Calendar extends Props {
     D.switchDays(this.currentSejour, dateFrom, dateTo);
   }
 
-  addSejour() {
-    console.log("add");
+  private getCurrentSejour(): SejourJournees | undefined {
+    if (this.currentSejour == null) return;
+    return D.agenda.sejours[this.currentSejour];
   }
 
-  editSejour(sejour: DetailsSejour) {
+  getInitialCurrentSejour() {
+    const newSejour = {
+      id_proprietaire: D.idUtilisateur,
+      nom: "",
+      date_debut: ""
+    };
+    return this.getCurrentSejour() || newSejour;
+  }
+
+  onEditSejourDone(modif: DetailsSejour) {
     this.showEditFormSejour = false;
-    console.log(sejour);
+    if (this.editMode == "edit") {
+      this.editSejour(modif);
+    } else {
+      this.addSejour(modif);
+    }
+  }
+
+  private async addSejour(modif: DetailsSejour) {
+    if (D.idUtilisateur == null) return;
+    const sejour: New<Sejour> = {
+      nom: modif.nom,
+      date_debut: modif.date_debut,
+      id_proprietaire: D.idUtilisateur
+    };
+    const newSejour = await D.createSejour(sejour);
+    if (NS.getError() == null && newSejour != undefined) {
+      NS.setMessage("Le séjour a bien été ajouté.");
+      this.currentSejour = newSejour.id;
+    }
+  }
+
+  private async editSejour(modif: DetailsSejour) {
+    const sejourJ = this.getCurrentSejour();
+    if (sejourJ == undefined) return;
+    const sejour = sejourJ.sejour;
+    sejour.date_debut = modif.date_debut;
+    sejour.nom = modif.nom;
+    await D.updateSejour(sejour);
+    if (NS.getError() == null) {
+      NS.setMessage("Le séjour a bien été modifié.");
+    }
+  }
+
+  startAddRepas(dt: DateTime) {
+    const sejourJ = this.getCurrentSejour();
+    if (sejourJ == undefined) return;
+    const offset = D.getOffset(sejourJ.sejour, new Date(dt.date));
+    if (offset == undefined) return;
+    this.editedRepas.horaire = timeToHoraire(dt.time);
+    this.editedRepas.jour_offset = offset;
+    this.editMode = "new";
+    this.showEditFormRepas = true;
+  }
+
+  async onEditRepasDone(repas: DetailsRepas) {
+    if (this.currentSejour == null) return;
+    const newRepas: New<Repas> = { ...repas, id_sejour: this.currentSejour };
+    await D.createRepas(newRepas);
+    if (NS.getError() == null) {
+      NS.setMessage("Le repas a bien été ajouté.");
+    }
   }
 }
 </script>

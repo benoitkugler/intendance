@@ -18,35 +18,20 @@ import {
 } from "./types";
 import { Ingredients, Menus, New, Recettes } from "./types2";
 import { NS } from "./notifications";
+import Vue from "vue";
 
 const devMode = process.env.NODE_ENV != "production";
 const host = devMode ? "http://localhost:1323" : window.location.origin;
 export const ServerURL = host + "/api";
 
 class Data {
-  agenda: AgendaUtilisateur;
-  ingredients: Ingredients;
-  recettes: Recettes;
-  menus: Menus;
+  agenda: AgendaUtilisateur = { sejours: {} };
+  ingredients: Ingredients = {};
+  recettes: Recettes = {};
+  menus: Menus = {};
 
-  private token: string;
-  private idUtilisateur: number | "*" | null;
-
-  constructor() {
-    this.agenda = {
-      sejours: {
-        7: { sejour: { nom: "Tesst" } },
-        8: { sejour: { nom: "Tesdsst" } },
-        3: { sejour: { nom: "sdTesst" } }
-      }
-    };
-    this.ingredients = {};
-    this.recettes = {};
-    this.menus = {};
-
-    this.token = "";
-    this.idUtilisateur = devMode ? "*" : null;
-  }
+  private token: string = "";
+  idUtilisateur: number | null = devMode ? 2 : null;
 
   private auth() {
     return {
@@ -85,7 +70,11 @@ class Data {
           auth: this.auth()
         }
       );
-      this.ingredients[response.data.ingredient.id] = response.data.ingredient;
+      Vue.set(
+        this.ingredients,
+        response.data.ingredient.id,
+        response.data.ingredient
+      ); // VRC
       this.token = response.data.token;
 
       return response.data.ingredient;
@@ -149,7 +138,7 @@ class Data {
           auth: this.auth()
         }
       );
-      this.recettes[response.data.recette.id] = response.data.recette;
+      Vue.set(this.recettes, response.data.recette.id, response.data.recette); // VRC
       this.token = response.data.token;
 
       return response.data.recette;
@@ -213,7 +202,7 @@ class Data {
           auth: this.auth()
         }
       );
-      this.menus[response.data.menu.id] = response.data.menu;
+      Vue.set(this.menus, response.data.menu.id, response.data.menu); // VRC
       this.token = response.data.token;
 
       return response.data.menu;
@@ -282,9 +271,8 @@ class Data {
         sejour: response.data.sejour
       };
       entry.sejour = response.data.sejour;
-      this.agenda.sejours[response.data.sejour.id] = entry;
+      Vue.set(this.agenda.sejours, response.data.sejour.id, entry); // VRC
       this.token = response.data.token;
-
       return response.data.sejour;
     } catch (error) {
       NS.setAxiosError(error);
@@ -384,7 +372,7 @@ class Data {
 
   // vérifie que la date est après le début du séjour et gère l'erreur
   // si la date est valide, renvoie l'offset correspondant
-  private getOffset(sejour: Sejour, jour: Date) {
+  getOffset(sejour: Sejour, jour: Date) {
     const dateDebut = new Date(sejour.date_debut);
     if (jour < dateDebut) {
       // invalide

@@ -101,18 +101,19 @@ func refreshToken(token string, idUtilisateur int64) (newToken string, err error
 
 func (s Server) Authentifie(r *http.Request) (ct RequeteContext, err error) {
 	idString, token, _ := r.BasicAuth()
-	if s.devMode && idString == "*" { // utilisateur arbitraire
-		return RequeteContext{idProprietaire: 2}, nil
-	}
-	id, err := strconv.Atoi(idString)
+	id0, err := strconv.Atoi(idString)
 	if err != nil {
 		return ct, ErrorAuth(err)
 	}
-	token, err = refreshToken(token, int64(id))
+	id := int64(id0)
+	if s.devMode { // on autorise toutes les requêtes
+		return RequeteContext{idProprietaire: id}, nil
+	}
+	token, err = refreshToken(token, id)
 	if err != nil {
 		return ct, ErrorAuth(err)
 	}
-	return RequeteContext{idProprietaire: int64(id), Token: token}, nil
+	return RequeteContext{idProprietaire: id, Token: token}, nil
 }
 
 // Plusieurs items sont liées à un propriétaire.

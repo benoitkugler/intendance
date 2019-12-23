@@ -137,7 +137,7 @@ test("crud sejour", async () => {
 
   const l = Object.keys(D.agenda.sejours).length;
   let sejour = await D.createSejour({
-    date_debut: new Date(),
+    date_debut: new Date().toISOString(),
     nom: "C2 Again !",
     id_proprietaire: IdProprietaire
   });
@@ -146,7 +146,7 @@ test("crud sejour", async () => {
   if (!sejour) return;
 
   sejour.nom = "Ah non C3";
-  sejour.date_debut = new Date();
+  sejour.date_debut = new Date().toISOString();
   sejour = await D.updateSejour(sejour);
   expect(NS.getError()).toBeNull();
   if (!sejour) return;

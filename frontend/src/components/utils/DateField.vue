@@ -4,7 +4,7 @@
       <v-text-field
         readonly
         v-on="on"
-        :value="date(currentDate)"
+        :value="showDate(currentDate)"
         :label="label"
         :disabled="disabled"
       ></v-text-field>
@@ -69,12 +69,12 @@ function showDate(dateString: string) {
 export default class DateField extends Props {
   isoDate = "";
 
-  date = showDate;
-  toDateObject(date) {
+  showDate = showDate;
+  toDateObject(date: string | any) {
     if (!date) return null;
     return date + "T00:00:00Z";
   }
-  save(date) {
+  save(date: string) {
     (this.$refs.menuDatePicker as any).save(date);
   }
   get maxDate() {
