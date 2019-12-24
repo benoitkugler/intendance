@@ -33,7 +33,7 @@ export const routes: RouteType[] = [
     component: () =>
       import(/* webpackChunkName: "menus" */ "../views/Menus.vue"),
     meta: {
-      title: "Recettes et ingrédients",
+      title: "Menus, recettes et ingrédients",
       tooltip: "Accès aux menus, recettes et ingrédients.",
       icon: "mdi-food-variant"
     }

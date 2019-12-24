@@ -1,6 +1,6 @@
 <template>
   <v-snackbar v-model="show" bottom right :timeout="6000" color="success">
-    <i>({{ currentTime() }})</i>
+    <i>({{ currentTime() }}) </i>
     &nbsp;
     <span v-html="message"></span>
     <v-btn color="black" text icon @click="show = false">

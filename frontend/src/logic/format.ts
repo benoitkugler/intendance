@@ -1,5 +1,6 @@
 import { Repas, Menu } from "./types";
 import { D } from "./controller";
+import { G } from "./getters";
 
 export function formatRepasName(r: Repas) {
   const menu = D.menus[r.id_menu];
@@ -8,8 +9,7 @@ export function formatRepasName(r: Repas) {
 }
 
 export function formatMenuName(menu: Menu) {
-  if (!menu.recettes) return `(${menu.id})`;
-  return menu.recettes
-    .map(rec => D.recettes[rec.id_recette]?.nom || "")
-    .join(", ");
+  const recs = G.getMenuRecettes(menu);
+  if (recs.length == 0) return `(${menu.id})`;
+  return recs.map(rec => rec.nom || "").join(", ");
 }

@@ -1,4 +1,13 @@
-import { Ingredient, Menu, Recette, Sejour, Repas } from "./types";
+import {
+  Ingredient,
+  Menu,
+  Recette,
+  Sejour,
+  Repas,
+  RecetteIngredient,
+  MenuIngredient,
+  MenuRecette
+} from "./types";
 
 export type New<T extends { id: number }> = Omit<T, "id"> &
   Partial<Pick<T, "id">>;
@@ -12,6 +21,11 @@ export type DetailsRepas = Pick<
   Repas,
   "horaire" | "id_menu" | "nb_personnes" | "jour_offset"
 >;
+
+export interface IngredientOptions {
+  ingredient: Ingredient;
+  options?: RecetteIngredient | MenuIngredient;
+}
 
 export interface PreferencesAgenda {
   restrictSejourCourant: boolean;

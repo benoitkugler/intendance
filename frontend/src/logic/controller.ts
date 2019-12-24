@@ -20,7 +20,7 @@ import { Ingredients, Menus, New, Recettes } from "./types2";
 import { NS } from "./notifications";
 import Vue from "vue";
 
-const devMode = process.env.NODE_ENV != "production";
+export const devMode = process.env.NODE_ENV != "production";
 const host = devMode ? "http://localhost:1323" : window.location.origin;
 export const ServerURL = host + "/api";
 

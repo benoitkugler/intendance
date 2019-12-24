@@ -1,12 +1,7 @@
 <template>
-  <v-navigation-drawer
-    v-if="isLoggedIn"
-    app
-    :mini-variant="menuExpanded"
-    permanent
-  >
+  <v-navigation-drawer v-if="isLoggedIn" app :mini-variant="menuMini" permanent>
     <v-layout align-center justify-center row>
-      <v-avatar @click="menuExpanded = !menuExpanded" size="50">
+      <v-avatar @click="menuMini = !menuMini" size="50">
         <v-img margin="auto" :src="require('@/assets/logo.png')" />
       </v-avatar>
     </v-layout>
@@ -57,7 +52,7 @@ const Props = Vue.extend({
 
 @Component
 export default class NavigationBar extends Props {
-  menuExpanded = false;
+  menuMini = true;
   routes = routes;
 }
 </script>
