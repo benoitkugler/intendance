@@ -19,6 +19,11 @@ export class G {
     });
   }
 
+  static getMenuProprietaire(menu: Menu) {
+    if (!menu.id_proprietaire.Valid) return null;
+    return D.utilisateurs[menu.id_proprietaire.Int64];
+  }
+
   static getRecetteIngredients(rec: Recette): IngredientOptions[] {
     return (rec.ingredients || []).map(ing => {
       return { ingredient: D.ingredients[ing.id_ingredient], options: ing };

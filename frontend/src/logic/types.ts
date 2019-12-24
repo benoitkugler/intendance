@@ -1,8 +1,5 @@
 // this file was automatically generated, DO NOT EDIT
 // structs
-
-// types
-
 // struct2ts:github.com/benoitkugler/intendance/server/models.Sejour
 export interface Sejour {
   id: number;
@@ -155,4 +152,19 @@ export interface OutSejour {
 export interface OutAgenda {
   token: string;
   agenda: AgendaUtilisateur;
+}
+
+// struct2ts:github.com/benoitkugler/intendance/server/controller.Utilisateur
+export interface Utilisateur {
+  id: number;
+  prenom_nom: string;
+}
+
+// struct2ts:github.com/benoitkugler/intendance/server/views.OutUtilisateurs
+export interface OutUtilisateurs {
+  token: string;
+  utilisateurs: {
+    [key: number]: Utilisateur;
+    // types
+  };
 }

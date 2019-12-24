@@ -23,6 +23,21 @@ func getId(c echo.Context) (int64, error) {
 }
 
 // --------------------------------------------------------------------------
+// ------------------------------ Utilisateurs ------------------------------
+// --------------------------------------------------------------------------
+func GetUtilisateurs(c echo.Context) error {
+	ct, err := Server.Authentifie(c.Request())
+	if err != nil {
+		return err
+	}
+	out, err := Server.LoadUtilisateurs()
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, OutUtilisateurs{Token: ct.Token, Utilisateurs: out})
+}
+
+// --------------------------------------------------------------------------
 // ------------------------------ Ingredients -------------------------------
 // --------------------------------------------------------------------------
 

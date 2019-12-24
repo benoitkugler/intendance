@@ -1,18 +1,17 @@
 <template>
   <div>
-    <v-toolbar color="secondary" dense>
-      <v-toolbar-title>Recettes {{ bonusTitle }}</v-toolbar-title>
+    <v-toolbar color="secondary" dense class="my-1">
+      <v-toolbar-title>
+        Recettes <i>{{ bonusTitle }}</i>
+      </v-toolbar-title>
       <v-spacer></v-spacer>
-      <v-toolbar-items>
-        <tooltip-btn
-          mdi-icon="refresh"
-          tooltip="Afficher toutes les recettes"
-          @click="$emit('reset')"
-        ></tooltip-btn>
-      </v-toolbar-items>
+      <v-toolbar-items> </v-toolbar-items>
     </v-toolbar>
     <v-list dense :max-height="height" class="overflow-y-auto">
-      <v-list-item-group v-model="currentRecette">
+      <v-list-item-group
+        :value="recette"
+        @change="args => $emit('change', args)"
+      >
         <v-list-item
           v-for="recette in recettes"
           :key="recette.id"
@@ -44,23 +43,17 @@ const Props = Vue.extend({
     bonusTitle: {
       type: String,
       default: ""
-    }
+    },
+    recette: Object as () => Recette | null
+  },
+  model: {
+    prop: "recette",
+    event: "change"
   }
 });
 
 @Component({
   components: { TooltipBtn }
 })
-export default class ListeRecettes extends Props {
-  currentRecette: Recette | null = null;
-
-  @Watch("currentRecette")
-  onChange() {
-    this.$emit("change", this.currentRecette);
-  }
-
-  clearSelection() {
-    this.currentRecette = null;
-  }
-}
+export default class ListeRecettes extends Props {}
 </script>

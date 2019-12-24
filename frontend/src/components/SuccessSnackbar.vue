@@ -1,11 +1,18 @@
 <template>
   <v-snackbar v-model="show" bottom right :timeout="6000" color="success">
-    <i>({{ currentTime() }}) </i>
-    &nbsp;
-    <span v-html="message"></span>
-    <v-btn color="black" text icon @click="show = false">
-      <v-icon>mdi-close</v-icon>
-    </v-btn>
+    <v-row no-gutters>
+      <v-col cols="2" align-self="center">
+        <i>({{ currentTime() }})</i>
+      </v-col>
+      <v-col cols="9" align-self="center">
+        <span v-html="message"></span>
+      </v-col>
+      <v-col cols="1">
+        <v-btn color="black" text icon @click="show = false" class="mx-0">
+          <v-icon>mdi-close</v-icon>
+        </v-btn>
+      </v-col>
+    </v-row>
   </v-snackbar>
 </template>
 

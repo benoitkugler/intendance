@@ -14,9 +14,10 @@ import {
   Recette,
   Repas,
   Sejour,
-  Horaire
+  Horaire,
+  OutUtilisateurs
 } from "./types";
-import { Ingredients, Menus, New, Recettes } from "./types2";
+import { Ingredients, Menus, New, Recettes, Utilisateurs } from "./types2";
 import { NS } from "./notifications";
 import Vue from "vue";
 
@@ -29,6 +30,7 @@ class Data {
   ingredients: Ingredients = {};
   recettes: Recettes = {};
   menus: Menus = {};
+  utilisateurs: Utilisateurs = {};
 
   private token: string = "";
   idUtilisateur: number | null = devMode ? 2 : null;
@@ -39,6 +41,22 @@ class Data {
       password: this.token
     };
   }
+
+  loadUtilisateurs = async () => {
+    NS.startSpin();
+    try {
+      const response: AxiosResponse<OutUtilisateurs> = await axios.get(
+        ServerURL + "/utilisateurs",
+        {
+          auth: this.auth()
+        }
+      );
+      this.token = response.data.token;
+      this.utilisateurs = response.data.utilisateurs;
+    } catch (error) {
+      NS.setAxiosError(error);
+    }
+  };
 
   loadIngredients = async () => {
     NS.startSpin();

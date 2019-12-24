@@ -6,7 +6,7 @@
           ref="menus"
           height="85vh"
           :menus="menus"
-          @change="onMenuChange"
+          v-model="selection.menu"
         />
       </v-col>
       <v-col>
@@ -14,9 +14,8 @@
           ref="recettes"
           height="85vh"
           :recettes="recettes"
-          @change="onRecetteChange"
-          @reset="onRecettesReset"
           :bonus-title="recettesBonusTitle"
+          v-model="selection.recette"
         />
       </v-col>
       <v-col>
@@ -24,7 +23,6 @@
           ref="ingredients"
           height="85vh"
           :ingredients="ingredients"
-          @change="onIngredientChange"
           :bonus-title="ingredientsBonusTitle"
         />
       </v-col>
@@ -45,8 +43,9 @@ import { IngredientOptions } from "../logic/types2";
 import { NS } from "../logic/notifications";
 
 interface Selection {
-  kind: "menu" | "recette" | "ingredient";
-  item: Menu | Recette | Ingredient;
+  menu: Menu | null;
+  recette: Recette | null;
+  ingredient: Ingredient | null;
 }
 
 @Component({
@@ -54,11 +53,7 @@ interface Selection {
 })
 export default class Menus extends Vue {
   mode: "visu" | "edit" = "visu";
-  selection: Selection | null = null;
-
-  ingredients: IngredientOptions[] = [];
-  menus: Menu[] = [];
-  recettes: Recette[] = [];
+  selection: Selection = { menu: null, recette: null, ingredient: null };
 
   // annotate refs type
   $refs!: {
@@ -68,53 +63,49 @@ export default class Menus extends Vue {
   };
 
   get ingredientsBonusTitle() {
-    if (this.selection == null) return "";
-    if (this.selection.kind == "menu") {
-      return " - Menu courant";
-    } else if (this.selection.kind == "recette") {
+    if (this.selection.recette != null) {
       return " - Recette courante";
+    } else if (this.selection.menu != null) {
+      return " - Menu courant";
     }
     return "";
   }
 
   get recettesBonusTitle() {
-    if (this.selection == null) return "";
-    if (this.selection.kind == "menu") {
+    if (this.selection.menu != null) {
       return " - Menu courant";
     }
     return "";
   }
 
-  onIngredientChange(ing: Ingredient | null) {}
-
-  onMenuChange(menu: Menu | null) {
-    if (menu == null) return;
-    this.selection = { kind: "menu", item: menu };
-    this.recettes = G.getMenuRecettes(menu);
-    this.ingredients = G.getMenuIngredients(menu);
+  get ingredients() {
+    if (this.selection.recette != null) {
+      return G.getRecetteIngredients(this.selection.recette);
+    } else if (this.selection.menu != null) {
+      return G.getMenuIngredients(this.selection.menu);
+    } else {
+      return G.getAllIngredients();
+    }
   }
 
-  onRecetteChange(recette: Recette | null) {
-    if (recette == null) return;
-    this.selection = { kind: "recette", item: recette };
-    this.ingredients = G.getRecetteIngredients(recette);
-    this.$refs.menus.clearSelection();
+  get recettes() {
+    if (this.selection.menu != null) {
+      return G.getMenuRecettes(this.selection.menu);
+    }
+    return Object.values(D.recettes);
   }
 
-  onRecettesReset() {
-    this.recettes = Object.values(D.recettes);
-    this.$refs.recettes.clearSelection();
-    this.ingredients = G.getAllIngredients();
-    this.selection = null;
+  get menus() {
+    return Object.values(D.menus);
   }
 
   async mounted() {
-    await Promise.all([D.loadMenus(), D.loadIngredients(), D.loadRecettes()]);
+    await Promise.all([D.loadIngredients(), D.loadUtilisateurs()]);
+    await D.loadRecettes(); // recettes dépend des ingrédients
+    await D.loadMenus(); // menus dépends des recettes, ingrédients et utilisateurs
     if (NS.getError() == null) {
       NS.setMessage("Les menus, recettes et ingrédients ont bien été chargés.");
     }
-    this.menus = Object.values(D.menus);
-    this.recettes = Object.values(D.recettes);
   }
 }
 </script>

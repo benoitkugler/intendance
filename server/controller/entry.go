@@ -87,6 +87,23 @@ func (s Server) LoadAgendaUtilisateur(ct RequeteContext) (out AgendaUtilisateur,
 	return out, nil
 }
 
+// LoadUtilisateurs renvois les données publiques des utilisateurs enregistrés.
+func (s Server) LoadUtilisateurs() (map[int64]Utilisateur, error) {
+	rows, err := s.db.Query("SELECT * FROM utilisateurs")
+	if err != nil {
+		return nil, ErrorSQL(err)
+	}
+	users, err := models.ScanUtilisateurs(rows)
+	if err != nil {
+		return nil, ErrorSQL(err)
+	}
+	out := make(map[int64]Utilisateur, len(users))
+	for k, v := range users {
+		out[k] = Utilisateur{Id: v.Id, PrenomNom: v.PrenomNom}
+	}
+	return out, nil
+}
+
 // ------------------------------------------------------------------------
 // ---------------------------- Ingrédients -------------------------------
 // ------------------------------------------------------------------------
@@ -436,7 +453,7 @@ func (s Server) DeleteMenu(ct RequeteContext, id int64) error {
 	// nécessite de rassembler les données nécessaires à la re-création
 
 	if L := len(ids); L > 0 {
-		return fmt.Errorf(`Ce menu est présent dans <b>%d menu(s)</b>.
+		return fmt.Errorf(`Ce menu est présent dans <b>%d séjours(s)</b>.
 		Si vous souhaitez vraiment le supprimer, il faudra d'abord l'en retirer.`, L)
 	}
 	_, err = ct.tx.Exec("DELETE FROM menu_recettes WHERE id_menu = $1", id)

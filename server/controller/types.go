@@ -36,3 +36,8 @@ type SejourJournees struct {
 type AgendaUtilisateur struct {
 	Sejours map[int64]*SejourJournees `json:"sejours"`
 }
+
+type Utilisateur struct {
+	Id        int64  `json:"id"`
+	PrenomNom string `json:"prenom_nom"`
+}

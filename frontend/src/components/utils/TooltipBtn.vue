@@ -2,7 +2,7 @@
   <v-tooltip bottom>
     <template v-slot:activator="{ on }">
       <v-btn v-on="on" icon @click="$emit('click')">
-        <v-icon>mdi-{{ mdiIcon }}</v-icon>
+        <v-icon :color="color">mdi-{{ mdiIcon }}</v-icon>
       </v-btn>
     </template>
     {{ tooltip }}
@@ -17,7 +17,11 @@ const Props = Vue.extend({
   props: {
     // Date as string
     tooltip: String,
-    mdiIcon: String
+    mdiIcon: String,
+    color: {
+      type: String,
+      default: "black"
+    }
   }
 });
 

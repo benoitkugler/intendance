@@ -2,4 +2,5 @@
     views.OutIngredient views.OutIngredients \
     views.OutRecette views.OutRecettes \
     views.OutMenu views.OutMenus \
-    views.OutSejour views.OutAgenda
+    views.OutSejour views.OutAgenda \
+    views.OutUtilisateurs

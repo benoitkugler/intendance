@@ -6,7 +6,7 @@ import {
   Repas,
   RecetteIngredient,
   MenuIngredient,
-  MenuRecette
+  Utilisateur
 } from "./types";
 
 export type New<T extends { id: number }> = Omit<T, "id"> &
@@ -15,6 +15,7 @@ export type New<T extends { id: number }> = Omit<T, "id"> &
 export type Ingredients = { [key: number]: Ingredient };
 export type Recettes = { [key: number]: Recette };
 export type Menus = { [key: number]: Menu };
+export type Utilisateurs = { [key: number]: Utilisateur };
 
 export type DetailsSejour = Pick<Sejour, "nom" | "date_debut">;
 export type DetailsRepas = Pick<

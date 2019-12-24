@@ -1,7 +1,14 @@
 <template>
   <v-dialog v-model="show" max-width="500">
     <v-card>
-      <v-card-title class="title error" v-html="title"></v-card-title>
+      <v-card-title class="title error">
+        <v-row>
+          <v-col cols="7">{{ mainTitle }}</v-col>
+          <v-col cols="5" class="text-right"
+            ><small>{{ subTitle }}</small></v-col
+          >
+        </v-row>
+      </v-card-title>
       <v-card-text class="pa-3">
         <div v-html="message" class="subtitle-2"></div>
       </v-card-text>
@@ -26,14 +33,18 @@ export default class ErrorDialog extends Vue {
     }
   }
 
-  get title() {
+  get mainTitle() {
     const err = NS.getError();
     if (err == null) return "";
-    let title = err.kind;
-    if (err.code != null) {
-      title += ` <i>(code ${err.code})</i>`;
+    return err.kind;
+  }
+
+  get subTitle() {
+    const err = NS.getError();
+    if (err && err.code != null) {
+      return `code ${err.code}`;
     }
-    return title;
+    return "";
   }
 
   get message() {

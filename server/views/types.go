@@ -44,3 +44,8 @@ type OutSejour struct {
 	Token  string        `json:"token"`
 	Sejour models.Sejour `json:"sejour"`
 }
+
+type OutUtilisateurs struct {
+	Token        string                           `json:"token"`
+	Utilisateurs map[int64]controller.Utilisateur `json:"utilisateurs"`
+}
