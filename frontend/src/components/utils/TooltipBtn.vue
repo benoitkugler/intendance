@@ -1,7 +1,7 @@
 <template>
   <v-tooltip bottom>
     <template v-slot:activator="{ on }">
-      <v-btn v-on="on" icon @click="$emit('click')">
+      <v-btn v-on="on" icon @click="e => $emit('click', e)">
         <v-icon :color="color">mdi-{{ mdiIcon }}</v-icon>
       </v-btn>
     </template>

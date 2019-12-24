@@ -24,6 +24,7 @@
           height="85vh"
           :ingredients="ingredients"
           :bonus-title="ingredientsBonusTitle"
+          v-model="selection.ingredient"
         />
       </v-col>
     </v-row>
@@ -45,7 +46,7 @@ import { NS } from "../logic/notifications";
 interface Selection {
   menu: Menu | null;
   recette: Recette | null;
-  ingredient: Ingredient | null;
+  ingredient: IngredientOptions | null;
 }
 
 @Component({

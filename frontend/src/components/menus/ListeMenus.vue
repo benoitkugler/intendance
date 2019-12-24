@@ -1,5 +1,19 @@
 <template>
   <div>
+    <v-dialog v-model="confirmeSupprime" max-width="500px">
+      <v-card>
+        <v-card-title primary-title color="warning">
+          Confirmer la suppression
+        </v-card-title>
+        <v-card-text>
+          Confirmez-vous la suppression de ce menu ?
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn tile color="warning" @click="supprime">Supprimer</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
     <v-toolbar color="secondary" dense class="my-1">
       <v-toolbar-title>Menus</v-toolbar-title>
     </v-toolbar>
@@ -18,7 +32,7 @@
                 mdi-icon="close"
                 tooltip="Supprimer ce menu"
                 color="red"
-                @click="supprime"
+                @click.stop="confirmeSupprime = true"
               ></tooltip-btn>
             </v-list-item-action>
           </template>
@@ -34,7 +48,10 @@ import Component from "vue-class-component";
 import { Prop, Watch } from "vue-property-decorator";
 import { D } from "../../logic/controller";
 import { Menu } from "../../logic/types";
-import { formatMenuName } from "../../logic/format";
+import {
+  formatMenuName,
+  formatMenuOrRecetteProprietaire
+} from "../../logic/format";
 import { G } from "../../logic/getters";
 import TooltipBtn from "../utils/TooltipBtn.vue";
 import { NS } from "../../logic/notifications";
@@ -55,15 +72,9 @@ const Props = Vue.extend({
   components: { TooltipBtn }
 })
 export default class ListeMenus extends Props {
+  confirmeSupprime = false;
   formatMenuName = formatMenuName;
-
-  formatMenuProprietaire(menu: Menu) {
-    const prop = G.getMenuProprietaire(menu);
-    if (prop == null) {
-      return "public";
-    }
-    return `appartient à ${prop.prenom_nom}`;
-  }
+  formatMenuProprietaire = formatMenuOrRecetteProprietaire;
 
   showDelete(active: boolean, menu: Menu) {
     return (
@@ -74,6 +85,7 @@ export default class ListeMenus extends Props {
   }
 
   async supprime() {
+    this.confirmeSupprime = false;
     if (this.menu == null) return;
     await D.deleteMenu(this.menu);
     if (NS.getError() == null) {
