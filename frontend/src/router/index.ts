@@ -1,23 +1,42 @@
 import Vue from "vue";
-import VueRouter from "vue-router";
-import Home from "../views/Home.vue";
+import VueRouter, { RouteConfig } from "vue-router";
+import Agenda from "../views/Agenda.vue";
 
 Vue.use(VueRouter);
 
-const routes = [
+interface RouteMeta {
+  title: string;
+  tooltip: string;
+  icon: string;
+}
+export interface RouteType extends RouteConfig {
+  meta: RouteMeta;
+}
+
+export const routes: RouteType[] = [
   {
     path: "/",
-    name: "home",
-    component: Home
+    name: "agenda",
+    component: Agenda,
+    meta: {
+      title: "Agenda",
+      tooltip: "Vue d'ensemble des séjours et des repas.",
+      icon: "mdi-calendar-month"
+    }
   },
   {
-    path: "/about",
-    name: "about",
+    path: "/menus",
+    name: "menus",
     // route level code-splitting
-    // this generates a separate chunk (about.[hash].js) for this route
+    // this generates a separate chunk (menus.[hash].js) for this route
     // which is lazy-loaded when the route is visited.
     component: () =>
-      import(/* webpackChunkName: "about" */ "../views/About.vue")
+      import(/* webpackChunkName: "menus" */ "../views/Menus.vue"),
+    meta: {
+      title: "Recettes et ingrédients",
+      tooltip: "Accès aux menus, recettes et ingrédients.",
+      icon: "mdi-food-variant"
+    }
   }
 ];
 
