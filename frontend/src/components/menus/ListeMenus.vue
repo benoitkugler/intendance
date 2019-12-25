@@ -27,12 +27,18 @@
                 <i> {{ formatMenuProprietaire(menu) }}</i>
               </v-list-item-subtitle>
             </v-list-item-content>
-            <v-list-item-action v-if="showDelete(active, menu)">
+            <v-list-item-action v-if="showButtons(active, menu)">
               <tooltip-btn
                 mdi-icon="close"
                 tooltip="Supprimer ce menu"
                 color="red"
                 @click.stop="confirmeSupprime = true"
+              ></tooltip-btn>
+              <tooltip-btn
+                mdi-icon="pencil"
+                tooltip="Modifier ce menu"
+                color="secondary"
+                @click.stop="$emit('edit', menu)"
               ></tooltip-btn>
             </v-list-item-action>
           </template>
@@ -76,7 +82,7 @@ export default class ListeMenus extends Props {
   formatMenuName = formatMenuName;
   formatMenuProprietaire = formatMenuOrRecetteProprietaire;
 
-  showDelete(active: boolean, menu: Menu) {
+  showButtons(active: boolean, menu: Menu) {
     return (
       active &&
       (!menu.id_proprietaire.Valid ||

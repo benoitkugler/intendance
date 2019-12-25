@@ -46,13 +46,14 @@
           :value="ingredient"
         >
           <template v-slot:default="{ active }">
-            <v-list-item-content>
+            <v-list-item-content
+              draggable="true"
+              @dragstart="ev => onDragStart(ev, ingredient.ingredient)"
+            >
               <v-list-item-title>
-                <v-row>
+                <v-row no-gutters>
                   <v-col>
-                    {{ ingredient.ingredient.nom }} ({{
-                      ingredient.ingredient.unite
-                    }})
+                    {{ ingredient.ingredient.nom }}
                   </v-col>
                   <v-spacer></v-spacer>
                   <v-col v-if="ingredient.options"
@@ -61,6 +62,9 @@
                   >
                 </v-row>
               </v-list-item-title>
+              <v-list-item-subtitle>
+                <i>{{ ingredient.ingredient.unite }}</i>
+              </v-list-item-subtitle>
             </v-list-item-content>
             <v-list-item-action v-if="active">
               <tooltip-btn
@@ -114,6 +118,12 @@ export default class ListeIngredients extends Props {
     if (NS.getError() == null) {
       NS.setMessage("Ingrédient supprimé avec succès.");
     }
+  }
+
+  onDragStart(event: DragEvent, ingredient: Ingredient) {
+    if (!event.dataTransfer) return;
+    event.dataTransfer.setData("id-ingredient", String(ingredient.id));
+    event.dataTransfer.effectAllowed = "copy";
   }
 }
 </script>

@@ -39,7 +39,10 @@
           :value="recette"
         >
           <template v-slot:default="{ active }">
-            <v-list-item-content>
+            <v-list-item-content
+              draggable="true"
+              @dragstart="ev => onDragStart(ev, recette)"
+            >
               <v-list-item-title>
                 <v-list-item-title>{{ recette.nom }}</v-list-item-title>
               </v-list-item-title>
@@ -113,6 +116,12 @@ export default class ListeRecettes extends Props {
     if (NS.getError() == null) {
       NS.setMessage("Recette supprimée avec succès.");
     }
+  }
+
+  onDragStart(event: DragEvent, recette: Recette) {
+    if (!event.dataTransfer) return;
+    event.dataTransfer.setData("id-recette", String(recette.id));
+    event.dataTransfer.effectAllowed = "copy";
   }
 }
 </script>

@@ -32,3 +32,5 @@ export interface PreferencesAgenda {
   restrictSejourCourant: boolean;
   startPremierJour: boolean;
 }
+
+export type EditMode = "new" | "edit";
