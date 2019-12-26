@@ -30,18 +30,47 @@
       </v-card>
     </v-dialog>
 
-    <v-toolbar color="secondary" dense class="my-1">
+    <v-toolbar color="secondary" class="toolbar-ingredients my-1">
       <v-toolbar-title class="px-2">
-        Ingrédients <i>{{ bonusTitle }}</i>
+        <v-row no-gutters class="mt-1">
+          <v-col>
+            Ingrédients
+          </v-col>
+        </v-row>
+        <v-row no-gutters
+          ><v-col>
+            <small>
+              <i>{{ bonusTitle }}</i></small
+            >
+          </v-col></v-row
+        >
       </v-toolbar-title>
+      <v-spacer></v-spacer>
+      <v-toolbar-items>
+        <tooltip-btn
+          mdi-icon="magnify"
+          tooltip="Filtrer les ingrédients..."
+          @click="showSearch = !showSearch"
+        />
+      </v-toolbar-items>
     </v-toolbar>
+    <v-text-field
+      outlined
+      label="Rechercher"
+      placeholder="Tappez pour lancer la recherche"
+      v-model="search"
+      hide-details
+      v-if="showSearch"
+      class="mt-2"
+      ref="search"
+    ></v-text-field>
     <v-list dense :max-height="height" class="overflow-y-auto">
       <v-list-item-group
         :value="ingredient"
         @change="args => $emit('change', args)"
       >
         <v-list-item
-          v-for="ingredient in ingredients"
+          v-for="ingredient in ingredientsWithSearch"
           :key="ingredient.ingredient.id"
           :value="ingredient"
         >
@@ -51,19 +80,9 @@
               @dragstart="ev => onDragStart(ev, ingredient.ingredient)"
             >
               <v-list-item-title>
-                <v-row no-gutters>
-                  <v-col>
-                    {{ ingredient.ingredient.nom }}
-                  </v-col>
-                  <v-spacer></v-spacer>
-                  <v-col v-if="ingredient.options"
-                    >{{ ingredient.options.quantite }}
-                    {{ ingredient.options.cuisson }}</v-col
-                  >
-                </v-row>
+                {{ ingredient.ingredient.nom }}
               </v-list-item-title>
-              <v-list-item-subtitle>
-                <i>{{ ingredient.ingredient.unite }}</i>
+              <v-list-item-subtitle v-html="subtitle(ingredient)">
               </v-list-item-subtitle>
             </v-list-item-content>
             <v-list-item-action v-if="active">
@@ -90,6 +109,7 @@ import { Ingredient, RecetteIngredient } from "../../logic/types";
 import { IngredientOptions } from "../../logic/types2";
 import TooltipBtn from "../utils/TooltipBtn.vue";
 import { NS } from "../../logic/notifications";
+import levenshtein from "js-levenshtein";
 
 const Props = Vue.extend({
   props: {
@@ -107,9 +127,45 @@ const Props = Vue.extend({
   }
 });
 
+const MAX_DIST_LEVENSHTEIN = 4;
+
 @Component({ components: { TooltipBtn } })
 export default class ListeIngredients extends Props {
   confirmeSupprime = false;
+  search = "";
+  showSearch = false;
+
+  $refs!: {
+    search: Vue;
+  };
+
+  subtitle(ingredient: IngredientOptions) {
+    if (ingredient.options) {
+      return `${ingredient.options.quantite} <i>${
+        ingredient.ingredient.unite
+      }</i> - Cuisson : ${ingredient.options.cuisson || "-"}`;
+    }
+    return `<i>${ingredient.ingredient.unite}</i>`;
+  }
+
+  // filtre suivant la recherche
+  get ingredientsWithSearch() {
+    if (!this.search || !this.showSearch) return this.ingredients;
+    let filterNom: (nom: string) => boolean;
+    try {
+      const s = new RegExp(this.search, "i");
+      filterNom = nom => s.test(nom);
+    } catch {
+      const sl = this.search.toLowerCase();
+      filterNom = (nom: string) => nom.includes(sl);
+    }
+    return this.ingredients.filter(ing => {
+      if (this.search == ing.ingredient.unite) return true;
+      const nom = ing.ingredient.nom.toLowerCase();
+      if (filterNom(nom)) return true;
+      return levenshtein(nom, this.search) <= MAX_DIST_LEVENSHTEIN;
+    });
+  }
 
   async supprime(checkProduits: boolean) {
     this.confirmeSupprime = false;
@@ -125,5 +181,28 @@ export default class ListeIngredients extends Props {
     event.dataTransfer.setData("id-ingredient", String(ingredient.id));
     event.dataTransfer.effectAllowed = "copy";
   }
+
+  @Watch("showSearch")
+  onShowSearch(b: boolean) {
+    if (!b) return;
+    setTimeout(() => {
+      const input = this.$refs.search.$el.querySelector("input");
+      console.log(input);
+      if (input != null) input.select();
+    }, 50);
+  }
 }
 </script>
+
+<style>
+.toolbar-ingredients .v-input__control {
+  margin: auto;
+}
+.toolbar-ingredients .v-input__slot {
+  height: 100%;
+}
+.toolbar-ingredients .v-input {
+  height: 100%;
+  width: 50%;
+}
+</style>

@@ -13,13 +13,15 @@
       <v-spacer></v-spacer>
       <v-toolbar-items>
         <tooltip-btn
-          mdi-icon="check"
+          mdi-icon="check-outline"
           tooltip="Valider"
           color="success"
+          @click="$emit('done', menu)"
         ></tooltip-btn>
         <tooltip-btn
           mdi-icon="undo"
           tooltip="Abandonner les modifications"
+          @click="$emit('undo')"
         ></tooltip-btn>
       </v-toolbar-items>
     </v-toolbar>

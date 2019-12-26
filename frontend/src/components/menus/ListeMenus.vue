@@ -14,10 +14,10 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-toolbar color="secondary" dense class="my-1">
+    <v-toolbar color="secondary" class="my-1">
       <v-toolbar-title>Menus</v-toolbar-title>
     </v-toolbar>
-    <v-list dense :height="height" class="overflow-y-auto">
+    <v-list dense class="overflow-y-auto">
       <v-list-item-group :value="menu" @change="args => $emit('change', args)">
         <v-list-item v-for="menu in menus" :key="menu.id" :value="menu">
           <template v-slot:default="{ active }">
@@ -28,18 +28,24 @@
               </v-list-item-subtitle>
             </v-list-item-content>
             <v-list-item-action v-if="showButtons(active, menu)">
-              <tooltip-btn
-                mdi-icon="close"
-                tooltip="Supprimer ce menu"
-                color="red"
-                @click.stop="confirmeSupprime = true"
-              ></tooltip-btn>
-              <tooltip-btn
-                mdi-icon="pencil"
-                tooltip="Modifier ce menu"
-                color="secondary"
-                @click.stop="$emit('edit', menu)"
-              ></tooltip-btn>
+              <v-row no-gutters>
+                <v-col
+                  ><tooltip-btn
+                    mdi-icon="pencil"
+                    tooltip="Modifier ce menu"
+                    color="secondary"
+                    @click.stop="$emit('edit', menu)"
+                  ></tooltip-btn
+                ></v-col>
+                <v-col
+                  ><tooltip-btn
+                    mdi-icon="close"
+                    tooltip="Supprimer ce menu"
+                    color="red"
+                    @click.stop="confirmeSupprime = true"
+                  ></tooltip-btn
+                ></v-col>
+              </v-row>
             </v-list-item-action>
           </template>
         </v-list-item>
@@ -64,7 +70,6 @@ import { NS } from "../../logic/notifications";
 
 const Props = Vue.extend({
   props: {
-    height: String,
     menus: Array as () => Menu[],
     menu: Object as () => Menu | null
   },

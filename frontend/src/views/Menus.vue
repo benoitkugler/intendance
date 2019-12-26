@@ -3,10 +3,9 @@
     <v-row wrap>
       <transition name="slide-fade">
         <keep-alive>
-          <v-col v-if="mode == 'visu'">
+          <v-col v-if="mode == 'visu'" :style="{ maxWidth: '35%' }">
             <liste-menus
-              ref="menus"
-              height="80vh"
+              :style="{ height: '80vh' }"
               :menus="menus"
               v-model="selection.menu"
               @edit="startEditMenu"
@@ -17,7 +16,12 @@
       <transition name="slide-fade">
         <keep-alive>
           <v-col v-if="mode == 'editMenu'">
-            <edit-menu :mode="menuEditMode" :initialMenu="menuEdit"></edit-menu>
+            <edit-menu
+              :mode="menuEditMode"
+              :initialMenu="menuEdit"
+              @undo="mode = 'visu'"
+              @done="editMenuDone"
+            ></edit-menu>
           </v-col>
         </keep-alive>
       </transition>
@@ -25,7 +29,6 @@
         <keep-alive>
           <v-col>
             <liste-recettes
-              ref="recettes"
               height="80vh"
               :recettes="recettes"
               :bonus-title="recettesBonusTitle"
@@ -38,7 +41,6 @@
         <keep-alive>
           <v-col>
             <liste-ingredients
-              ref="ingredients"
               height="80vh"
               :ingredients="ingredients"
               :bonus-title="ingredientsBonusTitle"
@@ -80,31 +82,24 @@ export default class Menus extends Vue {
   menuEditMode: EditMode = "new";
   menuEdit: Menu | null = null;
 
-  // annotate refs type
-  $refs!: {
-    menus: ListeMenus;
-    recettes: ListeRecettes;
-    ingredients: ListeIngredients;
-  };
-
   get ingredientsBonusTitle() {
     if (this.mode == "editMenu") {
-      return " - Tous";
+      return "Tous";
     }
     if (this.selection.recette != null) {
-      return " - Recette courante";
+      return "Recette courante";
     } else if (this.selection.menu != null) {
-      return " - Menu courant";
+      return "Menu courant";
     }
     return "";
   }
 
   get recettesBonusTitle() {
     if (this.mode == "editMenu") {
-      return " - Toutes";
+      return "Toutes";
     }
     if (this.selection.menu != null) {
-      return " - Menu courant";
+      return "Menu courant";
     }
     return "";
   }
@@ -149,6 +144,14 @@ export default class Menus extends Vue {
     this.mode = "editMenu";
     this.menuEditMode = "edit";
     this.menuEdit = menu;
+  }
+
+  async editMenuDone(menu: Menu) {
+    await D.updateMenu(menu);
+    if (NS.getError() == null) {
+      NS.setMessage("Le menu a bien été mis à jour.");
+    }
+    this.mode = "visu";
   }
 }
 </script>

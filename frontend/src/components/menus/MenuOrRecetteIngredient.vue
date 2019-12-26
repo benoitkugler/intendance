@@ -1,5 +1,5 @@
 <template>
-  <v-card>
+  <v-card @keyup.native.enter="$emit('edit', current)">
     <v-card-title primary-title>
       Détails de l'ingrédient
     </v-card-title>
