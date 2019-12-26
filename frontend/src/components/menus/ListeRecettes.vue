@@ -52,7 +52,7 @@
       v-model="search"
       hide-details
       v-if="showSearch"
-      class="mt-2"
+      class="my-2"
       ref="search"
     ></v-text-field>
     <v-list dense :max-height="height" class="overflow-y-auto">
@@ -167,6 +167,7 @@ export default class ListeRecettes extends Props {
     this.confirmeSupprime = false;
     if (this.recette == null) return;
     await D.deleteRecette(this.recette);
+    this.$emit("change", null);
     if (NS.getError() == null) {
       NS.setMessage("Recette supprimée avec succès.");
     }

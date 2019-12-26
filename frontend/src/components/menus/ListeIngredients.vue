@@ -61,7 +61,7 @@
       v-model="search"
       hide-details
       v-if="showSearch"
-      class="mt-2"
+      class="my-2"
       ref="search"
     ></v-text-field>
     <v-list dense :max-height="height" class="overflow-y-auto">
