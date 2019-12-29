@@ -1,5 +1,12 @@
 <template>
   <div>
+    <v-dialog v-model="showEditIngredient" max-width="800px">
+      <edit-ingredient
+        :initialIngredient="state.selection.ingredient"
+        @edit="editIngredientDone"
+      ></edit-ingredient>
+    </v-dialog>
+
     <v-dialog v-model="confirmeSupprime" max-width="800px">
       <v-card>
         <v-card-title primary-title color="warning">
@@ -66,11 +73,11 @@
     ></v-text-field>
     <v-list dense :max-height="height" class="overflow-y-auto">
       <v-list-item-group
-        :value="ingredient"
+        :value="state.selection.ingredient"
         @change="args => $emit('change', args)"
       >
         <v-list-item
-          v-for="ingredient in ingredientsWithSearch"
+          v-for="ingredient in ingredients"
           :key="ingredient.ingredient.id"
           :value="ingredient"
         >
@@ -85,13 +92,26 @@
               <v-list-item-subtitle v-html="subtitle(ingredient)">
               </v-list-item-subtitle>
             </v-list-item-content>
-            <v-list-item-action v-if="active">
-              <tooltip-btn
-                mdi-icon="close"
-                tooltip="Supprimer cet ingrédient"
-                color="red"
-                @click.stop="confirmeSupprime = true"
-              ></tooltip-btn>
+            <v-list-item-action v-if="showActions(active)">
+              <v-row no-gutters>
+                <v-col>
+                  <tooltip-btn
+                    mdi-icon="pencil"
+                    tooltip="Modifier cet ingrédient"
+                    color="secondary"
+                    @click.stop="startEditIngredient(ingredient)"
+                  >
+                  </tooltip-btn>
+                </v-col>
+                <v-col>
+                  <tooltip-btn
+                    mdi-icon="close"
+                    tooltip="Supprimer cet ingrédient"
+                    color="red"
+                    @click.stop="confirmeSupprime = true"
+                  ></tooltip-btn>
+                </v-col>
+              </v-row>
             </v-list-item-action>
           </template>
         </v-list-item>
@@ -104,34 +124,32 @@
 import Vue from "vue";
 import Component from "vue-class-component";
 import { Prop, Watch } from "vue-property-decorator";
+
+import EditIngredient from "./EditIngredient.vue";
+
 import { D } from "../../logic/controller";
 import { Ingredient, RecetteIngredient } from "../../logic/types";
 import { IngredientOptions } from "../../logic/types2";
 import TooltipBtn from "../utils/TooltipBtn.vue";
 import { NS } from "../../logic/notifications";
 import levenshtein from "js-levenshtein";
+import { StateMenus } from "./types";
+import { G } from "../../logic/getters";
 
 const Props = Vue.extend({
   props: {
     height: String,
-    ingredients: Array as () => IngredientOptions[],
-    ingredient: Object as () => IngredientOptions | null,
-    bonusTitle: {
-      type: String,
-      default: ""
-    }
-  },
-  model: {
-    prop: "ingredient",
-    event: "change"
+    state: Object as () => StateMenus
   }
 });
 
 const MAX_DIST_LEVENSHTEIN = 4;
 
-@Component({ components: { TooltipBtn } })
+@Component({ components: { TooltipBtn, EditIngredient } })
 export default class ListeIngredients extends Props {
   confirmeSupprime = false;
+  showEditIngredient = false;
+
   search = "";
   showSearch = false;
 
@@ -148,9 +166,21 @@ export default class ListeIngredients extends Props {
     return `<i>${ingredient.ingredient.unite}</i>`;
   }
 
+  get bonusTitle() {
+    if (this.state.mode == "editMenu") {
+      return "Tous";
+    }
+    if (this.state.selection.recette != null) {
+      return "Recette courante";
+    } else if (this.state.selection.menu != null) {
+      return "Menu courant";
+    }
+    return "";
+  }
+
   // filtre suivant la recherche
-  get ingredientsWithSearch() {
-    if (!this.search || !this.showSearch) return this.ingredients;
+  private searchIngredients(ingredients: IngredientOptions[]) {
+    if (!this.search || !this.showSearch) return ingredients;
     let filterNom: (nom: string) => boolean;
     try {
       const s = new RegExp(this.search, "i");
@@ -159,7 +189,7 @@ export default class ListeIngredients extends Props {
       const sl = this.search.toLowerCase();
       filterNom = (nom: string) => nom.includes(sl);
     }
-    return this.ingredients.filter(ing => {
+    return ingredients.filter(ing => {
       if (this.search == ing.ingredient.unite) return true;
       const nom = ing.ingredient.nom.toLowerCase();
       if (filterNom(nom)) return true;
@@ -167,10 +197,35 @@ export default class ListeIngredients extends Props {
     });
   }
 
+  get ingredients() {
+    let baseIngredients: IngredientOptions[];
+    if (this.state.mode == "editMenu" || this.state.mode == "editRecette") {
+      baseIngredients = G.getAllIngredients();
+    } else if (this.state.selection.recette != null) {
+      baseIngredients = G.getRecetteIngredients(this.state.selection.recette);
+    } else if (this.state.selection.menu != null) {
+      baseIngredients = G.getMenuIngredients(this.state.selection.menu);
+    } else {
+      baseIngredients = G.getAllIngredients();
+    }
+    return this.searchIngredients(baseIngredients);
+  }
+
+  showActions(active: boolean) {
+    return (
+      this.state.selection.menu == null &&
+      this.state.selection.recette == null &&
+      active
+    );
+  }
+
   async supprime(checkProduits: boolean) {
     this.confirmeSupprime = false;
-    if (this.ingredient == null) return;
-    await D.deleteIngredient(this.ingredient.ingredient, checkProduits);
+    if (this.state.selection.ingredient == null) return;
+    await D.deleteIngredient(
+      this.state.selection.ingredient.ingredient,
+      checkProduits
+    );
     if (NS.getError() == null) {
       NS.setMessage("Ingrédient supprimé avec succès.");
     }
@@ -187,9 +242,21 @@ export default class ListeIngredients extends Props {
     if (!b) return;
     setTimeout(() => {
       const input = this.$refs.search.$el.querySelector("input");
-      console.log(input);
       if (input != null) input.select();
     }, 50);
+  }
+
+  startEditIngredient(ing: IngredientOptions) {
+    this.$emit("change", ing);
+    this.showEditIngredient = true;
+  }
+
+  async editIngredientDone(ing: Ingredient) {
+    this.showEditIngredient = false;
+    await D.updateIngredient(ing);
+    if (NS.getError() == null) {
+      NS.setMessage("L'ingrédient a été modifié avec succès.");
+    }
   }
 }
 </script>

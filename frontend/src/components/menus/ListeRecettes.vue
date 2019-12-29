@@ -57,11 +57,11 @@
     ></v-text-field>
     <v-list dense :max-height="height" class="overflow-y-auto">
       <v-list-item-group
-        :value="recette"
+        :value="state.selection.recette"
         @change="args => $emit('change', args)"
       >
         <v-list-item
-          v-for="recette in recettesWithSearch"
+          v-for="recette in recettes"
           :key="recette.id"
           :value="recette"
         >
@@ -77,13 +77,25 @@
                 <i> {{ formatRecetteProprietaire(recette) }}</i>
               </v-list-item-subtitle>
             </v-list-item-content>
-            <v-list-item-action v-if="showDelete(active, recette)">
-              <tooltip-btn
-                mdi-icon="close"
-                tooltip="Supprimer cette recette"
-                color="red"
-                @click.stop="confirmeSupprime = true"
-              ></tooltip-btn>
+            <v-list-item-action v-if="showActions(active, recette)">
+              <v-row no-gutters>
+                <v-col
+                  ><tooltip-btn
+                    mdi-icon="pencil"
+                    tooltip="Modifier cette recette"
+                    color="secondary"
+                    @click.stop="$emit('edit', recette)"
+                  ></tooltip-btn
+                ></v-col>
+                <v-col>
+                  <tooltip-btn
+                    mdi-icon="close"
+                    tooltip="Supprimer cette recette"
+                    color="red"
+                    @click.stop="confirmeSupprime = true"
+                  ></tooltip-btn>
+                </v-col>
+              </v-row>
             </v-list-item-action>
           </template>
         </v-list-item>
@@ -101,23 +113,16 @@ import TooltipBtn from "../utils/TooltipBtn.vue";
 
 import { D } from "../../logic/controller";
 import { Recette } from "../../logic/types";
+import { StateMenus } from "./types";
 import { formatMenuOrRecetteProprietaire } from "../../logic/format";
 import { NS } from "../../logic/notifications";
 import levenshtein from "js-levenshtein";
+import { G } from "../../logic/getters";
 
 const Props = Vue.extend({
   props: {
-    height: String,
-    recettes: Array as () => Recette[],
-    bonusTitle: {
-      type: String,
-      default: ""
-    },
-    recette: Object as () => Recette | null
-  },
-  model: {
-    prop: "recette",
-    event: "change"
+    state: Object as () => StateMenus,
+    height: String
   }
 });
 
@@ -136,8 +141,8 @@ export default class ListeRecettes extends Props {
     search: Vue;
   };
 
-  get recettesWithSearch() {
-    if (!this.search || !this.showSearch) return this.recettes;
+  private searchRecettes(recettes: Recette[]) {
+    if (!this.search || !this.showSearch) return recettes;
     let filterNom: (nom: string) => boolean;
     try {
       const s = new RegExp(this.search, "i");
@@ -146,16 +151,38 @@ export default class ListeRecettes extends Props {
       const sl = this.search.toLowerCase();
       filterNom = (nom: string) => nom.includes(sl);
     }
-    return this.recettes.filter(ing => {
+    return recettes.filter(ing => {
       const nom = ing.nom.toLowerCase();
       if (filterNom(nom)) return true;
       return levenshtein(nom, this.search) <= MAX_DIST_LEVENSHTEIN;
     });
   }
 
+  get recettes() {
+    let baseRecettes: Recette[];
+    if (this.state.mode == "editMenu") {
+      baseRecettes = Object.values(D.recettes);
+    } else if (this.state.selection.menu != null) {
+      baseRecettes = G.getMenuRecettes(this.state.selection.menu);
+    } else {
+      baseRecettes = Object.values(D.recettes);
+    }
+    return this.searchRecettes(baseRecettes);
+  }
+
+  get bonusTitle() {
+    if (this.state.mode == "editMenu") {
+      return "Toutes";
+    }
+    if (this.state.selection.menu != null) {
+      return "Menu courant";
+    }
+    return "";
+  }
   formatRecetteProprietaire = formatMenuOrRecetteProprietaire;
 
-  showDelete(active: boolean, recette: Recette) {
+  showActions(active: boolean, recette: Recette) {
+    if (this.state.selection.menu != null) return false;
     return (
       active &&
       (!recette.id_proprietaire.Valid ||
@@ -165,8 +192,8 @@ export default class ListeRecettes extends Props {
 
   async supprime() {
     this.confirmeSupprime = false;
-    if (this.recette == null) return;
-    await D.deleteRecette(this.recette);
+    if (this.state.selection.recette == null) return;
+    await D.deleteRecette(this.state.selection.recette);
     this.$emit("change", null);
     if (NS.getError() == null) {
       NS.setMessage("Recette supprimée avec succès.");
@@ -184,7 +211,6 @@ export default class ListeRecettes extends Props {
     if (!b) return;
     setTimeout(() => {
       const input = this.$refs.search.$el.querySelector("input");
-      console.log(input);
       if (input != null) input.select();
     }, 50);
   }

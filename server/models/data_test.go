@@ -58,6 +58,11 @@ func randCallories() Callories {
 	return Callories{}
 }
 
+// TODO: update
+func randCategorie() Categorie {
+	return ""
+}
+
 func randTime() time.Time {
 	return time.Unix(int64(rand.Int31()), 5)
 }

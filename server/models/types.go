@@ -22,6 +22,9 @@ func (u Unite) String() string {
 	return "unité inconnue"
 }
 
+// Categorie permet de classer les ingrédients
+type Categorie string
+
 type Callories struct{}
 
 // Lundi = 0, Mardi = 1 , etc...

@@ -34,3 +34,4 @@ export interface PreferencesAgenda {
 }
 
 export type EditMode = "new" | "edit";
+

@@ -19,7 +19,7 @@ type Ingredient struct {
 	Nom   string `json:"nom"`
 	Unite Unite  `json:"unite"`
 
-	Categorie string    `json:"categorie"`
+	Categorie Categorie `json:"categorie"`
 	Callories Callories `json:"callories"`
 	// optionnel, zero signifie pas de contrainte
 	Conditionnement Conditionnement `json:"conditionnement,omitempty"`

@@ -49,7 +49,7 @@ func randIngredient() Ingredient {
 		Id:              rand.Int63n(1 << 20),
 		Nom:             randstring(),
 		Unite:           randUnite(),
-		Categorie:       randstring(),
+		Categorie:       randCategorie(),
 		Callories:       randCallories(),
 		Conditionnement: randConditionnement(),
 	}

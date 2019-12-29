@@ -4,3 +4,7 @@
     views.OutMenu views.OutMenus \
     views.OutSejour views.OutAgenda \
     views.OutUtilisateurs
+
+cd server/models && 
+../../../scaneo/scaneo models.go && 
+cd ../..

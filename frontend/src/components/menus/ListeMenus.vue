@@ -18,7 +18,10 @@
       <v-toolbar-title>Menus</v-toolbar-title>
     </v-toolbar>
     <v-list dense class="overflow-y-auto">
-      <v-list-item-group :value="menu" @change="args => $emit('change', args)">
+      <v-list-item-group
+        :value="state.selection.menu"
+        @change="args => $emit('change', args)"
+      >
         <v-list-item v-for="menu in menus" :key="menu.id" :value="menu">
           <template v-slot:default="{ active }">
             <v-list-item-content>
@@ -67,15 +70,11 @@ import {
 import { G } from "../../logic/getters";
 import TooltipBtn from "../utils/TooltipBtn.vue";
 import { NS } from "../../logic/notifications";
+import { StateMenus } from "./types";
 
 const Props = Vue.extend({
   props: {
-    menus: Array as () => Menu[],
-    menu: Object as () => Menu | null
-  },
-  model: {
-    prop: "menu",
-    event: "change"
+    state: Object as () => StateMenus
   }
 });
 
@@ -87,6 +86,10 @@ export default class ListeMenus extends Props {
   formatMenuName = formatMenuName;
   formatMenuProprietaire = formatMenuOrRecetteProprietaire;
 
+  get menus() {
+    return Object.values(D.menus);
+  }
+
   showButtons(active: boolean, menu: Menu) {
     return (
       active &&
@@ -97,8 +100,8 @@ export default class ListeMenus extends Props {
 
   async supprime() {
     this.confirmeSupprime = false;
-    if (this.menu == null) return;
-    await D.deleteMenu(this.menu);
+    if (this.state.selection.menu == null) return;
+    await D.deleteMenu(this.state.selection.menu);
     if (NS.getError() == null) {
       NS.setMessage("Menu supprimé avec succès.");
     }

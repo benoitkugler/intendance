@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/lib/pq"
+
 	"github.com/benoitkugler/intendance/server/models"
 )
 
@@ -75,10 +77,19 @@ type errorSQL struct {
 }
 
 func (e errorSQL) Error() string {
-	return fmt.Sprintf(`La requête SQL correspondant à votre demande a échoué.
-		Détails : 
-		<i>%s</i>
-	`, e.error)
+	return fmt.Sprintf(`La requête SQL correspondant à votre demande a échoué.<br/>
+		Détails : <i>%s</i>
+	`, e.parseDetails())
+}
+
+func (e errorSQL) parseDetails() string {
+	if pqError, ok := e.error.(*pq.Error); ok {
+		switch pqError.Constraint {
+		case "ingredients_nom_key":
+			return "Le nom demandé pour cet ingrédient est <b>déjà pris</b>."
+		}
+	}
+	return e.error.Error()
 }
 
 func ErrorSQL(err error) error { return errorSQL{err} }
