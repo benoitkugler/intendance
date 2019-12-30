@@ -61,7 +61,9 @@
     </v-card-text>
     <v-card-actions>
       <v-spacer></v-spacer>
-      <v-btn color="success" @click="$emit('edit', current)">Valider</v-btn>
+      <v-btn color="success" @click="$emit('edit', current)">{{
+        btnTitle
+      }}</v-btn>
     </v-card-actions>
   </v-card>
 </template>
@@ -71,13 +73,15 @@ import Vue from "vue";
 import Component from "vue-class-component";
 import { RecetteIngredient, Ingredient } from "../../logic/types";
 import { Watch } from "vue-property-decorator";
-import { IngredientOptions } from "../../logic/types2";
+import { IngredientOptions, EditMode } from "../../logic/types2";
 import UniteField from "../utils/UniteField.vue";
 import { Unites, UnitePiece } from "../utils/enums";
+import { DefautIngredient } from "./types";
 
 const EditIngredientProps = Vue.extend({
   props: {
-    initialIngredient: Object as () => IngredientOptions
+    initialIngredient: Object as () => IngredientOptions | null,
+    mode: String as () => EditMode
   }
 });
 
@@ -85,9 +89,16 @@ const EditIngredientProps = Vue.extend({
   components: { UniteField }
 })
 export default class EditIngredient extends EditIngredientProps {
-  current: Ingredient = JSON.parse(
-    JSON.stringify(this.initialIngredient.ingredient)
-  );
+  current = this.copy(this.initialIngredient);
+
+  private copy(initial: IngredientOptions | null): Ingredient {
+    const ing = initial == null ? DefautIngredient : initial.ingredient;
+    return JSON.parse(JSON.stringify(ing));
+  }
+
+  get btnTitle() {
+    return this.mode == "edit" ? "Valider" : "Créer";
+  }
 
   get conditionnement() {
     return this.current.conditionnement.unite != "";
@@ -97,7 +108,9 @@ export default class EditIngredient extends EditIngredientProps {
       this.current.conditionnement = { unite: "", quantite: 0 };
     } else {
       this.current.conditionnement.unite =
-        this.current.unite || this.initialIngredient.ingredient.unite || "L";
+        this.current.unite ||
+        (this.initialIngredient && this.initialIngredient.ingredient.unite) ||
+        "L";
     }
   }
 
@@ -112,9 +125,7 @@ export default class EditIngredient extends EditIngredientProps {
 
   @Watch("initialIngredient")
   onPropChange() {
-    this.current = JSON.parse(
-      JSON.stringify(this.initialIngredient.ingredient)
-    );
+    this.current = this.copy(this.initialIngredient);
   }
 
   $refs!: {

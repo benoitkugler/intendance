@@ -3,6 +3,7 @@
     <v-dialog v-model="showEditIngredient" max-width="800px">
       <edit-ingredient
         :initialIngredient="state.selection.ingredient"
+        :mode="editMode"
         @edit="editIngredientDone"
       ></edit-ingredient>
     </v-dialog>
@@ -58,6 +59,11 @@
           mdi-icon="magnify"
           tooltip="Filtrer les ingrédients..."
           @click="showSearch = !showSearch"
+        />
+        <tooltip-btn
+          mdi-icon="plus-outline"
+          tooltip="Ajouter un ingrédient..."
+          @click="startCreateIngredient"
         />
       </v-toolbar-items>
     </v-toolbar>
@@ -129,11 +135,11 @@ import EditIngredient from "./EditIngredient.vue";
 
 import { D } from "../../logic/controller";
 import { Ingredient, RecetteIngredient } from "../../logic/types";
-import { IngredientOptions } from "../../logic/types2";
+import { IngredientOptions, EditMode, New } from "../../logic/types2";
 import TooltipBtn from "../utils/TooltipBtn.vue";
 import { NS } from "../../logic/notifications";
 import levenshtein from "js-levenshtein";
-import { StateMenus } from "./types";
+import { StateMenus, DefautIngredient } from "./types";
 import { G } from "../../logic/getters";
 
 const Props = Vue.extend({
@@ -148,7 +154,9 @@ const MAX_DIST_LEVENSHTEIN = 4;
 @Component({ components: { TooltipBtn, EditIngredient } })
 export default class ListeIngredients extends Props {
   confirmeSupprime = false;
+
   showEditIngredient = false;
+  editMode: EditMode = "new";
 
   search = "";
   showSearch = false;
@@ -248,15 +256,30 @@ export default class ListeIngredients extends Props {
 
   startEditIngredient(ing: IngredientOptions) {
     this.$emit("change", ing);
+    this.editMode = "edit";
     this.showEditIngredient = true;
   }
 
   async editIngredientDone(ing: Ingredient) {
     this.showEditIngredient = false;
-    await D.updateIngredient(ing);
-    if (NS.getError() == null) {
-      NS.setMessage("L'ingrédient a été modifié avec succès.");
+    let message = "";
+    if (this.editMode == "edit") {
+      await D.updateIngredient(ing);
+      message = "L'ingrédient a été modifié avec succès.";
+    } else {
+      await D.createIngredient(ing);
+      message = "L'ingrédient a été ajouté avec succès.";
     }
+    if (NS.getError() == null) {
+      NS.setMessage(message);
+    }
+    this.$emit("change", null);
+  }
+
+  startCreateIngredient() {
+    this.$emit("change", { ingredient: DefautIngredient });
+    this.editMode = "new";
+    this.showEditIngredient = true;
   }
 }
 </script>

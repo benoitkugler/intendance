@@ -1,6 +1,6 @@
-import { Menu, Recette } from "@/logic/types";
+import { Menu, Recette, Ingredient } from "@/logic/types";
 
-import { IngredientOptions } from "@/logic/types2";
+import { IngredientOptions, New } from "@/logic/types2";
 
 type ModeMenu = "visu" | "editMenu" | "editRecette" | "editIngredient";
 interface SelectionMenu {
@@ -12,3 +12,11 @@ export interface StateMenus {
   mode: ModeMenu;
   selection: SelectionMenu;
 }
+
+export const DefautIngredient: New<Ingredient> = {
+  nom: "",
+  unite: "",
+  categorie: "",
+  conditionnement: { unite: "", quantite: 0 },
+  callories: {}
+};
