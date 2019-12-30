@@ -42,6 +42,12 @@ class Data {
     };
   }
 
+  async loadAllMenus() {
+    await Promise.all([this.loadIngredients(), this.loadUtilisateurs()]);
+    await this.loadRecettes(); // recettes dépend des ingrédients
+    await this.loadMenus(); // menus dépends des recettes, ingrédients et utilisateurs
+  }
+
   loadUtilisateurs = async () => {
     NS.startSpin();
     try {

@@ -94,9 +94,7 @@ export default class Menus extends Vue {
   editMode: EditMode = "new"; // s'applique au menu, recette ou ingrédient
 
   async mounted() {
-    await Promise.all([D.loadIngredients(), D.loadUtilisateurs()]);
-    await D.loadRecettes(); // recettes dépend des ingrédients
-    await D.loadMenus(); // menus dépends des recettes, ingrédients et utilisateurs
+    await D.loadAllMenus();
     if (NS.getError() == null) {
       NS.setMessage("Les menus, recettes et ingrédients ont bien été chargés.");
     }

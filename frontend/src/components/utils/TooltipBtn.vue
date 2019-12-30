@@ -1,7 +1,12 @@
 <template>
   <v-tooltip bottom>
     <template v-slot:activator="{ on }">
-      <v-btn v-on="on" icon @click="e => $emit('click', e)">
+      <v-btn
+        :disabled="disabled"
+        v-on="on"
+        icon
+        @click="e => $emit('click', e)"
+      >
         <v-icon :color="color">mdi-{{ mdiIcon }}</v-icon>
       </v-btn>
     </template>
@@ -21,6 +26,10 @@ const Props = Vue.extend({
     color: {
       type: String,
       default: "black"
+    },
+    disabled: {
+      type: Boolean,
+      default: false
     }
   }
 });

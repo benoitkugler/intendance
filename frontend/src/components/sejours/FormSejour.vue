@@ -31,6 +31,7 @@ import Component from "vue-class-component";
 import { Sejour, SejourJournees } from "../../logic/types";
 import { New, DetailsSejour } from "../../logic/types2";
 import DateField from "../utils/DateField.vue";
+import { Watch } from "vue-property-decorator";
 
 const Props = Vue.extend({
   props: {
@@ -43,6 +44,11 @@ const Props = Vue.extend({
 })
 export default class FormSejour extends Props {
   sejour: DetailsSejour = JSON.parse(JSON.stringify(this.initialSejour));
+
+  @Watch("initialSejour")
+  onPropChange() {
+    this.sejour = JSON.parse(JSON.stringify(this.initialSejour));
+  }
 }
 </script>
 

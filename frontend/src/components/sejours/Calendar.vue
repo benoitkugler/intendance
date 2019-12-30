@@ -14,8 +14,26 @@
     <v-dialog v-model="showEditFormRepas" max-width="500">
       <form-repas
         :initialRepas="editedRepas"
+        :mode="editMode"
         @accept="onEditRepasDone"
+        @delete="deleteRepas"
       ></form-repas>
+    </v-dialog>
+
+    <v-dialog v-model="showConfirmeSupprime" max-width="500px">
+      <v-card>
+        <v-card-title primary-title color="warning">
+          Confirmer la suppression
+        </v-card-title>
+        <v-card-text>
+          Confirmez-vous la suppression du séjour
+          <b>{{ (getCurrentSejour() || {}).nom }}</b> ?
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn tile color="warning" @click="supprimeSejour">Supprimer</v-btn>
+        </v-card-actions>
+      </v-card>
     </v-dialog>
 
     <v-toolbar class="calendar-toolbar mb-1">
@@ -40,12 +58,20 @@
           class="mx-2"
         ></v-select>
         <tooltip-btn
+          :disabled="!currentSejour"
           tooltip="Modifier les paramètres du séjour..."
           mdi-icon="pencil"
           @click="
             editMode = 'edit';
             showEditFormSejour = true;
           "
+        ></tooltip-btn>
+        <tooltip-btn
+          :disabled="!currentSejour"
+          tooltip="Supprimer le séjour..."
+          mdi-icon="close"
+          color="red"
+          @click="showConfirmeSupprime = true"
         ></tooltip-btn>
         <v-divider vertical></v-divider>
         <tooltip-btn
@@ -58,6 +84,7 @@
     <v-calendar
       type="week"
       locale="fr"
+      :event-height="22"
       :short-weekdays="false"
       :first-interval="firstInterval"
       :interval-count="intervalCount"
@@ -71,7 +98,15 @@
       @click:time="startAddRepas"
     >
       <template v-slot:event="{ event }">
-        <div :data-repas="event.dataRepas">{{ event.name }}</div>
+        <div
+          :data-repas="event.dataRepas"
+          @click.stop="startEditRepas(event.repas)"
+          :style="{
+            fontWeight: event.repas.id_sejour == currentSejour ? 'bold' : ''
+          }"
+        >
+          {{ event.name }}
+        </div>
       </template>
       <template v-slot:day-header="{ date }">
         <div :data-day="date"></div>
@@ -85,8 +120,10 @@
       ></template>
     </v-calendar>
     <v-calendar
+      class="mt-1"
       type="week"
       locale="fr"
+      :event-height="22"
       :short-weekdays="false"
       :first-interval="firstInterval"
       :interval-count="intervalCount"
@@ -98,7 +135,29 @@
       :event-color="getEventColor"
       @mousedown:time="registerTime"
       @click:time="startAddRepas"
-    ></v-calendar>
+    >
+      <template v-slot:event="{ event }">
+        <div
+          :data-repas="event.dataRepas"
+          @click.stop="startEditRepas(event.repas)"
+          :style="{
+            fontWeight: event.repas.id_sejour == currentSejour ? 'bold' : ''
+          }"
+        >
+          {{ event.name }}
+        </div>
+      </template>
+      <template v-slot:day-header="{ date }">
+        <div :data-day="date"></div>
+      </template>
+      <template v-slot:interval
+        ><div
+          @dragover="e => onDragover(e, 'repas')"
+          @drop="e => onDrop(e, 'repas')"
+          class="dragover"
+        ></div>
+      </template>
+    </v-calendar>
   </div>
 </template>
 
@@ -119,6 +178,7 @@ import {
 } from "../../logic/types2";
 import { formatRepasName } from "../../logic/format";
 import { NS } from "../../logic/notifications";
+import { G } from "../../logic/getters";
 
 const _days = [0, 1, 2, 3, 4, 5, 6];
 
@@ -144,6 +204,7 @@ type DragKind = "journee" | "repas";
 interface DataEvent {
   name: string;
   start: Time;
+  repas: Repas;
   dataRepas: string; // JSON of Repas
   indexColor: number;
 }
@@ -206,12 +267,16 @@ export default class Calendar extends Props {
   private intervalMinutes = 120;
   private intervalHeight = 25;
 
-  private showPreferences = false;
-  private showEditFormSejour = false;
-  private showEditFormRepas = false;
+  protected showPreferences = false;
+  protected showEditFormSejour = false;
+  protected showEditFormRepas = false;
+  protected showConfirmeSupprime = false;
+
   private editMode: "new" | "edit" = "new";
 
-  private editedRepas: DetailsRepas = {
+  private editedRepas: Repas = {
+    id: -1,
+    id_sejour: -1,
     horaire: { heure: 0, minute: 0 },
     id_menu: -1,
     nb_personnes: 0,
@@ -221,14 +286,15 @@ export default class Calendar extends Props {
   get startDate(): Date {
     const sejour = this.getCurrentSejour();
     if (!sejour) return new Date();
-    return new Date(sejour.sejour.date_debut);
+    return new Date(sejour.date_debut);
   }
 
   get weekdays() {
     if (this.preferences.startPremierJour) {
       return weekdaysFromStart(this.startDate);
+    } else {
+      return [1, 2, 3, 4, 5, 6, 0];
     }
-    return _days;
   }
 
   get startWeek1() {
@@ -256,11 +322,17 @@ export default class Calendar extends Props {
     });
     let out: DataEvent[] = [];
     sejours.forEach((sejour, sejourIndex) => {
+      if (
+        this.preferences.restrictSejourCourant &&
+        sejour.sejour.id != this.currentSejour
+      )
+        return;
       Object.values(sejour.journees).forEach(journee => {
         if (!journee.menus) return;
         out = out.concat(
           journee.menus.map(repas => {
             return {
+              repas: repas,
               name: formatRepasName(repas),
               start: getEventStart(repas, sejour.sejour),
               dataRepas: JSON.stringify(repas),
@@ -279,15 +351,26 @@ export default class Calendar extends Props {
   };
 
   mounted() {
-    // TODO:
-    D.loadAgenda();
-    D.loadMenus();
-    NS.setMessage("");
     this.setupDrag();
   }
 
   updated() {
     this.setupDrag();
+  }
+
+  setClosestSejour() {
+    if (this.sejours.length == 0) return;
+    const computeDistance = (idSejour: number) => {
+      const sej = D.agenda.sejours[idSejour].sejour;
+      const diff = new Date().valueOf() - new Date(sej.date_debut).valueOf();
+      return Math.abs(diff);
+    };
+    const criteres = this.sejours.map(sej => {
+      return { id: sej.value, distance: computeDistance(sej.value) };
+    });
+    const id = criteres.sort((a, b) => (a.distance < b.distance ? 1 : -1))[0]
+      .id;
+    this.currentSejour = id;
   }
 
   // on stocke le moment correspondant au dernier click,
@@ -398,9 +481,9 @@ export default class Calendar extends Props {
     D.switchDays(this.currentSejour, dateFrom, dateTo);
   }
 
-  private getCurrentSejour(): SejourJournees | undefined {
+  private getCurrentSejour(): Sejour | undefined {
     if (this.currentSejour == null) return;
-    return D.agenda.sejours[this.currentSejour];
+    return D.agenda.sejours[this.currentSejour].sejour;
   }
 
   getInitialCurrentSejour() {
@@ -436,9 +519,8 @@ export default class Calendar extends Props {
   }
 
   private async editSejour(modif: DetailsSejour) {
-    const sejourJ = this.getCurrentSejour();
-    if (sejourJ == undefined) return;
-    const sejour = sejourJ.sejour;
+    const sejour = this.getCurrentSejour();
+    if (sejour == undefined) return;
     sejour.date_debut = modif.date_debut;
     sejour.nom = modif.nom;
     await D.updateSejour(sejour);
@@ -447,23 +529,67 @@ export default class Calendar extends Props {
     }
   }
 
+  async supprimeSejour() {
+    const sej = this.getCurrentSejour();
+    if (sej == null) return;
+    this.currentSejour = null;
+    this.showConfirmeSupprime = false;
+    await D.deleteSejour(sej);
+    if (NS.getError() == null) {
+      NS.setMessage("Le séjour a été supprimé avec succès.");
+    }
+  }
+
   startAddRepas(dt: DateTime) {
-    const sejourJ = this.getCurrentSejour();
-    if (sejourJ == undefined) return;
-    const offset = D.getOffset(sejourJ.sejour, new Date(dt.date));
+    const sejour = this.getCurrentSejour();
+    if (sejour == undefined) return;
+    const offset = D.getOffset(sejour, new Date(dt.date));
     if (offset == undefined) return;
-    this.editedRepas.horaire = timeToHoraire(dt.time);
-    this.editedRepas.jour_offset = offset;
+    this.editedRepas = {
+      horaire: timeToHoraire(dt.time),
+      jour_offset: offset,
+      nb_personnes: 0,
+      id_menu: -1,
+      id_sejour: sejour.id,
+      id: -1
+    };
     this.editMode = "new";
     this.showEditFormRepas = true;
   }
 
+  startEditRepas(repas: Repas) {
+    this.editedRepas = repas;
+    this.editMode = "edit";
+    this.showEditFormRepas = true;
+  }
+
   async onEditRepasDone(repas: DetailsRepas) {
+    this.showEditFormRepas = false;
     if (this.currentSejour == null) return;
-    const newRepas: New<Repas> = { ...repas, id_sejour: this.currentSejour };
-    await D.createRepas(newRepas);
+    let message = "";
+    if (this.editMode == "new") {
+      const newRepas: New<Repas> = { ...repas, id_sejour: this.currentSejour };
+      await D.createRepas(newRepas);
+      message = "Le repas a bien été ajouté.";
+    } else {
+      const repasFull = {
+        ...repas,
+        id_sejour: this.editedRepas.id_sejour,
+        id: this.editedRepas.id
+      };
+      await D.updateManyRepas([repasFull]);
+      message = "Le repas a bien été mis à jour.";
+    }
     if (NS.getError() == null) {
-      NS.setMessage("Le repas a bien été ajouté.");
+      NS.setMessage(message);
+    }
+  }
+
+  async deleteRepas(repas: Repas) {
+    this.showEditFormRepas = false;
+    await D.deleteRepas(repas);
+    if (NS.getError() == null) {
+      NS.setMessage("Le repas a été retiré avec succès.");
     }
   }
 }

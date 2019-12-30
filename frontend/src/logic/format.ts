@@ -4,8 +4,8 @@ import { G } from "./getters";
 
 export function formatRepasName(r: Repas) {
   const menu = D.menus[r.id_menu];
-  if (!menu) return "";
-  return formatMenuName(menu);
+  const menuName = menu ? formatMenuName(menu) : "";
+  return ` (${r.nb_personnes}) - ${menuName}`;
 }
 
 export function formatMenuName(menu: Menu) {
