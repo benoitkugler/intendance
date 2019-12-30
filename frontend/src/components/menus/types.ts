@@ -20,3 +20,17 @@ export const DefautIngredient: New<Ingredient> = {
   conditionnement: { unite: "", quantite: 0 },
   callories: {}
 };
+
+export const DefautRecette: New<Recette> = {
+  id_proprietaire: { Valid: true, Int64: -1 },
+  ingredients: [],
+  mode_emploi: "",
+  nom: ""
+};
+
+export const DefautMenu: New<Menu> = {
+  commentaire: "",
+  id_proprietaire: { Valid: true, Int64: -1 },
+  ingredients: [],
+  recettes: []
+};

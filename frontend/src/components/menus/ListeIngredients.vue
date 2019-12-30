@@ -61,9 +61,15 @@
           @click="showSearch = !showSearch"
         />
         <tooltip-btn
-          mdi-icon="plus-outline"
+          mdi-icon="plus-thick"
           tooltip="Ajouter un ingrédient..."
           @click="startCreateIngredient"
+          color="green"
+          v-if="
+            state.mode == 'visu' &&
+              state.selection.menu == null &&
+              state.selection.recette == null
+          "
         />
       </v-toolbar-items>
     </v-toolbar>

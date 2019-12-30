@@ -140,6 +140,9 @@ func CreateRecette(c echo.Context) error {
 		return err
 	}
 	recetteIn.Id = newRecette.Id // on garde les valeurs d'entrée
+	for i := range recetteIn.Ingredients {
+		(&recetteIn.Ingredients[i]).IdRecette = newRecette.Id
+	}
 	recetteIn, err = Server.UpdateRecette(ct, recetteIn)
 	if err != nil {
 		return err
@@ -203,20 +206,26 @@ func CreateMenu(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	var recetteIn controller.Menu
-	if err = c.Bind(&recetteIn); err != nil {
+	var menuIn controller.Menu
+	if err = c.Bind(&menuIn); err != nil {
 		return err
 	}
 	newMenu, err := Server.CreateMenu(ct)
 	if err != nil {
 		return err
 	}
-	recetteIn.Id = newMenu.Id // on garde les valeurs d'entrée
-	recetteIn, err = Server.UpdateMenu(ct, recetteIn)
+	menuIn.Id = newMenu.Id // on garde les valeurs d'entrée
+	for i := range menuIn.Recettes {
+		(&menuIn.Recettes[i]).IdMenu = newMenu.Id
+	}
+	for i := range menuIn.Ingredients {
+		(&menuIn.Ingredients[i]).IdMenu = newMenu.Id
+	}
+	menuIn, err = Server.UpdateMenu(ct, menuIn)
 	if err != nil {
 		return err
 	}
-	return c.JSON(200, OutMenu{Token: ct.Token, Menu: recetteIn})
+	return c.JSON(200, OutMenu{Token: ct.Token, Menu: menuIn})
 }
 
 func UpdateMenu(c echo.Context) error {

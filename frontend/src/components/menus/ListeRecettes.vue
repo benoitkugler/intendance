@@ -43,6 +43,13 @@
           tooltip="Filtrer les recettes..."
           @click="showSearch = !showSearch"
         />
+        <tooltip-btn
+          mdi-icon="plus-thick"
+          color="green"
+          tooltip="Ajouter une recette..."
+          @click="$emit('new')"
+          v-if="state.mode == 'visu' && state.selection.menu == null"
+        />
       </v-toolbar-items>
     </v-toolbar>
     <v-text-field

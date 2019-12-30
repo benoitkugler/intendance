@@ -16,6 +16,16 @@
     </v-dialog>
     <v-toolbar color="secondary" class="my-1">
       <v-toolbar-title>Menus</v-toolbar-title>
+      <v-spacer></v-spacer>
+      <v-toolbar-items>
+        <tooltip-btn
+          mdi-icon="plus-thick"
+          color="green"
+          tooltip="Ajouter un menu..."
+          @click="$emit('new')"
+          v-if="state.mode == 'visu'"
+        />
+      </v-toolbar-items>
     </v-toolbar>
     <v-list dense class="overflow-y-auto">
       <v-list-item-group

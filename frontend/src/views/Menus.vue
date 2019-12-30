@@ -6,8 +6,9 @@
           <liste-menus
             :style="{ height: '80vh' }"
             :state="state"
-            @edit="startEditMenu"
             @change="menu => (state.selection.menu = menu)"
+            @edit="startEditMenu"
+            @new="startCreateMenu"
           />
         </v-col>
         <v-col v-if="state.mode == 'editMenu'" key="edit">
@@ -29,6 +30,7 @@
             :state="state"
             @change="rec => (state.selection.recette = rec)"
             @edit="startEditRecette"
+            @new="startCreateRecette"
           />
         </v-col>
         <v-col v-if="state.mode == 'editRecette'" key="edit">
@@ -66,9 +68,13 @@ import EditRecette from "../components/menus/EditRecette.vue";
 import { D } from "../logic/controller";
 import { Menu, Recette, Ingredient } from "../logic/types";
 import { G } from "../logic/getters";
-import { IngredientOptions, EditMode } from "../logic/types2";
+import { IngredientOptions, EditMode, New } from "../logic/types2";
 import { NS } from "../logic/notifications";
-import { StateMenus } from "../components/menus/types";
+import {
+  StateMenus,
+  DefautRecette,
+  DefautMenu
+} from "../components/menus/types";
 
 @Component({
   components: {
@@ -102,28 +108,60 @@ export default class Menus extends Vue {
     this.editMode = "edit";
   }
 
+  startCreateMenu() {
+    if (D.idUtilisateur == null) return;
+    const newMenu: Menu = JSON.parse(JSON.stringify(DefautMenu));
+    newMenu.id_proprietaire.Int64 = D.idUtilisateur;
+    this.state.selection.menu = newMenu;
+    this.editMode = "new";
+    this.state.mode = "editMenu";
+  }
+
   async editMenuDone(menu: Menu) {
-    await D.updateMenu(menu);
-    if (NS.getError() == null) {
-      NS.setMessage("Le menu a bien été mis à jour.");
+    let message = "";
+    if (this.editMode == "edit") {
+      await D.updateMenu(menu);
+      message = "Le menu a bien été mis à jour.";
+    } else {
+      await D.createMenu(menu);
+      message = "Le menu a bien été ajouté.";
     }
-    this.state.mode = "visu";
+    if (NS.getError() == null) {
+      NS.setMessage(message);
+    }
     this.state.selection.menu = null;
+    this.state.mode = "visu";
   }
 
   startEditRecette(recette: Recette) {
     this.state.selection.recette = recette;
-    this.state.mode = "editRecette";
     this.editMode = "edit";
+    this.state.mode = "editRecette";
+  }
+
+  startCreateRecette() {
+    if (D.idUtilisateur == null) return;
+    const newRecette: Recette = JSON.parse(JSON.stringify(DefautRecette));
+    newRecette.id_proprietaire.Int64 = D.idUtilisateur;
+    this.state.selection.recette = newRecette;
+    this.editMode = "new";
+    this.state.mode = "editRecette";
   }
 
   async editRecetteDone(recette: Recette) {
-    await D.updateRecette(recette);
-    if (NS.getError() == null) {
-      NS.setMessage("La recette a bien été mise à jour.");
+    let message = "";
+    if (this.editMode == "edit") {
+      await D.updateRecette(recette);
+      message = "La recette a bien été mise à jour.";
+    } else {
+      await D.createRecette(recette);
+      message = "La recette a bien été ajoutée.";
     }
-    this.state.mode = "visu";
+    if (NS.getError() == null) {
+      NS.setMessage(message);
+    }
     this.state.selection.recette = null;
+    this.state.mode = "visu";
   }
 }
 </script>

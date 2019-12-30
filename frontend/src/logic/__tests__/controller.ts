@@ -52,6 +52,8 @@ test("crud recette", async () => {
   await Promise.all([D.loadRecettes(), D.loadIngredients()]);
   expect(NS.getError()).toBeNull();
 
+  const ingId = Number(Object.keys(D.ingredients)[0]);
+
   const l = Object.keys(D.recettes).length;
   let recette = await D.createRecette({
     nom:
@@ -62,13 +64,18 @@ test("crud recette", async () => {
         .substr(0, 5),
     id_proprietaire: { Valid: true, Int64: IdProprietaire },
     mode_emploi: "BAtter les oeufs en eige....",
-    ingredients: []
+    ingredients: [
+      {
+        id_ingredient: ingId,
+        cuisson: "buit",
+        quantite: 4,
+        id_recette: -1
+      }
+    ]
   });
   expect(NS.getError()).toBeNull();
   expect(Object.keys(D.recettes)).toHaveLength(l + 1);
   if (!recette) return;
-
-  const ingId = Number(Object.keys(D.ingredients)[0]);
 
   recette.ingredients = [
     {
