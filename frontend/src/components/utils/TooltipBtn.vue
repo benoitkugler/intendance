@@ -10,7 +10,7 @@
         <v-icon :color="color">mdi-{{ mdiIcon }}</v-icon>
       </v-btn>
     </template>
-    {{ tooltip }}
+    <div v-html="tooltip"></div>
   </v-tooltip>
 </template>
 

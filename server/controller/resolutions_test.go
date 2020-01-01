@@ -20,7 +20,7 @@ func TestResoudRepas(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	res, err := s.ResoudIngredients(repas.Id)
+	res, err := s.ResoudIngredients(repas.Id, -1)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -308,26 +308,18 @@ export default class Calendar extends Props {
 
   get events(): DataEvent[] {
     let out: DataEvent[] = [];
-    this.sortedSejours.forEach((sejour, sejourIndex) => {
-      if (
-        this.preferences.restrictSejourCourant &&
-        sejour.sejour.id != this.currentSejour
-      )
-        return;
-      Object.values(sejour.journees).forEach(journee => {
-        if (!journee.menus) return;
-        out = out.concat(
-          journee.menus.map(repas => {
-            return {
-              repas: repas,
-              name: C.formatter.formatRepasName(repas),
-              start: getEventStart(repas, sejour.sejour),
-              dataRepas: JSON.stringify(repas)
-            };
-          })
-        );
-      });
+    const restrict = this.preferences.restrictSejourCourant;
+    C.iterateAllRepas((sejour, repas) => {
+      if (restrict && sejour.id != this.currentSejour) return;
+      const data = {
+        repas: repas,
+        name: C.formatter.formatRepasName(repas),
+        start: getEventStart(repas, sejour),
+        dataRepas: JSON.stringify(repas)
+      };
+      out.push(data);
     });
+
     return out;
   }
 

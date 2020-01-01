@@ -3,7 +3,8 @@
     views.OutRecette views.OutRecettes \
     views.OutMenu views.OutMenus \
     views.OutSejour views.OutAgenda \
-    views.OutUtilisateurs
+    views.OutUtilisateurs \
+    views.InResoudIngredients views.OutResoudIngredients
 
 cd server/models && 
 ../../../scaneo/scaneo models.go && 

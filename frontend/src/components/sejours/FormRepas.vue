@@ -32,6 +32,13 @@
         >Supprimer</v-btn
       >
       <v-spacer></v-spacer>
+      <tooltip-btn
+        v-if="mode == 'edit'"
+        mdi-icon="food-variant"
+        tooltip="Calculer les <b>ingrédients</b> nécessaires au repas..."
+        @click="resoudIngredients"
+      ></tooltip-btn>
+      <v-spacer></v-spacer>
       <v-btn color="success" @click="$emit('accept', repas)">{{
         mode == "edit" ? "Enregistrer" : "Ajouter"
       }}</v-btn>
@@ -45,6 +52,7 @@ import Component from "vue-class-component";
 import { Repas } from "../../logic/types";
 import { New, DetailsRepas, EditMode } from "../../logic/types2";
 import DateField from "../utils/DateField.vue";
+import TooltipBtn from "../utils/TooltipBtn.vue";
 import { C } from "../../logic/controller";
 import { Watch } from "vue-property-decorator";
 import { Horaires } from "../utils/enums";
@@ -58,7 +66,7 @@ const Props = Vue.extend({
 });
 
 @Component({
-  components: { DateField }
+  components: { DateField, TooltipBtn }
 })
 export default class FormRepas extends Props {
   repas: DetailsRepas = JSON.parse(JSON.stringify(this.initialRepas));
@@ -83,6 +91,14 @@ export default class FormRepas extends Props {
   get horaireFormatted() {
     const horaire = this.repas.horaire;
     return `(Personnalisé) - ${Formatter.horaireToTime(horaire)}`;
+  }
+
+  async resoudIngredients() {
+    const data = await C.calculs.resoudIngredientsRepas(
+      this.initialRepas.id,
+      this.repas.nb_personnes
+    );
+    console.log(data);
   }
 }
 </script>

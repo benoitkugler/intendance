@@ -10,11 +10,14 @@ import (
 // Ce fichier implémente le calcul des ingrédients pour un repas, une journée,
 // ou un séjour, ainsi que l'association avec les produits correspondants.
 
-func (s Server) ResoudIngredients(idRepas int64) ([]IngredientQuantite, error) {
-	r := s.db.QueryRow("SELECT * FROM repass WHERE id = $1", idRepas)
-	repas, err := models.ScanRepas(r)
-	if err != nil {
-		return nil, ErrorSQL(err)
+func (s Server) ResoudIngredients(idRepas, nbPersonnes int64) ([]IngredientQuantite, error) {
+	if nbPersonnes == -1 {
+		r := s.db.QueryRow("SELECT * FROM repass WHERE id = $1", idRepas)
+		repas, err := models.ScanRepas(r)
+		if err != nil {
+			return nil, ErrorSQL(err)
+		}
+		nbPersonnes = repas.NbPersonnes
 	}
 
 	rows, err := s.db.Query(`SELECT recette_ingredients.* FROM recette_ingredients 
@@ -41,13 +44,13 @@ func (s Server) ResoudIngredients(idRepas int64) ([]IngredientQuantite, error) {
 
 	total := map[int64]float64{} // idIngredient -> quantité pour le nombre de personnes souhaité
 	ids := make(pq.Int64Array, 0, len(recetteIngredients)+len(menuIngredients))
-	nbPersonnes := float64(repas.NbPersonnes)
+	nbPersonnesF := float64(nbPersonnes)
 	for _, rIng := range recetteIngredients {
-		total[rIng.IdIngredient] += nbPersonnes * rIng.Quantite
+		total[rIng.IdIngredient] += nbPersonnesF * rIng.Quantite
 		ids = append(ids, rIng.IdIngredient)
 	}
 	for _, rIng := range menuIngredients {
-		total[rIng.IdIngredient] += nbPersonnes * rIng.Quantite
+		total[rIng.IdIngredient] += nbPersonnesF * rIng.Quantite
 		ids = append(ids, rIng.IdIngredient)
 	}
 	rows, err = s.db.Query("SELECT * FROM ingredients WHERE id = ANY($1)", ids)
@@ -64,6 +67,7 @@ func (s Server) ResoudIngredients(idRepas int64) ([]IngredientQuantite, error) {
 			out = append(out, IngredientQuantite{Ingredient: ing, Quantite: quantite})
 		}
 	}
-	sort.Slice(out, func(i, j int) bool { return out[i].Quantite < out[j].Quantite })
+	// par ordre décroissant
+	sort.Slice(out, func(i, j int) bool { return out[i].Quantite > out[j].Quantite })
 	return out, nil
 }

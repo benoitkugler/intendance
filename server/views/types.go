@@ -50,15 +50,19 @@ type OutUtilisateurs struct {
 	Utilisateurs map[int64]controller.Utilisateur `json:"utilisateurs"`
 }
 
-type InResoudRepas struct {
-	Mode string
+type InResoudIngredients struct {
+	Mode string `json:"mode"`
 
-	IdRepas    int64 // pour Mode == "repas"
-	IdSejour   int64 // pour Mode == "sejour" ou "journee"
-	JourOffset int   // pour Mode == "journee"
+	IdRepas int64 `json:"id_repas"` // pour Mode == "repas"
+	// pour Mode == "repas" seulement
+	// donner -1 pour utiliser le nombre de personnes actuel
+	NbPersonnes int64 `json:"nb_personnes"`
+
+	IdSejour   int64 `json:"id_sejour"`   // pour Mode == "sejour" ou "journee"
+	JourOffset int   `json:"jour_offset"` // pour Mode == "journee"
 }
 
-type OutResoudRepas struct {
+type OutResoudIngredients struct {
 	Token       string                          `json:"token"`
 	Ingredients []controller.IngredientQuantite `json:"ingredients"`
 }

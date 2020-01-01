@@ -37,6 +37,6 @@ type Utilisateur struct {
 }
 
 type IngredientQuantite struct {
-	models.Ingredient
-	Quantite float64 `json:"quantite"`
+	Ingredient models.Ingredient `json:"ingredient"`
+	Quantite   float64           `json:"quantite"`
 }

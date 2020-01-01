@@ -408,15 +408,15 @@ func ResoudIngredients(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	var params InResoudRepas
+	var params InResoudIngredients
 	if err = c.Bind(&params); err != nil {
 		return err
 	}
-	var out OutResoudRepas
+	var out OutResoudIngredients
 	out.Token = ct.Token
 	switch params.Mode {
 	case "repas":
-		out.Ingredients, err = Server.ResoudIngredients(params.IdRepas)
+		out.Ingredients, err = Server.ResoudIngredients(params.IdRepas, params.NbPersonnes)
 	}
 	if err != nil {
 		return err
