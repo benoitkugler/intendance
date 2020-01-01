@@ -118,13 +118,10 @@ import { Prop, Watch } from "vue-property-decorator";
 
 import TooltipBtn from "../utils/TooltipBtn.vue";
 
-import { D } from "../../logic/controller";
+import { C } from "../../logic/controller";
 import { Recette } from "../../logic/types";
 import { StateMenus } from "./types";
-import { formatMenuOrRecetteProprietaire } from "../../logic/format";
-import { NS } from "../../logic/notifications";
 import levenshtein from "js-levenshtein";
-import { G } from "../../logic/getters";
 
 const Props = Vue.extend({
   props: {
@@ -168,11 +165,11 @@ export default class ListeRecettes extends Props {
   get recettes() {
     let baseRecettes: Recette[];
     if (this.state.mode == "editMenu") {
-      baseRecettes = Object.values(D.recettes);
+      baseRecettes = Object.values(C.data.recettes);
     } else if (this.state.selection.menu != null) {
-      baseRecettes = G.getMenuRecettes(this.state.selection.menu);
+      baseRecettes = C.getMenuRecettes(this.state.selection.menu);
     } else {
-      baseRecettes = Object.values(D.recettes);
+      baseRecettes = Object.values(C.data.recettes);
     }
     return this.searchRecettes(baseRecettes);
   }
@@ -186,24 +183,24 @@ export default class ListeRecettes extends Props {
     }
     return "";
   }
-  formatRecetteProprietaire = formatMenuOrRecetteProprietaire;
+  formatRecetteProprietaire = C.formatter.formatMenuOrRecetteProprietaire;
 
   showActions(active: boolean, recette: Recette) {
     if (this.state.selection.menu != null) return false;
     return (
       active &&
       (!recette.id_proprietaire.Valid ||
-        recette.id_proprietaire.Int64 == D.idUtilisateur)
+        recette.id_proprietaire.Int64 == C.idUtilisateur)
     );
   }
 
   async supprime() {
     this.confirmeSupprime = false;
     if (this.state.selection.recette == null) return;
-    await D.deleteRecette(this.state.selection.recette);
+    await C.data.deleteRecette(this.state.selection.recette);
     this.$emit("change", null);
-    if (NS.getError() == null) {
-      NS.setMessage("Recette supprimée avec succès.");
+    if (C.notifications.getError() == null) {
+      C.notifications.setMessage("Recette supprimée avec succès.");
     }
   }
 

@@ -8,8 +8,7 @@
 import Component from "vue-class-component";
 import Vue from "vue";
 import Calendar from "../components/sejours/Calendar.vue";
-import { D } from "../logic/controller";
-import { NS } from "../logic/notifications";
+import { C } from "../logic/controller";
 
 @Component({
   components: { Calendar }
@@ -20,10 +19,10 @@ export default class Agenda extends Vue {
   };
 
   async mounted() {
-    await D.loadAllMenus();
-    await D.loadAgenda();
-    if (NS.getError() == null) {
-      NS.setMessage("L'agenda a bien été chargé.");
+    await C.data.loadAllMenus();
+    await C.data.loadAgenda();
+    if (C.notifications.getError() == null) {
+      C.notifications.setMessage("L'agenda a bien été chargé.");
     }
     this.$refs.calendar.setClosestSejour();
   }

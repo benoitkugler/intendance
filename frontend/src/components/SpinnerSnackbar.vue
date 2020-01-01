@@ -8,12 +8,12 @@
 <script lang="ts">
 import Vue from "vue";
 import Component from "vue-class-component";
-import { NS } from "../logic/notifications";
+import { C } from "../logic/controller";
 
 @Component
 export default class SpinnerSnackbar extends Vue {
   get show() {
-    return NS.getSpin();
+    return C.notifications.getSpin();
   }
 
   set show(b: boolean) {}

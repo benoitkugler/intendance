@@ -117,7 +117,7 @@ import Component from "vue-class-component";
 import TooltipBtn from "../utils/TooltipBtn.vue";
 import MenuOrRecetteIngredient from "./MenuOrRecetteIngredient.vue";
 
-import { D } from "../../logic/controller";
+import { C } from "../../logic/controller";
 import {
   Menu,
   Recette,
@@ -125,8 +125,6 @@ import {
   RecetteIngredient
 } from "../../logic/types";
 import { New, EditMode } from "../../logic/types2";
-import { formatMenuOrRecetteProprietaire } from "../../logic/format";
-import { G } from "../../logic/getters";
 import { Watch } from "vue-property-decorator";
 const EditMenuProps = Vue.extend({
   props: {
@@ -157,13 +155,13 @@ export default class EditMenu extends EditMenuProps {
 
   // résoud les recettes à partir des ids
   get recettes() {
-    return G.getMenuRecettes(this.menu);
+    return C.getMenuRecettes(this.menu);
   }
 
-  formatRecetteProprietaire = formatMenuOrRecetteProprietaire;
+  formatRecetteProprietaire = C.formatter.formatMenuOrRecetteProprietaire;
 
   getIngredient(ing: MenuIngredient) {
-    return D.ingredients[ing.id_ingredient];
+    return C.data.ingredients[ing.id_ingredient];
   }
 
   removeRecette(toRemove: Recette) {

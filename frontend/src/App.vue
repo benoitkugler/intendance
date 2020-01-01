@@ -36,8 +36,8 @@ import SuccessSnackbar from "./components/SuccessSnackbar.vue";
 import SpinnerSnackbar from "./components/SpinnerSnackbar.vue";
 import NavigationBar from "./components/NavigationBar.vue";
 
-import { D, devMode } from "./logic/controller";
-import { NS } from "./logic/notifications";
+import { C } from "./logic/controller";
+import { devMode } from "./logic/data";
 import { RouteType } from "./router";
 
 declare var process: {
@@ -55,8 +55,7 @@ declare var process: {
   }
 })
 export default class App extends Vue {
-  private storage = D;
-  private notifications = NS;
+  private controller = C;
 
   isLoggedIn = devMode;
 

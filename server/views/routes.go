@@ -398,3 +398,28 @@ func DeleteRepas(c echo.Context) error {
 	}
 	return c.JSON(200, OutAgenda{Token: ct.Token, Agenda: out})
 }
+
+// --------------------------------------------------------------------------
+// -------------------- Résolutions des ingrédients -------------------------
+// --------------------------------------------------------------------------
+
+func ResoudIngredients(c echo.Context) error {
+	ct, err := Server.Authentifie(c.Request())
+	if err != nil {
+		return err
+	}
+	var params InResoudRepas
+	if err = c.Bind(&params); err != nil {
+		return err
+	}
+	var out OutResoudRepas
+	out.Token = ct.Token
+	switch params.Mode {
+	case "repas":
+		out.Ingredients, err = Server.ResoudIngredients(params.IdRepas)
+	}
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, out)
+}

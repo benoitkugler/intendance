@@ -1,19 +1,18 @@
-import { D } from "../controller";
-import { NS } from "../notifications";
+import { C } from "../controller";
 
 const IdProprietaire = 2;
 
 test("load agenda", async () => {
-  await D.loadAgenda();
-  expect(NS.getError()).toBeNull();
+  await C.data.loadAgenda();
+  expect(C.notifications.getError()).toBeNull();
 });
 
 test("crud ingredient", async () => {
-  await D.loadIngredients();
-  expect(NS.getError()).toBeNull();
+  await C.data.loadIngredients();
+  expect(C.notifications.getError()).toBeNull();
 
-  const l = Object.keys(D.ingredients).length;
-  const ing = await D.createIngredient({
+  const l = Object.keys(C.data.ingredients).length;
+  const ing = await C.data.createIngredient({
     nom:
       "Concombres" +
       Math.random()
@@ -25,11 +24,11 @@ test("crud ingredient", async () => {
     categorie: "",
     unite: "L"
   });
-  expect(NS.getError()).toBeNull();
-  expect(Object.keys(D.ingredients)).toHaveLength(l + 1);
+  expect(C.notifications.getError()).toBeNull();
+  expect(Object.keys(C.data.ingredients)).toHaveLength(l + 1);
   if (!ing) return;
 
-  await D.updateIngredient({
+  await C.data.updateIngredient({
     id: ing.id,
     nom:
       "Concombres" +
@@ -42,20 +41,20 @@ test("crud ingredient", async () => {
     categorie: "nouvelle cat&gori",
     unite: "Kg"
   });
-  expect(NS.getError()).toBeNull();
+  expect(C.notifications.getError()).toBeNull();
 
-  await D.deleteIngredient(ing, false);
-  expect(Object.keys(D.ingredients)).toHaveLength(l);
+  await C.data.deleteIngredient(ing, false);
+  expect(Object.keys(C.data.ingredients)).toHaveLength(l);
 });
 
 test("crud recette", async () => {
-  await Promise.all([D.loadRecettes(), D.loadIngredients()]);
-  expect(NS.getError()).toBeNull();
+  await Promise.all([C.data.loadRecettes(), C.data.loadIngredients()]);
+  expect(C.notifications.getError()).toBeNull();
 
-  const ingId = Number(Object.keys(D.ingredients)[0]);
+  const ingId = Number(Object.keys(C.data.ingredients)[0]);
 
-  const l = Object.keys(D.recettes).length;
-  let recette = await D.createRecette({
+  const l = Object.keys(C.data.recettes).length;
+  let recette = await C.data.createRecette({
     nom:
       "Gratin de semoule" +
       Math.random()
@@ -73,8 +72,8 @@ test("crud recette", async () => {
       }
     ]
   });
-  expect(NS.getError()).toBeNull();
-  expect(Object.keys(D.recettes)).toHaveLength(l + 1);
+  expect(C.notifications.getError()).toBeNull();
+  expect(Object.keys(C.data.recettes)).toHaveLength(l + 1);
   if (!recette) return;
 
   recette.ingredients = [
@@ -86,32 +85,32 @@ test("crud recette", async () => {
     }
   ];
 
-  recette = await D.updateRecette(recette);
-  expect(NS.getError()).toBeNull();
+  recette = await C.data.updateRecette(recette);
+  expect(C.notifications.getError()).toBeNull();
   if (!recette) return;
   expect(recette.ingredients).toHaveLength(1);
 
-  await D.deleteRecette(recette);
-  expect(Object.keys(D.recettes)).toHaveLength(l);
+  await C.data.deleteRecette(recette);
+  expect(Object.keys(C.data.recettes)).toHaveLength(l);
 });
 
 test("crud menu", async () => {
-  await Promise.all([D.loadRecettes(), D.loadIngredients(), D.loadMenus()]);
-  expect(NS.getError()).toBeNull();
+  await C.data.loadAllMenus();
+  expect(C.notifications.getError()).toBeNull();
 
-  const l = Object.keys(D.menus).length;
-  let menu = await D.createMenu({
+  const l = Object.keys(C.data.menus).length;
+  let menu = await C.data.createMenu({
     id_proprietaire: { Valid: true, Int64: IdProprietaire },
     commentaire: "BAtter les oeufs en eige....",
     ingredients: [],
     recettes: []
   });
-  expect(NS.getError()).toBeNull();
-  expect(Object.keys(D.menus)).toHaveLength(l + 1);
+  expect(C.notifications.getError()).toBeNull();
+  expect(Object.keys(C.data.menus)).toHaveLength(l + 1);
   if (!menu) return;
 
-  const ingId = Number(Object.keys(D.ingredients)[0]);
-  const recId = Number(Object.keys(D.recettes)[0]);
+  const ingId = Number(Object.keys(C.data.ingredients)[0]);
+  const recId = Number(Object.keys(C.data.recettes)[0]);
 
   menu.ingredients = [
     {
@@ -128,67 +127,67 @@ test("crud menu", async () => {
     }
   ];
 
-  menu = await D.updateMenu(menu);
-  expect(NS.getError()).toBeNull();
+  menu = await C.data.updateMenu(menu);
+  expect(C.notifications.getError()).toBeNull();
   if (!menu) return;
   expect(menu.ingredients).toHaveLength(1);
   expect(menu.recettes).toHaveLength(1);
 
-  await D.deleteMenu(menu);
-  expect(Object.keys(D.menus)).toHaveLength(l);
-});
+  await C.data.deleteMenu(menu);
+  expect(Object.keys(C.data.menus)).toHaveLength(l);
+}, 10000);
 
 test("crud sejour", async () => {
-  await D.loadMenus();
-  expect(NS.getError()).toBeNull();
+  await C.data.loadMenus();
+  expect(C.notifications.getError()).toBeNull();
 
-  const l = Object.keys(D.agenda.sejours).length;
-  let sejour = await D.createSejour({
+  const l = Object.keys(C.data.agenda.sejours).length;
+  let sejour = await C.data.createSejour({
     date_debut: new Date().toISOString(),
     nom: "C2 Again !",
     id_proprietaire: IdProprietaire
   });
-  expect(NS.getError()).toBeNull();
-  expect(Object.keys(D.agenda.sejours)).toHaveLength(l + 1);
+  expect(C.notifications.getError()).toBeNull();
+  expect(Object.keys(C.data.agenda.sejours)).toHaveLength(l + 1);
   if (!sejour) return;
 
   sejour.nom = "Ah non C3";
   sejour.date_debut = new Date().toISOString();
-  sejour = await D.updateSejour(sejour);
-  expect(NS.getError()).toBeNull();
+  sejour = await C.data.updateSejour(sejour);
+  expect(C.notifications.getError()).toBeNull();
   if (!sejour) return;
   expect(sejour.nom).toBe("Ah non C3");
 
-  await D.deleteSejour(sejour);
-  expect(Object.keys(D.agenda.sejours)).toHaveLength(l);
+  await C.data.deleteSejour(sejour);
+  expect(Object.keys(C.data.agenda.sejours)).toHaveLength(l);
 });
 
 test("crud repas", async () => {
-  await D.loadMenus();
-  expect(NS.getError()).toBeNull();
+  await C.data.loadMenus();
+  expect(C.notifications.getError()).toBeNull();
 
-  const menuId = Number(Object.keys(D.menus)[0]);
-  const sejourId = Number(Object.keys(D.agenda.sejours)[0]);
+  const menuId = Number(Object.keys(C.data.menus)[0]);
+  const sejourId = Number(Object.keys(C.data.agenda.sejours)[0]);
 
-  const journee = (D.agenda.sejours[sejourId]?.journees || {})[2];
+  const journee = (C.data.agenda.sejours[sejourId]?.journees || {})[2];
   const l = journee?.menus?.length || 0;
-  await D.createRepas({
+  await C.data.createRepas({
     horaire: { heure: 10, minute: 20 },
     id_menu: menuId,
     id_sejour: sejourId,
     jour_offset: 2,
     nb_personnes: 50
   });
-  expect(NS.getError()).toBeNull();
-  let menus = D.agenda.sejours[sejourId]!.journees[2]?.menus || [];
+  expect(C.notifications.getError()).toBeNull();
+  let menus = C.data.agenda.sejours[sejourId]!.journees[2]?.menus || [];
   expect(menus).toHaveLength(l + 1);
 
   const repas = menus[0];
   repas.horaire = { heure: 12, minute: 20 };
-  await D.updateManyRepas([repas]);
-  expect(NS.getError()).toBeNull();
+  await C.data.updateManyRepas([repas]);
+  expect(C.notifications.getError()).toBeNull();
 
-  await D.deleteRepas(repas);
-  menus = D.agenda.sejours[sejourId]!.journees[2]?.menus || [];
+  await C.data.deleteRepas(repas);
+  menus = C.data.agenda.sejours[sejourId]!.journees[2]?.menus || [];
   expect(menus).toHaveLength(l);
 });

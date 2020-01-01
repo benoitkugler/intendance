@@ -139,14 +139,12 @@ import { Prop, Watch } from "vue-property-decorator";
 
 import EditIngredient from "./EditIngredient.vue";
 
-import { D } from "../../logic/controller";
+import { C } from "../../logic/controller";
 import { Ingredient, RecetteIngredient } from "../../logic/types";
 import { IngredientOptions, EditMode, New } from "../../logic/types2";
 import TooltipBtn from "../utils/TooltipBtn.vue";
-import { NS } from "../../logic/notifications";
 import levenshtein from "js-levenshtein";
 import { StateMenus, DefautIngredient } from "./types";
-import { G } from "../../logic/getters";
 
 const Props = Vue.extend({
   props: {
@@ -214,13 +212,13 @@ export default class ListeIngredients extends Props {
   get ingredients() {
     let baseIngredients: IngredientOptions[];
     if (this.state.mode == "editMenu" || this.state.mode == "editRecette") {
-      baseIngredients = G.getAllIngredients();
+      baseIngredients = C.getAllIngredients();
     } else if (this.state.selection.recette != null) {
-      baseIngredients = G.getRecetteIngredients(this.state.selection.recette);
+      baseIngredients = C.getRecetteIngredients(this.state.selection.recette);
     } else if (this.state.selection.menu != null) {
-      baseIngredients = G.getMenuIngredients(this.state.selection.menu);
+      baseIngredients = C.getMenuIngredients(this.state.selection.menu);
     } else {
-      baseIngredients = G.getAllIngredients();
+      baseIngredients = C.getAllIngredients();
     }
     return this.searchIngredients(baseIngredients);
   }
@@ -236,12 +234,12 @@ export default class ListeIngredients extends Props {
   async supprime(checkProduits: boolean) {
     this.confirmeSupprime = false;
     if (this.state.selection.ingredient == null) return;
-    await D.deleteIngredient(
+    await C.data.deleteIngredient(
       this.state.selection.ingredient.ingredient,
       checkProduits
     );
-    if (NS.getError() == null) {
-      NS.setMessage("Ingrédient supprimé avec succès.");
+    if (C.notifications.getError() == null) {
+      C.notifications.setMessage("Ingrédient supprimé avec succès.");
     }
   }
 
@@ -270,14 +268,14 @@ export default class ListeIngredients extends Props {
     this.showEditIngredient = false;
     let message = "";
     if (this.editMode == "edit") {
-      await D.updateIngredient(ing);
+      await C.data.updateIngredient(ing);
       message = "L'ingrédient a été modifié avec succès.";
     } else {
-      await D.createIngredient(ing);
+      await C.data.createIngredient(ing);
       message = "L'ingrédient a été ajouté avec succès.";
     }
-    if (NS.getError() == null) {
-      NS.setMessage(message);
+    if (C.notifications.getError() == null) {
+      C.notifications.setMessage(message);
     }
     this.$emit("change", null);
   }

@@ -19,6 +19,12 @@
           :items="menus"
           v-model="repas.id_menu"
         ></v-autocomplete>
+        <v-select
+          :items="horaires"
+          v-model="repas.horaire"
+          label="Horaire"
+          :placeholder="horaireFormatted"
+        ></v-select>
       </v-form>
     </v-card-text>
     <v-card-actions>
@@ -39,9 +45,10 @@ import Component from "vue-class-component";
 import { Repas } from "../../logic/types";
 import { New, DetailsRepas, EditMode } from "../../logic/types2";
 import DateField from "../utils/DateField.vue";
-import { D } from "../../logic/controller";
-import { formatMenuName } from "../../logic/format";
+import { C } from "../../logic/controller";
 import { Watch } from "vue-property-decorator";
+import { Horaires } from "../utils/enums";
+import { Formatter } from "../../logic/formatter";
 
 const Props = Vue.extend({
   props: {
@@ -56,19 +63,26 @@ const Props = Vue.extend({
 export default class FormRepas extends Props {
   repas: DetailsRepas = JSON.parse(JSON.stringify(this.initialRepas));
 
+  horaires = Horaires;
+
   @Watch("initialRepas")
   onPropChange() {
     this.repas = JSON.parse(JSON.stringify(this.initialRepas));
   }
 
   get sejour() {
-    return D.agenda.sejours[this.initialRepas.id_sejour].sejour;
+    return C.data.agenda.sejours[this.initialRepas.id_sejour].sejour;
   }
 
   get menus() {
-    return Object.values(D.menus).map(menu => {
-      return { text: formatMenuName(menu), value: menu.id };
+    return Object.values(C.data.menus).map(menu => {
+      return { text: C.formatter.formatMenuName(menu), value: menu.id };
     });
+  }
+
+  get horaireFormatted() {
+    const horaire = this.repas.horaire;
+    return `(Personnalisé) - ${Formatter.horaireToTime(horaire)}`;
   }
 }
 </script>

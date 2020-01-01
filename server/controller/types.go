@@ -14,12 +14,6 @@ type Menu struct {
 	Ingredients []models.MenuIngredient `json:"ingredients"`
 }
 
-// type Items struct {
-// 	Ingredients models.Ingredients `json:"ingredients"`
-// 	Recettes    models.Recettes    `json:"recettes"`
-// 	Menus       models.Menus       `json:"menus"`
-// }
-
 type Journee struct {
 	JourOffset int64          `json:"jour_offset"`
 	Repas      []models.Repas `json:"menus"`
@@ -40,4 +34,9 @@ type AgendaUtilisateur struct {
 type Utilisateur struct {
 	Id        int64  `json:"id"`
 	PrenomNom string `json:"prenom_nom"`
+}
+
+type IngredientQuantite struct {
+	models.Ingredient
+	Quantite float64 `json:"quantite"`
 }

@@ -99,11 +99,9 @@ import Component from "vue-class-component";
 import TooltipBtn from "../utils/TooltipBtn.vue";
 import MenuOrRecetteIngredient from "./MenuOrRecetteIngredient.vue";
 
-import { D } from "../../logic/controller";
+import { C } from "../../logic/controller";
 import { Recette, RecetteIngredient } from "../../logic/types";
 import { New, EditMode } from "../../logic/types2";
-import { formatMenuOrRecetteProprietaire } from "../../logic/format";
-import { G } from "../../logic/getters";
 import { Watch } from "vue-property-decorator";
 const EditRecetteProps = Vue.extend({
   props: {
@@ -132,10 +130,10 @@ export default class EditRecette extends EditRecetteProps {
     return "Ajouter une recette";
   }
 
-  formatRecetteProprietaire = formatMenuOrRecetteProprietaire;
+  formatRecetteProprietaire = C.formatter.formatMenuOrRecetteProprietaire;
 
   getIngredient(ing: RecetteIngredient) {
-    return D.ingredients[ing.id_ingredient];
+    return C.data.ingredients[ing.id_ingredient];
   }
 
   editIngredient(ing: RecetteIngredient) {

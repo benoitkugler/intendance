@@ -49,3 +49,16 @@ type OutUtilisateurs struct {
 	Token        string                           `json:"token"`
 	Utilisateurs map[int64]controller.Utilisateur `json:"utilisateurs"`
 }
+
+type InResoudRepas struct {
+	Mode string
+
+	IdRepas    int64 // pour Mode == "repas"
+	IdSejour   int64 // pour Mode == "sejour" ou "journee"
+	JourOffset int   // pour Mode == "journee"
+}
+
+type OutResoudRepas struct {
+	Token       string                          `json:"token"`
+	Ingredients []controller.IngredientQuantite `json:"ingredients"`
+}

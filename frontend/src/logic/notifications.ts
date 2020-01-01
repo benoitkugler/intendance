@@ -10,16 +10,12 @@ function arrayBufferToString(buffer: ArrayBuffer) {
   return decodeURIComponent(escape(encodedString));
 }
 
-class NotificationsState {
-  private error: Error | null;
-  private message: string | null;
-  private spin: boolean;
-
-  constructor() {
-    this.error = null;
-    this.message = null;
-    this.spin = false;
-  }
+// Contient les données nécessaires aux notifications
+// (erreurs ou succès)
+export class Notifications {
+  private error: Error | null = null;
+  private message: string | null = null;
+  private spin: boolean = false;
 
   getError() {
     return this.error;
@@ -63,7 +59,7 @@ class NotificationsState {
           const json = arrayBufferToString(error.response.data);
           messageHtml = JSON.parse(json).message;
         } catch (error) {
-          messageHtml = `Impossible de décoder la réponse du serveur. <br/>
+          messageHtml = `Le format d'erreur du serveur n'a pu être décodé.<br/>
           Détails : <i>${error}</i>`;
         }
       }
@@ -84,7 +80,3 @@ class NotificationsState {
     this.spin = false;
   }
 }
-
-// Contient les données nécessaires aux notifications
-// (erreurs ou succès)
-export const NS = new NotificationsState();

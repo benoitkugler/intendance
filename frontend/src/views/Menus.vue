@@ -65,11 +65,9 @@ import ListeRecettes from "../components/menus/ListeRecettes.vue";
 import ListeIngredients from "../components/menus/ListeIngredients.vue";
 import EditMenu from "../components/menus/EditMenu.vue";
 import EditRecette from "../components/menus/EditRecette.vue";
-import { D } from "../logic/controller";
+import { C } from "../logic/controller";
 import { Menu, Recette, Ingredient } from "../logic/types";
-import { G } from "../logic/getters";
 import { IngredientOptions, EditMode, New } from "../logic/types2";
-import { NS } from "../logic/notifications";
 import {
   StateMenus,
   DefautRecette,
@@ -94,9 +92,11 @@ export default class Menus extends Vue {
   editMode: EditMode = "new"; // s'applique au menu, recette ou ingrédient
 
   async mounted() {
-    await D.loadAllMenus();
-    if (NS.getError() == null) {
-      NS.setMessage("Les menus, recettes et ingrédients ont bien été chargés.");
+    await C.data.loadAllMenus();
+    if (C.notifications.getError() == null) {
+      C.notifications.setMessage(
+        "Les menus, recettes et ingrédients ont bien été chargés."
+      );
     }
   }
 
@@ -107,9 +107,9 @@ export default class Menus extends Vue {
   }
 
   startCreateMenu() {
-    if (D.idUtilisateur == null) return;
+    if (C.idUtilisateur == null) return;
     const newMenu: Menu = JSON.parse(JSON.stringify(DefautMenu));
-    newMenu.id_proprietaire.Int64 = D.idUtilisateur;
+    newMenu.id_proprietaire.Int64 = C.idUtilisateur;
     this.state.selection.menu = newMenu;
     this.editMode = "new";
     this.state.mode = "editMenu";
@@ -118,14 +118,14 @@ export default class Menus extends Vue {
   async editMenuDone(menu: Menu) {
     let message = "";
     if (this.editMode == "edit") {
-      await D.updateMenu(menu);
+      await C.data.updateMenu(menu);
       message = "Le menu a bien été mis à jour.";
     } else {
-      await D.createMenu(menu);
+      await C.data.createMenu(menu);
       message = "Le menu a bien été ajouté.";
     }
-    if (NS.getError() == null) {
-      NS.setMessage(message);
+    if (C.notifications.getError() == null) {
+      C.notifications.setMessage(message);
     }
     this.state.selection.menu = null;
     this.state.mode = "visu";
@@ -138,9 +138,9 @@ export default class Menus extends Vue {
   }
 
   startCreateRecette() {
-    if (D.idUtilisateur == null) return;
+    if (C.idUtilisateur == null) return;
     const newRecette: Recette = JSON.parse(JSON.stringify(DefautRecette));
-    newRecette.id_proprietaire.Int64 = D.idUtilisateur;
+    newRecette.id_proprietaire.Int64 = C.idUtilisateur;
     this.state.selection.recette = newRecette;
     this.editMode = "new";
     this.state.mode = "editRecette";
@@ -149,14 +149,14 @@ export default class Menus extends Vue {
   async editRecetteDone(recette: Recette) {
     let message = "";
     if (this.editMode == "edit") {
-      await D.updateRecette(recette);
+      await C.data.updateRecette(recette);
       message = "La recette a bien été mise à jour.";
     } else {
-      await D.createRecette(recette);
+      await C.data.createRecette(recette);
       message = "La recette a bien été ajoutée.";
     }
-    if (NS.getError() == null) {
-      NS.setMessage(message);
+    if (C.notifications.getError() == null) {
+      C.notifications.setMessage(message);
     }
     this.state.selection.recette = null;
     this.state.mode = "visu";

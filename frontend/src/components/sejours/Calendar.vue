@@ -170,7 +170,7 @@ import { Repas, Sejour, Horaire, SejourJournees } from "../../logic/types";
 import FormSejour from "./FormSejour.vue";
 import FormRepas from "./FormRepas.vue";
 import FormPreferences from "./FormPreferences.vue";
-import { D } from "../../logic/controller";
+import { C } from "../../logic/controller";
 import TooltipBtn from "../utils/TooltipBtn.vue";
 import {
   DetailsSejour,
@@ -178,9 +178,7 @@ import {
   DetailsRepas,
   PreferencesAgenda
 } from "../../logic/types2";
-import { formatRepasName } from "../../logic/format";
-import { NS } from "../../logic/notifications";
-import { G } from "../../logic/getters";
+import { Formatter } from "../../logic/formatter";
 
 const _days = [0, 1, 2, 3, 4, 5, 6];
 
@@ -228,18 +226,10 @@ function timeToHoraire(time: string): Horaire {
   };
 }
 
-function horaireToTime(horaire: Horaire) {
-  return (
-    ("00" + horaire.heure).substr(-2, 2) +
-    ":" +
-    ("00" + horaire.minute).substr(-2, 2)
-  );
-}
-
 function getEventStart(r: Repas, sejour: Sejour) {
   const dateDebut = new Date(sejour.date_debut);
   dateDebut.setDate(dateDebut.getDate() + r.jour_offset);
-  return formatDate(dateDebut) + " " + horaireToTime(r.horaire);
+  return formatDate(dateDebut) + " " + Formatter.horaireToTime(r.horaire);
 }
 
 const Props = Vue.extend({
@@ -264,8 +254,8 @@ export default class Calendar extends Props {
   };
 
   private firstInterval = 4;
-  private intervalCount = 7;
   private intervalMinutes = 120;
+  private intervalCount = 8;
   private intervalHeight = 25;
 
   protected showPreferences = false;
@@ -309,7 +299,7 @@ export default class Calendar extends Props {
   }
 
   get sejours() {
-    const items = Object.values(D.agenda.sejours).map(sejour => {
+    const items = Object.values(C.data.agenda.sejours).map(sejour => {
       return { value: sejour.sejour.id, text: sejour.sejour.nom };
     });
     items.sort((a, b) => Number(a.text < b.text));
@@ -330,7 +320,7 @@ export default class Calendar extends Props {
           journee.menus.map(repas => {
             return {
               repas: repas,
-              name: formatRepasName(repas),
+              name: C.formatter.formatRepasName(repas),
               start: getEventStart(repas, sejour.sejour),
               dataRepas: JSON.stringify(repas)
             };
@@ -342,7 +332,7 @@ export default class Calendar extends Props {
   }
 
   private get sortedSejours() {
-    const sejours = Object.values(D.agenda.sejours);
+    const sejours = Object.values(C.data.agenda.sejours);
     sejours.sort((a, b) => {
       return a.sejour.date_debut < b.sejour.date_debut ? 1 : -1;
     });
@@ -385,7 +375,7 @@ export default class Calendar extends Props {
   setClosestSejour() {
     if (this.sejours.length == 0) return;
     const computeDistance = (idSejour: number) => {
-      const sej = D.agenda.sejours[idSejour].sejour;
+      const sej = C.data.agenda.sejours[idSejour].sejour;
       const diff = new Date().valueOf() - new Date(sej.date_debut).valueOf();
       return Math.abs(diff);
     };
@@ -460,7 +450,7 @@ export default class Calendar extends Props {
       heure: Number(targetTime.time.substr(0, 2)),
       minute: Number(targetTime.time.substr(3, 2))
     };
-    D.deplaceRepas(repas, jour, horaire);
+    C.data.deplaceRepas(repas, jour, horaire);
   }
 
   private onDropRepas(
@@ -502,17 +492,17 @@ export default class Calendar extends Props {
     if (!customDiv || !customDiv.dataset.day) return;
     const dateTo = new Date(customDiv.dataset.day);
     if (isNaN(dateFrom.getTime()) || isNaN(dateTo.getTime())) return;
-    D.switchDays(this.currentSejour, dateFrom, dateTo);
+    C.data.switchDays(this.currentSejour, dateFrom, dateTo);
   }
 
   private getCurrentSejour(): Sejour | undefined {
     if (this.currentSejour == null) return;
-    return D.agenda.sejours[this.currentSejour].sejour;
+    return C.data.agenda.sejours[this.currentSejour].sejour;
   }
 
   getInitialCurrentSejour() {
     const newSejour = {
-      id_proprietaire: D.idUtilisateur,
+      id_proprietaire: C.idUtilisateur,
       nom: "",
       date_debut: ""
     };
@@ -529,15 +519,15 @@ export default class Calendar extends Props {
   }
 
   private async addSejour(modif: DetailsSejour) {
-    if (D.idUtilisateur == null) return;
+    if (C.idUtilisateur == null) return;
     const sejour: New<Sejour> = {
       nom: modif.nom,
       date_debut: modif.date_debut,
-      id_proprietaire: D.idUtilisateur
+      id_proprietaire: C.idUtilisateur
     };
-    const newSejour = await D.createSejour(sejour);
-    if (NS.getError() == null && newSejour != undefined) {
-      NS.setMessage("Le séjour a bien été ajouté.");
+    const newSejour = await C.data.createSejour(sejour);
+    if (C.notifications.getError() == null && newSejour != undefined) {
+      C.notifications.setMessage("Le séjour a bien été ajouté.");
       this.currentSejour = newSejour.id;
     }
   }
@@ -547,9 +537,9 @@ export default class Calendar extends Props {
     if (sejour == undefined) return;
     sejour.date_debut = modif.date_debut;
     sejour.nom = modif.nom;
-    await D.updateSejour(sejour);
-    if (NS.getError() == null) {
-      NS.setMessage("Le séjour a bien été modifié.");
+    await C.data.updateSejour(sejour);
+    if (C.notifications.getError() == null) {
+      C.notifications.setMessage("Le séjour a bien été modifié.");
     }
   }
 
@@ -558,16 +548,16 @@ export default class Calendar extends Props {
     if (sej == null) return;
     this.currentSejour = null;
     this.showConfirmeSupprime = false;
-    await D.deleteSejour(sej);
-    if (NS.getError() == null) {
-      NS.setMessage("Le séjour a été supprimé avec succès.");
+    await C.data.deleteSejour(sej);
+    if (C.notifications.getError() == null) {
+      C.notifications.setMessage("Le séjour a été supprimé avec succès.");
     }
   }
 
   startAddRepas(dt: DateTime) {
     const sejour = this.getCurrentSejour();
     if (sejour == undefined) return;
-    const offset = D.getOffset(sejour, new Date(dt.date));
+    const offset = C.data.getOffset(sejour, new Date(dt.date));
     if (offset == undefined) return;
     this.editedRepas = {
       horaire: timeToHoraire(dt.time),
@@ -593,7 +583,7 @@ export default class Calendar extends Props {
     let message = "";
     if (this.editMode == "new") {
       const newRepas: New<Repas> = { ...repas, id_sejour: this.currentSejour };
-      await D.createRepas(newRepas);
+      await C.data.createRepas(newRepas);
       message = "Le repas a bien été ajouté.";
     } else {
       const repasFull = {
@@ -601,19 +591,19 @@ export default class Calendar extends Props {
         id_sejour: this.editedRepas.id_sejour,
         id: this.editedRepas.id
       };
-      await D.updateManyRepas([repasFull]);
+      await C.data.updateManyRepas([repasFull]);
       message = "Le repas a bien été mis à jour.";
     }
-    if (NS.getError() == null) {
-      NS.setMessage(message);
+    if (C.notifications.getError() == null) {
+      C.notifications.setMessage(message);
     }
   }
 
   async deleteRepas(repas: Repas) {
     this.showEditFormRepas = false;
-    await D.deleteRepas(repas);
-    if (NS.getError() == null) {
-      NS.setMessage("Le repas a été retiré avec succès.");
+    await C.data.deleteRepas(repas);
+    if (C.notifications.getError() == null) {
+      C.notifications.setMessage("Le repas a été retiré avec succès.");
     }
   }
 }

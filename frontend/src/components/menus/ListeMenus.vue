@@ -71,15 +71,9 @@
 import Vue from "vue";
 import Component from "vue-class-component";
 import { Prop, Watch } from "vue-property-decorator";
-import { D } from "../../logic/controller";
+import { C } from "../../logic/controller";
 import { Menu } from "../../logic/types";
-import {
-  formatMenuName,
-  formatMenuOrRecetteProprietaire
-} from "../../logic/format";
-import { G } from "../../logic/getters";
 import TooltipBtn from "../utils/TooltipBtn.vue";
-import { NS } from "../../logic/notifications";
 import { StateMenus } from "./types";
 
 const Props = Vue.extend({
@@ -93,27 +87,27 @@ const Props = Vue.extend({
 })
 export default class ListeMenus extends Props {
   confirmeSupprime = false;
-  formatMenuName = formatMenuName;
-  formatMenuProprietaire = formatMenuOrRecetteProprietaire;
+  formatMenuName = C.formatter.formatMenuName;
+  formatMenuProprietaire = C.formatter.formatMenuOrRecetteProprietaire;
 
   get menus() {
-    return Object.values(D.menus);
+    return Object.values(C.data.menus);
   }
 
   showButtons(active: boolean, menu: Menu) {
     return (
       active &&
       (!menu.id_proprietaire.Valid ||
-        menu.id_proprietaire.Int64 == D.idUtilisateur)
+        menu.id_proprietaire.Int64 == C.idUtilisateur)
     );
   }
 
   async supprime() {
     this.confirmeSupprime = false;
     if (this.state.selection.menu == null) return;
-    await D.deleteMenu(this.state.selection.menu);
-    if (NS.getError() == null) {
-      NS.setMessage("Menu supprimé avec succès.");
+    await C.data.deleteMenu(this.state.selection.menu);
+    if (C.notifications.getError() == null) {
+      C.notifications.setMessage("Menu supprimé avec succès.");
     }
   }
 }
