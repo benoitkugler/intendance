@@ -90,6 +90,7 @@
       :interval-count="intervalCount"
       :interval-minutes="intervalMinutes"
       :interval-height="intervalHeight"
+      :interval-style="intervalStyle"
       :start="startWeek1"
       :weekdays="weekdays"
       :events="events"
@@ -129,6 +130,7 @@
       :interval-count="intervalCount"
       :interval-minutes="intervalMinutes"
       :interval-height="intervalHeight"
+      :interval-style="intervalStyle"
       :start="startWeek2"
       :weekdays="weekdays"
       :events="events"
@@ -206,7 +208,6 @@ interface DataEvent {
   start: Time;
   repas: Repas;
   dataRepas: string; // JSON of Repas
-  indexColor: number;
 }
 
 // renvoie l'ordre des jours pour que `start` soit
@@ -316,12 +317,8 @@ export default class Calendar extends Props {
   }
 
   get events(): DataEvent[] {
-    const sejours = Object.values(D.agenda.sejours);
-    sejours.sort((a, b) => {
-      return a.sejour.date_debut < b.sejour.date_debut ? 1 : -1;
-    });
     let out: DataEvent[] = [];
-    sejours.forEach((sejour, sejourIndex) => {
+    this.sortedSejours.forEach((sejour, sejourIndex) => {
       if (
         this.preferences.restrictSejourCourant &&
         sejour.sejour.id != this.currentSejour
@@ -335,8 +332,7 @@ export default class Calendar extends Props {
               repas: repas,
               name: formatRepasName(repas),
               start: getEventStart(repas, sejour.sejour),
-              dataRepas: JSON.stringify(repas),
-              indexColor: sejourIndex
+              dataRepas: JSON.stringify(repas)
             };
           })
         );
@@ -345,9 +341,37 @@ export default class Calendar extends Props {
     return out;
   }
 
-  getEventColor = (event: DataEvent) => {
+  private get sortedSejours() {
+    const sejours = Object.values(D.agenda.sejours);
+    sejours.sort((a, b) => {
+      return a.sejour.date_debut < b.sejour.date_debut ? 1 : -1;
+    });
+    return sejours;
+  }
+
+  private sejourColor(idSejour: number) {
     const L = _colors.length;
-    return _colors[event.indexColor % L];
+    const index = this.sortedSejours.findIndex(
+      sej => sej.sejour.id == idSejour
+    );
+    if (index != -1) {
+      return _colors[index % L];
+    }
+    return "black";
+  }
+
+  intervalStyle(interval: DateTime) {
+    const day = new Date(interval.date);
+    const sej = this.getCurrentSejour();
+    if (!sej) return {};
+    const debutSejour = new Date(sej.date_debut);
+    if (debutSejour <= day) {
+      return { backgroundColor: this.sejourColor(sej.id), opacity: 0.15 };
+    }
+  }
+
+  getEventColor = (event: DataEvent) => {
+    return this.sejourColor(event.repas.id_sejour);
   };
 
   mounted() {
