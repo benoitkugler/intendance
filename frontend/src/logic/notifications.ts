@@ -43,7 +43,7 @@ export class Notifications {
     this.error = error;
   }
 
-  setAxiosError(error: any) {
+  private parseAxiosError(error: any): Error {
     let kind: string,
       messageHtml: string,
       code = null;
@@ -60,7 +60,7 @@ export class Notifications {
           messageHtml = JSON.parse(json).message;
         } catch (error) {
           messageHtml = `Le format d'erreur du serveur n'a pu être décodé.<br/>
-          Détails : <i>${error}</i>`;
+        Détails : <i>${error}</i>`;
         }
       }
     } else if (error.request) {
@@ -74,9 +74,13 @@ export class Notifications {
       // Something happened in setting up the request that triggered an Error
       kind = "Erreur du client";
       messageHtml = `La requête n'a pu être mise en place. <br/>
-                    Détails :  ${error.message} `;
+                  Détails :  ${error.message} `;
     }
-    this.error = { kind, messageHtml, code };
+    return { kind, messageHtml, code };
+  }
+
+  setAxiosError(error: any) {
+    this.error = this.parseAxiosError(error);
     this.spin = false;
   }
 }

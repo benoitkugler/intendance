@@ -40,6 +40,12 @@ type Utilisateur struct {
 	PrenomNom string `json:"prenom_nom"`
 }
 
+type OutLoggin struct {
+	Erreur      string      `json:"erreur"`
+	Token       string      `json:"token"`
+	Utilisateur Utilisateur `json:"utilisateur"`
+}
+
 type IngredientQuantite struct {
 	Ingredient models.Ingredient `json:"ingredient"`
 	Quantite   float64           `json:"quantite"`

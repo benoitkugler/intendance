@@ -22,6 +22,19 @@ func getId(c echo.Context) (int64, error) {
 	return id, nil
 }
 
+// -------------------------------- Loggin --------------------------------
+func Loggin(c echo.Context) error {
+	var params InLoggin
+	if err := c.Bind(&params); err != nil {
+		return err
+	}
+	out, err := Server.Loggin(params.Mail, params.Password)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, out)
+}
+
 // --------------------------------------------------------------------------
 // ------------------------------ Utilisateurs ------------------------------
 // --------------------------------------------------------------------------

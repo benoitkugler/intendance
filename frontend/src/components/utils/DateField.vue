@@ -25,6 +25,8 @@
 import Vue from "vue";
 import Component from "vue-class-component";
 import { Watch, Model } from "vue-property-decorator";
+import { C } from "../../logic/controller";
+import { Formatter } from "../../logic/formatter";
 
 const Props = Vue.extend({
   model: {
@@ -39,37 +41,11 @@ const Props = Vue.extend({
   }
 });
 
-const Months = [
-  "Janvier",
-  "Février",
-  "Mars",
-  "Avril",
-  "Mai",
-  "Juin",
-  "Juillet",
-  "Août",
-  "Septembre",
-  "Octobre",
-  "Novembre",
-  "Décembre"
-];
-
-function showDate(dateString: string) {
-  dateString = dateString || "";
-  if (dateString.length < 10 || dateString.substr(0, 10) == "0001-01-01") {
-    return null;
-  }
-  const year = dateString.substr(0, 4);
-  const month = Number(dateString.substr(5, 2));
-  const day = dateString.substr(8, 2);
-  return `${day} ${Months[month - 1]} ${year}`;
-}
-
 @Component
 export default class DateField extends Props {
   isoDate = "";
 
-  showDate = showDate;
+  showDate = Formatter.formatDate;
   toDateObject(date: string | any) {
     if (!date) return null;
     return date + "T00:00:00Z";

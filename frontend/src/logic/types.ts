@@ -195,3 +195,16 @@ export interface OutResoudIngredients {
   token: string;
   date_ingredients: DateIngredientQuantites[] | null;
 }
+
+// struct2ts:github.com/benoitkugler/intendance/server/controller.OutLoggin
+export interface OutLoggin {
+  erreur: string;
+  token: string;
+  utilisateur: Utilisateur;
+}
+
+// struct2ts:github.com/benoitkugler/intendance/server/views.InLoggin
+export interface InLoggin {
+  mail: string;
+  password: string;
+}

@@ -5,6 +5,11 @@ import (
 	"github.com/benoitkugler/intendance/server/models"
 )
 
+type InLoggin struct {
+	Mail     string `json:"mail,omitempty"`
+	Password string `json:"password,omitempty"`
+}
+
 type OutAgenda struct {
 	Token  string                       `json:"token"`
 	Agenda controller.AgendaUtilisateur `json:"agenda"`

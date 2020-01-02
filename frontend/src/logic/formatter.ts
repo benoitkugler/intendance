@@ -1,6 +1,21 @@
 import { Controller } from "./controller";
 import { Repas, Menu, Recette, Horaire } from "./types";
 
+const Months = [
+  "Janvier",
+  "Février",
+  "Mars",
+  "Avril",
+  "Mai",
+  "Juin",
+  "Juillet",
+  "Août",
+  "Septembre",
+  "Octobre",
+  "Novembre",
+  "Décembre"
+];
+
 export class Formatter {
   private controller: Controller;
 
@@ -36,5 +51,20 @@ export class Formatter {
       ":" +
       ("00" + horaire.minute).substr(-2, 2)
     );
+  }
+
+  static formatDate(dateString: Time) {
+    dateString = dateString || "";
+    if (dateString.length < 10 || dateString.substr(0, 10) == "0001-01-01") {
+      return null;
+    }
+    const year = dateString.substr(0, 4);
+    const month = Number(dateString.substr(5, 2));
+    const day = dateString.substr(8, 2);
+    return `${day} ${Months[month - 1]} ${year}`;
+  }
+
+  static formatQuantite(v: number) {
+    return v.toFixed(2);
   }
 }

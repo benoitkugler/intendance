@@ -53,6 +53,31 @@ func (ct *RequeteContext) setup(s Server) (err error) {
 	return nil
 }
 
+// ---------------------------- Identification ----------------------------
+
+func (s Server) Loggin(mail, password string) (out OutLoggin, err error) {
+	r := s.db.QueryRow("SELECT * FROM utilisateurs WHERE mail = $1", mail)
+	u, err := models.ScanUtilisateur(r)
+	if err == sql.ErrNoRows {
+		out.Erreur = fmt.Sprintf(`L'adresse mail <i>%s</i> ne figure pas dans nos <b>utilisateurs</b>. <br/>
+					Peut-être souhaitez-vous créer un compte ?`, mail)
+		return out, nil
+	}
+	if err != nil {
+		return out, ErrorSQL(err)
+	}
+	if u.Password != password {
+		out.Erreur = "Le mot de passe est invalide."
+		return out, nil
+	}
+	token, err := creeToken(u.Id)
+	out = OutLoggin{
+		Utilisateur: Utilisateur{Id: u.Id, PrenomNom: u.PrenomNom},
+		Token:       token,
+	}
+	return out, err
+}
+
 func (s Server) LoadAgendaUtilisateur(ct RequeteContext) (out AgendaUtilisateur, err error) {
 	rows, err := s.db.Query("SELECT * FROM sejours WHERE id_proprietaire = $1", ct.idProprietaire)
 	if err != nil {

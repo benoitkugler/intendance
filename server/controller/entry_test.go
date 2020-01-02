@@ -9,6 +9,27 @@ import (
 	"github.com/benoitkugler/intendance/server/models"
 )
 
+func TestLoggin(t *testing.T) {
+	db, err := models.ConnectDB(logs.DB_DEV)
+	defer db.Close()
+	if err != nil {
+		t.Fatal(err)
+	}
+	s := Server{db: db}
+
+	out, err := s.Loggin("mldks", "sdsd")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if out.Erreur == "" {
+		t.Error("expected error")
+	}
+	_, err = s.Loggin("test@intendance.fr", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestLoadData(t *testing.T) {
 	db, err := models.ConnectDB(logs.DB_DEV)
 	defer db.Close()

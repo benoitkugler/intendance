@@ -18,6 +18,7 @@
       <keep-alive v-if="isLoggedIn">
         <router-view></router-view>
       </keep-alive>
+      <loggin v-else></loggin>
 
       <spinner-snackbar></spinner-snackbar>
       <error-dialog></error-dialog>
@@ -35,6 +36,7 @@ import ErrorDialog from "./components/ErrorDialog.vue";
 import SuccessSnackbar from "./components/SuccessSnackbar.vue";
 import SpinnerSnackbar from "./components/SpinnerSnackbar.vue";
 import NavigationBar from "./components/NavigationBar.vue";
+import Loggin from "./views/Loggin.vue";
 
 import { C } from "./logic/controller";
 import { devMode } from "./logic/data";
@@ -51,16 +53,19 @@ declare var process: {
     ErrorDialog,
     SuccessSnackbar,
     SpinnerSnackbar,
-    NavigationBar
+    NavigationBar,
+    Loggin
   }
 })
 export default class App extends Vue {
   private controller = C;
 
-  isLoggedIn = devMode;
-
   get version() {
     return process.env.VUE_APP_VERSION;
+  }
+
+  get isLoggedIn() {
+    return this.controller.isLoggedIn;
   }
 
   get mainTitle() {
@@ -71,7 +76,7 @@ export default class App extends Vue {
   }
 
   logout() {
-    console.log("TODO");
+    this.controller.logger.logout();
   }
 
   private getPageTitle() {

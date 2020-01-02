@@ -63,6 +63,8 @@ func main() {
 }
 
 func routes(e *echo.Echo) {
+	e.POST("/api/loggin", views.Loggin)
+
 	e.GET("/api/utilisateurs", views.GetUtilisateurs)
 
 	e.GET("/api/ingredients", views.GetIngredients)

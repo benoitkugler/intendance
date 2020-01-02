@@ -4,12 +4,16 @@ import { Calculs } from "./calculs";
 import { Data, devMode } from "./data";
 import { IngredientOptions } from "./types2";
 import { Formatter } from "./formatter";
+import { Loggin as Logger } from "./loggin";
 
 export class Controller {
   readonly data: Data;
   readonly notifications: Notifications;
   readonly calculs: Calculs;
   readonly formatter: Formatter;
+  readonly logger: Logger;
+
+  isLoggedIn = devMode; // en dev mode, connection automatique
 
   token: string = "";
   idUtilisateur: number | null = devMode ? 2 : null;
@@ -19,6 +23,7 @@ export class Controller {
     this.notifications = new Notifications();
     this.calculs = new Calculs(this);
     this.formatter = new Formatter(this);
+    this.logger = new Logger(this);
   }
 
   auth() {
