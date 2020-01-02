@@ -416,7 +416,13 @@ func ResoudIngredients(c echo.Context) error {
 	out.Token = ct.Token
 	switch params.Mode {
 	case "repas":
-		out.Ingredients, err = Server.ResoudIngredients(params.IdRepas, params.NbPersonnes)
+		var di controller.DateIngredientQuantites
+		di.Ingredients, err = Server.ResoudIngredientsRepas(params.IdRepas, params.NbPersonnes)
+		out.DateIngredients = append(out.DateIngredients, di)
+	case "journees":
+		out.DateIngredients, err = Server.ResoudIngredientsJournees(params.IdSejour, params.JourOffsets)
+	default:
+		return fmt.Errorf("Mode de résolution inconnu : %s", params.Mode)
 	}
 	if err != nil {
 		return err

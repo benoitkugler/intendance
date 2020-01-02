@@ -1,6 +1,10 @@
 package controller
 
-import "github.com/benoitkugler/intendance/server/models"
+import (
+	"time"
+
+	"github.com/benoitkugler/intendance/server/models"
+)
 
 type Recette struct {
 	models.Recette
@@ -39,4 +43,9 @@ type Utilisateur struct {
 type IngredientQuantite struct {
 	Ingredient models.Ingredient `json:"ingredient"`
 	Quantite   float64           `json:"quantite"`
+}
+
+type DateIngredientQuantites struct {
+	Date        time.Time            `json:"date"`
+	Ingredients []IngredientQuantite `json:"ingredients"`
 }

@@ -51,18 +51,18 @@ type OutUtilisateurs struct {
 }
 
 type InResoudIngredients struct {
-	Mode string `json:"mode"`
+	Mode string `json:"mode"` // "repas" ou "journees"
 
 	IdRepas int64 `json:"id_repas"` // pour Mode == "repas"
 	// pour Mode == "repas" seulement
 	// donner -1 pour utiliser le nombre de personnes actuel
 	NbPersonnes int64 `json:"nb_personnes"`
 
-	IdSejour   int64 `json:"id_sejour"`   // pour Mode == "sejour" ou "journee"
-	JourOffset int   `json:"jour_offset"` // pour Mode == "journee"
+	IdSejour    int64   `json:"id_sejour"`   // pour Mode == "journees"
+	JourOffsets []int64 `json:"jour_offset"` // pour Mode == "journees". Passer nil pour tout le sejour
 }
 
 type OutResoudIngredients struct {
-	Token       string                          `json:"token"`
-	Ingredients []controller.IngredientQuantite `json:"ingredients"`
+	Token           string                               `json:"token"`
+	DateIngredients []controller.DateIngredientQuantites `json:"date_ingredients"`
 }
