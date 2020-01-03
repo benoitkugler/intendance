@@ -3,20 +3,25 @@
     <v-row>
       <v-col xs="0" md="2"></v-col>
       <v-col xs="6" md="4">
-        <v-form v-model="formValid">
+        <v-form v-model="formValid" @keyup.native.enter="loggin">
           <v-text-field
             label="Mail"
             v-model="params.mail"
             :rules="[rules.required, rules.mail]"
             required
+            name="email"
+            autocomplete="email"
+            browser-autocomplete="email"
           ></v-text-field>
           <v-text-field
             name="password"
-            label="Mot de passe"
             :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
             @click:append="showPassword = !showPassword"
             v-model="params.password"
             :type="showPassword ? 'password' : 'text'"
+            label="Mot de passe"
+            autocomplete="password"
+            browser-autocomplete="password"
           ></v-text-field>
           <v-fade-transition>
             <v-row v-if="error">
@@ -71,6 +76,7 @@ export default class Loggin extends Vue {
   async mounted() {}
 
   async loggin() {
+    if (!this.formValid) return;
     this.loading = true;
     const err = await C.logger.loggin(this.params);
     this.loading = false;

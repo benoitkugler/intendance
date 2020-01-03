@@ -29,16 +29,23 @@ func main() {
 
 	e := echo.New()
 
+	adress := setup(e, *dev)
+
 	// erreurs explicites, même en production
 	e.HTTPErrorHandler = func(err error, c echo.Context) {
 		err = echo.NewHTTPError(400, err.Error())
 		e.DefaultHTTPErrorHandler(err, c)
 	}
 
+	e.Group("/static", middleware.Gzip()).Static("/*", "server/static")
 	routes(e)
 
+	e.Logger.Fatal(e.Start(adress))
+}
+
+func setup(e *echo.Echo, dev bool) string {
 	var adress string
-	if *dev {
+	if dev {
 		adress = "localhost:1323"
 		e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 			AllowMethods:  append(middleware.DefaultCORSConfig.AllowMethods, http.MethodOptions),
@@ -47,8 +54,8 @@ func main() {
 		}))
 		fmt.Println("CORS activé.")
 	} else {
-		if err = db.Ping(); err != nil {
-			log.Fatal("DB not responding : %s", err)
+		if err := views.Server.PingDB(); err != nil {
+			log.Fatalf("DB not responding : %s", err)
 		}
 		fmt.Println("DB OK.")
 
@@ -59,7 +66,7 @@ func main() {
 		}
 		adress = fmt.Sprintf("%s:%d", host, port)
 	}
-	e.Logger.Fatal(e.Start(adress))
+	return adress
 }
 
 func routes(e *echo.Echo) {

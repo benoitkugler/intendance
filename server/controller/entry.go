@@ -18,6 +18,10 @@ func NewServer(db *sql.DB, devMode bool) Server {
 	return Server{db: db, devMode: devMode}
 }
 
+func (s Server) PingDB() error {
+	return s.db.Ping()
+}
+
 // RequeteContext est créé pour chaque requête.
 type RequeteContext struct {
 	idProprietaire int64
