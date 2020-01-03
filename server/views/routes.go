@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/avct/uasurfer"
 	"github.com/benoitkugler/intendance/server/controller"
 	"github.com/benoitkugler/intendance/server/models"
 	"github.com/labstack/echo"
@@ -20,6 +21,17 @@ func getId(c echo.Context) (int64, error) {
 		return 0, fmt.Errorf("Impossible de lire l'ID de l'ingrédient à supprimer.")
 	}
 	return id, nil
+}
+
+func Accueil(c echo.Context) error {
+	ua := uasurfer.Parse(c.Request().UserAgent())
+	if ua.Browser.Name == uasurfer.BrowserIE && ua.Browser.Version.Major < 12 {
+		return c.HTML(200, `Ce portail ne supporte pas Internet Explorer. 
+			<br/> Veuillez nous excuser pour le désagrement occasioné. <br/>
+			Plusieurs très bons navigateurs libres et gratuits sont disponibles (Mozilla Firefox, Google Chrome, ...).
+			`)
+	}
+	return c.File("server/static/app/index.html")
 }
 
 // -------------------------------- Loggin --------------------------------

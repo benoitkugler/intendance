@@ -11,7 +11,6 @@
             required
             name="email"
             autocomplete="email"
-            browser-autocomplete="email"
           ></v-text-field>
           <v-text-field
             name="password"
@@ -21,7 +20,6 @@
             :type="showPassword ? 'password' : 'text'"
             label="Mot de passe"
             autocomplete="password"
-            browser-autocomplete="password"
           ></v-text-field>
           <v-fade-transition>
             <v-row v-if="error">
@@ -54,6 +52,7 @@ import Component from "vue-class-component";
 import Vue from "vue";
 import { C } from "../logic/controller";
 import { InLoggin } from "../logic/types";
+import { routes } from "../router/index";
 
 const patternMail = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
 
@@ -82,8 +81,11 @@ export default class Loggin extends Vue {
     this.loading = false;
     if (C.notifications.getError() != null) return; // erreur déjà gérée
     if (err == "" || !err) {
-      this.$emit("logged-in");
       this.error = null;
+      const currentPath = this.$router.currentRoute.path;
+      if (routes.map(r => r.path).indexOf(currentPath) == -1) {
+        this.$router.push("/agenda");
+      }
     } else {
       this.error = err;
     }

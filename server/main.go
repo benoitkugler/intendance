@@ -70,6 +70,14 @@ func setup(e *echo.Echo, dev bool) string {
 }
 
 func routes(e *echo.Echo) {
+	for _, route := range []string{
+		"/",
+		"/agenda",
+		"/menus",
+	} {
+		e.GET(route, views.Accueil)
+	}
+
 	e.POST("/api/loggin", views.Loggin)
 
 	e.GET("/api/utilisateurs", views.GetUtilisateurs)

@@ -15,8 +15,11 @@ export interface RouteType extends RouteConfig {
 
 export const routes: RouteType[] = [
   {
-    path: "/",
+    path: "/agenda",
     name: "agenda",
+    // route level code-splitting
+    // this generates a separate chunk (agenda.[hash].js) for this route
+    // which is lazy-loaded when the route is visited.
     component: Agenda,
     meta: {
       title: "Agenda",
@@ -42,7 +45,6 @@ export const routes: RouteType[] = [
 
 const router = new VueRouter({
   mode: "history",
-  base: process.env.BASE_URL,
   routes
 });
 

@@ -165,7 +165,6 @@ export default class EditMenu extends EditMenuProps {
   }
 
   removeRecette(toRemove: Recette) {
-    console.log(toRemove);
     this.menu.recettes = (this.menu.recettes || []).filter(
       rec => rec.id_recette != toRemove.id
     );
