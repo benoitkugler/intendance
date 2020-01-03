@@ -45,6 +45,13 @@ export class Formatter {
     return `appartient à ${prop.prenom_nom}`;
   };
 
+  offsetToDate(idSejour: number, offset: number) {
+    const sejour = this.controller.data.agenda.sejours[idSejour].sejour;
+    const dateDebut = new Date(sejour.date_debut);
+    dateDebut.setDate(dateDebut.getDate() + offset);
+    return dateDebut;
+  }
+
   static horaireToTime(horaire: Horaire) {
     return (
       ("00" + horaire.heure).substr(-2, 2) +

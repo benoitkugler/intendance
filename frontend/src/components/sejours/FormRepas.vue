@@ -2,7 +2,7 @@
   <div>
     <v-dialog v-model="showPrevisuIngredients" max-width="600px">
       <v-skeleton-loader type="card" :loading="loadingIngredients">
-        <v-card>
+        <v-card class="py-2">
           <v-card-title primary-title>
             <h3 class="headline mb-0">
               Ingrédients pour {{ repas.nb_personnes }} personne{{
@@ -10,9 +10,11 @@
               }}
             </h3>
           </v-card-title>
-          <liste-ingredients
-            :ingredients="listeIngredients"
-          ></liste-ingredients>
+          <div height="50vh">
+            <liste-ingredients
+              :ingredients="listeIngredients"
+            ></liste-ingredients>
+          </div>
         </v-card>
       </v-skeleton-loader>
     </v-dialog>

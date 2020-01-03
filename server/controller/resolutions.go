@@ -181,8 +181,12 @@ func (s Server) ResoudIngredientsJournees(idSejour int64, journeesOffsets []int6
 
 	out := make([]DateIngredientQuantites, 0, len(joursQuantites))
 	for jourOffset, quantites := range joursQuantites {
+		ings := data.formatQuantites(quantites)
+		if len(ings) == 0 {
+			continue
+		}
 		out = append(out, DateIngredientQuantites{
-			Ingredients: data.formatQuantites(quantites),
+			Ingredients: ings,
 			Date:        sejour.DateFromOffset(jourOffset),
 		})
 	}

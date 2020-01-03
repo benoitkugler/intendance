@@ -36,10 +36,20 @@
       </v-card>
     </v-dialog>
 
+    <v-dialog v-model="showFormCalcul" max-width="600px">
+      <form-calcul :initial-sejour="currentSejour"></form-calcul>
+    </v-dialog>
+
     <v-toolbar class="calendar-toolbar mb-1">
       <v-toolbar-title>Séjours</v-toolbar-title>
       <v-spacer></v-spacer>
       <v-toolbar-items>
+        <tooltip-btn
+          tooltip="Calculer les ingrédients nécessaires..."
+          mdi-icon="food-variant"
+          @click="showFormCalcul = true"
+        ></tooltip-btn>
+        <v-divider vertical></v-divider>
         <tooltip-btn
           tooltip="Ajouter un séjour..."
           mdi-icon="shape-rectangle-plus"
@@ -49,14 +59,10 @@
           "
         ></tooltip-btn>
         <v-divider vertical></v-divider>
-        <v-select
-          :items="sejours"
-          label="Séjour courant"
-          hide-details
-          max-width="200"
+        <select-sejour
+          label="Séjour actif"
           v-model.number="currentSejour"
-          class="mx-2"
-        ></v-select>
+        ></select-sejour>
         <tooltip-btn
           :disabled="!currentSejour"
           tooltip="Modifier les paramètres du séjour..."
@@ -170,6 +176,8 @@ import { Repas, Sejour, Horaire, SejourJournees } from "../../logic/types";
 import FormSejour from "./FormSejour.vue";
 import FormRepas from "./FormRepas.vue";
 import FormPreferences from "./FormPreferences.vue";
+import FormCalcul from "./FormCalcul.vue";
+import SelectSejour from "./SelectSejour.vue";
 import { C } from "../../logic/controller";
 import TooltipBtn from "../utils/TooltipBtn.vue";
 import {
@@ -226,9 +234,8 @@ function timeToHoraire(time: string): Horaire {
   };
 }
 
-function getEventStart(r: Repas, sejour: Sejour) {
-  const dateDebut = new Date(sejour.date_debut);
-  dateDebut.setDate(dateDebut.getDate() + r.jour_offset);
+function getEventStart(r: Repas) {
+  const dateDebut = C.formatter.offsetToDate(r.id_sejour, r.jour_offset);
   return formatDate(dateDebut) + " " + Formatter.horaireToTime(r.horaire);
 }
 
@@ -242,7 +249,14 @@ interface DateTime {
 }
 
 @Component({
-  components: { TooltipBtn, FormSejour, FormRepas, FormPreferences }
+  components: {
+    TooltipBtn,
+    FormSejour,
+    FormRepas,
+    FormPreferences,
+    SelectSejour,
+    FormCalcul
+  }
 })
 export default class Calendar extends Props {
   private lastClickedTime: DateTime | null = null;
@@ -262,6 +276,7 @@ export default class Calendar extends Props {
   protected showEditFormSejour = false;
   protected showEditFormRepas = false;
   protected showConfirmeSupprime = false;
+  protected showFormCalcul = false;
 
   private editMode: "new" | "edit" = "new";
 
@@ -298,14 +313,6 @@ export default class Calendar extends Props {
     return formatDate(out);
   }
 
-  get sejours() {
-    const items = Object.values(C.data.agenda.sejours).map(sejour => {
-      return { value: sejour.sejour.id, text: sejour.sejour.nom };
-    });
-    items.sort((a, b) => Number(a.text < b.text));
-    return items;
-  }
-
   get events(): DataEvent[] {
     let out: DataEvent[] = [];
     const restrict = this.preferences.restrictSejourCourant;
@@ -314,7 +321,7 @@ export default class Calendar extends Props {
       const data = {
         repas: repas,
         name: C.formatter.formatRepasName(repas),
-        start: getEventStart(repas, sejour),
+        start: getEventStart(repas),
         dataRepas: JSON.stringify(repas)
       };
       out.push(data);
@@ -365,18 +372,18 @@ export default class Calendar extends Props {
   }
 
   setClosestSejour() {
-    if (this.sejours.length == 0) return;
-    const computeDistance = (idSejour: number) => {
-      const sej = C.data.agenda.sejours[idSejour].sejour;
-      const diff = new Date().valueOf() - new Date(sej.date_debut).valueOf();
+    const sejours = Object.values(C.data.agenda.sejours);
+    if (sejours.length == 0) return;
+    const now = new Date().valueOf();
+    const computeDistance = (sejour: Sejour) => {
+      const diff = now - new Date(sejour.date_debut).valueOf();
       return Math.abs(diff);
     };
-    const criteres = this.sejours.map(sej => {
-      return { id: sej.value, distance: computeDistance(sej.value) };
+    const criteres = sejours.map(sej => {
+      return { id: sej.sejour.id, distance: computeDistance(sej.sejour) };
     });
-    const id = criteres.sort((a, b) => (a.distance < b.distance ? 1 : -1))[0]
-      .id;
-    this.currentSejour = id;
+    const best = criteres.sort((a, b) => (a.distance < b.distance ? 1 : -1))[0];
+    this.currentSejour = best.id;
   }
 
   // on stocke le moment correspondant au dernier click,
