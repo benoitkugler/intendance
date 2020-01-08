@@ -4,7 +4,6 @@ package models
 
 import (
 	"database/sql"
-	"fmt"
 	"math/rand"
 )
 
@@ -141,7 +140,7 @@ func queriesRecetteIngredient(tx *sql.Tx, item RecetteIngredient) (RecetteIngred
 		return item, err
 	}
 
-	fmt.Println(len(items))
+	_ = len(items)
 
 	row := tx.QueryRow(`SELECT * FROM recette_ingredients WHERE 
 		id_recette = $1 AND id_ingredient = $2;`, item.IdRecette, item.IdIngredient)
@@ -208,7 +207,7 @@ func queriesMenuIngredient(tx *sql.Tx, item MenuIngredient) (MenuIngredient, err
 		return item, err
 	}
 
-	fmt.Println(len(items))
+	_ = len(items)
 
 	row := tx.QueryRow(`SELECT * FROM menu_ingredients WHERE 
 		id_menu = $1 AND id_ingredient = $2;`, item.IdMenu, item.IdIngredient)
@@ -238,7 +237,7 @@ func queriesMenuRecette(tx *sql.Tx, item MenuRecette) (MenuRecette, error) {
 		return item, err
 	}
 
-	fmt.Println(len(items))
+	_ = len(items)
 
 	row := tx.QueryRow(`SELECT * FROM menu_recettes WHERE 
 		id_menu = $1 AND id_recette = $2;`, item.IdMenu, item.IdRecette)
@@ -417,7 +416,7 @@ func queriesIngredientProduit(tx *sql.Tx, item IngredientProduit) (IngredientPro
 		return item, err
 	}
 
-	fmt.Println(len(items))
+	_ = len(items)
 
 	row := tx.QueryRow(`SELECT * FROM ingredient_produits WHERE 
 		id_ingredient = $1 AND id_produit = $2;`, item.IdIngredient, item.IdProduit)
@@ -430,7 +429,8 @@ func randCommande() Commande {
 	return Commande{
 		Id:             rand.Int63n(1 << 20),
 		IdProprietaire: rand.Int63n(1 << 20),
-		DateLivraison:  randTime(),
+		DateEmission:   randTime(),
+		Tag:            randstring(),
 	}
 }
 
@@ -458,5 +458,36 @@ func queriesCommande(tx *sql.Tx, item Commande) (Commande, error) {
 	row := tx.QueryRow("SELECT * FROM commandes WHERE id = $1", item.Id)
 
 	_, err = ScanCommande(row)
+	return item, err
+}
+
+func randCommandeProduit() CommandeProduit {
+	return CommandeProduit{
+		IdCommande: rand.Int63n(1 << 20),
+		IdProduit:  rand.Int63n(1 << 20),
+		Quantite:   rand.Int63n(1 << 20),
+	}
+}
+
+func queriesCommandeProduit(tx *sql.Tx, item CommandeProduit) (CommandeProduit, error) {
+	err := InsertManyCommandeProduits(tx, []CommandeProduit{item})
+	if err != nil {
+		return item, err
+	}
+	rows, err := tx.Query("SELECT * FROM commande_produits")
+	if err != nil {
+		return item, err
+	}
+	items, err := ScanCommandeProduits(rows)
+	if err != nil {
+		return item, err
+	}
+
+	_ = len(items)
+
+	row := tx.QueryRow(`SELECT * FROM commande_produits WHERE 
+		id_commande = $1 AND id_produit = $2;`, item.IdCommande, item.IdProduit)
+
+	_, err = ScanCommandeProduit(row)
 	return item, err
 }

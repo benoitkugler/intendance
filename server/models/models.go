@@ -108,5 +108,12 @@ type IngredientProduit struct {
 type Commande struct {
 	Id             int64     `json:"id"`
 	IdProprietaire int64     `json:"id_proprietaire"`
-	DateLivraison  time.Time `json:"date_livraison"`
+	DateEmission   time.Time `json:"date_emission"`
+	Tag            string    `json:"tag"`
+}
+
+type CommandeProduit struct {
+	IdCommande int64 `json:"id_commande"`
+	IdProduit  int64 `json:"id_produit"`
+	Quantite   int64 `json:"quantite"`
 }

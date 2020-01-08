@@ -93,7 +93,7 @@ Les séjours sont _privés_, mais les journées formées peuvent être copiées.
 
 - Table **produits** : id, nom, conditionnement (quantité + unité), colisage (quantité minimal), prix (pour le conditionnement), id_fournisseur, reference_fournisseur
 
-- Table **commandes**: id, id_proprietaire, jour_livraison
+- Table **commandes**: id, id_proprietaire, date_emission, tag (permet de classer les commandes)
 
 - Table **commandes_produits**: id_commande, id_produit, quantite
 

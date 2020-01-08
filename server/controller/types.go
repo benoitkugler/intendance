@@ -55,3 +55,8 @@ type DateIngredientQuantites struct {
 	Date        time.Time            `json:"date"`
 	Ingredients []IngredientQuantite `json:"ingredients"`
 }
+
+type Commande struct {
+	models.Commande
+	Produits []models.CommandeProduit
+}

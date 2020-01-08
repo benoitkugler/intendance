@@ -905,7 +905,8 @@ func ScanCommande(r *sql.Row) (Commande, error) {
 	if err := r.Scan(
 		&s.Id,
 		&s.IdProprietaire,
-		&s.DateLivraison,
+		&s.DateEmission,
+		&s.Tag,
 	); err != nil {
 		return Commande{}, err
 	}
@@ -930,7 +931,8 @@ func ScanCommandes(rs *sql.Rows) (Commandes, error) {
 		if err = rs.Scan(
 			&s.Id,
 			&s.IdProprietaire,
-			&s.DateLivraison,
+			&s.DateEmission,
+			&s.Tag,
 		); err != nil {
 			return nil, err
 		}
@@ -945,24 +947,24 @@ func ScanCommandes(rs *sql.Rows) (Commandes, error) {
 // Insert Commande in the database and returns the item with id filled.
 func (item Commande) Insert(tx *sql.Tx) (out Commande, err error) {
 	r := tx.QueryRow(`INSERT INTO commandes (
-		id_proprietaire,date_livraison
+		id_proprietaire,date_emission,tag
 		) VALUES (
-		$1,$2
+		$1,$2,$3
 		) RETURNING 
-		id,id_proprietaire,date_livraison;
-		`, item.IdProprietaire, item.DateLivraison)
+		id,id_proprietaire,date_emission,tag;
+		`, item.IdProprietaire, item.DateEmission, item.Tag)
 	return ScanCommande(r)
 }
 
 // Update Commande in the database and returns the new version.
 func (item Commande) Update(tx *sql.Tx) (out Commande, err error) {
 	r := tx.QueryRow(`UPDATE commandes SET (
-		id_proprietaire,date_livraison
+		id_proprietaire,date_emission,tag
 		) = (
-		$2,$3
+		$2,$3,$4
 		) WHERE id = $1 RETURNING 
-		id,id_proprietaire,date_livraison;
-		`, item.Id, item.IdProprietaire, item.DateLivraison)
+		id,id_proprietaire,date_emission,tag;
+		`, item.Id, item.IdProprietaire, item.DateEmission, item.Tag)
 	return ScanCommande(r)
 }
 
@@ -973,4 +975,70 @@ func (item Commande) Delete(tx *sql.Tx) (int64, error) {
 	r := tx.QueryRow("DELETE FROM commandes WHERE id = $1 RETURNING id;", item.Id)
 	err := r.Scan(&deleted_id)
 	return deleted_id, err
+}
+
+func ScanCommandeProduit(r *sql.Row) (CommandeProduit, error) {
+	var s CommandeProduit
+	if err := r.Scan(
+		&s.IdCommande,
+		&s.IdProduit,
+		&s.Quantite,
+	); err != nil {
+		return CommandeProduit{}, err
+	}
+	return s, nil
+}
+
+func ScanCommandeProduits(rs *sql.Rows) ([]CommandeProduit, error) {
+	structs := make([]CommandeProduit, 0, 16)
+	var err error
+	for rs.Next() {
+		var s CommandeProduit
+		if err = rs.Scan(
+			&s.IdCommande,
+			&s.IdProduit,
+			&s.Quantite,
+		); err != nil {
+			return nil, err
+		}
+		structs = append(structs, s)
+	}
+	if err = rs.Err(); err != nil {
+		return nil, err
+	}
+	return structs, nil
+}
+
+// Insert the links CommandeProduit in the database.
+func InsertManyCommandeProduits(tx *sql.Tx, items []CommandeProduit) error {
+	stmt, err := tx.Prepare(pq.CopyIn("commande_produits",
+		"id_commande", "id_produit", "quantite",
+	))
+	if err != nil {
+		return err
+	}
+
+	for _, item := range items {
+		_, err = stmt.Exec(item.IdCommande, item.IdProduit, item.Quantite)
+		if err != nil {
+			return err
+		}
+	}
+
+	if _, err = stmt.Exec(); err != nil {
+		return err
+	}
+
+	if err = stmt.Close(); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Delete the link CommandeProduit in the database.
+// Only the 'IdCommande' 'IdProduit' fields are used.
+func (item CommandeProduit) Delete(tx *sql.Tx) error {
+	_, err := tx.Exec(`DELETE FROM commande_produits WHERE 
+	id_commande = $1 AND id_produit = $2;`, item.IdCommande, item.IdProduit)
+	return err
 }
