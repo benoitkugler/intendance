@@ -14,9 +14,9 @@ const (
 type CommandeOptimisation string
 
 type ContrainteProduit struct {
-	Date         time.Time
-	IdIngredient int64
-	IdProduit    int64
+	Date         time.Time `json:"date"`
+	IdIngredient int64     `json:"id_ingredient"`
+	IdProduit    int64     `json:"id_produit"`
 }
 
 type CommandeContraintes struct {
@@ -24,15 +24,15 @@ type CommandeContraintes struct {
 	// pour regrouper les commandes.
 	// Permet de diminuer le nombre de jours final.
 	// Sinon, les commandes respectent exactement le jour de livraison.
-	RespectJour bool
+	RespectJour bool `json:"respect_jour"`
 
 	// Choisit automatiquement les produits pour favoriser
 	// le critère choisit.
-	Optimisation CommandeOptimisation
+	Optimisation CommandeOptimisation `json:"optimisation"`
 
 	// Force l'utilisation du produit donné pour l'ingrédient
 	// à la date donnée.
-	ContrainteProduits []ContrainteProduit
+	ContrainteProduits []ContrainteProduit `json:"contrainte_produits"`
 }
 
 func (s Server) EtablitCommandes(ingredients []DateIngredientQuantites, contraintes CommandeContraintes) ([]Commande, error) {
