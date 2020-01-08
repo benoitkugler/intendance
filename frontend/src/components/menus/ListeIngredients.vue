@@ -8,6 +8,10 @@
       ></edit-ingredient>
     </v-dialog>
 
+    <v-dialog v-model="showEditProduits" scrollable max-width="1000px">
+      <ingredient-produits></ingredient-produits>
+    </v-dialog>
+
     <v-dialog v-model="confirmeSupprime" max-width="800px">
       <v-card>
         <v-card-title primary-title color="warning">
@@ -108,8 +112,17 @@
               <v-row no-gutters>
                 <v-col>
                   <tooltip-btn
+                    mdi-icon="cart"
+                    tooltip="Produits liés à cet ingrédient..."
+                    color="accent"
+                    @click.stop="startEditProduits(ingredient)"
+                  >
+                  </tooltip-btn>
+                </v-col>
+                <v-col>
+                  <tooltip-btn
                     mdi-icon="pencil"
-                    tooltip="Modifier cet ingrédient"
+                    tooltip="Modifier cet ingrédient..."
                     color="secondary"
                     @click.stop="startEditIngredient(ingredient)"
                   >
@@ -138,6 +151,7 @@ import Component from "vue-class-component";
 import { Prop, Watch } from "vue-property-decorator";
 
 import EditIngredient from "./EditIngredient.vue";
+import IngredientProduits from "../produits/IngredientProduits.vue";
 
 import { C } from "../../logic/controller";
 import { Ingredient, RecetteIngredient } from "../../logic/types";
@@ -155,12 +169,14 @@ const Props = Vue.extend({
 
 const MAX_DIST_LEVENSHTEIN = 4;
 
-@Component({ components: { TooltipBtn, EditIngredient } })
+@Component({ components: { TooltipBtn, EditIngredient, IngredientProduits } })
 export default class ListeIngredients extends Props {
   confirmeSupprime = false;
 
   showEditIngredient = false;
   editMode: EditMode = "new";
+
+  showEditProduits = false;
 
   search = "";
   showSearch = false;
@@ -284,6 +300,10 @@ export default class ListeIngredients extends Props {
     this.$emit("change", { ingredient: DefautIngredient });
     this.editMode = "new";
     this.showEditIngredient = true;
+  }
+
+  startEditProduits(ingredient: IngredientOptions) {
+    this.showEditProduits = true;
   }
 }
 </script>
