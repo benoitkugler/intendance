@@ -103,6 +103,7 @@ type Produit struct {
 type IngredientProduit struct {
 	IdIngredient int64 `json:"id_ingredient"`
 	IdProduit    int64 `json:"id_produit"`
+	IdAjouteur   int64 `json:"id_ajouteur"`
 }
 
 type Commande struct {

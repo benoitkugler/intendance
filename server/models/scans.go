@@ -841,6 +841,7 @@ func ScanIngredientProduit(r *sql.Row) (IngredientProduit, error) {
 	if err := r.Scan(
 		&s.IdIngredient,
 		&s.IdProduit,
+		&s.IdAjouteur,
 	); err != nil {
 		return IngredientProduit{}, err
 	}
@@ -855,6 +856,7 @@ func ScanIngredientProduits(rs *sql.Rows) ([]IngredientProduit, error) {
 		if err = rs.Scan(
 			&s.IdIngredient,
 			&s.IdProduit,
+			&s.IdAjouteur,
 		); err != nil {
 			return nil, err
 		}
@@ -869,14 +871,14 @@ func ScanIngredientProduits(rs *sql.Rows) ([]IngredientProduit, error) {
 // Insert the links IngredientProduit in the database.
 func InsertManyIngredientProduits(tx *sql.Tx, items []IngredientProduit) error {
 	stmt, err := tx.Prepare(pq.CopyIn("ingredient_produits",
-		"id_ingredient", "id_produit",
+		"id_ingredient", "id_produit", "id_ajouteur",
 	))
 	if err != nil {
 		return err
 	}
 
 	for _, item := range items {
-		_, err = stmt.Exec(item.IdIngredient, item.IdProduit)
+		_, err = stmt.Exec(item.IdIngredient, item.IdProduit, item.IdAjouteur)
 		if err != nil {
 			return err
 		}
@@ -893,10 +895,10 @@ func InsertManyIngredientProduits(tx *sql.Tx, items []IngredientProduit) error {
 }
 
 // Delete the link IngredientProduit in the database.
-// Only the 'IdIngredient' 'IdProduit' fields are used.
+// Only the 'IdIngredient' 'IdProduit' 'IdAjouteur' fields are used.
 func (item IngredientProduit) Delete(tx *sql.Tx) error {
 	_, err := tx.Exec(`DELETE FROM ingredient_produits WHERE 
-	id_ingredient = $1 AND id_produit = $2;`, item.IdIngredient, item.IdProduit)
+	id_ingredient = $1 AND id_produit = $2 AND id_ajouteur = $3;`, item.IdIngredient, item.IdProduit, item.IdAjouteur)
 	return err
 }
 

@@ -399,6 +399,7 @@ func randIngredientProduit() IngredientProduit {
 	return IngredientProduit{
 		IdIngredient: rand.Int63n(1 << 20),
 		IdProduit:    rand.Int63n(1 << 20),
+		IdAjouteur:   rand.Int63n(1 << 20),
 	}
 }
 
@@ -419,7 +420,7 @@ func queriesIngredientProduit(tx *sql.Tx, item IngredientProduit) (IngredientPro
 	_ = len(items)
 
 	row := tx.QueryRow(`SELECT * FROM ingredient_produits WHERE 
-		id_ingredient = $1 AND id_produit = $2;`, item.IdIngredient, item.IdProduit)
+		id_ingredient = $1 AND id_produit = $2 AND id_ajouteur = $3;`, item.IdIngredient, item.IdProduit, item.IdAjouteur)
 
 	_, err = ScanIngredientProduit(row)
 	return item, err

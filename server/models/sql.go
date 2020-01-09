@@ -48,7 +48,7 @@ func ScanInts(rs *sql.Rows) ([]int64, error) {
 	return ints, nil
 }
 
-// GetProduits renvoie les produits associé à l'ingrédient.
+// GetProduits renvoie les produits associé à l'ingrédient
 // Seul le champ 'Id' est utilisé
 func (ig Ingredient) GetProduits(tx *sql.Tx) (Produits, error) {
 	rows, err := tx.Query(`SELECT produits.* FROM produits 

@@ -61,7 +61,7 @@ Le logiciel est disponible sous la forme d'une **application web** accessible pa
 
 - Table **ingredients** : id, nom, unite, (optionnel : categorie, callories)
 
-- Table **ingredients_produits** : id_ingredient, id_produit
+- Table **ingredients_produits** : id_ingredient, id_produit, id_ajouteur
 
 * Table **recettes** : id, id_proprietaire, nom, mode_emploi
 

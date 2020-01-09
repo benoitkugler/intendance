@@ -49,7 +49,7 @@ func (r RequeteContext) commit() error {
 	return nil
 }
 
-func (ct *RequeteContext) setup(s Server) (err error) {
+func (ct *RequeteContext) beginTx(s Server) (err error) {
 	ct.tx, err = s.db.Begin()
 	if err != nil {
 		return ErrorSQL(err)
@@ -150,7 +150,7 @@ func (s Server) LoadIngredients() (models.Ingredients, error) {
 }
 
 func (s Server) CreateIngredient(ct RequeteContext) (out models.Ingredient, err error) {
-	if err = ct.setup(s); err != nil {
+	if err = ct.beginTx(s); err != nil {
 		return
 	}
 	out.Nom = fmt.Sprintf("I%d", time.Now().UnixNano())
@@ -164,7 +164,7 @@ func (s Server) CreateIngredient(ct RequeteContext) (out models.Ingredient, err 
 }
 
 func (s Server) UpdateIngredient(ct RequeteContext, ig models.Ingredient) (models.Ingredient, error) {
-	if err := ct.setup(s); err != nil {
+	if err := ct.beginTx(s); err != nil {
 		return ig, err
 	}
 	tx := ct.tx
@@ -191,7 +191,7 @@ func (s Server) UpdateIngredient(ct RequeteContext, ig models.Ingredient) (model
 }
 
 func (s Server) DeleteIngredient(ct RequeteContext, id int64, checkProduits bool) error {
-	if err := ct.setup(s); err != nil {
+	if err := ct.beginTx(s); err != nil {
 		return err
 	}
 	tx := ct.tx
@@ -280,7 +280,7 @@ func (s Server) LoadRecettes() (out map[int64]*Recette, err error) {
 }
 
 func (s Server) CreateRecette(ct RequeteContext) (out models.Recette, err error) {
-	if err = ct.setup(s); err != nil {
+	if err = ct.beginTx(s); err != nil {
 		return
 	}
 	tx := ct.tx
@@ -301,7 +301,7 @@ func (s Server) UpdateRecette(ct RequeteContext, in Recette) (Recette, error) {
 			return in, fmt.Errorf("L'ingrédient %d n'est pas associé à la recette fournie !", r.IdIngredient)
 		}
 	}
-	if err := ct.setup(s); err != nil {
+	if err := ct.beginTx(s); err != nil {
 		return in, err
 	}
 	if err := s.proprioRecette(ct, in.Recette, true); err != nil {
@@ -326,7 +326,7 @@ func (s Server) UpdateRecette(ct RequeteContext, in Recette) (Recette, error) {
 }
 
 func (s Server) DeleteRecette(ct RequeteContext, id int64) error {
-	if err := ct.setup(s); err != nil {
+	if err := ct.beginTx(s); err != nil {
 		return err
 	}
 	if err := s.proprioRecette(ct, models.Recette{Id: id}, false); err != nil {
@@ -404,7 +404,7 @@ func (s Server) LoadMenus() (out map[int64]*Menu, err error) {
 }
 
 func (s Server) CreateMenu(ct RequeteContext) (out models.Menu, err error) {
-	if err = ct.setup(s); err != nil {
+	if err = ct.beginTx(s); err != nil {
 		return
 	}
 	tx := ct.tx
@@ -429,7 +429,7 @@ func (s Server) UpdateMenu(ct RequeteContext, in Menu) (Menu, error) {
 			return in, fmt.Errorf("L'ingrédient %d n'est pas associé au menu fourni !", r.IdIngredient)
 		}
 	}
-	if err := ct.setup(s); err != nil {
+	if err := ct.beginTx(s); err != nil {
 		return in, err
 	}
 	if err := s.proprioMenu(ct, in.Menu, true); err != nil {
@@ -462,7 +462,7 @@ func (s Server) UpdateMenu(ct RequeteContext, in Menu) (Menu, error) {
 }
 
 func (s Server) DeleteMenu(ct RequeteContext, id int64) error {
-	if err := ct.setup(s); err != nil {
+	if err := ct.beginTx(s); err != nil {
 		return err
 	}
 	if err := s.proprioMenu(ct, models.Menu{Id: id}, false); err != nil {
@@ -505,7 +505,7 @@ func (s Server) DeleteMenu(ct RequeteContext, id int64) error {
 // ------------------------------------------------------------------------
 
 func (s Server) CreateSejour(ct RequeteContext) (out models.Sejour, err error) {
-	if err = ct.setup(s); err != nil {
+	if err = ct.beginTx(s); err != nil {
 		return
 	}
 	tx := ct.tx
@@ -520,7 +520,7 @@ func (s Server) CreateSejour(ct RequeteContext) (out models.Sejour, err error) {
 }
 
 func (s Server) UpdateSejour(ct RequeteContext, in models.Sejour) (models.Sejour, error) {
-	if err := ct.setup(s); err != nil {
+	if err := ct.beginTx(s); err != nil {
 		return in, err
 	}
 	if err := s.proprioSejour(ct, in, true); err != nil {
@@ -535,7 +535,7 @@ func (s Server) UpdateSejour(ct RequeteContext, in models.Sejour) (models.Sejour
 }
 
 func (s Server) DeleteSejour(ct RequeteContext, id int64) error {
-	if err := ct.setup(s); err != nil {
+	if err := ct.beginTx(s); err != nil {
 		return err
 	}
 	if err := s.proprioSejour(ct, models.Sejour{Id: id}, false); err != nil {
@@ -554,7 +554,7 @@ func (s Server) DeleteSejour(ct RequeteContext, id int64) error {
 }
 
 func (s Server) CreateRepas(ct RequeteContext, idSejour, idMenu int64) (out models.Repas, err error) {
-	if err = ct.setup(s); err != nil {
+	if err = ct.beginTx(s); err != nil {
 		return
 	}
 	if err = s.proprioSejour(ct, models.Sejour{Id: idSejour}, false); err != nil {
@@ -573,7 +573,7 @@ func (s Server) CreateRepas(ct RequeteContext, idSejour, idMenu int64) (out mode
 }
 
 func (s Server) UpdateManyRepas(ct RequeteContext, repass []models.Repas) error {
-	if err := ct.setup(s); err != nil {
+	if err := ct.beginTx(s); err != nil {
 		return err
 	}
 	for _, repas := range repass {
@@ -588,7 +588,7 @@ func (s Server) UpdateManyRepas(ct RequeteContext, repass []models.Repas) error 
 }
 
 func (s Server) DeleteRepas(ct RequeteContext, id int64) error {
-	if err := ct.setup(s); err != nil {
+	if err := ct.beginTx(s); err != nil {
 		return err
 	}
 	if err := s.proprioRepas(ct, id); err != nil {
