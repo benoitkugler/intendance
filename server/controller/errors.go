@@ -1,18 +1,40 @@
 package controller
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
-	"github.com/lib/pq"
-
 	"github.com/benoitkugler/intendance/server/models"
+	"github.com/lib/pq"
 )
 
 func ErrorAuth(err error) error {
 	return fmt.Errorf(`Impossible d'authentifier votre requête.<br/>
 	Détails : <i>%s</i>`, err)
 }
+
+type errorSQL struct {
+	error
+}
+
+func (e errorSQL) Error() string {
+	return fmt.Sprintf(`La requête SQL correspondant à votre demande a échoué.<br/>
+		Détails : <i>%s</i>
+	`, e.parseDetails())
+}
+
+func (e errorSQL) parseDetails() string {
+	if pqError, ok := e.error.(*pq.Error); ok {
+		switch pqError.Constraint {
+		case "ingredients_nom_key":
+			return "Le nom demandé pour cet ingrédient est <b>déjà pris</b>."
+		}
+	}
+	return e.error.Error()
+}
+
+func ErrorSQL(err error) error { return errorSQL{err} }
 
 type ErrorIngredientProduitUnite struct {
 	ingredient models.Ingredient
@@ -72,24 +94,12 @@ func (e ErrorIngredientUsed) Error() string {
 	return b.String()
 }
 
-type errorSQL struct {
-	error
-}
-
-func (e errorSQL) Error() string {
-	return fmt.Sprintf(`La requête SQL correspondant à votre demande a échoué.<br/>
-		Détails : <i>%s</i>
-	`, e.parseDetails())
-}
-
-func (e errorSQL) parseDetails() string {
-	if pqError, ok := e.error.(*pq.Error); ok {
-		switch pqError.Constraint {
-		case "ingredients_nom_key":
-			return "Le nom demandé pour cet ingrédient est <b>déjà pris</b>."
-		}
+func ErrorLieIngredientProduit(validUnite, validConditionnement bool) error {
+	if !validUnite {
+		return errors.New("L'ingrédient et le produit n'utilise pas les mêmes unitées.")
 	}
-	return e.error.Error()
+	if !validConditionnement {
+		return errors.New("L'ingrédient impose un conditionnement que le produit doit respecter.")
+	}
+	return nil
 }
-
-func ErrorSQL(err error) error { return errorSQL{err} }

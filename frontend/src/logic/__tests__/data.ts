@@ -191,3 +191,8 @@ test("crud repas", async () => {
   menus = C.data.agenda.sejours[sejourId]!.journees[2]?.menus || [];
   expect(menus).toHaveLength(l);
 });
+
+test("crud produits", async () => {
+  await C.data.loadIngredients();
+  expect(C.notifications.getError()).toBeNull();
+});

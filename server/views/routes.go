@@ -18,7 +18,7 @@ func getId(c echo.Context) (int64, error) {
 	idS := c.QueryParam("id")
 	id, err := strconv.ParseInt(idS, 10, 64)
 	if err != nil {
-		return 0, fmt.Errorf("Impossible de lire l'ID de l'ingrédient à supprimer.")
+		return 0, fmt.Errorf("Impossible de décrypter l'ID reçu %s : %s", idS, err)
 	}
 	return id, nil
 }
@@ -453,4 +453,45 @@ func ResoudIngredients(c echo.Context) error {
 		return err
 	}
 	return c.JSON(200, out)
+}
+
+// --------------------------------------------------------------------------
+// ----------------------------- Produits -----------------------------------
+// --------------------------------------------------------------------------
+
+func GetIngredientProduits(c echo.Context) error {
+	ct, err := Server.Authentifie(c.Request())
+	if err != nil {
+		return err
+	}
+	idIngredient, err := getId(c)
+	if err != nil {
+		return err
+	}
+	out, err := Server.GetIngredientProduits(ct, idIngredient)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, OutIngredientProduits{Token: ct.Token, Produits: out})
+}
+
+func AjouteIngredientProduit(c echo.Context) error {
+	ct, err := Server.Authentifie(c.Request())
+	if err != nil {
+		return err
+	}
+	var params InAjouteIngredientProduit
+	if err = c.Bind(&params); err != nil {
+		return err
+	}
+	err = Server.AjouteIngredientProduit(ct, params.IdIngredient, params.Produit)
+	if err != nil {
+		return err
+	}
+	out, err := Server.GetIngredientProduits(ct, params.IdIngredient)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, OutIngredientProduits{Token: ct.Token, Produits: out})
+
 }

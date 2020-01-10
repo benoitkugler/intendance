@@ -29,10 +29,10 @@ type RequeteContext struct {
 	Token          string  // à remplir pendant la phase d'authentification
 }
 
-// rollback the current transaction, caused by `err`, and
+// rollbackTx the current transaction, caused by `err`, and
 // handles the possible error from tx.Rollback()
-func (r RequeteContext) rollback(origin error) error {
-	if err := r.tx.Rollback(); err != nil {
+func (ct RequeteContext) rollbackTx(origin error) error {
+	if err := ct.tx.Rollback(); err != nil {
 		origin = fmt.Errorf("Rollback impossible. Erreur originale : %s", origin)
 	}
 	if _, ok := origin.(errorSQL); ok { // pas besoin de wrapper
@@ -41,18 +41,18 @@ func (r RequeteContext) rollback(origin error) error {
 	return ErrorSQL(origin)
 }
 
-// commit the transaction and try to rollback on error
-func (r RequeteContext) commit() error {
-	if err := r.tx.Commit(); err != nil {
-		return r.rollback(err)
-	}
-	return nil
-}
-
 func (ct *RequeteContext) beginTx(s Server) (err error) {
 	ct.tx, err = s.db.Begin()
 	if err != nil {
 		return ErrorSQL(err)
+	}
+	return nil
+}
+
+// commitTx the transaction and try to rollback on error
+func (r RequeteContext) commitTx() error {
+	if err := r.tx.Commit(); err != nil {
+		return r.rollbackTx(err)
 	}
 	return nil
 }
@@ -159,7 +159,7 @@ func (s Server) CreateIngredient(ct RequeteContext) (out models.Ingredient, err 
 		err = ErrorSQL(err)
 		return
 	}
-	err = ct.commit()
+	err = ct.commitTx()
 	return
 }
 
@@ -187,7 +187,7 @@ func (s Server) UpdateIngredient(ct RequeteContext, ig models.Ingredient) (model
 	if err != nil {
 		return ig, ErrorSQL(err)
 	}
-	return ig, ct.commit()
+	return ig, ct.commitTx()
 }
 
 func (s Server) DeleteIngredient(ct RequeteContext, id int64, checkProduits bool) error {
@@ -242,9 +242,9 @@ func (s Server) DeleteIngredient(ct RequeteContext, id int64, checkProduits bool
 	}
 	// tout bon, on peut supprimer
 	if _, err = ing.Delete(tx); err != nil {
-		return ct.rollback(err)
+		return ct.rollbackTx(err)
 	}
-	return ct.commit()
+	return ct.commitTx()
 }
 
 // ------------------------------------------------------------------------
@@ -291,7 +291,7 @@ func (s Server) CreateRecette(ct RequeteContext) (out models.Recette, err error)
 		err = ErrorSQL(err)
 		return
 	}
-	err = ct.commit()
+	err = ct.commitTx()
 	return
 }
 
@@ -316,13 +316,13 @@ func (s Server) UpdateRecette(ct RequeteContext, in Recette) (Recette, error) {
 	}
 	_, err = tx.Exec("DELETE FROM recette_ingredients WHERE id_recette = $1", in.Id)
 	if err != nil {
-		return in, ct.rollback(err)
+		return in, ct.rollbackTx(err)
 	}
 	err = models.InsertManyRecetteIngredients(tx, in.Ingredients)
 	if err != nil {
-		return in, ct.rollback(err)
+		return in, ct.rollbackTx(err)
 	}
-	return in, ct.commit()
+	return in, ct.commitTx()
 }
 
 func (s Server) DeleteRecette(ct RequeteContext, id int64) error {
@@ -355,9 +355,9 @@ func (s Server) DeleteRecette(ct RequeteContext, id int64) error {
 	}
 	_, err = models.Recette{Id: id}.Delete(ct.tx)
 	if err != nil {
-		return ct.rollback(err)
+		return ct.rollbackTx(err)
 	}
-	return ct.commit()
+	return ct.commitTx()
 }
 
 // ------------------------------------------------------------------------
@@ -414,7 +414,7 @@ func (s Server) CreateMenu(ct RequeteContext) (out models.Menu, err error) {
 		err = ErrorSQL(err)
 		return
 	}
-	err = ct.commit()
+	err = ct.commitTx()
 	return
 }
 
@@ -444,21 +444,21 @@ func (s Server) UpdateMenu(ct RequeteContext, in Menu) (Menu, error) {
 	}
 	_, err = tx.Exec("DELETE FROM menu_recettes WHERE id_menu = $1", in.Id)
 	if err != nil {
-		return in, ct.rollback(err)
+		return in, ct.rollbackTx(err)
 	}
 	err = models.InsertManyMenuRecettes(tx, in.Recettes)
 	if err != nil {
-		return in, ct.rollback(err)
+		return in, ct.rollbackTx(err)
 	}
 	_, err = tx.Exec("DELETE FROM menu_ingredients WHERE id_menu = $1", in.Id)
 	if err != nil {
-		return in, ct.rollback(err)
+		return in, ct.rollbackTx(err)
 	}
 	err = models.InsertManyMenuIngredients(tx, in.Ingredients)
 	if err != nil {
-		return in, ct.rollback(err)
+		return in, ct.rollbackTx(err)
 	}
-	return in, ct.commit()
+	return in, ct.commitTx()
 }
 
 func (s Server) DeleteMenu(ct RequeteContext, id int64) error {
@@ -491,13 +491,13 @@ func (s Server) DeleteMenu(ct RequeteContext, id int64) error {
 	}
 	_, err = ct.tx.Exec("DELETE FROM menu_ingredients WHERE id_menu = $1", id)
 	if err != nil {
-		return ct.rollback(err)
+		return ct.rollbackTx(err)
 	}
 	_, err = models.Menu{Id: id}.Delete(ct.tx)
 	if err != nil {
-		return ct.rollback(err)
+		return ct.rollbackTx(err)
 	}
-	return ct.commit()
+	return ct.commitTx()
 }
 
 // ------------------------------------------------------------------------
@@ -515,7 +515,7 @@ func (s Server) CreateSejour(ct RequeteContext) (out models.Sejour, err error) {
 		err = ErrorSQL(err)
 		return
 	}
-	err = ct.commit()
+	err = ct.commitTx()
 	return
 }
 
@@ -531,7 +531,7 @@ func (s Server) UpdateSejour(ct RequeteContext, in models.Sejour) (models.Sejour
 	if err != nil {
 		return in, ErrorSQL(err)
 	}
-	return in, ct.commit()
+	return in, ct.commitTx()
 }
 
 func (s Server) DeleteSejour(ct RequeteContext, id int64) error {
@@ -548,9 +548,9 @@ func (s Server) DeleteSejour(ct RequeteContext, id int64) error {
 	}
 	_, err = models.Sejour{Id: id}.Delete(ct.tx)
 	if err != nil {
-		return ct.rollback(err)
+		return ct.rollbackTx(err)
 	}
-	return ct.commit()
+	return ct.commitTx()
 }
 
 func (s Server) CreateRepas(ct RequeteContext, idSejour, idMenu int64) (out models.Repas, err error) {
@@ -568,7 +568,7 @@ func (s Server) CreateRepas(ct RequeteContext, idSejour, idMenu int64) (out mode
 		err = ErrorSQL(err)
 		return
 	}
-	err = ct.commit()
+	err = ct.commitTx()
 	return
 }
 
@@ -578,13 +578,13 @@ func (s Server) UpdateManyRepas(ct RequeteContext, repass []models.Repas) error 
 	}
 	for _, repas := range repass {
 		if err := s.proprioRepas(ct, repas.Id); err != nil {
-			return ct.rollback(err)
+			return ct.rollbackTx(err)
 		}
 		if _, err := repas.Update(ct.tx); err != nil {
-			return ct.rollback(err)
+			return ct.rollbackTx(err)
 		}
 	}
-	return ct.commit()
+	return ct.commitTx()
 }
 
 func (s Server) DeleteRepas(ct RequeteContext, id int64) error {
@@ -596,7 +596,7 @@ func (s Server) DeleteRepas(ct RequeteContext, id int64) error {
 	}
 	_, err := models.Repas{Id: id}.Delete(ct.tx)
 	if err != nil {
-		return ct.rollback(err)
+		return ct.rollbackTx(err)
 	}
-	return ct.commit()
+	return ct.commitTx()
 }

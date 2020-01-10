@@ -4,7 +4,8 @@
     views.OutMenu views.OutMenus \
     views.OutSejour views.OutAgenda \
     views.OutUtilisateurs \
-    views.InResoudIngredients views.OutResoudIngredients controller.OutLoggin views.InLoggin
+    views.InResoudIngredients views.OutResoudIngredients controller.OutLoggin views.InLoggin \
+    views.OutIngredientProduits
 
 cd server/models && 
 ../../../scaneo/scaneo models.go && 

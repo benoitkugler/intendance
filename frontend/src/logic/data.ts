@@ -14,7 +14,8 @@ import {
   Sejour,
   OutSejour,
   Repas,
-  Horaire
+  Horaire,
+  OutIngredientProduits
 } from "./types";
 import axios, { AxiosResponse } from "axios";
 import { Ingredients, Recettes, Menus, Utilisateurs, New } from "./types2";
@@ -124,6 +125,25 @@ export class Data {
       );
       this.ingredients = response.data.ingredients;
       this.controller.token = response.data.token;
+    } catch (error) {
+      this.controller.notifications.setAxiosError(error);
+    }
+  };
+
+  getIngredientProduits = async (idIngredient: number) => {
+    this.controller.notifications.startSpin();
+    try {
+      const response: AxiosResponse<OutIngredientProduits> = await axios.get(
+        ServerURL + "/recettes",
+        {
+          auth: this.controller.auth(),
+          params: {
+            id: idIngredient
+          }
+        }
+      );
+      this.controller.token = response.data.token;
+      return response.data.produits;
     } catch (error) {
       this.controller.notifications.setAxiosError(error);
     }

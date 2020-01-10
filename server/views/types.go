@@ -71,3 +71,18 @@ type OutResoudIngredients struct {
 	Token           string                               `json:"token"`
 	DateIngredients []controller.DateIngredientQuantites `json:"date_ingredients"`
 }
+
+type InLieIngredientProduit struct {
+	IdIngredient int64 `json:"id_ingredient,omitempty"`
+	IdProduit    int64 `json:"id_produit,omitempty"`
+}
+
+type InAjouteIngredientProduit struct {
+	IdIngredient int64          `json:"id_ingredient,omitempty"`
+	Produit      models.Produit `json:"produit,omitempty"`
+}
+
+type OutIngredientProduits struct {
+	Token    string                        `json:"token"`
+	Produits controller.IngredientProduits `json:"produits"`
+}

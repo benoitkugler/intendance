@@ -108,4 +108,6 @@ func routes(e *echo.Echo) {
 	e.DELETE("/api/sejours/repas", views.DeleteRepas)
 
 	e.POST("/api/resolution", views.ResoudIngredients)
+
+	e.GET("/api/ingredient-produit", views.GetIngredientProduits)
 }
