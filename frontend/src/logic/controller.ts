@@ -24,7 +24,7 @@ export class Controller {
     this.calculs = new Calculs(this);
     this.formatter = new Formatter(this);
     this.logger = new Logger(this);
-    this.state = new State();
+    this.state = new State(this);
   }
 
   auth() {
@@ -32,11 +32,6 @@ export class Controller {
       username: String(this.idUtilisateur || ""),
       password: this.token
     };
-  }
-
-  // gère l'erreur d'un séjour introuvable
-  getSejour(idSejour: number) {
-    return this.data.sejours.sejours[idSejour];
   }
 
   getAllIngredients(): IngredientOptions[] {
@@ -80,6 +75,8 @@ export class Controller {
       });
     });
   }
+
+  getRepasGroupes(repas: Repas) {}
 }
 
 // Object principal de stockage des données

@@ -98,16 +98,16 @@ export default class Sejours extends SejoursProps {
   showEditFormSejour = false;
   showConfirmeSupprime = false;
 
-  get idSejour(): number | null {
-    return C.state.idSejour;
+  get idSejour() {
+    const sej = this.sejour;
+    return sej == null ? null : sej.id;
   }
   set idSejour(idSejour: number | null) {
     C.state.idSejour = idSejour;
   }
 
   get sejour() {
-    if (!this.idSejour) return null;
-    return C.getSejour(this.idSejour);
+    return C.state.getSejour();
   }
 
   async mounted() {

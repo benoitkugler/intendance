@@ -1,7 +1,6 @@
 import Vue from "vue";
 import VueRouter, { RouteConfig } from "vue-router";
 import Sejours from "../views/Sejours.vue";
-import Agenda from "../views/Agenda.vue";
 
 Vue.use(VueRouter);
 

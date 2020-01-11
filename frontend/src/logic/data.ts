@@ -477,10 +477,15 @@ export class Data {
     return offset;
   }
 
+  // gère l'erreur d'un séjour introuvable
+  getSejour(idSejour: number) {
+    return this.sejours.sejours[idSejour];
+  }
+
   // échange les deux journées, en modifiant les dates
   // des repas concernés pour le séjour donné.
   async switchDays(idSejour: number, from: Date, to: Date) {
-    const sejour = this.controller.getSejour(idSejour);
+    const sejour = this.getSejour(idSejour);
     if (!sejour) return;
     const offsetTo = this.getOffset(sejour, to);
     if (offsetTo === undefined) return;
@@ -507,7 +512,7 @@ export class Data {
 
   // modifie le moment du repas
   async deplaceRepas(repas: Repas, jour: Date, horaire: Horaire) {
-    const sejour = this.controller.getSejour(repas.id_sejour);
+    const sejour = this.getSejour(repas.id_sejour);
     if (!sejour) return;
     const offset = this.getOffset(sejour, jour);
     if (offset === undefined) return;

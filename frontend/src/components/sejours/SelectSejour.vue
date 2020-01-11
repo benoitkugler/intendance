@@ -7,6 +7,7 @@
     :value="idSejour"
     @change="args => $emit('change', Number(args))"
     class="mx-2"
+    outlined
   ></v-select>
 </template>
 

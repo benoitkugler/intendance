@@ -31,8 +31,9 @@ export interface IngredientOptions {
 }
 
 export interface PreferencesAgenda {
-  restrictSejourCourant: boolean;
   startPremierJour: boolean;
 }
 
 export type EditMode = "new" | "edit";
+
+export type CalendarMode = "groupes" | "menus";

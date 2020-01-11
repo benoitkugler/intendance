@@ -5,13 +5,6 @@
     </v-card-title>
     <v-card-text>
       <v-switch
-        label="Se restreindre au séjour courant"
-        v-model="current.restrictSejourCourant"
-        @change="onChange"
-        persistent-hint
-        hint="N'afficher que le séjour actuellement sélectionné."
-      ></v-switch>
-      <v-switch
         label="Afficher le premier jour en tête de semaine"
         v-model="current.startPremierJour"
         @change="onChange"
@@ -25,7 +18,7 @@
 <script lang="ts">
 import Vue from "vue";
 import Component from "vue-class-component";
-import { PreferencesAgenda } from "../../logic/types2";
+import { PreferencesAgenda } from "../../../logic/types2";
 
 const Props = Vue.extend({
   model: {
