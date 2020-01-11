@@ -23,10 +23,12 @@ export class Formatter {
     this.controller = controller;
   }
 
+  //FIXME:
   formatRepasName = (r: Repas) => {
     const menu = this.controller.data.menus[r.id_menu];
     const menuName = menu ? this.formatMenuName(menu) : "";
-    return ` (${r.nb_personnes}) - ${menuName}`;
+    // return ` (${r.nb_personnes}) - ${menuName}`;
+    return "";
   };
 
   formatMenuName = (menu: Menu) => {
@@ -46,7 +48,7 @@ export class Formatter {
   };
 
   offsetToDate(idSejour: number, offset: number) {
-    const sejour = this.controller.data.agenda.sejours[idSejour].sejour;
+    const sejour = this.controller.data.sejours.sejours[idSejour].sejour;
     const dateDebut = new Date(sejour.date_debut);
     dateDebut.setDate(dateDebut.getDate() + offset);
     return dateDebut;

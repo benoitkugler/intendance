@@ -37,25 +37,25 @@ func TestLoadData(t *testing.T) {
 		t.Fatal(err)
 	}
 	s := Server{db: db}
-	a, err := s.LoadAgendaUtilisateur(RequeteContext{idProprietaire: 2})
+	a, err := s.LoadSejoursUtilisateur(RequeteContext{idProprietaire: 2})
 	if err != nil {
 		t.Fatal(err)
 	}
 	fmt.Println(a)
 }
 
-type agendaFormatter struct {
+type indentFormatter struct {
 	s      strings.Builder
 	indent int
 }
 
-func (s *agendaFormatter) Printf(format string, args ...interface{}) {
+func (s *indentFormatter) Printf(format string, args ...interface{}) {
 	c := fmt.Sprintf(format, args...)
 	s.s.WriteString(strings.Repeat("\t", s.indent) + c + "\n")
 }
 
-func (a AgendaUtilisateur) String() string {
-	var out agendaFormatter
+func (a Sejours) String() string {
+	var out indentFormatter
 	out.Printf("Séjours :")
 	out.indent++
 	for _, s := range a.Sejours {
@@ -72,6 +72,11 @@ func (a AgendaUtilisateur) String() string {
 		out.indent--
 	}
 	out.indent--
+	out.Printf("Groupes :")
+	out.indent++
+	for _, g := range a.Groupes {
+		out.Printf("Groupe %s (id séjour : %d)", g.Nom, g.IdSejour)
+	}
 	return out.s.String()
 }
 
@@ -139,7 +144,7 @@ func TestCRUD(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	a, err := s.LoadAgendaUtilisateur(RequeteContext{idProprietaire: 2})
+	a, err := s.LoadSejoursUtilisateur(RequeteContext{idProprietaire: 2})
 	if err != nil {
 		t.Fatal(err)
 	}

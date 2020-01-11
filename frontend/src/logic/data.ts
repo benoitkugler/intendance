@@ -1,5 +1,4 @@
 import {
-  AgendaUtilisateur,
   OutUtilisateurs,
   OutIngredients,
   Ingredient,
@@ -10,12 +9,16 @@ import {
   OutMenus,
   Menu,
   OutMenu,
-  OutAgenda,
   Sejour,
   OutSejour,
   Repas,
   Horaire,
-  OutIngredientProduits
+  OutIngredientProduits,
+  OutSejours,
+  Sejours,
+  Groupe,
+  OutGroupe,
+  OutDeleteGroupe
 } from "./types";
 import axios, { AxiosResponse } from "axios";
 import { Ingredients, Recettes, Menus, Utilisateurs, New } from "./types2";
@@ -28,7 +31,10 @@ const host = devMode ? "http://localhost:1323" : window.location.origin;
 export const ServerURL = host + "/api";
 
 export class Data {
-  agenda: AgendaUtilisateur = { sejours: {} };
+  sejours: Sejours = {
+    sejours: {},
+    groupes: {}
+  };
   ingredients: Ingredients = {};
   recettes: Recettes = {};
   menus: Menus = {};
@@ -277,17 +283,17 @@ export class Data {
     }
   };
 
-  loadAgenda = async () => {
+  loadSejours = async () => {
     this.controller.notifications.startSpin();
     try {
-      const response: AxiosResponse<OutAgenda> = await axios.get(
-        ServerURL + "/agenda",
+      const response: AxiosResponse<OutSejours> = await axios.get(
+        ServerURL + "/sejours",
         {
           auth: this.controller.auth()
         }
       );
       this.controller.token = response.data.token;
-      this.agenda = response.data.agenda;
+      this.sejours = response.data.sejours;
     } catch (error) {
       this.controller.notifications.setAxiosError(error);
     }
@@ -307,12 +313,12 @@ export class Data {
           auth: this.controller.auth()
         }
       );
-      const entry = this.agenda.sejours[response.data.sejour.id] || {
+      const entry = this.sejours.sejours[response.data.sejour.id] || {
         journees: [],
         sejour: response.data.sejour
       };
       entry.sejour = response.data.sejour;
-      Vue.set(this.agenda.sejours, response.data.sejour.id, entry); // VRC
+      Vue.set(this.sejours.sejours, response.data.sejour.id, entry); // VRC
       this.controller.token = response.data.token;
       return response.data.sejour;
     } catch (error) {
@@ -331,15 +337,68 @@ export class Data {
   deleteSejour = async (sejour: Sejour) => {
     this.controller.notifications.startSpin();
     try {
-      const response: AxiosResponse<OutAgenda> = await axios.delete(
+      const response: AxiosResponse<OutSejours> = await axios.delete(
         ServerURL + "/sejours",
         {
           params: { id: sejour.id },
           auth: this.controller.auth()
         }
       );
-      this.agenda = response.data.agenda;
+      this.sejours = response.data.sejours;
       this.controller.token = response.data.token;
+    } catch (error) {
+      this.controller.notifications.setAxiosError(error);
+    }
+  };
+
+  private createOrUpdateGroupe = async (
+    groupe: New<Groupe>,
+    method: "put" | "post"
+  ) => {
+    this.controller.notifications.startSpin();
+    const f = method == "put" ? axios.put : axios.post;
+    try {
+      const response: AxiosResponse<OutGroupe> = await f(
+        ServerURL + "/groupes",
+        groupe,
+        {
+          auth: this.controller.auth()
+        }
+      );
+      Vue.set(
+        this.sejours.groupes,
+        response.data.groupe.id,
+        response.data.groupe
+      ); // VRC
+      this.controller.token = response.data.token;
+      return response.data.groupe;
+    } catch (error) {
+      this.controller.notifications.setAxiosError(error);
+    }
+  };
+
+  createGroupe = async (groupe: New<Groupe>) => {
+    return this.createOrUpdateGroupe(groupe, "put");
+  };
+
+  updateGroupe = async (groupe: Groupe) => {
+    return this.createOrUpdateGroupe(groupe, "post");
+  };
+
+  // Renvoie le nombre de repas touchés par la suppression
+  deleteGroupe = async (groupe: Groupe) => {
+    this.controller.notifications.startSpin();
+    try {
+      const response: AxiosResponse<OutDeleteGroupe> = await axios.delete(
+        ServerURL + "/groupes",
+        {
+          params: { id: groupe.id },
+          auth: this.controller.auth()
+        }
+      );
+      Vue.delete(this.sejours.groupes, groupe.id); // VRC
+      this.controller.token = response.data.token;
+      return response.data.nb_repas;
     } catch (error) {
       this.controller.notifications.setAxiosError(error);
     }
@@ -348,14 +407,14 @@ export class Data {
   createRepas = async (repas: New<Repas>) => {
     this.controller.notifications.startSpin();
     try {
-      const response: AxiosResponse<OutAgenda> = await axios.put(
+      const response: AxiosResponse<OutSejours> = await axios.put(
         ServerURL + "/sejours/repas",
         repas,
         {
           auth: this.controller.auth()
         }
       );
-      this.agenda = response.data.agenda;
+      this.sejours = response.data.sejours;
       this.controller.token = response.data.token;
     } catch (error) {
       this.controller.notifications.setAxiosError(error);
@@ -365,14 +424,14 @@ export class Data {
   updateManyRepas = async (repass: Repas[]) => {
     this.controller.notifications.startSpin();
     try {
-      const response: AxiosResponse<OutAgenda> = await axios.post(
+      const response: AxiosResponse<OutSejours> = await axios.post(
         ServerURL + "/sejours/repas",
         repass,
         {
           auth: this.controller.auth()
         }
       );
-      this.agenda = response.data.agenda;
+      this.sejours = response.data.sejours;
       this.controller.token = response.data.token;
     } catch (error) {
       this.controller.notifications.setAxiosError(error);
@@ -382,14 +441,14 @@ export class Data {
   deleteRepas = async (repas: Repas) => {
     this.controller.notifications.startSpin();
     try {
-      const response: AxiosResponse<OutAgenda> = await axios.delete(
+      const response: AxiosResponse<OutSejours> = await axios.delete(
         ServerURL + "/sejours/repas",
         {
           params: { id: repas.id },
           auth: this.controller.auth()
         }
       );
-      this.agenda = response.data.agenda;
+      this.sejours = response.data.sejours;
       this.controller.token = response.data.token;
     } catch (error) {
       this.controller.notifications.setAxiosError(error);
@@ -398,7 +457,7 @@ export class Data {
 
   // gère l'erreur d'un séjour introuvable
   private getSejour(idSejour: number) {
-    const sejour = this.agenda.sejours[idSejour];
+    const sejour = this.sejours.sejours[idSejour];
     if (!sejour) {
       this.controller.notifications.setError({
         code: null,

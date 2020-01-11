@@ -2,7 +2,7 @@ import { C } from "../controller";
 import { Repas } from "../types";
 
 test("resoud ingredients", async () => {
-  await C.data.loadAgenda();
+  await C.data.loadSejours();
   expect(C.notifications.getError()).toBeNull();
 
   const repas: Repas[] = [];
@@ -13,7 +13,7 @@ test("resoud ingredients", async () => {
   await C.calculs.resoudIngredientsRepas(repas[0].id);
   expect(C.notifications.getError()).toBeNull();
 
-  const sejour = Object.values(C.data.agenda.sejours).filter(
+  const sejour = Object.values(C.data.sejours).filter(
     s => Object.keys(s.journees).length > 0
   )[0];
   const N = Object.keys(sejour.journees).length;

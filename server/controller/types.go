@@ -32,8 +32,9 @@ type SejourJournees struct {
 // AgendaUtilisateur rassemble toutes les données
 // relative aux séjours et repas
 // d'un utilisateur.
-type AgendaUtilisateur struct {
+type Sejours struct {
 	Sejours map[int64]*SejourJournees `json:"sejours"`
+	Groupes models.Groupes            `json:"groupes"`
 }
 
 type Utilisateur struct {

@@ -97,11 +97,14 @@ func routes(e *echo.Echo) {
 	e.POST("/api/menus", views.UpdateMenu)
 	e.DELETE("/api/menus", views.DeleteMenu)
 
-	e.GET("/api/agenda", views.GetAgenda)
-
+	e.GET("/api/sejours", views.GetSejours)
 	e.PUT("/api/sejours", views.CreateSejour)
 	e.POST("/api/sejours", views.UpdateSejour)
 	e.DELETE("/api/sejours", views.DeleteSejour)
+
+	e.PUT("/api/groupes", views.CreateGroupe)
+	e.POST("/api/groupes", views.UpdateGroupe)
+	e.DELETE("/api/groupes", views.DeleteGroupe)
 
 	e.PUT("/api/sejours/repas", views.CreateRepas)
 	e.POST("/api/sejours/repas", views.UpdateRepas)

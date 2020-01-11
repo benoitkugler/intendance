@@ -82,8 +82,21 @@ func (s Server) Loggin(mail, password string) (out OutLoggin, err error) {
 	return out, err
 }
 
-func (s Server) LoadAgendaUtilisateur(ct RequeteContext) (out AgendaUtilisateur, err error) {
-	rows, err := s.db.Query("SELECT * FROM sejours WHERE id_proprietaire = $1", ct.idProprietaire)
+func (s Server) LoadSejoursUtilisateur(ct RequeteContext) (out Sejours, err error) {
+	rows, err := s.db.Query(`SELECT groupes.* FROM groupes 
+	JOIN sejours ON sejours.id = groupes.id_sejour
+	WHERE sejours.id_proprietaire = $1`, ct.idProprietaire)
+	if err != nil {
+		err = ErrorSQL(err)
+		return
+	}
+	out.Groupes, err = models.ScanGroupes(rows)
+	if err != nil {
+		err = ErrorSQL(err)
+		return
+	}
+
+	rows, err = s.db.Query("SELECT * FROM sejours WHERE id_proprietaire = $1", ct.idProprietaire)
 	if err != nil {
 		err = ErrorSQL(err)
 		return

@@ -10,9 +10,9 @@ type InLoggin struct {
 	Password string `json:"password,omitempty"`
 }
 
-type OutAgenda struct {
-	Token  string                       `json:"token"`
-	Agenda controller.AgendaUtilisateur `json:"agenda"`
+type OutSejours struct {
+	Token   string             `json:"token"`
+	Sejours controller.Sejours `json:"sejours"`
 }
 
 type OutIngredient struct {
@@ -48,11 +48,6 @@ type OutMenus struct {
 type OutSejour struct {
 	Token  string        `json:"token"`
 	Sejour models.Sejour `json:"sejour"`
-}
-
-type InCreateGroupe struct {
-	IdSejour int64         `json:"id_sejour,omitempty"`
-	Groupe   models.Groupe `json:"groupe,omitempty"`
 }
 
 type OutGroupe struct {

@@ -292,16 +292,16 @@ func DeleteMenu(c echo.Context) error {
 // ---------------------------- Sejours et repas ----------------------------
 // --------------------------------------------------------------------------
 
-func GetAgenda(c echo.Context) error {
+func GetSejours(c echo.Context) error {
 	ct, err := Server.Authentifie(c.Request())
 	if err != nil {
 		return err
 	}
-	out, err := Server.LoadAgendaUtilisateur(ct)
+	out, err := Server.LoadSejoursUtilisateur(ct)
 	if err != nil {
 		return err
 	}
-	return c.JSON(200, OutAgenda{Token: ct.Token, Agenda: out})
+	return c.JSON(200, OutSejours{Token: ct.Token, Sejours: out})
 }
 
 func CreateSejour(c echo.Context) error {
@@ -353,11 +353,11 @@ func DeleteSejour(c echo.Context) error {
 	if err = Server.DeleteSejour(ct, id); err != nil {
 		return err
 	}
-	out, err := Server.LoadAgendaUtilisateur(ct)
+	out, err := Server.LoadSejoursUtilisateur(ct)
 	if err != nil {
 		return err
 	}
-	return c.JSON(200, OutAgenda{Token: ct.Token, Agenda: out})
+	return c.JSON(200, OutSejours{Token: ct.Token, Sejours: out})
 }
 
 func CreateGroupe(c echo.Context) error {
@@ -365,20 +365,20 @@ func CreateGroupe(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	var params InCreateGroupe
-	if err = c.Bind(&params); err != nil {
+	var groupe models.Groupe
+	if err = c.Bind(&groupe); err != nil {
 		return err
 	}
-	newGroupe, err := Server.CreateGroupe(ct, params.IdSejour)
+	newGroupe, err := Server.CreateGroupe(ct, groupe.IdSejour)
 	if err != nil {
 		return err
 	}
-	params.Groupe.Id = newGroupe.Id // on garde les valeurs d'entrée
-	params.Groupe, err = Server.UpdateGroupe(ct, params.Groupe)
+	groupe.Id = newGroupe.Id // on garde les valeurs d'entrée
+	groupe, err = Server.UpdateGroupe(ct, groupe)
 	if err != nil {
 		return err
 	}
-	return c.JSON(200, OutGroupe{Token: ct.Token, Groupe: params.Groupe})
+	return c.JSON(200, OutGroupe{Token: ct.Token, Groupe: groupe})
 }
 
 func UpdateGroupe(c echo.Context) error {
@@ -432,11 +432,11 @@ func CreateRepas(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	out, err := Server.LoadAgendaUtilisateur(ct)
+	out, err := Server.LoadSejoursUtilisateur(ct)
 	if err != nil {
 		return err
 	}
-	return c.JSON(200, OutAgenda{Token: ct.Token, Agenda: out})
+	return c.JSON(200, OutSejours{Token: ct.Token, Sejours: out})
 }
 
 func UpdateRepas(c echo.Context) error {
@@ -452,11 +452,11 @@ func UpdateRepas(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	out, err := Server.LoadAgendaUtilisateur(ct)
+	out, err := Server.LoadSejoursUtilisateur(ct)
 	if err != nil {
 		return err
 	}
-	return c.JSON(200, OutAgenda{Token: ct.Token, Agenda: out})
+	return c.JSON(200, OutSejours{Token: ct.Token, Sejours: out})
 }
 
 func DeleteRepas(c echo.Context) error {
@@ -471,11 +471,11 @@ func DeleteRepas(c echo.Context) error {
 	if err = Server.DeleteRepas(ct, id); err != nil {
 		return err
 	}
-	out, err := Server.LoadAgendaUtilisateur(ct)
+	out, err := Server.LoadSejoursUtilisateur(ct)
 	if err != nil {
 		return err
 	}
-	return c.JSON(200, OutAgenda{Token: ct.Token, Agenda: out})
+	return c.JSON(200, OutSejours{Token: ct.Token, Sejours: out})
 }
 
 // --------------------------------------------------------------------------

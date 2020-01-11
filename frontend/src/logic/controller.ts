@@ -67,7 +67,7 @@ export class Controller {
   }
 
   iterateAllRepas(fn: (sejour: Sejour, rep: Repas) => void) {
-    Object.values(this.data.agenda.sejours).forEach(sejour => {
+    Object.values(this.data.sejours.sejours).forEach(sejour => {
       Object.values(sejour.journees).forEach(journee => {
         if (!journee.menus) return;
         journee.menus.forEach(repas => {
