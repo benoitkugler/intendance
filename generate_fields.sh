@@ -2,9 +2,11 @@
     views.OutIngredient views.OutIngredients \
     views.OutRecette views.OutRecettes \
     views.OutMenu views.OutMenus \
-    views.OutSejour views.OutSejours \
-    views.OutGroupe views.OutDeleteGroupe \
     views.OutUtilisateurs \
+    views.OutSejour \
+    views.OutGroupe \
+    views.OutDeleteGroupe \
+    views.OutSejours \
     views.InResoudIngredients views.OutResoudIngredients controller.OutLoggin views.InLoggin \
     views.OutIngredientProduits \
     

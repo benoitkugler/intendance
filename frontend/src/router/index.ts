@@ -1,5 +1,6 @@
 import Vue from "vue";
 import VueRouter, { RouteConfig } from "vue-router";
+import Sejours from "../views/Sejours.vue";
 import Agenda from "../views/Agenda.vue";
 
 Vue.use(VueRouter);
@@ -15,15 +16,29 @@ export interface RouteType extends RouteConfig {
 
 export const routes: RouteType[] = [
   {
+    path: "/sejours",
+    name: "sejours",
+    // route level code-splitting
+    // this generates a separate chunk (agenda.[hash].js) for this route
+    // which is lazy-loaded when the route is visited.
+    component: Sejours,
+    meta: {
+      title: "Sejours",
+      tooltip: "Vue d'ensemble des séjours et des groupes.",
+      icon: "mdi-account-group"
+    }
+  },
+  {
     path: "/agenda",
     name: "agenda",
     // route level code-splitting
     // this generates a separate chunk (agenda.[hash].js) for this route
     // which is lazy-loaded when the route is visited.
-    component: Agenda,
+    component: () =>
+      import(/* webpackChunkName: "agenda" */ "../views/Agenda.vue"),
     meta: {
       title: "Agenda",
-      tooltip: "Vue d'ensemble des séjours et des repas.",
+      tooltip: "Organisation du séjour.",
       icon: "mdi-calendar-month"
     }
   },

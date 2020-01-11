@@ -29,8 +29,8 @@ const SelectSejourProps = Vue.extend({
 @Component({})
 export default class SelectSejour extends SelectSejourProps {
   get sejours() {
-    const items = Object.values(C.data.agenda.sejours).map(sejour => {
-      return { value: sejour.sejour.id, text: sejour.sejour.nom };
+    const items = Object.values(C.data.sejours.sejours).map(sejour => {
+      return { value: sejour.id, text: sejour.nom };
     });
     items.sort((a, b) => Number(a.text < b.text));
     return items;

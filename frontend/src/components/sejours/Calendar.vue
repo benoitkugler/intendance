@@ -4,13 +4,6 @@
       <form-preferences v-model="preferences"></form-preferences>
     </v-dialog>
 
-    <v-dialog v-model="showEditFormSejour" max-width="500">
-      <form-sejour
-        :initialSejour="getInitialCurrentSejour()"
-        @accept="onEditSejourDone"
-      ></form-sejour>
-    </v-dialog>
-
     <v-dialog v-model="showEditFormRepas" max-width="500">
       <form-repas
         :initialRepas="editedRepas"
@@ -18,22 +11,6 @@
         @accept="onEditRepasDone"
         @delete="deleteRepas"
       ></form-repas>
-    </v-dialog>
-
-    <v-dialog v-model="showConfirmeSupprime" max-width="500px">
-      <v-card>
-        <v-card-title primary-title color="warning">
-          Confirmer la suppression
-        </v-card-title>
-        <v-card-text>
-          Confirmez-vous la suppression du séjour
-          <b>{{ (getCurrentSejour() || {}).nom }}</b> ?
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn tile color="warning" @click="supprimeSejour">Supprimer</v-btn>
-        </v-card-actions>
-      </v-card>
     </v-dialog>
 
     <v-dialog v-model="showFormCalcul" max-width="600px">
@@ -172,7 +149,7 @@
 <script lang="ts">
 import Vue from "vue";
 import Component from "vue-class-component";
-import { Repas, Sejour, Horaire, SejourJournees } from "../../logic/types";
+import { Repas, Sejour, Horaire } from "../../logic/types";
 import FormSejour from "./FormSejour.vue";
 import FormRepas from "./FormRepas.vue";
 import FormPreferences from "./FormPreferences.vue";
@@ -285,7 +262,7 @@ export default class Calendar extends Props {
     id_sejour: -1,
     horaire: { heure: 0, minute: 0 },
     id_menu: -1,
-    nb_personnes: 0,
+    offset_personnes: 0,
     jour_offset: 0
   };
 
@@ -331,18 +308,16 @@ export default class Calendar extends Props {
   }
 
   private get sortedSejours() {
-    const sejours = Object.values(C.data.agenda.sejours);
+    const sejours = Object.values(C.data.sejours.sejours);
     sejours.sort((a, b) => {
-      return a.sejour.date_debut < b.sejour.date_debut ? 1 : -1;
+      return a.date_debut < b.date_debut ? 1 : -1;
     });
     return sejours;
   }
 
   private sejourColor(idSejour: number) {
     const L = _colors.length;
-    const index = this.sortedSejours.findIndex(
-      sej => sej.sejour.id == idSejour
-    );
+    const index = this.sortedSejours.findIndex(sej => sej.id == idSejour);
     if (index != -1) {
       return _colors[index % L];
     }
@@ -369,21 +344,6 @@ export default class Calendar extends Props {
 
   updated() {
     this.setupDrag();
-  }
-
-  setClosestSejour() {
-    const sejours = Object.values(C.data.agenda.sejours);
-    if (sejours.length == 0) return;
-    const now = new Date().valueOf();
-    const computeDistance = (sejour: Sejour) => {
-      const diff = now - new Date(sejour.date_debut).valueOf();
-      return Math.abs(diff);
-    };
-    const criteres = sejours.map(sej => {
-      return { id: sej.sejour.id, distance: computeDistance(sej.sejour) };
-    });
-    const best = criteres.sort((a, b) => (a.distance < b.distance ? 1 : -1))[0];
-    this.currentSejour = best.id;
   }
 
   // on stocke le moment correspondant au dernier click,
@@ -496,7 +456,7 @@ export default class Calendar extends Props {
 
   private getCurrentSejour(): Sejour | undefined {
     if (this.currentSejour == null) return;
-    return C.data.agenda.sejours[this.currentSejour].sejour;
+    return C.data.sejours.sejours[this.currentSejour];
   }
 
   getInitialCurrentSejour() {
@@ -508,51 +468,6 @@ export default class Calendar extends Props {
     return this.getCurrentSejour() || newSejour;
   }
 
-  onEditSejourDone(modif: DetailsSejour) {
-    this.showEditFormSejour = false;
-    if (this.editMode == "edit") {
-      this.editSejour(modif);
-    } else {
-      this.addSejour(modif);
-    }
-  }
-
-  private async addSejour(modif: DetailsSejour) {
-    if (C.idUtilisateur == null) return;
-    const sejour: New<Sejour> = {
-      nom: modif.nom,
-      date_debut: modif.date_debut,
-      id_proprietaire: C.idUtilisateur
-    };
-    const newSejour = await C.data.createSejour(sejour);
-    if (C.notifications.getError() == null && newSejour != undefined) {
-      C.notifications.setMessage("Le séjour a bien été ajouté.");
-      this.currentSejour = newSejour.id;
-    }
-  }
-
-  private async editSejour(modif: DetailsSejour) {
-    const sejour = this.getCurrentSejour();
-    if (sejour == undefined) return;
-    sejour.date_debut = modif.date_debut;
-    sejour.nom = modif.nom;
-    await C.data.updateSejour(sejour);
-    if (C.notifications.getError() == null) {
-      C.notifications.setMessage("Le séjour a bien été modifié.");
-    }
-  }
-
-  async supprimeSejour() {
-    const sej = this.getCurrentSejour();
-    if (sej == null) return;
-    this.currentSejour = null;
-    this.showConfirmeSupprime = false;
-    await C.data.deleteSejour(sej);
-    if (C.notifications.getError() == null) {
-      C.notifications.setMessage("Le séjour a été supprimé avec succès.");
-    }
-  }
-
   startAddRepas(dt: DateTime) {
     const sejour = this.getCurrentSejour();
     if (sejour == undefined) return;
@@ -561,7 +476,7 @@ export default class Calendar extends Props {
     this.editedRepas = {
       horaire: timeToHoraire(dt.time),
       jour_offset: offset,
-      nb_personnes: 0,
+      offset_personnes: 0,
       id_menu: -1,
       id_sejour: sejour.id,
       id: -1

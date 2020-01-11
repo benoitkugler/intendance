@@ -96,9 +96,12 @@ export default class FormCalcul extends FormCalculProps {
   }
 
   get choixJournees(): number[] {
-    const offsets = Object.keys(
-      C.data.agenda.sejours[this.sejour].journees
-    ).map(k => Number(k));
+    const s = new Set(
+      (C.data.sejours.sejours[this.sejour].repass || []).map(
+        rep => rep.jour_offset
+      )
+    );
+    const offsets = [...s];
     return offsets.sort();
   }
 

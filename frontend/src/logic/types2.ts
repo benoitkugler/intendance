@@ -7,8 +7,7 @@ import {
   RecetteIngredient,
   MenuIngredient,
   Utilisateur,
-  Groupe,
-  SejourJournees
+  Groupe
 } from "./types";
 
 export type New<T extends { id: number }> = Omit<T, "id"> &

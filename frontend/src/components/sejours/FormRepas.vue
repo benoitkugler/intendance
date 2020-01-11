@@ -112,7 +112,7 @@ export default class FormRepas extends Props {
   }
 
   get sejour() {
-    return C.data.agenda.sejours[this.initialRepas.id_sejour].sejour;
+    return C.data.sejours.sejours[this.initialRepas.id_sejour];
   }
 
   get menus() {
@@ -131,7 +131,7 @@ export default class FormRepas extends Props {
     this.showPrevisuIngredients = true;
     const data = await C.calculs.resoudIngredientsRepas(
       this.initialRepas.id,
-      this.repas.nb_personnes
+      this.repas.offset_personnes
     );
     if (data == undefined || data.date_ingredients == null) return;
     this.listeIngredients = data.date_ingredients[0].ingredients || [];

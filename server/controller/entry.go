@@ -106,9 +106,9 @@ func (s Server) LoadSejoursUtilisateur(ct RequeteContext) (out Sejours, err erro
 		err = ErrorSQL(err)
 		return
 	}
-	out.Sejours = make(map[int64]*SejourJournees, len(sejours))
-	for k, v := range sejours {
-		out.Sejours[k] = &SejourJournees{Sejour: v, Journees: map[int64]Journee{}}
+	out.Sejours = make(map[int64]SejourRepas, len(sejours))
+	for k, v := range sejours { // informations basiques
+		out.Sejours[k] = SejourRepas{Sejour: v}
 	}
 	rows, err = s.db.Query(`SELECT * FROM repass WHERE id_sejour = ANY($1)`, sejours.Ids())
 	if err != nil {
@@ -120,11 +120,10 @@ func (s Server) LoadSejoursUtilisateur(ct RequeteContext) (out Sejours, err erro
 		err = ErrorSQL(err)
 		return
 	}
-	for _, l := range sms {
-		journee := out.Sejours[l.IdSejour].Journees[l.JourOffset]
-		journee.JourOffset = l.JourOffset
-		journee.Repas = append(journee.Repas, l)
-		out.Sejours[l.IdSejour].Journees[l.JourOffset] = journee
+	for _, l := range sms { // on ajoute les repas aux séjours
+		sej := out.Sejours[l.IdSejour]     // slice copiée
+		sej.Repass = append(sej.Repass, l) // peut ré-allouer
+		out.Sejours[l.IdSejour] = sej
 	}
 	return out, nil
 }
@@ -556,6 +555,10 @@ func (s Server) DeleteSejour(ct RequeteContext, id int64) error {
 	}
 
 	_, err := ct.tx.Exec("DELETE FROM repass WHERE id_sejour = $1", id)
+	if err != nil {
+		return ErrorSQL(err)
+	}
+	_, err = ct.tx.Exec("DELETE FROM groupes WHERE id_sejour = $1", id)
 	if err != nil {
 		return ErrorSQL(err)
 	}

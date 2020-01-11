@@ -5,6 +5,7 @@ import { Data, devMode } from "./data";
 import { IngredientOptions } from "./types2";
 import { Formatter } from "./formatter";
 import { Loggin as Logger } from "./loggin";
+import { State } from "./state";
 
 export class Controller {
   readonly data: Data;
@@ -12,8 +13,7 @@ export class Controller {
   readonly calculs: Calculs;
   readonly formatter: Formatter;
   readonly logger: Logger;
-
-  isLoggedIn = devMode; // en dev mode, connection automatique
+  readonly state: State;
 
   token: string = "";
   idUtilisateur: number | null = devMode ? 2 : null;
@@ -24,6 +24,7 @@ export class Controller {
     this.calculs = new Calculs(this);
     this.formatter = new Formatter(this);
     this.logger = new Logger(this);
+    this.state = new State();
   }
 
   auth() {
@@ -31,6 +32,11 @@ export class Controller {
       username: String(this.idUtilisateur || ""),
       password: this.token
     };
+  }
+
+  // gère l'erreur d'un séjour introuvable
+  getSejour(idSejour: number) {
+    return this.data.sejours.sejours[idSejour];
   }
 
   getAllIngredients(): IngredientOptions[] {
@@ -68,11 +74,9 @@ export class Controller {
 
   iterateAllRepas(fn: (sejour: Sejour, rep: Repas) => void) {
     Object.values(this.data.sejours.sejours).forEach(sejour => {
-      Object.values(sejour.journees).forEach(journee => {
-        if (!journee.menus) return;
-        journee.menus.forEach(repas => {
-          fn(sejour.sejour, repas);
-        });
+      if (!sejour.repass) return;
+      sejour.repass.forEach(repas => {
+        fn(sejour, repas);
       });
     });
   }

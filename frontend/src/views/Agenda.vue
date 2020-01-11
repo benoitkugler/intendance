@@ -20,11 +20,10 @@ export default class Agenda extends Vue {
 
   async mounted() {
     await C.data.loadAllMenus();
-    await C.data.loadAgenda();
+    await C.data.loadSejours();
     if (C.notifications.getError() == null) {
       C.notifications.setMessage("L'agenda a bien été chargé.");
     }
-    this.$refs.calendar.setClosestSejour();
   }
 }
 </script>

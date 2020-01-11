@@ -65,7 +65,7 @@ export default class App extends Vue {
   }
 
   get isLoggedIn() {
-    return this.controller.isLoggedIn;
+    return this.controller.state.isLoggedIn;
   }
 
   get mainTitle() {

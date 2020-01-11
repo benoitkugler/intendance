@@ -61,13 +61,9 @@ func (a Sejours) String() string {
 	for _, s := range a.Sejours {
 		out.Printf("Séjour %s, début : %s", s.Sejour.Nom, s.Sejour.DateDebut)
 		out.indent++
-		for _, j := range s.Journees {
-			out.Printf("Journée %d", j.JourOffset)
-			out.indent++
-			for _, men := range j.Repas {
-				out.Printf("Repas %v", men)
-			}
-			out.indent--
+		for _, j := range s.Repass {
+			out.Printf("Repas %v", j)
+
 		}
 		out.indent--
 	}

@@ -313,12 +313,11 @@ export class Data {
           auth: this.controller.auth()
         }
       );
-      const entry = this.sejours.sejours[response.data.sejour.id] || {
-        journees: [],
-        sejour: response.data.sejour
-      };
-      entry.sejour = response.data.sejour;
-      Vue.set(this.sejours.sejours, response.data.sejour.id, entry); // VRC
+      Vue.set(
+        this.sejours.sejours,
+        response.data.sejour.id,
+        response.data.sejour
+      ); // VRC
       this.controller.token = response.data.token;
       return response.data.sejour;
     } catch (error) {
@@ -455,21 +454,6 @@ export class Data {
     }
   };
 
-  // gère l'erreur d'un séjour introuvable
-  private getSejour(idSejour: number) {
-    const sejour = this.sejours.sejours[idSejour];
-    if (!sejour) {
-      this.controller.notifications.setError({
-        code: null,
-        kind: "Séjour introuvable",
-        messageHtml: `Le séjour concerné (id ${idSejour}) est <i>introuvable<i> <br/>
-              Il s'agit probablement d'une erreur de synchronisation avec le serveur. <br/>
-              Pour la corriger, merci de <b>recharger la page</b>.`
-      });
-    }
-    return sejour;
-  }
-
   // vérifie que la date est après le début du séjour et gère l'erreur
   // si la date est valide, renvoie l'offset correspondant
   getOffset(sejour: Sejour, jour: Date) {
@@ -496,19 +480,22 @@ export class Data {
   // échange les deux journées, en modifiant les dates
   // des repas concernés pour le séjour donné.
   async switchDays(idSejour: number, from: Date, to: Date) {
-    const sejour = this.getSejour(idSejour);
+    const sejour = this.controller.getSejour(idSejour);
     if (!sejour) return;
-    const offsetTo = this.getOffset(sejour.sejour, to);
+    const offsetTo = this.getOffset(sejour, to);
     if (offsetTo === undefined) return;
-    const offsetFrom = this.getOffset(sejour.sejour, from);
+    const offsetFrom = this.getOffset(sejour, from);
     if (offsetFrom === undefined) return;
     if (offsetFrom == offsetTo) return;
-    const menusFrom =
-      (sejour.journees[offsetFrom] || { menus: [] }).menus || [];
-    const menusTo = (sejour.journees[offsetTo] || { menus: [] }).menus || [];
-    menusFrom.forEach(m => (m.jour_offset = offsetTo));
-    menusTo.forEach(m => (m.jour_offset = offsetFrom));
-    const modifs = menusFrom.concat(menusTo);
+    const repasFrom = (sejour.repass || []).filter(
+      rep => rep.jour_offset == offsetFrom
+    );
+    const repasTo = (sejour.repass || []).filter(
+      rep => rep.jour_offset == offsetTo
+    );
+    repasFrom.forEach(m => (m.jour_offset = offsetTo));
+    repasTo.forEach(m => (m.jour_offset = offsetFrom));
+    const modifs = repasFrom.concat(repasTo);
     if (modifs.length === 0) return;
     await this.updateManyRepas(modifs);
     if (this.controller.notifications.getError() === null) {
@@ -520,9 +507,9 @@ export class Data {
 
   // modifie le moment du repas
   async deplaceRepas(repas: Repas, jour: Date, horaire: Horaire) {
-    const sejour = this.getSejour(repas.id_sejour);
+    const sejour = this.controller.getSejour(repas.id_sejour);
     if (!sejour) return;
-    const offset = this.getOffset(sejour.sejour, jour);
+    const offset = this.getOffset(sejour, jour);
     if (offset === undefined) return;
     repas.jour_offset = offset;
     repas.horaire = horaire;

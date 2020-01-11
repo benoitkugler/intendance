@@ -19,22 +19,15 @@ type Menu struct {
 	Ingredients []models.MenuIngredient `json:"ingredients"`
 }
 
-type Journee struct {
-	JourOffset int64          `json:"jour_offset"`
-	Repas      []models.Repas `json:"menus"`
+type SejourRepas struct {
+	models.Sejour
+	Repass []models.Repas `json:"repass"`
 }
 
-type SejourJournees struct {
-	Sejour   models.Sejour     `json:"sejour"`
-	Journees map[int64]Journee `json:"journees"` // key is JourOffset
-}
-
-// AgendaUtilisateur rassemble toutes les données
-// relative aux séjours et repas
-// d'un utilisateur.
+// Sejours contient les séjours, ainsi que les groupes et repas associés.
 type Sejours struct {
-	Sejours map[int64]*SejourJournees `json:"sejours"`
-	Groupes models.Groupes            `json:"groupes"`
+	Sejours map[int64]SejourRepas `json:"sejours"`
+	Groupes models.Groupes        `json:"groupes"`
 }
 
 type Utilisateur struct {

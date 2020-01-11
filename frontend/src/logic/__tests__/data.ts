@@ -194,8 +194,6 @@ test("crud repas", async () => {
   const menuId = Number(Object.keys(C.data.menus)[0]);
   const sejourId = Number(Object.keys(C.data.sejours.sejours)[0]);
 
-  const journee = (C.data.sejours.sejours[sejourId]?.journees || {})[2];
-  const l = journee?.menus?.length || 0;
   await C.data.createRepas({
     horaire: { heure: 10, minute: 20 },
     id_menu: menuId,
@@ -204,17 +202,13 @@ test("crud repas", async () => {
     offset_personnes: 50
   });
   expect(C.notifications.getError()).toBeNull();
-  let menus = C.data.sejours.sejours[sejourId]!.journees[2]?.menus || [];
-  expect(menus).toHaveLength(l + 1);
 
-  const repas = menus[0];
+  const repas = (C.data.sejours.sejours[sejourId].repass || [])[0];
   repas.horaire = { heure: 12, minute: 20 };
   await C.data.updateManyRepas([repas]);
   expect(C.notifications.getError()).toBeNull();
 
   await C.data.deleteRepas(repas);
-  menus = C.data.sejours.sejours[sejourId]!.journees[2]?.menus || [];
-  expect(menus).toHaveLength(l);
 });
 
 test("crud produits", async () => {

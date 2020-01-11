@@ -48,7 +48,7 @@ export class Formatter {
   };
 
   offsetToDate(idSejour: number, offset: number) {
-    const sejour = this.controller.data.sejours.sejours[idSejour].sejour;
+    const sejour = this.controller.data.sejours.sejours[idSejour];
     const dateDebut = new Date(sejour.date_debut);
     dateDebut.setDate(dateDebut.getDate() + offset);
     return dateDebut;

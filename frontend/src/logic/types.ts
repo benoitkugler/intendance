@@ -101,6 +101,18 @@ export interface OutMenus {
   menus: { [key: number]: Menu };
 }
 
+// struct2ts:github.com/benoitkugler/intendance/server/controller.Utilisateur
+export interface Utilisateur {
+  id: number;
+  prenom_nom: string;
+}
+
+// struct2ts:github.com/benoitkugler/intendance/server/views.OutUtilisateurs
+export interface OutUtilisateurs {
+  token: string;
+  utilisateurs: { [key: number]: Utilisateur };
+}
+
 // struct2ts:github.com/benoitkugler/intendance/server/models.Sejour
 export interface Sejour {
   id: number;
@@ -113,6 +125,27 @@ export interface Sejour {
 export interface OutSejour {
   token: string;
   sejour: Sejour;
+}
+
+// struct2ts:github.com/benoitkugler/intendance/server/models.Groupe
+export interface Groupe {
+  id: number;
+  id_sejour: number;
+  nom: string;
+  nb_personnes: number;
+  couleur: string;
+}
+
+// struct2ts:github.com/benoitkugler/intendance/server/views.OutGroupe
+export interface OutGroupe {
+  token: string;
+  groupe: Groupe;
+}
+
+// struct2ts:github.com/benoitkugler/intendance/server/views.OutDeleteGroupe
+export interface OutDeleteGroupe {
+  token: string;
+  nb_repas: number;
 }
 
 // struct2ts:github.com/benoitkugler/intendance/server/models.Horaire
@@ -131,30 +164,18 @@ export interface Repas {
   horaire: Horaire;
 }
 
-// struct2ts:github.com/benoitkugler/intendance/server/controller.Journee
-export interface Journee {
-  jour_offset: number;
-  menus: Repas[] | null;
-}
-
-// struct2ts:github.com/benoitkugler/intendance/server/controller.SejourJournees
-export interface SejourJournees {
-  sejour: Sejour;
-  journees: { [key: number]: Journee };
-}
-
-// struct2ts:github.com/benoitkugler/intendance/server/models.Groupe
-export interface Groupe {
+// struct2ts:github.com/benoitkugler/intendance/server/controller.SejourRepas
+export interface SejourRepas {
   id: number;
-  id_sejour: number;
+  id_proprietaire: number;
+  date_debut: Time;
   nom: string;
-  nb_personnes: number;
-  couleur: string;
+  repass: Repas[] | null;
 }
 
 // struct2ts:github.com/benoitkugler/intendance/server/controller.Sejours
 export interface Sejours {
-  sejours: { [key: number]: SejourJournees };
+  sejours: { [key: number]: SejourRepas };
   groupes: { [key: number]: Groupe };
 }
 
@@ -162,33 +183,6 @@ export interface Sejours {
 export interface OutSejours {
   token: string;
   sejours: Sejours;
-}
-
-// struct2ts:github.com/benoitkugler/intendance/server/views.OutGroupe
-export interface OutGroupe {
-  token: string;
-
-  // types
-
-  groupe: Groupe;
-}
-
-// struct2ts:github.com/benoitkugler/intendance/server/views.OutDeleteGroupe
-export interface OutDeleteGroupe {
-  token: string;
-  nb_repas: number;
-}
-
-// struct2ts:github.com/benoitkugler/intendance/server/controller.Utilisateur
-export interface Utilisateur {
-  id: number;
-  prenom_nom: string;
-}
-
-// struct2ts:github.com/benoitkugler/intendance/server/views.OutUtilisateurs
-export interface OutUtilisateurs {
-  token: string;
-  utilisateurs: { [key: number]: Utilisateur };
 }
 
 // struct2ts:github.com/benoitkugler/intendance/server/views.InResoudIngredients
@@ -253,3 +247,5 @@ export interface OutIngredientProduits {
   token: string;
   produits: IngredientProduits;
 }
+
+// types

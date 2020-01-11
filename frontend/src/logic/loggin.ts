@@ -36,14 +36,14 @@ export class Loggin {
       this.controller.notifications.setMessage(
         `Connecté sous le nom de <b>${response.data.utilisateur.prenom_nom}</b>`
       );
-      this.controller.isLoggedIn = true;
+      this.controller.state.isLoggedIn = true;
     } catch (error) {
       return this.controller.notifications.setAxiosError(error);
     }
   }
 
   logout() {
-    this.controller.isLoggedIn = false;
+    this.controller.state.isLoggedIn = false;
     // TODO: cookies
   }
 }
