@@ -15,15 +15,27 @@ import (
 // d'un (ou plusieurs) repas
 type dataRepas struct {
 	repass             models.Repass
+	groupes            models.Groupes
 	menuIngredients    []models.MenuIngredient
 	recetteIngredients []models.RecetteIngredient
 	ingredients        models.Ingredients
 
 	menuRecettes map[int64]Set // id menu -> ids recettes
+	repasGroupes map[int64]Set // id repas -> ids groupes
 }
 
 // idIngredient -> quantité
 type quantites = map[int64]float64
+
+// ajoute id2 au crible de id1
+func addToCribles(crible map[int64]Set, id1, id2 int64) {
+	s := crible[id1]
+	if s == nil {
+		s = NewSet()
+	}
+	s.Add(id2)
+	crible[id1] = s
+}
 
 // prend en entrée le résultat d'une requête renvoyant des repas
 func (s Server) loadDataRepas(rowsRepas *sql.Rows) (out dataRepas, err error) {
@@ -36,7 +48,31 @@ func (s Server) loadDataRepas(rowsRepas *sql.Rows) (out dataRepas, err error) {
 		idRepass = append(idRepass, idRepas)
 	}
 
-	rows, err := s.db.Query(`SELECT menu_ingredients.* FROM menu_ingredients
+	rows, err := s.db.Query(`SELECT * FROM repas_groupes WHERE id_repas = ANY($1)`, idRepass)
+	if err != nil {
+		return out, err
+	}
+	tmp, err := models.ScanRepasGroupes(rows)
+	if err != nil {
+		return out, err
+	}
+	out.repasGroupes = make(map[int64]Set)
+	for _, rg := range tmp {
+		addToCribles(out.repasGroupes, rg.IdRepas, rg.IdGroupe)
+	}
+
+	rows, err = s.db.Query(`SELECT groupes.* FROM groupes 
+		JOIN repas_groupes ON repas_groupes.id_groupe = groupes.id
+		WHERE repas_groupes.id_repas = ANY($1)`, idRepass)
+	if err != nil {
+		return out, err
+	}
+	out.groupes, err = models.ScanGroupes(rows)
+	if err != nil {
+		return out, err
+	}
+
+	rows, err = s.db.Query(`SELECT menu_ingredients.* FROM menu_ingredients
 	JOIN repass ON repass.id_menu = menu_ingredients.id_menu 
 	WHERE repass.id = ANY($1)`, idRepass)
 	if err != nil {
@@ -60,12 +96,7 @@ func (s Server) loadDataRepas(rowsRepas *sql.Rows) (out dataRepas, err error) {
 
 	out.menuRecettes = make(map[int64]Set)
 	for _, menuRecette := range menuRecettes {
-		s := out.menuRecettes[menuRecette.IdMenu]
-		if s == nil {
-			s = NewSet()
-		}
-		s.Add(menuRecette.IdRecette)
-		out.menuRecettes[menuRecette.IdMenu] = s
+		addToCribles(out.menuRecettes, menuRecette.IdMenu, menuRecette.IdRecette)
 	}
 
 	rows, err = s.db.Query(`SELECT recette_ingredients.* FROM recette_ingredients 
@@ -101,8 +132,15 @@ func (s Server) loadDataRepas(rowsRepas *sql.Rows) (out dataRepas, err error) {
 // si `nbPersonnes` vaut -1, le nombre de personne du repas est utilisé
 func (d dataRepas) resoudRepas(idRepas, nbPersonnes int64, quantite quantites) {
 	repas := d.repass[idRepas]
-	if nbPersonnes == -1 {
-		nbPersonnes = repas.NbPersonnes
+
+	if nbPersonnes == -1 { // on résoud le nombre de personnes
+		nbPersonnes = repas.OffsetPersonnes
+		for idGroupe := range d.repasGroupes[idRepas] { // parcourt des groupes
+			nbPersonnes += d.groupes[idGroupe].NbPersonnes
+		}
+		if nbPersonnes < 0 {
+			nbPersonnes = 0
+		}
 	}
 	nbPersonnesF := float64(nbPersonnes)
 	cribleRecettes := d.menuRecettes[repas.IdMenu]

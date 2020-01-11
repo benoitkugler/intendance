@@ -158,6 +158,8 @@ func (s Server) proprioMenu(ct RequeteContext, menu models.Menu, checkProprioFie
 	return nil
 }
 
+// Vérifie que le séjour donné appartient au propriétaire courant
+// Si `checkProprioField`, vérifie aussi que le champ IdProprietaire est cohérent.
 func (s Server) proprioSejour(ct RequeteContext, sejour models.Sejour, checkProprioField bool) error {
 	row := ct.tx.QueryRow("SELECT id_proprietaire FROM sejours WHERE id = $1", sejour.Id)
 	var trueProp int64
@@ -175,6 +177,20 @@ func (s Server) proprioSejour(ct RequeteContext, sejour models.Sejour, checkProp
 	return nil
 }
 
+func (s Server) proprioGroupe(ct RequeteContext, idGroupe int64) error {
+	row := ct.tx.QueryRow(`SELECT sejours.id_proprietaire FROM sejours 
+	JOIN groupes ON groupes.id_sejour = sejours.id
+	WHERE groupes.id = $1`, idGroupe)
+	var trueProp int64
+	if err := row.Scan(&trueProp); err != nil {
+		return ErrorSQL(err)
+	}
+	if trueProp != ct.idProprietaire {
+		return fmt.Errorf(`Votre requête est impossible car le <b>séjour</b> 
+		concerné ne vous <b>appartient pas</b> !`)
+	}
+	return nil
+}
 func (s Server) proprioRepas(ct RequeteContext, idRepas int64) error {
 	row := ct.tx.QueryRow(`SELECT sejours.id_proprietaire FROM sejours 
 	JOIN repass ON repass.id_sejour = sejours.id

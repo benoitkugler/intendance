@@ -595,13 +595,92 @@ func (item Sejour) Delete(tx *sql.Tx) (int64, error) {
 	return deleted_id, err
 }
 
+func ScanGroupe(r *sql.Row) (Groupe, error) {
+	var s Groupe
+	if err := r.Scan(
+		&s.Id,
+		&s.IdSejour,
+		&s.Nom,
+		&s.NbPersonnes,
+		&s.Couleur,
+	); err != nil {
+		return Groupe{}, err
+	}
+	return s, nil
+}
+
+type Groupes map[int64]Groupe
+
+func (m Groupes) Ids() pq.Int64Array {
+	out := make(pq.Int64Array, 0, len(m))
+	for i := range m {
+		out = append(out, i)
+	}
+	return out
+}
+
+func ScanGroupes(rs *sql.Rows) (Groupes, error) {
+	structs := make(Groupes, 16)
+	var err error
+	for rs.Next() {
+		var s Groupe
+		if err = rs.Scan(
+			&s.Id,
+			&s.IdSejour,
+			&s.Nom,
+			&s.NbPersonnes,
+			&s.Couleur,
+		); err != nil {
+			return nil, err
+		}
+		structs[s.Id] = s
+	}
+	if err = rs.Err(); err != nil {
+		return nil, err
+	}
+	return structs, nil
+}
+
+// Insert Groupe in the database and returns the item with id filled.
+func (item Groupe) Insert(tx *sql.Tx) (out Groupe, err error) {
+	r := tx.QueryRow(`INSERT INTO groupes (
+		id_sejour,nom,nb_personnes,couleur
+		) VALUES (
+		$1,$2,$3,$4
+		) RETURNING 
+		id,id_sejour,nom,nb_personnes,couleur;
+		`, item.IdSejour, item.Nom, item.NbPersonnes, item.Couleur)
+	return ScanGroupe(r)
+}
+
+// Update Groupe in the database and returns the new version.
+func (item Groupe) Update(tx *sql.Tx) (out Groupe, err error) {
+	r := tx.QueryRow(`UPDATE groupes SET (
+		id_sejour,nom,nb_personnes,couleur
+		) = (
+		$2,$3,$4,$5
+		) WHERE id = $1 RETURNING 
+		id,id_sejour,nom,nb_personnes,couleur;
+		`, item.Id, item.IdSejour, item.Nom, item.NbPersonnes, item.Couleur)
+	return ScanGroupe(r)
+}
+
+// Delete Groupe in the database and the return the id.
+// Only the field 'Id' is used.
+func (item Groupe) Delete(tx *sql.Tx) (int64, error) {
+	var deleted_id int64
+	r := tx.QueryRow("DELETE FROM groupes WHERE id = $1 RETURNING id;", item.Id)
+	err := r.Scan(&deleted_id)
+	return deleted_id, err
+}
+
 func ScanRepas(r *sql.Row) (Repas, error) {
 	var s Repas
 	if err := r.Scan(
 		&s.Id,
 		&s.IdSejour,
 		&s.IdMenu,
-		&s.NbPersonnes,
+		&s.OffsetPersonnes,
 		&s.JourOffset,
 		&s.Horaire,
 	); err != nil {
@@ -629,7 +708,7 @@ func ScanRepass(rs *sql.Rows) (Repass, error) {
 			&s.Id,
 			&s.IdSejour,
 			&s.IdMenu,
-			&s.NbPersonnes,
+			&s.OffsetPersonnes,
 			&s.JourOffset,
 			&s.Horaire,
 		); err != nil {
@@ -646,24 +725,24 @@ func ScanRepass(rs *sql.Rows) (Repass, error) {
 // Insert Repas in the database and returns the item with id filled.
 func (item Repas) Insert(tx *sql.Tx) (out Repas, err error) {
 	r := tx.QueryRow(`INSERT INTO repass (
-		id_sejour,id_menu,nb_personnes,jour_offset,horaire
+		id_sejour,id_menu,offset_personnes,jour_offset,horaire
 		) VALUES (
 		$1,$2,$3,$4,$5
 		) RETURNING 
-		id,id_sejour,id_menu,nb_personnes,jour_offset,horaire;
-		`, item.IdSejour, item.IdMenu, item.NbPersonnes, item.JourOffset, item.Horaire)
+		id,id_sejour,id_menu,offset_personnes,jour_offset,horaire;
+		`, item.IdSejour, item.IdMenu, item.OffsetPersonnes, item.JourOffset, item.Horaire)
 	return ScanRepas(r)
 }
 
 // Update Repas in the database and returns the new version.
 func (item Repas) Update(tx *sql.Tx) (out Repas, err error) {
 	r := tx.QueryRow(`UPDATE repass SET (
-		id_sejour,id_menu,nb_personnes,jour_offset,horaire
+		id_sejour,id_menu,offset_personnes,jour_offset,horaire
 		) = (
 		$2,$3,$4,$5,$6
 		) WHERE id = $1 RETURNING 
-		id,id_sejour,id_menu,nb_personnes,jour_offset,horaire;
-		`, item.Id, item.IdSejour, item.IdMenu, item.NbPersonnes, item.JourOffset, item.Horaire)
+		id,id_sejour,id_menu,offset_personnes,jour_offset,horaire;
+		`, item.Id, item.IdSejour, item.IdMenu, item.OffsetPersonnes, item.JourOffset, item.Horaire)
 	return ScanRepas(r)
 }
 
@@ -674,6 +753,70 @@ func (item Repas) Delete(tx *sql.Tx) (int64, error) {
 	r := tx.QueryRow("DELETE FROM repass WHERE id = $1 RETURNING id;", item.Id)
 	err := r.Scan(&deleted_id)
 	return deleted_id, err
+}
+
+func ScanRepasGroupe(r *sql.Row) (RepasGroupe, error) {
+	var s RepasGroupe
+	if err := r.Scan(
+		&s.IdRepas,
+		&s.IdGroupe,
+	); err != nil {
+		return RepasGroupe{}, err
+	}
+	return s, nil
+}
+
+func ScanRepasGroupes(rs *sql.Rows) ([]RepasGroupe, error) {
+	structs := make([]RepasGroupe, 0, 16)
+	var err error
+	for rs.Next() {
+		var s RepasGroupe
+		if err = rs.Scan(
+			&s.IdRepas,
+			&s.IdGroupe,
+		); err != nil {
+			return nil, err
+		}
+		structs = append(structs, s)
+	}
+	if err = rs.Err(); err != nil {
+		return nil, err
+	}
+	return structs, nil
+}
+
+// Insert the links RepasGroupe in the database.
+func InsertManyRepasGroupes(tx *sql.Tx, items []RepasGroupe) error {
+	stmt, err := tx.Prepare(pq.CopyIn("repas_groupes",
+		"id_repas", "id_groupe",
+	))
+	if err != nil {
+		return err
+	}
+
+	for _, item := range items {
+		_, err = stmt.Exec(item.IdRepas, item.IdGroupe)
+		if err != nil {
+			return err
+		}
+	}
+
+	if _, err = stmt.Exec(); err != nil {
+		return err
+	}
+
+	if err = stmt.Close(); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Delete the link RepasGroupe in the database.
+// Only the 'IdRepas' 'IdGroupe' fields are used.
+func (item RepasGroupe) Delete(tx *sql.Tx) error {
+	_, err := tx.Exec(`DELETE FROM repas_groupes WHERE 
+	id_repas = $1 AND id_groupe = $2;`, item.IdRepas, item.IdGroupe)
+	return err
 }
 
 func ScanFournisseur(r *sql.Row) (Fournisseur, error) {

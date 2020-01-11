@@ -282,14 +282,51 @@ func queriesSejour(tx *sql.Tx, item Sejour) (Sejour, error) {
 	return item, err
 }
 
-func randRepas() Repas {
-	return Repas{
+func randGroupe() Groupe {
+	return Groupe{
 		Id:          rand.Int63n(1 << 20),
 		IdSejour:    rand.Int63n(1 << 20),
-		IdMenu:      rand.Int63n(1 << 20),
+		Nom:         randstring(),
 		NbPersonnes: rand.Int63n(1 << 20),
-		JourOffset:  rand.Int63n(1 << 20),
-		Horaire:     randHoraire(),
+		Couleur:     randstring(),
+	}
+}
+
+func queriesGroupe(tx *sql.Tx, item Groupe) (Groupe, error) {
+	item, err := item.Insert(tx)
+
+	if err != nil {
+		return item, err
+	}
+	rows, err := tx.Query("SELECT * FROM groupes")
+	if err != nil {
+		return item, err
+	}
+	items, err := ScanGroupes(rows)
+	if err != nil {
+		return item, err
+	}
+
+	_ = items.Ids()
+
+	item, err = item.Update(tx)
+	if err != nil {
+		return item, err
+	}
+	row := tx.QueryRow("SELECT * FROM groupes WHERE id = $1", item.Id)
+
+	_, err = ScanGroupe(row)
+	return item, err
+}
+
+func randRepas() Repas {
+	return Repas{
+		Id:              rand.Int63n(1 << 20),
+		IdSejour:        rand.Int63n(1 << 20),
+		IdMenu:          rand.Int63n(1 << 20),
+		OffsetPersonnes: rand.Int63n(1 << 20),
+		JourOffset:      rand.Int63n(1 << 20),
+		Horaire:         randHoraire(),
 	}
 }
 
@@ -317,6 +354,36 @@ func queriesRepas(tx *sql.Tx, item Repas) (Repas, error) {
 	row := tx.QueryRow("SELECT * FROM repass WHERE id = $1", item.Id)
 
 	_, err = ScanRepas(row)
+	return item, err
+}
+
+func randRepasGroupe() RepasGroupe {
+	return RepasGroupe{
+		IdRepas:  rand.Int63n(1 << 20),
+		IdGroupe: rand.Int63n(1 << 20),
+	}
+}
+
+func queriesRepasGroupe(tx *sql.Tx, item RepasGroupe) (RepasGroupe, error) {
+	err := InsertManyRepasGroupes(tx, []RepasGroupe{item})
+	if err != nil {
+		return item, err
+	}
+	rows, err := tx.Query("SELECT * FROM repas_groupes")
+	if err != nil {
+		return item, err
+	}
+	items, err := ScanRepasGroupes(rows)
+	if err != nil {
+		return item, err
+	}
+
+	_ = len(items)
+
+	row := tx.QueryRow(`SELECT * FROM repas_groupes WHERE 
+		id_repas = $1 AND id_groupe = $2;`, item.IdRepas, item.IdGroupe)
+
+	_, err = ScanRepasGroupe(row)
 	return item, err
 }
 

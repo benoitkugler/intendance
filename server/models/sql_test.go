@@ -73,6 +73,21 @@ func TestSql(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	i9 := randGroupe()
+	i9.IdSejour = i5.Id
+	i9, err = queriesGroupe(tx, i9)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	i10 := randRepas()
+	i10.IdSejour = i5.Id
+	i10.IdMenu = i4.Id
+	i10, err = queriesRepas(tx, i10)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	// tables de lien
 	l1 := randRecetteIngredient()
 	l1.IdIngredient = i2.Id
@@ -98,18 +113,19 @@ func TestSql(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	l4 := randRepas()
-	l4.IdSejour = i5.Id
-	l4.IdMenu = i4.Id
-	l4, err = queriesRepas(tx, l4)
+	l4 := randIngredientProduit()
+	l4.IdIngredient = i2.Id
+	l4.IdProduit = i7.Id
+	l4.IdAjouteur = i1.Id
+	l4, err = queriesIngredientProduit(tx, l4)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	l5 := randIngredientProduit()
-	l5.IdIngredient = i2.Id
-	l5.IdProduit = i7.Id
-	l5, err = queriesIngredientProduit(tx, l5)
+	l5 := randRepasGroupe()
+	l5.IdRepas = i10.Id
+	l5.IdGroupe = i9.Id
+	l5, err = queriesRepasGroupe(tx, l5)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -124,7 +140,7 @@ func TestSql(t *testing.T) {
 	if err := l3.Delete(tx); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := l4.Delete(tx); err != nil {
+	if err := l4.Delete(tx); err != nil {
 		t.Fatal(err)
 	}
 	if err := l5.Delete(tx); err != nil {
@@ -132,6 +148,12 @@ func TestSql(t *testing.T) {
 	}
 
 	//suppressions des objets
+	if _, err := i10.Delete(tx); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := i9.Delete(tx); err != nil {
+		t.Fatal(err)
+	}
 	if _, err := i8.Delete(tx); err != nil {
 		t.Fatal(err)
 	}
@@ -203,8 +225,8 @@ func TestProduits(t *testing.T) {
 	}
 
 	err = InsertManyIngredientProduits(tx, []IngredientProduit{
-		{IdIngredient: ig.Id, IdProduit: pr1.Id},
-		{IdIngredient: ig.Id, IdProduit: pr2.Id},
+		{IdIngredient: ig.Id, IdProduit: pr1.Id, IdAjouteur: 2},
+		{IdIngredient: ig.Id, IdProduit: pr2.Id, IdAjouteur: 2},
 	})
 	if err != nil {
 		t.Fatal(err)

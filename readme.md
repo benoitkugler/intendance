@@ -14,11 +14,11 @@
 
 - **Menu** : les recettes (et ingrédients supplémentaires éventuels) se regroupent en un menu.
 
-- **Journée**: une journée est une liste de menus, auxquels on associe un nombre de personnes, et un moment dans la journée (label ou heure approximative). L'équilibre des repas se calcule au niveau d'une journée.
-
 Ces concepts forment une partie _abstraite_, déconnectée des fournisseurs, et _universelle_ : les recettes et menus sont directement partageables et ré-utilisables entre plusieurs intendants / séjours. Les concepts suivant sont quant à eux dépendant du contexte:
 
-- **Séjour**: un séjour est une suite de journées (successives). Le séjour défini une date de début, qui permet de prévoir les commandes, en fonction du délai et des jours d'ouvertures des fournisseurs.
+- **Séjour**: un séjour est une suite de journées (successives). Le séjour défini une date de début, qui permet de prévoir les commandes, en fonction du délai et des jours d'ouvertures des fournisseurs. Un séjour peut définir une liste de _groupes_ (nom et nombre de personnes) utiles dans la définition des repas.
+
+- **Repas**: un repas est lié à un séjour. Il contient une liste de groupes, ainsi qu'un nombre de personnes bonus. Il définit aussi le menu utilisé pour ce repas.
 
 - **Fournisseur** : commerçant/magasin chez qui les produits sont commandés. Définit des jours d'ouvertures, et un délai de livraison.
 
@@ -34,7 +34,7 @@ Remarque : _Plusieurs produits peuvent être associés au même ingrédient (dif
 
 Remarque: _L'association ingrédient -> produit peut être repoussée, mais sera nécessaire pour pouvoir exporter une commande._
 
-Il définit ensuite les dates de son séjour et forme les journées. Il valide ensuite les commandes nécessaires, puis peut exporter une liste de commandes effectives (jour par jour).
+Il définit ensuite les dates de son séjour, les groupes du séjour et forme les journées. Il valide ensuite les commandes nécessaires, puis peut exporter une liste de commandes effectives (jour par jour).
 
 ## Unités
 
@@ -79,11 +79,15 @@ Les recettes et menus peuvent n'être liés à aucun propriétaire, et sont alor
 ### Journées
 
 Le concept de journée nécessite d'être lié à la donnée du nombre de personnes pour chaque menu. Cela ne colle pas bien avec un schéma SQL classique. De plus, une journée n'a pas vraiment d'intérêt à être partagée : la modification sur une journée entrainerait celle sur une autre, ce qui est serait plutôt déroutant.
-On propose donc de ne pas utiliser de table "journée", mais de construire (dynamiquement) les journées à partir de la table _sejour_menus_ (voir ci dessous). En revanche, le concept de journée sera bien présent pour l'utilisateur, pour organiser son emploi du temps, ou pour copier des journées déjà existantes.
+On propose donc de ne pas utiliser de table "journée", mais de construire (dynamiquement) les journées à partir de la table _repas_ (voir ci dessous). En revanche, le concept de journée sera bien présent pour l'utilisateur, pour organiser son emploi du temps, ou pour copier des journées déjà existantes.
 
 - Table **sejours** : id, id_proprietaire, date_debut
 
-- Table **repas** : id, id_sejour, id_menu, nb_personnes,jour_offset, horaire (matin, midi, goûter, soir, etc...)
+- Table **groupes** : id, id_sejour, nom, nb_personnes, couleur
+
+- Table **repass** : id, id_sejour, id_menu, offset_personnes,jour_offset, horaire (matin, midi, goûter, soir, etc...)
+
+- Table **repas_groupes** : id_repas, id_groupe
 
 Les séjours sont _privés_, mais les journées formées peuvent être copiées.
 

@@ -50,6 +50,21 @@ type OutSejour struct {
 	Sejour models.Sejour `json:"sejour"`
 }
 
+type InCreateGroupe struct {
+	IdSejour int64         `json:"id_sejour,omitempty"`
+	Groupe   models.Groupe `json:"groupe,omitempty"`
+}
+
+type OutGroupe struct {
+	Token  string        `json:"token"`
+	Groupe models.Groupe `json:"groupe"`
+}
+
+type OutDeleteGroupe struct {
+	Token   string `json:"token"`
+	NbRepas int    `json:"nb_repas"`
+}
+
 type OutUtilisateurs struct {
 	Token        string                           `json:"token"`
 	Utilisateurs map[int64]controller.Utilisateur `json:"utilisateurs"`

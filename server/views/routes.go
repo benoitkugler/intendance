@@ -360,6 +360,60 @@ func DeleteSejour(c echo.Context) error {
 	return c.JSON(200, OutAgenda{Token: ct.Token, Agenda: out})
 }
 
+func CreateGroupe(c echo.Context) error {
+	ct, err := Server.Authentifie(c.Request())
+	if err != nil {
+		return err
+	}
+	var params InCreateGroupe
+	if err = c.Bind(&params); err != nil {
+		return err
+	}
+	newGroupe, err := Server.CreateGroupe(ct, params.IdSejour)
+	if err != nil {
+		return err
+	}
+	params.Groupe.Id = newGroupe.Id // on garde les valeurs d'entrée
+	params.Groupe, err = Server.UpdateGroupe(ct, params.Groupe)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, OutGroupe{Token: ct.Token, Groupe: params.Groupe})
+}
+
+func UpdateGroupe(c echo.Context) error {
+	ct, err := Server.Authentifie(c.Request())
+	if err != nil {
+		return err
+	}
+	var sejour models.Groupe
+	if err = c.Bind(&sejour); err != nil {
+		return err
+	}
+	sejour, err = Server.UpdateGroupe(ct, sejour)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, OutGroupe{Token: ct.Token, Groupe: sejour})
+}
+
+func DeleteGroupe(c echo.Context) error {
+	ct, err := Server.Authentifie(c.Request())
+	if err != nil {
+		return err
+	}
+	id, err := getId(c)
+	if err != nil {
+		return err
+	}
+	var out OutDeleteGroupe
+	if out.NbRepas, err = Server.DeleteGroupe(ct, id); err != nil {
+		return err
+	}
+	out.Token = ct.Token
+	return c.JSON(200, out)
+}
+
 func CreateRepas(c echo.Context) error {
 	ct, err := Server.Authentifie(c.Request())
 	if err != nil {

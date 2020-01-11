@@ -553,6 +553,69 @@ func (s Server) DeleteSejour(ct RequeteContext, id int64) error {
 	return ct.commitTx()
 }
 
+// Groupes
+
+func (s Server) CreateGroupe(ct RequeteContext, idSejour int64) (out models.Groupe, err error) {
+	if err = ct.beginTx(s); err != nil {
+		return
+	}
+	tx := ct.tx
+	if err = s.proprioSejour(ct, models.Sejour{Id: idSejour}, false); err != nil {
+		return
+	}
+	out.IdSejour = idSejour
+	out.Nom = fmt.Sprintf("G%d", time.Now().UnixNano())
+	out, err = out.Insert(tx)
+	if err != nil {
+		err = ErrorSQL(err)
+		return
+	}
+	err = ct.commitTx()
+	return
+}
+
+func (s Server) UpdateGroupe(ct RequeteContext, in models.Groupe) (models.Groupe, error) {
+	if err := ct.beginTx(s); err != nil {
+		return in, err
+	}
+	if err := s.proprioGroupe(ct, in.Id); err != nil {
+		return in, err
+	}
+	tx := ct.tx
+	in, err := in.Update(tx)
+	if err != nil {
+		return in, ErrorSQL(err)
+	}
+	return in, ct.commitTx()
+}
+
+// DeleteGroupe supprime le groupe et renvoie le nombre de repas touchés.
+func (s Server) DeleteGroupe(ct RequeteContext, id int64) (int, error) {
+	if err := ct.beginTx(s); err != nil {
+		return 0, err
+	}
+	if err := s.proprioGroupe(ct, id); err != nil {
+		return 0, err
+	}
+
+	// on enlève le groupe des repas
+	res, err := ct.tx.Exec("DELETE FROM repas_groupes WHERE id_groupe = $1", id)
+	if err != nil {
+		return 0, ErrorSQL(err)
+	}
+	nbDelete, err := res.RowsAffected()
+	if err != nil {
+		return 0, ct.rollbackTx(err)
+	}
+	_, err = models.Groupe{Id: id}.Delete(ct.tx)
+	if err != nil {
+		return 0, ct.rollbackTx(err)
+	}
+	return int(nbDelete), ct.commitTx()
+}
+
+// Repas
+
 func (s Server) CreateRepas(ct RequeteContext, idSejour, idMenu int64) (out models.Repas, err error) {
 	if err = ct.beginTx(s); err != nil {
 		return

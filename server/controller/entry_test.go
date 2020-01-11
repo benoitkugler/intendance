@@ -133,7 +133,7 @@ func TestCRUD(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	rep.NbPersonnes = 55
+	rep.OffsetPersonnes = 55
 	rep.Horaire = models.Horaire{Heure: 12, Minute: 5}
 	if err = s.UpdateManyRepas(r, []models.Repas{rep}); err != nil {
 		t.Fatal(err)
@@ -157,19 +157,6 @@ func TestCRUD(t *testing.T) {
 		t.Fatal(err)
 	}
 	if err = s.DeleteIngredient(r, ig.Id, true); err != nil {
-		t.Fatal(err)
-	}
-}
-
-func TestMisc(t *testing.T) {
-	db, err := models.ConnectDB(logs.DB_DEV)
-	defer db.Close()
-	if err != nil {
-		t.Fatal(err)
-	}
-	s := Server{db: db}
-	r := RequeteContext{idProprietaire: 2}
-	if err = s.DeleteRecette(r, 48); err != nil {
 		t.Fatal(err)
 	}
 }

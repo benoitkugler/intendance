@@ -71,13 +71,27 @@ type Sejour struct {
 	Nom       string    `json:"nom"`
 }
 
+// Groupe est un groupe de personnes lié à un séjour
+type Groupe struct {
+	Id          int64  `json:"id"`
+	IdSejour    int64  `json:"id_sejour"`
+	Nom         string `json:"nom"`
+	NbPersonnes int64  `json:"nb_personnes"`
+	Couleur     string `json:"couleur"`
+}
+
 type Repas struct {
-	Id          int64   `json:"id"`
-	IdSejour    int64   `json:"id_sejour"`
-	IdMenu      int64   `json:"id_menu"`
-	NbPersonnes int64   `json:"nb_personnes"`
-	JourOffset  int64   `json:"jour_offset"`
-	Horaire     Horaire `json:"horaire"`
+	Id              int64   `json:"id"`
+	IdSejour        int64   `json:"id_sejour"`
+	IdMenu          int64   `json:"id_menu"`
+	OffsetPersonnes int64   `json:"offset_personnes"`
+	JourOffset      int64   `json:"jour_offset"`
+	Horaire         Horaire `json:"horaire"`
+}
+
+type RepasGroupe struct {
+	IdRepas  int64 `json:"id_repas"`
+	IdGroupe int64 `json:"id_groupe"`
 }
 
 type Fournisseur struct {
