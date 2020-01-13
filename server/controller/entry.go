@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/benoitkugler/intendance/server/models"
+	"github.com/lib/pq"
 )
 
 // Server est le controller principal, partagé par toutes les requêtes.
@@ -106,25 +107,49 @@ func (s Server) LoadSejoursUtilisateur(ct RequeteContext) (out Sejours, err erro
 		err = ErrorSQL(err)
 		return
 	}
-	out.Sejours = make(map[int64]SejourRepas, len(sejours))
-	for k, v := range sejours { // informations basiques
-		out.Sejours[k] = SejourRepas{Sejour: v}
-	}
+
+	// on résoud les repas
 	rows, err = s.db.Query(`SELECT * FROM repass WHERE id_sejour = ANY($1)`, sejours.Ids())
 	if err != nil {
 		err = ErrorSQL(err)
 		return
 	}
-	sms, err := models.ScanRepass(rows)
+	repas, err := models.ScanRepass(rows)
 	if err != nil {
 		err = ErrorSQL(err)
 		return
 	}
-	for _, l := range sms { // on ajoute les repas aux séjours
-		sej := out.Sejours[l.IdSejour]     // slice copiée
-		sej.Repass = append(sej.Repass, l) // peut ré-allouer
-		out.Sejours[l.IdSejour] = sej
+	// on charge les groupes pour chaque repas
+	rows, err = s.db.Query(`SELECT * FROM repas_groupes WHERE id_repas = ANY($1)`, repas.Ids())
+	if err != nil {
+		err = ErrorSQL(err)
+		return
 	}
+	repasGroupes, err := models.ScanRepasGroupes(rows)
+	if err != nil {
+		err = ErrorSQL(err)
+		return
+	}
+
+	// on commence par associer les groupes aux repas
+	tmpGroupes := map[int64][]models.RepasGroupe{} // idRepas -> groupes
+	for _, rg := range repasGroupes {
+		tmpGroupes[rg.IdRepas] = append(tmpGroupes[rg.IdRepas], rg)
+	}
+
+	// puis on associe à chaque séjour ses repas
+	tmpRepas := map[int64][]RepasWithGroupe{} // idSejour -> repas
+	for _, rep := range repas {               // on ajoute les repas aux séjours
+		repG := RepasWithGroupe{Repas: rep, Groupes: tmpGroupes[rep.Id]}
+		tmpRepas[repG.IdSejour] = append(tmpRepas[repG.IdSejour], repG)
+	}
+
+	// finalement on assemble tout
+	out.Sejours = make(map[int64]SejourRepas, len(sejours))
+	for k, v := range sejours { // informations basiques
+		out.Sejours[k] = SejourRepas{Sejour: v, Repass: tmpRepas[k]}
+	}
+
 	return out, nil
 }
 
@@ -651,18 +676,31 @@ func (s Server) CreateRepas(ct RequeteContext, idSejour, idMenu int64) (out mode
 	return
 }
 
-func (s Server) UpdateManyRepas(ct RequeteContext, repass []models.Repas) error {
+func (s Server) UpdateManyRepas(ct RequeteContext, repass []RepasWithGroupe) error {
 	if err := ct.beginTx(s); err != nil {
 		return err
 	}
+	var repasIds pq.Int64Array
+	var batchRepasGroupes []models.RepasGroupe
 	for _, repas := range repass {
 		if err := s.proprioRepas(ct, repas.Id); err != nil {
 			return ct.rollbackTx(err)
 		}
-		if _, err := repas.Update(ct.tx); err != nil {
+		if _, err := repas.Repas.Update(ct.tx); err != nil {
 			return ct.rollbackTx(err)
 		}
+		repasIds = append(repasIds, repas.Id)
+		batchRepasGroupes = append(batchRepasGroupes, repas.Groupes...)
 	}
+	// mise à jour des groupes
+	_, err := ct.tx.Exec("DELETE FROM repas_groupes WHERE id_repas = ANY($1)", repasIds)
+	if err != nil {
+		return ct.rollbackTx(err)
+	}
+	if err = models.InsertManyRepasGroupes(ct.tx, batchRepasGroupes); err != nil {
+		return ct.rollbackTx(err)
+	}
+
 	return ct.commitTx()
 }
 
@@ -673,7 +711,13 @@ func (s Server) DeleteRepas(ct RequeteContext, id int64) error {
 	if err := s.proprioRepas(ct, id); err != nil {
 		return err
 	}
-	_, err := models.Repas{Id: id}.Delete(ct.tx)
+	// suppression des liens avec les groupes
+	_, err := ct.tx.Exec("DELETE FROM repas_groupes WHERE id_repas = $1", id)
+	if err != nil {
+		return ct.rollbackTx(err)
+	}
+
+	_, err = models.Repas{Id: id}.Delete(ct.tx)
 	if err != nil {
 		return ct.rollbackTx(err)
 	}

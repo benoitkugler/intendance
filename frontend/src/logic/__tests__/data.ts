@@ -199,7 +199,8 @@ test("crud repas", async () => {
     id_menu: menuId,
     id_sejour: sejourId,
     jour_offset: 2,
-    offset_personnes: 50
+    offset_personnes: 50,
+    groupes: []
   });
   expect(C.notifications.getError()).toBeNull();
 

@@ -19,9 +19,13 @@ type Menu struct {
 	Ingredients []models.MenuIngredient `json:"ingredients"`
 }
 
+type RepasWithGroupe struct {
+	models.Repas
+	Groupes []models.RepasGroupe `json:"groupes"`
+}
 type SejourRepas struct {
 	models.Sejour
-	Repass []models.Repas `json:"repass"`
+	Repass []RepasWithGroupe `json:"repass"`
 }
 
 // Sejours contient les séjours, ainsi que les groupes et repas associés.

@@ -74,7 +74,7 @@
 import Vue from "vue";
 import Component from "vue-class-component";
 import {
-  Repas,
+  RepasWithGroupe,
   DateIngredientQuantites,
   IngredientQuantite
 } from "../../logic/types";
@@ -89,7 +89,7 @@ import { Formatter } from "../../logic/formatter";
 
 const Props = Vue.extend({
   props: {
-    initialRepas: Object as () => Repas,
+    initialRepas: Object as () => RepasWithGroupe,
     mode: String as () => EditMode
   }
 });

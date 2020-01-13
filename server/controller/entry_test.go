@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/benoitkugler/intendance/logs"
 	"github.com/benoitkugler/intendance/server/models"
@@ -89,7 +90,7 @@ func TestCRUD(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	ig.Nom = "Tom acs tesd sdl sddddds ddsd35"
+	ig.Nom = fmt.Sprintf("Tom acs tesd sdl sddddds ddsd35 %d", time.Now().UnixNano())
 	ig.Unite = models.Kilos
 	ig, err = s.UpdateIngredient(r, ig)
 	if err != nil {
@@ -99,7 +100,7 @@ func TestCRUD(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	re.Nom = "Toma tes f a rcies2"
+	re.Nom = fmt.Sprintf("Toma tes f a rcies2 %d", time.Now().UnixNano())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -130,13 +131,21 @@ func TestCRUD(t *testing.T) {
 	if _, err = s.UpdateSejour(r, sej); err != nil {
 		t.Fatal(err)
 	}
+
+	groupe, err := s.CreateGroupe(r, sej.Id)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	rep, err := s.CreateRepas(r, sej.Id, m.Id)
 	if err != nil {
 		t.Fatal(err)
 	}
 	rep.OffsetPersonnes = 55
 	rep.Horaire = models.Horaire{Heure: 12, Minute: 5}
-	if err = s.UpdateManyRepas(r, []models.Repas{rep}); err != nil {
+	if err = s.UpdateManyRepas(r, []RepasWithGroupe{{Repas: rep, Groupes: []models.RepasGroupe{
+		{IdRepas: rep.Id, IdGroupe: groupe.Id}},
+	}}); err != nil {
 		t.Fatal(err)
 	}
 
@@ -146,6 +155,9 @@ func TestCRUD(t *testing.T) {
 	}
 	fmt.Println(a)
 	if err = s.DeleteRepas(r, rep.Id); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = s.DeleteGroupe(r, groupe.Id); err != nil {
 		t.Fatal(err)
 	}
 	if err = s.DeleteSejour(r, sej.Id); err != nil {

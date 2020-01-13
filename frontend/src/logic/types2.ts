@@ -3,7 +3,6 @@ import {
   Menu,
   Recette,
   Sejour,
-  Repas,
   RecetteIngredient,
   MenuIngredient,
   Utilisateur,

@@ -1,5 +1,5 @@
 import { Controller } from "./controller";
-import { Repas, Menu, Recette, Horaire } from "./types";
+import { Menu, Recette, Horaire, RepasWithGroupe } from "./types";
 
 const Months = [
   "Janvier",
@@ -23,12 +23,11 @@ export class Formatter {
     this.controller = controller;
   }
 
-  //FIXME:
-  formatRepasName = (r: Repas) => {
+  formatRepasName = (r: RepasWithGroupe) => {
     const menu = this.controller.data.menus[r.id_menu];
     const menuName = menu ? this.formatMenuName(menu) : "";
-    // return ` (${r.nb_personnes}) - ${menuName}`;
-    return "";
+    const nbPersonnes = this.controller.getRepasNbPersonnes(r);
+    return `(${nbPersonnes}) - ${menuName}`;
   };
 
   formatMenuName = (menu: Menu) => {

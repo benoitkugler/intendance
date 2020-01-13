@@ -1,4 +1,4 @@
-import { Menu, Recette, Sejour, Repas } from "./types";
+import { Menu, Recette, Sejour, RepasWithGroupe } from "./types";
 import { Notifications } from "./notifications";
 import { Calculs } from "./calculs";
 import { Data, devMode } from "./data";
@@ -67,7 +67,7 @@ export class Controller {
     });
   }
 
-  iterateAllRepas(fn: (sejour: Sejour, rep: Repas) => void) {
+  iterateAllRepas(fn: (sejour: Sejour, rep: RepasWithGroupe) => void) {
     Object.values(this.data.sejours.sejours).forEach(sejour => {
       if (!sejour.repass) return;
       sejour.repass.forEach(repas => {
@@ -76,7 +76,18 @@ export class Controller {
     });
   }
 
-  getRepasGroupes(repas: Repas) {}
+  getRepasGroupes(repas: RepasWithGroupe) {
+    return (repas.groupes || []).map(
+      rg => this.data.sejours.groupes[rg.id_groupe]
+    );
+  }
+
+  getRepasNbPersonnes(repas: RepasWithGroupe) {
+    const nb = this.getRepasGroupes(repas)
+      .map(g => g.nb_personnes)
+      .reduce((a, b) => a + b, repas.offset_personnes);
+    return nb >= 0 ? nb : 0;
+  }
 }
 
 // Object principal de stockage des données

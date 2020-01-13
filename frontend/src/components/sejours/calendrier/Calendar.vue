@@ -30,11 +30,10 @@
     >
       <template v-slot:event="{ event }">
         <div
-          :data-repas="event.dataRepas"
+          :data-repas="JSON.stringify(event.repas)"
           @click.stop="startEditRepas(event.repas)"
-          :style="{
-            fontWeight: event.repas.id_sejour == currentSejour ? 'bold' : ''
-          }"
+          :style="{ fontWeight: 'bold' }"
+          class="px-1"
         >
           {{ formatEventName(event) }}
         </div>
@@ -68,11 +67,10 @@
     >
       <template v-slot:event="{ event }">
         <div
-          :data-repas="event.dataRepas"
+          :data-repas="JSON.stringify(event.repas)"
           @click.stop="startEditRepas(event.repas)"
-          :style="{
-            fontWeight: event.repas.id_sejour == currentSejour ? 'bold' : ''
-          }"
+          :style="{ fontWeight: 'bold' }"
+          class="px-1"
         >
           {{ formatEventName(event) }}
         </div>
@@ -94,7 +92,12 @@
 <script lang="ts">
 import Vue from "vue";
 import Component from "vue-class-component";
-import { Repas, Sejour, Horaire, SejourRepas } from "../../../logic/types";
+import {
+  Sejour,
+  Horaire,
+  SejourRepas,
+  RepasWithGroupe
+} from "../../../logic/types";
 import FormRepas from "../FormRepas.vue";
 import FormCalcul from "../FormCalcul.vue";
 import { C } from "../../../logic/controller";
@@ -114,8 +117,7 @@ type DragKind = "journee" | "repas";
 
 interface DataEvent {
   start: Time;
-  repas: Repas;
-  dataRepas: string; // JSON of Repas
+  repas: RepasWithGroupe;
 }
 
 // renvoie l'ordre des jours pour que `start` soit
@@ -136,11 +138,15 @@ function timeToHoraire(time: string): Horaire {
   };
 }
 
-function getEventStart(r: Repas) {
+function getEventStart(r: RepasWithGroupe) {
   const dateDebut = C.formatter.offsetToDate(r.id_sejour, r.jour_offset);
   return formatDate(dateDebut) + " " + Formatter.horaireToTime(r.horaire);
 }
 
+interface DateTime {
+  date: string;
+  time: string;
+}
 const Props = Vue.extend({
   props: {
     sejour: Object as () => SejourRepas | null,
@@ -148,11 +154,6 @@ const Props = Vue.extend({
     mode: String as () => CalendarMode
   }
 });
-
-interface DateTime {
-  date: string;
-  time: string;
-}
 
 @Component({
   components: {
@@ -174,13 +175,14 @@ export default class Calendar extends Props {
 
   private editMode: "new" | "edit" = "new";
 
-  private editedRepas: Repas = {
+  private editedRepas: RepasWithGroupe = {
     id: -1,
     id_sejour: -1,
     horaire: { heure: 0, minute: 0 },
     id_menu: -1,
     offset_personnes: 0,
-    jour_offset: 0
+    jour_offset: 0,
+    groupes: []
   };
 
   get startDate(): Date {
@@ -214,8 +216,7 @@ export default class Calendar extends Props {
       if (repas.id_sejour != sejour.id) return;
       const data = {
         repas: repas,
-        start: getEventStart(repas),
-        dataRepas: JSON.stringify(repas)
+        start: getEventStart(repas)
       };
       out.push(data);
     });
@@ -224,9 +225,12 @@ export default class Calendar extends Props {
 
   formatEventName(event: DataEvent) {
     if (this.mode == "groupes") {
+      return C.getRepasGroupes(event.repas)
+        .map(g => g.nom)
+        .join(" / ");
     } else {
+      return C.formatter.formatRepasName(event.repas);
     }
-    C.formatter.formatRepasName;
   }
 
   mounted() {
@@ -256,7 +260,7 @@ export default class Calendar extends Props {
       item.parentElement.ondrop = e => this.onDrop(e, "journee");
     });
     htmlEl.querySelectorAll<HTMLElement>("[data-repas]").forEach(item => {
-      const repas: Repas = JSON.parse(item.dataset.repas || "");
+      const repas: RepasWithGroupe = JSON.parse(item.dataset.repas || "");
       item.draggable = repas.id_sejour == sejour.id; // uniquement les repas lié au séjour courant
       item.ondragstart = e => this.onDragStart(e, "repas", item.dataset.repas);
     });
@@ -295,7 +299,7 @@ export default class Calendar extends Props {
   }
 
   private jobDropRepas(targetTime: DateTime, dataRepas: string) {
-    const repas: Repas = JSON.parse(dataRepas);
+    const repas: RepasWithGroupe = JSON.parse(dataRepas);
     const jour = new Date(targetTime.date);
     const horaire: Horaire = {
       heure: Number(targetTime.time.substr(0, 2)),
@@ -357,13 +361,14 @@ export default class Calendar extends Props {
       offset_personnes: 0,
       id_menu: -1,
       id_sejour: sejour.id,
-      id: -1
+      id: -1,
+      groupes: []
     };
     this.editMode = "new";
     this.showEditFormRepas = true;
   }
 
-  startEditRepas(repas: Repas) {
+  startEditRepas(repas: RepasWithGroupe) {
     this.editedRepas = repas;
     this.editMode = "edit";
     this.showEditFormRepas = true;
@@ -374,7 +379,10 @@ export default class Calendar extends Props {
     if (this.sejour == null) return;
     let message = "";
     if (this.editMode == "new") {
-      const newRepas: New<Repas> = { ...repas, id_sejour: this.sejour.id };
+      const newRepas: New<RepasWithGroupe> = {
+        ...repas,
+        id_sejour: this.sejour.id
+      };
       await C.data.createRepas(newRepas);
       message = "Le repas a bien été ajouté.";
     } else {
@@ -391,7 +399,7 @@ export default class Calendar extends Props {
     }
   }
 
-  async deleteRepas(repas: Repas) {
+  async deleteRepas(repas: RepasWithGroupe) {
     this.showEditFormRepas = false;
     await C.data.deleteRepas(repas);
     if (C.notifications.getError() == null) {

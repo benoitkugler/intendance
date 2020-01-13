@@ -419,7 +419,7 @@ func CreateRepas(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	var repasIn models.Repas
+	var repasIn controller.RepasWithGroupe
 	if err = c.Bind(&repasIn); err != nil {
 		return err
 	}
@@ -428,7 +428,10 @@ func CreateRepas(c echo.Context) error {
 		return err
 	}
 	repasIn.Id = newRepas.Id // on garde les valeurs d'entrée
-	err = Server.UpdateManyRepas(ct, []models.Repas{repasIn})
+	for i := range repasIn.Groupes {
+		repasIn.Groupes[i].IdRepas = newRepas.Id
+	}
+	err = Server.UpdateManyRepas(ct, []controller.RepasWithGroupe{repasIn})
 	if err != nil {
 		return err
 	}
@@ -444,7 +447,7 @@ func UpdateRepas(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	var repass []models.Repas
+	var repass []controller.RepasWithGroupe
 	if err = c.Bind(&repass); err != nil {
 		return err
 	}

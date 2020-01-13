@@ -154,14 +154,21 @@ export interface Horaire {
   minute: number;
 }
 
-// struct2ts:github.com/benoitkugler/intendance/server/models.Repas
-export interface Repas {
+// struct2ts:github.com/benoitkugler/intendance/server/models.RepasGroupe
+export interface RepasGroupe {
+  id_repas: number;
+  id_groupe: number;
+}
+
+// struct2ts:github.com/benoitkugler/intendance/server/controller.RepasWithGroupe
+export interface RepasWithGroupe {
   id: number;
   id_sejour: number;
   id_menu: number;
   offset_personnes: number;
   jour_offset: number;
   horaire: Horaire;
+  groupes: RepasGroupe[] | null;
 }
 
 // struct2ts:github.com/benoitkugler/intendance/server/controller.SejourRepas
@@ -170,7 +177,7 @@ export interface SejourRepas {
   id_proprietaire: number;
   date_debut: Time;
   nom: string;
-  repass: Repas[] | null;
+  repass: RepasWithGroupe[] | null;
 }
 
 // struct2ts:github.com/benoitkugler/intendance/server/controller.Sejours
