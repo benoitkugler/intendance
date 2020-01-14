@@ -27,6 +27,7 @@
       :events="events"
       @mousedown:time="registerTime"
       @click:time="startAddRepas"
+      @click:date="args => $emit('change', args)"
     >
       <template v-slot:event="{ event }">
         <div
@@ -64,6 +65,7 @@
       :events="events"
       @mousedown:time="registerTime"
       @click:time="startAddRepas"
+      @click:date="args => $emit('change', args)"
     >
       <template v-slot:event="{ event }">
         <div
@@ -110,6 +112,8 @@ import {
   CalendarMode
 } from "../../../logic/types2";
 import { Formatter } from "../../../logic/formatter";
+import { DateTime } from "./types";
+import { toDateVuetify } from "./utils";
 
 const _days = [0, 1, 2, 3, 4, 5, 6];
 
@@ -127,10 +131,6 @@ function weekdaysFromStart(start: Date) {
   return _days.map(d => (d0 + d) % 7);
 }
 
-function formatDate(d: Date) {
-  return d.toISOString().substr(0, 10);
-}
-
 function timeToHoraire(time: string): Horaire {
   return {
     heure: Number(time.substr(0, 2)),
@@ -140,13 +140,9 @@ function timeToHoraire(time: string): Horaire {
 
 function getEventStart(r: RepasWithGroupe) {
   const dateDebut = C.formatter.offsetToDate(r.id_sejour, r.jour_offset);
-  return formatDate(dateDebut) + " " + Formatter.horaireToTime(r.horaire);
+  return toDateVuetify(dateDebut) + " " + Formatter.horaireToTime(r.horaire);
 }
 
-interface DateTime {
-  date: string;
-  time: string;
-}
 const Props = Vue.extend({
   props: {
     sejour: Object as () => SejourRepas | null,
@@ -166,8 +162,8 @@ export default class Calendar extends Props {
   private lastClickedTime: DateTime | null = null;
 
   private firstInterval = 4;
-  private intervalMinutes = 120;
   private intervalCount = 8;
+  private intervalMinutes = 120;
   private intervalHeight = 25;
 
   protected showEditFormRepas = false;
@@ -199,13 +195,13 @@ export default class Calendar extends Props {
   }
 
   get startWeek1() {
-    return formatDate(this.startDate);
+    return toDateVuetify(this.startDate);
   }
 
   get startWeek2() {
     const out = this.startDate;
     out.setDate(this.startDate.getDate() + 7);
-    return formatDate(out);
+    return toDateVuetify(out);
   }
 
   get events(): DataEvent[] {
