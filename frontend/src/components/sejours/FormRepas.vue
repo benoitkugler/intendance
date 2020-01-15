@@ -5,8 +5,8 @@
         <v-card class="py-2">
           <v-card-title primary-title>
             <h3 class="headline mb-0">
-              Ingrédients pour {{ repas.nb_personnes }} personne{{
-                repas.nb_personnes > 1 ? "s" : ""
+              Ingrédients pour {{ repas.offset_personnes }} personne{{
+                repas.offset_personnes > 1 ? "s" : ""
               }}
             </h3>
           </v-card-title>
@@ -29,10 +29,18 @@
       </v-card-title>
       <v-card-text>
         <v-form>
+          <v-select
+            :items="groupes"
+            v-model="repas.groupes"
+            label="Groupes"
+            chips
+            multiple
+          ></v-select>
           <v-text-field
-            label="Nombre de personnes"
-            v-model.number="repas.nb_personnes"
+            label="Nombre additionnel de personnes "
+            v-model.number="repas.offset_personnes"
             type="number"
+            hint="S'ajoute aux groupes. Peut être négatif."
           ></v-text-field>
           <v-autocomplete
             label="Menu"
@@ -76,7 +84,8 @@ import Component from "vue-class-component";
 import {
   RepasWithGroupe,
   DateIngredientQuantites,
-  IngredientQuantite
+  IngredientQuantite,
+  RepasGroupe
 } from "../../logic/types";
 import { New, DetailsRepas, EditMode } from "../../logic/types2";
 import DateField from "../utils/DateField.vue";
@@ -124,6 +133,16 @@ export default class FormRepas extends Props {
   get horaireFormatted() {
     const horaire = this.repas.horaire;
     return `(Personnalisé) - ${Formatter.horaireToTime(horaire)}`;
+  }
+
+  get groupes() {
+    return C.state.getGroupes().map(groupe => {
+      const rg: RepasGroupe = {
+        id_repas: this.initialRepas.id,
+        id_groupe: groupe.id
+      };
+      return { text: groupe.nom, value: rg };
+    });
   }
 
   async resoudIngredients() {

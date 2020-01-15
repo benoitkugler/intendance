@@ -27,7 +27,7 @@ export class Formatter {
     const menu = this.controller.data.menus[r.id_menu];
     const menuName = menu ? this.formatMenuName(menu) : "";
     const nbPersonnes = this.controller.getRepasNbPersonnes(r);
-    return `(${nbPersonnes}) - ${menuName}`;
+    return `(${nbPersonnes} p.) - ${menuName}`;
   };
 
   formatMenuName = (menu: Menu) => {
@@ -45,13 +45,6 @@ export class Formatter {
     }
     return `appartient à ${prop.prenom_nom}`;
   };
-
-  offsetToDate(idSejour: number, offset: number) {
-    const sejour = this.controller.data.sejours.sejours[idSejour];
-    const dateDebut = new Date(sejour.date_debut);
-    dateDebut.setDate(dateDebut.getDate() + offset);
-    return dateDebut;
-  }
 
   static horaireToTime(horaire: Horaire) {
     return (

@@ -16,4 +16,13 @@ export class State {
     if (this.idSejour == null) return null;
     return this.controller.data.getSejour(this.idSejour);
   }
+
+  // renvoie les groupes du séjour courant
+  getGroupes() {
+    const idS = this.idSejour;
+    if (idS == null) return [];
+    return Object.values(this.controller.data.sejours.groupes).filter(
+      groupe => groupe.id_sejour == idS
+    );
+  }
 }

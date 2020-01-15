@@ -106,7 +106,7 @@ export default class FormCalcul extends FormCalculProps {
   }
 
   offsetToDate(offset: number) {
-    const d = C.formatter.offsetToDate(this.sejour, offset);
+    const d = C.offsetToDate(this.sejour, offset);
     return Formatter.formatDate(d.toISOString());
   }
 

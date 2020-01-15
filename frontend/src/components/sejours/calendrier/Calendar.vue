@@ -17,6 +17,7 @@
       type="week"
       locale="fr"
       :event-height="22"
+      event-overlap-mode="column"
       :short-weekdays="false"
       :first-interval="firstInterval"
       :interval-count="intervalCount"
@@ -36,7 +37,7 @@
           :style="{ fontWeight: 'bold' }"
           class="px-1"
         >
-          {{ formatEventName(event) }}
+          {{ formatEventName(event) || "." }}
         </div>
       </template>
       <template v-slot:day-header="{ date }">
@@ -112,17 +113,11 @@ import {
   CalendarMode
 } from "../../../logic/types2";
 import { Formatter } from "../../../logic/formatter";
-import { DateTime } from "./types";
-import { toDateVuetify } from "./utils";
+import { toDateVuetify, DateTime, DataEvent, getEventStart } from "./utils";
 
 const _days = [0, 1, 2, 3, 4, 5, 6];
 
 type DragKind = "journee" | "repas";
-
-interface DataEvent {
-  start: Time;
-  repas: RepasWithGroupe;
-}
 
 // renvoie l'ordre des jours pour que `start` soit
 // affiché en premier
@@ -136,11 +131,6 @@ function timeToHoraire(time: string): Horaire {
     heure: Number(time.substr(0, 2)),
     minute: Number(time.substr(3, 2))
   };
-}
-
-function getEventStart(r: RepasWithGroupe) {
-  const dateDebut = C.formatter.offsetToDate(r.id_sejour, r.jour_offset);
-  return toDateVuetify(dateDebut) + " " + Formatter.horaireToTime(r.horaire);
 }
 
 const Props = Vue.extend({
@@ -161,10 +151,10 @@ const Props = Vue.extend({
 export default class Calendar extends Props {
   private lastClickedTime: DateTime | null = null;
 
-  private firstInterval = 4;
-  private intervalCount = 8;
-  private intervalMinutes = 120;
-  private intervalHeight = 25;
+  private firstInterval = 3;
+  private intervalCount = 5;
+  private intervalMinutes = 180;
+  private intervalHeight = 40;
 
   protected showEditFormRepas = false;
   protected showFormCalcul = false;
@@ -221,9 +211,13 @@ export default class Calendar extends Props {
 
   formatEventName(event: DataEvent) {
     if (this.mode == "groupes") {
-      return C.getRepasGroupes(event.repas)
-        .map(g => g.nom)
-        .join(" / ");
+      const nbGroupes = C.getRepasGroupes(event.repas).length;
+      const n = event.repas.offset_personnes;
+      let out = `${nbGroupes} gr.`;
+      if (n != 0) {
+        out += ` (${n > 0 ? "+" : ""}${n} p.)`;
+      }
+      return out;
     } else {
       return C.formatter.formatRepasName(event.repas);
     }

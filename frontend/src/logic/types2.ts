@@ -6,7 +6,8 @@ import {
   RecetteIngredient,
   MenuIngredient,
   Utilisateur,
-  Groupe
+  Groupe,
+  RepasWithGroupe
 } from "./types";
 
 export type New<T extends { id: number }> = Omit<T, "id"> &
@@ -20,8 +21,8 @@ export type Groupes = { [key: number]: Groupe };
 
 export type DetailsSejour = Pick<Sejour, "nom" | "date_debut">;
 export type DetailsRepas = Pick<
-  Repas,
-  "horaire" | "id_menu" | "offset_personnes" | "jour_offset"
+  RepasWithGroupe,
+  "horaire" | "id_menu" | "offset_personnes" | "jour_offset" | "groupes"
 >;
 
 export interface IngredientOptions {

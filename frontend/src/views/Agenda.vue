@@ -86,7 +86,7 @@ export default class Agenda extends Vue {
     startPremierJour: true
   };
 
-  calendarMode: CalendarMode = "groupes";
+  calendarMode: CalendarMode = "menus";
   activeDay: Date | null = null; // mode "groupes" only
 
   $refs!: {

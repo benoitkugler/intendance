@@ -67,6 +67,13 @@ export class Controller {
     });
   }
 
+  offsetToDate(idSejour: number, offset: number) {
+    const sejour = this.data.sejours.sejours[idSejour];
+    const dateDebut = new Date(sejour.date_debut);
+    dateDebut.setDate(dateDebut.getDate() + offset);
+    return dateDebut;
+  }
+
   iterateAllRepas(fn: (sejour: Sejour, rep: RepasWithGroupe) => void) {
     Object.values(this.data.sejours.sejours).forEach(sejour => {
       if (!sejour.repass) return;
@@ -77,8 +84,8 @@ export class Controller {
   }
 
   getRepasGroupes(repas: RepasWithGroupe) {
-    return (repas.groupes || []).map(
-      rg => this.data.sejours.groupes[rg.id_groupe]
+    return (repas.groupes || []).map(rg =>
+      JSON.parse(JSON.stringify(this.data.sejours.groupes[rg.id_groupe]))
     );
   }
 
