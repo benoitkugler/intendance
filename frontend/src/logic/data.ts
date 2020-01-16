@@ -28,7 +28,8 @@ import { Controller } from "./controller";
 import Vue from "vue";
 
 export const devMode = process.env.NODE_ENV != "production";
-const host = devMode ? "http://localhost:1323" : window.location.origin;
+// const host = devMode ? "http://localhost:1323" : window.location.origin;
+const host = "https://intendance.alwaysdata.net"
 export const ServerURL = host + "/api";
 
 export class Data {

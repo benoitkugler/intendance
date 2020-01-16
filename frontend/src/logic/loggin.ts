@@ -11,13 +11,13 @@ export class Loggin {
     this.controller = c;
   }
 
-  private checkCookies() {
+  checkCookies() {
     const token = Cookie.get("token");
     const idUtilisateur = Cookie.get("id_utilisateur");
     if (token == undefined || idUtilisateur == undefined) {
       return null;
     }
-    return { token, idUtilisateur };
+    return { token, idUtilisateur: Number(idUtilisateur) };
   }
 
   // renvoie un message d'erreur ou la chaine vide
@@ -33,6 +33,8 @@ export class Loggin {
       }
       this.controller.token = response.data.token;
       this.controller.idUtilisateur = response.data.utilisateur.id;
+      Cookie.set("token", response.data.token)
+      Cookie.set("id_utilisateur", response.data.utilisateur)
       this.controller.notifications.setMessage(
         `Connecté sous le nom de <b>${response.data.utilisateur.prenom_nom}</b>`
       );

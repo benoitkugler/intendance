@@ -33,15 +33,11 @@
               @click="loggin"
               :loading="loading"
               :disabled="!formValid"
-            >
-              Se connecter
-            </v-btn>
+            >Se connecter</v-btn>
           </v-row>
         </v-form>
       </v-col>
-      <v-col class="xs-6 md-4">
-        TODO : créer un compte
-      </v-col>
+      <v-col class="xs-6 md-4">TODO : créer un compte</v-col>
       <v-col></v-col>
     </v-row>
   </v-container>
@@ -72,7 +68,9 @@ export default class Loggin extends Vue {
   loading = false;
   formValid = false;
 
-  async mounted() {}
+  async mounted() {
+    C.logger.che;
+  }
 
   async loggin() {
     if (!this.formValid) return;

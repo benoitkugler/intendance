@@ -1,4 +1,4 @@
-import { Menu, Recette, Sejour, RepasWithGroupe } from "./types";
+import { Menu, Recette, Sejour, RepasWithGroupe, Groupe } from "./types";
 import { Notifications } from "./notifications";
 import { Calculs } from "./calculs";
 import { Data, devMode } from "./data";
@@ -25,6 +25,13 @@ export class Controller {
     this.formatter = new Formatter(this);
     this.logger = new Logger(this);
     this.state = new State(this);
+
+    const o = this.logger.checkCookies()
+    if (o != null) {
+      this.token = o.token
+      this.idUtilisateur = o.idUtilisateur
+      this.state.isLoggedIn = true
+    }
   }
 
   auth() {
@@ -83,9 +90,9 @@ export class Controller {
     });
   }
 
-  getRepasGroupes(repas: RepasWithGroupe) {
+  getRepasGroupes(repas: RepasWithGroupe): Groupe[] {
     return (repas.groupes || []).map(rg =>
-      JSON.parse(JSON.stringify(this.data.sejours.groupes[rg.id_groupe]))
+      this.data.sejours.groupes[rg.id_groupe]
     );
   }
 

@@ -17,39 +17,36 @@
       type="week"
       locale="fr"
       :event-height="22"
-      event-overlap-mode="column"
       :short-weekdays="false"
-      :first-interval="firstInterval"
-      :interval-count="intervalCount"
-      :interval-minutes="intervalMinutes"
-      :interval-height="intervalHeight"
+      :interval-count="1"
+      :interval-height="300"
+      :interval-width="0"
       :start="startWeek1"
       :weekdays="weekdays"
-      :events="events"
       @mousedown:time="registerTime"
       @click:time="startAddRepas"
       @click:date="args => $emit('change', args)"
     >
-      <template v-slot:event="{ event }">
+      <template v-slot:interval="{ date }">
         <div
-          :data-repas="JSON.stringify(event.repas)"
-          @click.stop="startEditRepas(event.repas)"
-          :style="{ fontWeight: 'bold' }"
-          class="px-1"
+          @dragover="e => onDragover(e, 'repas')"
+          @drop="e => onDrop(e, 'repas')"
+          class="dragover"
         >
-          {{ formatEventName(event) || "." }}
+          <v-list dense>
+            <v-list-item-group color="primary">
+              <v-list-item v-for="repas in events[date]" :key="repas.id">
+                <v-list-item-content>
+                  <v-list-item-title>{{ formatEventName(repas) }}</v-list-item-title>
+                </v-list-item-content>
+              </v-list-item>
+            </v-list-item-group>
+          </v-list>
         </div>
       </template>
       <template v-slot:day-header="{ date }">
         <div :data-day="date"></div>
       </template>
-      <template v-slot:interval
-        ><div
-          @dragover="e => onDragover(e, 'repas')"
-          @drop="e => onDrop(e, 'repas')"
-          class="dragover"
-        ></div
-      ></template>
     </v-calendar>
     <v-calendar
       class="mt-1"
@@ -57,38 +54,12 @@
       locale="fr"
       :event-height="22"
       :short-weekdays="false"
-      :first-interval="firstInterval"
-      :interval-count="intervalCount"
-      :interval-minutes="intervalMinutes"
-      :interval-height="intervalHeight"
       :start="startWeek2"
       :weekdays="weekdays"
-      :events="events"
       @mousedown:time="registerTime"
       @click:time="startAddRepas"
       @click:date="args => $emit('change', args)"
-    >
-      <template v-slot:event="{ event }">
-        <div
-          :data-repas="JSON.stringify(event.repas)"
-          @click.stop="startEditRepas(event.repas)"
-          :style="{ fontWeight: 'bold' }"
-          class="px-1"
-        >
-          {{ formatEventName(event) }}
-        </div>
-      </template>
-      <template v-slot:day-header="{ date }">
-        <div :data-day="date"></div>
-      </template>
-      <template v-slot:interval
-        ><div
-          @dragover="e => onDragover(e, 'repas')"
-          @drop="e => onDrop(e, 'repas')"
-          class="dragover"
-        ></div>
-      </template>
-    </v-calendar>
+    ></v-calendar>
   </div>
 </template>
 
@@ -194,32 +165,31 @@ export default class Calendar extends Props {
     return toDateVuetify(out);
   }
 
-  get events(): DataEvent[] {
+  get events(): { [key: string]: RepasWithGroupe[] } {
     const sejour = this.sejour;
-    if (sejour == null) return [];
-    let out: DataEvent[] = [];
+    if (sejour == null) return {};
+    let out: { [key: string]: RepasWithGroupe[] } = {};
     C.iterateAllRepas((_, repas) => {
       if (repas.id_sejour != sejour.id) return;
-      const data = {
-        repas: repas,
-        start: getEventStart(repas)
-      };
-      out.push(data);
+      const d = toDateVuetify(C.offsetToDate(sejour.id, repas.jour_offset));
+      const l = out[d] || [];
+      l.push(repas);
+      out[d] = l;
     });
     return out;
   }
 
-  formatEventName(event: DataEvent) {
+  formatEventName(repas: RepasWithGroupe) {
     if (this.mode == "groupes") {
-      const nbGroupes = C.getRepasGroupes(event.repas).length;
-      const n = event.repas.offset_personnes;
+      const nbGroupes = C.getRepasGroupes(repas).length;
+      const n = repas.offset_personnes;
       let out = `${nbGroupes} gr.`;
       if (n != 0) {
         out += ` (${n > 0 ? "+" : ""}${n} p.)`;
       }
       return out;
     } else {
-      return C.formatter.formatRepasName(event.repas);
+      return C.formatter.formatRepasName(repas);
     }
   }
 
