@@ -43,17 +43,22 @@ func main() {
 	e.Logger.Fatal(e.Start(adress))
 }
 
+func autoriseCORS(e *echo.Echo) {
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowMethods:  append(middleware.DefaultCORSConfig.AllowMethods, http.MethodOptions),
+		AllowHeaders:  []string{"Authorization", "Content-Type", "Access-Control-Allow-Origin"},
+		ExposeHeaders: []string{"Content-Disposition"},
+	}))
+	fmt.Println("CORS activé.")
+}
+
 func setup(e *echo.Echo, dev bool) string {
 	var adress string
 	if dev {
 		adress = "localhost:1323"
-		e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-			AllowMethods:  append(middleware.DefaultCORSConfig.AllowMethods, http.MethodOptions),
-			AllowHeaders:  []string{"Authorization", "Content-Type", "Access-Control-Allow-Origin"},
-			ExposeHeaders: []string{"Content-Disposition"},
-		}))
-		fmt.Println("CORS activé.")
+		autoriseCORS(e)
 	} else {
+		autoriseCORS(e) //FIXME:
 		if err := views.Server.PingDB(); err != nil {
 			log.Fatalf("DB not responding : %s", err)
 		}

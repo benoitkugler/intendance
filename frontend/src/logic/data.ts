@@ -467,8 +467,8 @@ export class Data {
         messageHtml: `La date ciblée (${jour.toLocaleDateString()}) est <i>antérieure</i> au début du séjour.<br/>
                     Si vous souhaitez déplacer un repas sur cette journée, 
                     veuillez d'abord <b>modifier la date de début</b> du séjour <b>${
-                      sejour.nom
-                    }</b>`
+          sejour.nom
+          }</b>`
       });
       return;
     }
