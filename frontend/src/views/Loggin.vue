@@ -68,9 +68,7 @@ export default class Loggin extends Vue {
   loading = false;
   formValid = false;
 
-  async mounted() {
-    C.logger.che;
-  }
+  async mounted() {}
 
   async loggin() {
     if (!this.formValid) return;
