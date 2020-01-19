@@ -1,4 +1,6 @@
 import { C } from "../controller";
+import { HoraireFields } from "../enums";
+import { toNullableId } from "../types2";
 
 const IdProprietaire = 2;
 
@@ -195,8 +197,8 @@ test("crud repas", async () => {
   const sejourId = Number(Object.keys(C.data.sejours.sejours)[0]);
 
   await C.data.createRepas({
-    horaire: { heure: 10, minute: 20 },
-    id_menu: menuId,
+    horaire: HoraireFields.Cinquieme,
+    id_menu: toNullableId(menuId),
     id_sejour: sejourId,
     jour_offset: 2,
     offset_personnes: 50,
@@ -205,7 +207,7 @@ test("crud repas", async () => {
   expect(C.notifications.getError()).toBeNull();
 
   const repas = (C.data.sejours.sejours[sejourId].repass || [])[0];
-  repas.horaire = { heure: 12, minute: 20 };
+  repas.horaire = HoraireFields.Midi;
   await C.data.updateManyRepas([repas]);
   expect(C.notifications.getError()).toBeNull();
 

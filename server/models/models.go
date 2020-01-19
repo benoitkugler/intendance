@@ -81,12 +81,12 @@ type Groupe struct {
 }
 
 type Repas struct {
-	Id              int64   `json:"id"`
-	IdSejour        int64   `json:"id_sejour"`
-	IdMenu          int64   `json:"id_menu"`
-	OffsetPersonnes int64   `json:"offset_personnes"`
-	JourOffset      int64   `json:"jour_offset"`
-	Horaire         Horaire `json:"horaire"`
+	Id              int64         `json:"id"`
+	IdSejour        int64         `json:"id_sejour"`
+	IdMenu          sql.NullInt64 `json:"id_menu"`
+	OffsetPersonnes int64         `json:"offset_personnes"`
+	JourOffset      int64         `json:"jour_offset"`
+	Horaire         Horaire       `json:"horaire"`
 }
 
 type RepasGroupe struct {

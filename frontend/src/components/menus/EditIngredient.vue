@@ -75,7 +75,7 @@ import { RecetteIngredient, Ingredient } from "../../logic/types";
 import { Watch } from "vue-property-decorator";
 import { IngredientOptions, EditMode } from "../../logic/types2";
 import UniteField from "../utils/UniteField.vue";
-import { Unites, UnitePiece } from "../utils/enums";
+import { Unites, UniteFields } from "../../logic/enums";
 import { DefautIngredient } from "./types";
 
 const EditIngredientProps = Vue.extend({
@@ -115,9 +115,9 @@ export default class EditIngredient extends EditIngredientProps {
   }
 
   get allowedUnitesConditionnement() {
-    if (this.current.unite == UnitePiece) {
+    if (this.current.unite == UniteFields.Piece) {
       // Pour le conditionnement, l'unité Pièce n'apporte aucune information
-      return Unites.filter(u => u.value != UnitePiece);
+      return Unites.filter(u => u.value != UniteFields.Piece);
     }
     // le conditionnement doit être compatible avec l'unité.
     return Unites.filter(u => u.value == this.current.unite);

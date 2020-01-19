@@ -322,7 +322,7 @@ func (s Server) CreateRecette(ct RequeteContext) (out models.Recette, err error)
 	}
 	tx := ct.tx
 	out.Nom = fmt.Sprintf("R%d", time.Now().UnixNano())
-	out.IdProprietaire = models.NullId(ct.idProprietaire)
+	out.IdProprietaire = models.NullableId(ct.idProprietaire)
 	out, err = out.Insert(tx)
 	if err != nil {
 		err = ErrorSQL(err)
@@ -445,7 +445,7 @@ func (s Server) CreateMenu(ct RequeteContext) (out models.Menu, err error) {
 		return
 	}
 	tx := ct.tx
-	out.IdProprietaire = models.NullId(ct.idProprietaire)
+	out.IdProprietaire = models.NullableId(ct.idProprietaire)
 	out, err = out.Insert(tx)
 	if err != nil {
 		err = ErrorSQL(err)
@@ -657,7 +657,7 @@ func (s Server) DeleteGroupe(ct RequeteContext, id int64) (int, error) {
 
 // Repas
 
-func (s Server) CreateRepas(ct RequeteContext, idSejour, idMenu int64) (out models.Repas, err error) {
+func (s Server) CreateRepas(ct RequeteContext, idSejour int64, idMenu sql.NullInt64) (out models.Repas, err error) {
 	if err = ct.beginTx(s); err != nil {
 		return
 	}
@@ -681,7 +681,7 @@ func (s Server) UpdateManyRepas(ct RequeteContext, repass []RepasWithGroupe) err
 		return err
 	}
 	var repasIds pq.Int64Array
-	var batchRepasGroupes []models.RepasGroupe
+	cribleRepasGroupes := map[models.RepasGroupe]bool{} // pour respecter l'unicité
 	for _, repas := range repass {
 		if err := s.proprioRepas(ct, repas.Id); err != nil {
 			return ct.rollbackTx(err)
@@ -690,12 +690,19 @@ func (s Server) UpdateManyRepas(ct RequeteContext, repass []RepasWithGroupe) err
 			return ct.rollbackTx(err)
 		}
 		repasIds = append(repasIds, repas.Id)
-		batchRepasGroupes = append(batchRepasGroupes, repas.Groupes...)
+		for _, rg := range repas.Groupes {
+			cribleRepasGroupes[rg] = true
+		}
 	}
+
 	// mise à jour des groupes
 	_, err := ct.tx.Exec("DELETE FROM repas_groupes WHERE id_repas = ANY($1)", repasIds)
 	if err != nil {
 		return ct.rollbackTx(err)
+	}
+	batchRepasGroupes := make([]models.RepasGroupe, 0, len(cribleRepasGroupes))
+	for rg := range cribleRepasGroupes {
+		batchRepasGroupes = append(batchRepasGroupes, rg)
 	}
 	if err = models.InsertManyRepasGroupes(ct.tx, batchRepasGroupes); err != nil {
 		return ct.rollbackTx(err)

@@ -33,14 +33,14 @@ func TestSql(t *testing.T) {
 	}
 
 	i3 := randRecette()
-	i3.IdProprietaire = NullId(i1.Id)
+	i3.IdProprietaire = NullableId(i1.Id)
 	i3, err = queriesRecette(tx, i3)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	i4 := randMenu()
-	i4.IdProprietaire = NullId(i1.Id)
+	i4.IdProprietaire = NullableId(i1.Id)
 	i4, err = queriesMenu(tx, i4)
 	if err != nil {
 		t.Fatal(err)
@@ -82,7 +82,7 @@ func TestSql(t *testing.T) {
 
 	i10 := randRepas()
 	i10.IdSejour = i5.Id
-	i10.IdMenu = i4.Id
+	i10.IdMenu = NullableId(i4.Id)
 	i10, err = queriesRepas(tx, i10)
 	if err != nil {
 		t.Fatal(err)

@@ -132,6 +132,9 @@ func (s Server) loadDataRepas(rowsRepas *sql.Rows) (out dataRepas, err error) {
 // si `nbPersonnes` vaut -1, le nombre de personne du repas est utilisé
 func (d dataRepas) resoudRepas(idRepas, nbPersonnes int64, quantite quantites) {
 	repas := d.repass[idRepas]
+	if !repas.IdMenu.Valid { // on ignore ce repas
+		return
+	}
 
 	if nbPersonnes == -1 { // on résoud le nombre de personnes
 		nbPersonnes = repas.OffsetPersonnes
@@ -143,14 +146,14 @@ func (d dataRepas) resoudRepas(idRepas, nbPersonnes int64, quantite quantites) {
 		}
 	}
 	nbPersonnesF := float64(nbPersonnes)
-	cribleRecettes := d.menuRecettes[repas.IdMenu]
+	cribleRecettes := d.menuRecettes[repas.IdMenu.Int64]
 	for _, recetteIngredient := range d.recetteIngredients {
 		if cribleRecettes.Has(recetteIngredient.IdRecette) {
 			quantite[recetteIngredient.IdIngredient] += nbPersonnesF * recetteIngredient.Quantite
 		}
 	}
 	for _, menuIngredient := range d.menuIngredients {
-		if menuIngredient.IdMenu == repas.IdMenu {
+		if menuIngredient.IdMenu == repas.IdMenu.Int64 {
 			quantite[menuIngredient.IdIngredient] += nbPersonnesF * menuIngredient.Quantite
 		}
 	}

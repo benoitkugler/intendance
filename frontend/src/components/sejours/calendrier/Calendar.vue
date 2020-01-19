@@ -1,14 +1,5 @@
 <template>
   <div class="two-weeks-calendar" ref="weeks">
-    <v-dialog v-model="showEditFormRepas" max-width="500">
-      <form-repas
-        :initialRepas="editedRepas"
-        :mode="editMode"
-        @accept="onEditRepasDone"
-        @delete="deleteRepas"
-      ></form-repas>
-    </v-dialog>
-
     <v-dialog v-model="showFormCalcul" max-width="600px">
       <form-calcul :initial-sejour="sejour"></form-calcul>
     </v-dialog>
@@ -19,29 +10,25 @@
       :event-height="22"
       :short-weekdays="false"
       :interval-count="1"
-      :interval-height="300"
+      :interval-height="dayHeight"
       :interval-width="0"
       :start="startWeek1"
       :weekdays="weekdays"
       @mousedown:time="registerTime"
-      @click:time="startAddRepas"
+      @click:time="args => $emit('addRepas', args.date)"
       @click:date="args => $emit('change', args)"
     >
       <template v-slot:interval="{ date }">
         <div
           @dragover="e => onDragover(e, 'repas')"
           @drop="e => onDrop(e, 'repas')"
-          class="dragover"
+          class="dragover overflow-y-auto"
         >
-          <v-list dense>
-            <v-list-item-group color="primary">
-              <v-list-item v-for="repas in events[date]" :key="repas.id">
-                <v-list-item-content>
-                  <v-list-item-title>{{ formatEventName(repas) }}</v-list-item-title>
-                </v-list-item-content>
-              </v-list-item>
-            </v-list-item-group>
-          </v-list>
+          <liste-repas
+            :repass="events[date]"
+            :mode="mode"
+            @edit="args => $emit('editRepas', args)"
+          ></liste-repas>
         </div>
       </template>
       <template v-slot:day-header="{ date }">
@@ -52,27 +39,38 @@
       class="mt-1"
       type="week"
       locale="fr"
-      :event-height="22"
+      :interval-count="1"
+      :interval-height="dayHeight"
+      :interval-width="0"
       :short-weekdays="false"
       :start="startWeek2"
       :weekdays="weekdays"
       @mousedown:time="registerTime"
-      @click:time="startAddRepas"
+      @click:time="args => $emit('addRepas', args.date)"
       @click:date="args => $emit('change', args)"
-    ></v-calendar>
+    >
+      <template v-slot:interval="{ date }">
+        <div
+          @dragover="e => onDragover(e, 'repas')"
+          @drop="e => onDrop(e, 'repas')"
+          class="dragover y-overflow-auto"
+        >
+          <liste-repas
+            :repass="events[date]"
+            :mode="mode"
+            @edit="args => $emit('editRepas', args)"
+          ></liste-repas>
+        </div>
+      </template>
+    </v-calendar>
   </div>
 </template>
 
 <script lang="ts">
 import Vue from "vue";
 import Component from "vue-class-component";
-import {
-  Sejour,
-  Horaire,
-  SejourRepas,
-  RepasWithGroupe
-} from "../../../logic/types";
-import FormRepas from "../FormRepas.vue";
+import { Sejour, SejourRepas, RepasWithGroupe } from "../../../logic/types";
+import ListeRepas from "./ListeRepas.vue";
 import FormCalcul from "../FormCalcul.vue";
 import { C } from "../../../logic/controller";
 import TooltipBtn from "../../utils/TooltipBtn.vue";
@@ -81,10 +79,13 @@ import {
   New,
   DetailsRepas,
   PreferencesAgenda,
-  CalendarMode
+  CalendarMode,
+  NullId
 } from "../../../logic/types2";
+import { fmtHoraire, Horaires } from "../../../logic/enums";
 import { Formatter } from "../../../logic/formatter";
-import { toDateVuetify, DateTime, DataEvent, getEventStart } from "./utils";
+import { toDateVuetify, DateTime, DataEvent } from "./utils";
+import { HorairesColors } from "../../utils/utils";
 
 const _days = [0, 1, 2, 3, 4, 5, 6];
 
@@ -95,13 +96,6 @@ type DragKind = "journee" | "repas";
 function weekdaysFromStart(start: Date) {
   const d0 = start.getDay();
   return _days.map(d => (d0 + d) % 7);
-}
-
-function timeToHoraire(time: string): Horaire {
-  return {
-    heure: Number(time.substr(0, 2)),
-    minute: Number(time.substr(3, 2))
-  };
 }
 
 const Props = Vue.extend({
@@ -115,32 +109,16 @@ const Props = Vue.extend({
 @Component({
   components: {
     TooltipBtn,
-    FormRepas,
-    FormCalcul
+    FormCalcul,
+    ListeRepas
   }
 })
 export default class Calendar extends Props {
   private lastClickedTime: DateTime | null = null;
 
-  private firstInterval = 3;
-  private intervalCount = 5;
-  private intervalMinutes = 180;
-  private intervalHeight = 40;
+  showFormCalcul = false;
 
-  protected showEditFormRepas = false;
-  protected showFormCalcul = false;
-
-  private editMode: "new" | "edit" = "new";
-
-  private editedRepas: RepasWithGroupe = {
-    id: -1,
-    id_sejour: -1,
-    horaire: { heure: 0, minute: 0 },
-    id_menu: -1,
-    offset_personnes: 0,
-    jour_offset: 0,
-    groupes: []
-  };
+  private dayHeight = 250;
 
   get startDate(): Date {
     if (this.sejour == null) return new Date();
@@ -176,29 +154,22 @@ export default class Calendar extends Props {
       l.push(repas);
       out[d] = l;
     });
+    const horaires = Horaires.map(v => v.value);
+    for (const date in out) {
+      const element = out[date];
+      out[date] = element.sort((a, b) => {
+        return horaires.indexOf(a.horaire) - horaires.indexOf(b.horaire);
+      });
+    }
     return out;
   }
 
-  formatEventName(repas: RepasWithGroupe) {
-    if (this.mode == "groupes") {
-      const nbGroupes = C.getRepasGroupes(repas).length;
-      const n = repas.offset_personnes;
-      let out = `${nbGroupes} gr.`;
-      if (n != 0) {
-        out += ` (${n > 0 ? "+" : ""}${n} p.)`;
-      }
-      return out;
-    } else {
-      return C.formatter.formatRepasName(repas);
-    }
-  }
-
   mounted() {
-    this.setupDrag();
+    // this.setupDrag();
   }
 
   updated() {
-    this.setupDrag();
+    // this.setupDrag();
   }
 
   // on stocke le moment correspondant au dernier click,
@@ -261,10 +232,8 @@ export default class Calendar extends Props {
   private jobDropRepas(targetTime: DateTime, dataRepas: string) {
     const repas: RepasWithGroupe = JSON.parse(dataRepas);
     const jour = new Date(targetTime.date);
-    const horaire: Horaire = {
-      heure: Number(targetTime.time.substr(0, 2)),
-      minute: Number(targetTime.time.substr(3, 2))
-    };
+    //FIXME:
+    const horaire = "";
     C.data.deplaceRepas(repas, jour, horaire);
   }
 
@@ -308,63 +277,6 @@ export default class Calendar extends Props {
     const dateTo = new Date(customDiv.dataset.day);
     if (isNaN(dateFrom.getTime()) || isNaN(dateTo.getTime())) return;
     C.data.switchDays(this.sejour.id, dateFrom, dateTo);
-  }
-
-  startAddRepas(dt: DateTime) {
-    const sejour = this.sejour;
-    if (sejour == null) return;
-    const offset = C.data.getOffset(sejour, new Date(dt.date));
-    if (offset == undefined) return;
-    this.editedRepas = {
-      horaire: timeToHoraire(dt.time),
-      jour_offset: offset,
-      offset_personnes: 0,
-      id_menu: -1,
-      id_sejour: sejour.id,
-      id: -1,
-      groupes: []
-    };
-    this.editMode = "new";
-    this.showEditFormRepas = true;
-  }
-
-  startEditRepas(repas: RepasWithGroupe) {
-    this.editedRepas = repas;
-    this.editMode = "edit";
-    this.showEditFormRepas = true;
-  }
-
-  async onEditRepasDone(repas: DetailsRepas) {
-    this.showEditFormRepas = false;
-    if (this.sejour == null) return;
-    let message = "";
-    if (this.editMode == "new") {
-      const newRepas: New<RepasWithGroupe> = {
-        ...repas,
-        id_sejour: this.sejour.id
-      };
-      await C.data.createRepas(newRepas);
-      message = "Le repas a bien été ajouté.";
-    } else {
-      const repasFull = {
-        ...repas,
-        id_sejour: this.editedRepas.id_sejour,
-        id: this.editedRepas.id
-      };
-      await C.data.updateManyRepas([repasFull]);
-      message = "Le repas a bien été mis à jour.";
-    }
-    if (C.notifications.getError() == null) {
-      C.notifications.setMessage(message);
-    }
-  }
-
-  async deleteRepas(repas: RepasWithGroupe) {
-    this.showEditFormRepas = false;
-    await C.data.deleteRepas(repas);
-    if (C.notifications.getError() == null) {
-      C.notifications.setMessage("Le repas a été retiré avec succès.");
-    }
   }
 }
 </script>

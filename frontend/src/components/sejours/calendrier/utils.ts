@@ -1,7 +1,4 @@
-import { RepasWithGroupe, Horaire } from "@/logic/types";
-import { C } from "@/logic/controller";
-import { Formatter } from "@/logic/formatter";
-import { Horaires } from "@/components/utils/enums";
+import { RepasWithGroupe } from "@/logic/types";
 
 export interface DateTime {
   date: string;
@@ -17,9 +14,12 @@ export function toDateVuetify(d: Date) {
   return d.toISOString().substr(0, 10);
 }
 
-export function getEventStart(r: RepasWithGroupe) {
-  const dateDebut = C.offsetToDate(r.id_sejour, r.jour_offset);
-  return toDateVuetify(dateDebut) + " " + Formatter.horaireToTime(r.horaire);
+export function formatNbOffset(repas: RepasWithGroupe) {
+  const n = repas.offset_personnes;
+  if (n != 0) {
+    return `${n > 0 ? "+" : ""}${n} pers.`;
+  }
+  return "";
 }
 
 // function findClosest<K extends { distance: number }>(values: K[]) {

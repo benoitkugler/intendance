@@ -1,7 +1,13 @@
 <template>
   <v-tooltip bottom>
     <template v-slot:activator="{ on }">
-      <v-btn :disabled="disabled" v-on="on" icon @click="e => $emit('click', e)">
+      <v-btn
+        :disabled="disabled"
+        v-on="on"
+        icon
+        @click="e => $emit('click', e)"
+        :small="small"
+      >
         <v-icon :color="color">mdi-{{ mdiIcon }}</v-icon>
       </v-btn>
     </template>
@@ -23,6 +29,10 @@ const Props = Vue.extend({
       default: "black"
     },
     disabled: {
+      type: Boolean,
+      default: false
+    },
+    small: {
       type: Boolean,
       default: false
     }

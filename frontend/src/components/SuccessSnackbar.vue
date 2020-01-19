@@ -1,5 +1,5 @@
 <template>
-  <v-snackbar v-model="show" bottom right :timeout="6000" color="success">
+  <v-snackbar v-model="show" bottom right :timeout="5000" color="success">
     <v-row no-gutters>
       <v-col cols="2" align-self="center">
         <i>({{ currentTime() }})</i>

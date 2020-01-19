@@ -158,7 +158,7 @@ export interface RepasGroupe {
 export interface RepasWithGroupe {
   id: number;
   id_sejour: number;
-  id_menu: number;
+  id_menu: NullInt64;
   offset_personnes: number;
   jour_offset: number;
   horaire: string;

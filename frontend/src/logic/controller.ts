@@ -26,11 +26,11 @@ export class Controller {
     this.logger = new Logger(this);
     this.state = new State(this);
 
-    const o = this.logger.checkCookies()
+    const o = this.logger.checkCookies();
     if (o != null) {
-      this.token = o.token
-      this.idUtilisateur = o.idUtilisateur
-      this.state.isLoggedIn = true
+      this.token = o.token;
+      this.idUtilisateur = o.idUtilisateur;
+      this.state.isLoggedIn = true;
     }
   }
 
@@ -81,6 +81,14 @@ export class Controller {
     return dateDebut;
   }
 
+  dateToOffset(idSejour: number, date: Date) {
+    const sejour = this.data.sejours.sejours[idSejour];
+    const dateDebut = new Date(sejour.date_debut);
+    return Math.round(
+      (date.valueOf() - dateDebut.valueOf()) / (24 * 60 * 60 * 1000)
+    );
+  }
+
   iterateAllRepas(fn: (sejour: Sejour, rep: RepasWithGroupe) => void) {
     Object.values(this.data.sejours.sejours).forEach(sejour => {
       if (!sejour.repass) return;
@@ -91,8 +99,8 @@ export class Controller {
   }
 
   getRepasGroupes(repas: RepasWithGroupe): Groupe[] {
-    return (repas.groupes || []).map(rg =>
-      this.data.sejours.groupes[rg.id_groupe]
+    return (repas.groupes || []).map(
+      rg => this.data.sejours.groupes[rg.id_groupe]
     );
   }
 

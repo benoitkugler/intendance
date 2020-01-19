@@ -21,7 +21,7 @@
 
     <v-card>
       <v-card-title primary-title>
-        Détails du repas
+        {{ mode == "new" ? "Détails du nouveau repas" : "Détails du repas" }}
         <v-spacer></v-spacer>
         <div>
           <small v-if="sejour">Sejour : {{ sejour.nom }} </small>
@@ -45,14 +45,9 @@
           <v-autocomplete
             label="Menu"
             :items="menus"
-            v-model="repas.id_menu"
+            v-model="idMenu"
           ></v-autocomplete>
-          <v-select
-            :items="horaires"
-            v-model="repas.horaire"
-            label="Horaire"
-            :placeholder="horaireFormatted"
-          ></v-select>
+          <horaire-field v-model="repas.horaire"></horaire-field>
         </v-form>
       </v-card-text>
       <v-card-actions>
@@ -87,14 +82,16 @@ import {
   IngredientQuantite,
   RepasGroupe
 } from "../../logic/types";
-import { New, DetailsRepas, EditMode } from "../../logic/types2";
+import { New, DetailsRepas, EditMode, toNullableId } from "../../logic/types2";
 import DateField from "../utils/DateField.vue";
+import HoraireField from "../utils/HoraireField.vue";
 import TooltipBtn from "../utils/TooltipBtn.vue";
 import ListeIngredients from "./ListeIngredients.vue";
 import { C } from "../../logic/controller";
 import { Watch } from "vue-property-decorator";
-import { Horaires } from "../utils/enums";
+import { Horaires } from "../../logic/enums";
 import { Formatter } from "../../logic/formatter";
+import { fmtHoraire } from "../../logic/enums";
 
 const Props = Vue.extend({
   props: {
@@ -104,7 +101,7 @@ const Props = Vue.extend({
 });
 
 @Component({
-  components: { DateField, TooltipBtn, ListeIngredients }
+  components: { DateField, HoraireField, TooltipBtn, ListeIngredients }
 })
 export default class FormRepas extends Props {
   repas: DetailsRepas = JSON.parse(JSON.stringify(this.initialRepas));
@@ -120,6 +117,13 @@ export default class FormRepas extends Props {
     this.repas = JSON.parse(JSON.stringify(this.initialRepas));
   }
 
+  get idMenu() {
+    return this.repas.id_menu.Valid ? this.repas.id_menu.Int64 : -1;
+  }
+  set idMenu(id: number) {
+    this.repas.id_menu = toNullableId(id);
+  }
+
   get sejour() {
     return C.data.sejours.sejours[this.initialRepas.id_sejour];
   }
@@ -128,11 +132,6 @@ export default class FormRepas extends Props {
     return Object.values(C.data.menus).map(menu => {
       return { text: C.formatter.formatMenuName(menu), value: menu.id };
     });
-  }
-
-  get horaireFormatted() {
-    const horaire = this.repas.horaire;
-    return `(Personnalisé) - ${Formatter.horaireToTime(horaire)}`;
   }
 
   get groupes() {

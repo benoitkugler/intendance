@@ -323,7 +323,7 @@ func randRepas() Repas {
 	return Repas{
 		Id:              rand.Int63n(1 << 20),
 		IdSejour:        rand.Int63n(1 << 20),
-		IdMenu:          rand.Int63n(1 << 20),
+		IdMenu:          randNullInt64(),
 		OffsetPersonnes: rand.Int63n(1 << 20),
 		JourOffset:      rand.Int63n(1 << 20),
 		Horaire:         randHoraire(),

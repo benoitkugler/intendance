@@ -1,5 +1,5 @@
 import { Controller } from "./controller";
-import { Menu, Recette, Horaire, RepasWithGroupe } from "./types";
+import { Menu, Recette, RepasWithGroupe } from "./types";
 
 const Months = [
   "Janvier",
@@ -24,8 +24,13 @@ export class Formatter {
   }
 
   formatRepasName = (r: RepasWithGroupe) => {
-    const menu = this.controller.data.menus[r.id_menu];
-    const menuName = menu ? this.formatMenuName(menu) : "";
+    let menuName = "";
+    if (!r.id_menu.Valid) {
+      menuName = "-";
+    } else {
+      const menu = this.controller.data.menus[r.id_menu.Int64];
+      menuName = menu ? this.formatMenuName(menu) : "";
+    }
     const nbPersonnes = this.controller.getRepasNbPersonnes(r);
     return `(${nbPersonnes} p.) - ${menuName}`;
   };
@@ -45,14 +50,6 @@ export class Formatter {
     }
     return `appartient à ${prop.prenom_nom}`;
   };
-
-  static horaireToTime(horaire: Horaire) {
-    return (
-      ("00" + horaire.heure).substr(-2, 2) +
-      ":" +
-      ("00" + horaire.minute).substr(-2, 2)
-    );
-  }
 
   static formatDate(dateString: Time) {
     dateString = dateString || "";

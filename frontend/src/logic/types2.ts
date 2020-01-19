@@ -7,7 +7,8 @@ import {
   MenuIngredient,
   Utilisateur,
   Groupe,
-  RepasWithGroupe
+  RepasWithGroupe,
+  NullInt64
 } from "./types";
 
 export type New<T extends { id: number }> = Omit<T, "id"> &
@@ -37,3 +38,8 @@ export interface PreferencesAgenda {
 export type EditMode = "new" | "edit";
 
 export type CalendarMode = "groupes" | "menus";
+
+export const NullId: NullInt64 = { Valid: false, Int64: 0 };
+export function toNullableId(id: number): NullInt64 {
+  return { Valid: true, Int64: id };
+}

@@ -11,7 +11,6 @@ import {
   OutMenu,
   Sejour,
   OutSejour,
-  Horaire,
   OutIngredientProduits,
   OutSejours,
   Sejours,
@@ -28,8 +27,7 @@ import { Controller } from "./controller";
 import Vue from "vue";
 
 export const devMode = process.env.NODE_ENV != "production";
-// const host = devMode ? "http://localhost:1323" : window.location.origin;
-const host = "https://intendance.alwaysdata.net"
+const host = devMode ? "http://localhost:1323" : window.location.origin;
 export const ServerURL = host + "/api";
 
 export class Data {
@@ -468,8 +466,8 @@ export class Data {
         messageHtml: `La date ciblée (${jour.toLocaleDateString()}) est <i>antérieure</i> au début du séjour.<br/>
                     Si vous souhaitez déplacer un repas sur cette journée, 
                     veuillez d'abord <b>modifier la date de début</b> du séjour <b>${
-          sejour.nom
-          }</b>`
+                      sejour.nom
+                    }</b>`
       });
       return;
     }
@@ -513,7 +511,7 @@ export class Data {
   }
 
   // modifie le moment du repas
-  async deplaceRepas(repas: RepasWithGroupe, jour: Date, horaire: Horaire) {
+  async deplaceRepas(repas: RepasWithGroupe, jour: Date, horaire: string) {
     const sejour = this.getSejour(repas.id_sejour);
     if (!sejour) return;
     const offset = this.getOffset(sejour, jour);
