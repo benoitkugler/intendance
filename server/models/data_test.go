@@ -88,9 +88,7 @@ func randConditionnement() Conditionnement {
 }
 
 func randHoraire() Horaire {
-	t := randTime()
-	return Horaire{
-		Heure:  t.Hour(),
-		Minute: t.Minute(),
-	}
+	choix := [5]Horaire{Cinquieme, Diner, Gouter, Midi, PetitDejeuner}
+	i := rand.Int31n(int32(len(choix)))
+	return choix[i]
 }

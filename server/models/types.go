@@ -2,12 +2,6 @@ package models
 
 import "fmt"
 
-const (
-	Litres Unite = "L"
-	Kilos  Unite = "Kg"
-	Piece  Unite = "P"
-)
-
 type Unite string
 
 func (u Unite) String() string {
@@ -44,8 +38,4 @@ func (c Conditionnement) IsNull() bool {
 }
 
 // Horaire définie l'horaire d'un repas.
-// Le frontend peut définir certains horaires classiques.
-type Horaire struct {
-	Heure  int `json:"heure"`
-	Minute int `json:"minute"`
-}
+type Horaire string

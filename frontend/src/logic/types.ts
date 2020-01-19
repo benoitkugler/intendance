@@ -148,12 +148,6 @@ export interface OutDeleteGroupe {
   nb_repas: number;
 }
 
-// struct2ts:github.com/benoitkugler/intendance/server/models.Horaire
-export interface Horaire {
-  heure: number;
-  minute: number;
-}
-
 // struct2ts:github.com/benoitkugler/intendance/server/models.RepasGroupe
 export interface RepasGroupe {
   id_repas: number;
@@ -167,7 +161,7 @@ export interface RepasWithGroupe {
   id_menu: number;
   offset_personnes: number;
   jour_offset: number;
-  horaire: Horaire;
+  horaire: string;
   groupes: RepasGroupe[] | null;
 }
 
