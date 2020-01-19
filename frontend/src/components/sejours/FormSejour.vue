@@ -29,7 +29,7 @@
 import Vue from "vue";
 import Component from "vue-class-component";
 import { Sejour } from "../../logic/types";
-import { New, DetailsSejour, EditMode } from "../../logic/types2";
+import { New, DetailsSejour, EditMode, deepcopy } from "../../logic/types2";
 import DateField from "../utils/DateField.vue";
 import { Watch } from "vue-property-decorator";
 
@@ -44,11 +44,17 @@ const Props = Vue.extend({
   components: { DateField }
 })
 export default class FormSejour extends Props {
-  tmpSejour: DetailsSejour = JSON.parse(JSON.stringify(this.sejour || {}));
+  tmpSejour: DetailsSejour = this.copy();
+
+  private copy() {
+    return deepcopy(
+      this.sejour || { nom: "", date_debut: new Date().toISOString() }
+    );
+  }
 
   @Watch("sejour")
   onPropChange() {
-    this.tmpSejour = JSON.parse(JSON.stringify(this.sejour || {}));
+    this.tmpSejour = this.copy();
   }
 }
 </script>

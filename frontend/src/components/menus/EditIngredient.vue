@@ -73,7 +73,7 @@ import Vue from "vue";
 import Component from "vue-class-component";
 import { RecetteIngredient, Ingredient } from "../../logic/types";
 import { Watch } from "vue-property-decorator";
-import { IngredientOptions, EditMode } from "../../logic/types2";
+import { IngredientOptions, EditMode, deepcopy } from "../../logic/types2";
 import UniteField from "../utils/UniteField.vue";
 import { Unites, UniteFields } from "../../logic/enums";
 import { DefautIngredient } from "./types";
@@ -92,8 +92,9 @@ export default class EditIngredient extends EditIngredientProps {
   current = this.copy(this.initialIngredient);
 
   private copy(initial: IngredientOptions | null): Ingredient {
-    const ing = initial == null ? DefautIngredient : initial.ingredient;
-    return JSON.parse(JSON.stringify(ing));
+    const ing =
+      initial == null ? { ...DefautIngredient, id: -1 } : initial.ingredient;
+    return deepcopy(ing);
   }
 
   get btnTitle() {

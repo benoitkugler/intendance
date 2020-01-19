@@ -81,7 +81,7 @@ export function formatNbOffset(repas: RepasWithGroupe) {
 //     );
 //     for (let rep of repasGroupe) {
 //       console.log(currentPos);
-//       rep = JSON.parse(JSON.stringify(rep));
+//       rep = deepcopy(rep);
 //       rep.horaire = mtoH(currentPos);
 //       out.push(rep);
 //       currentPos += repasDuree;

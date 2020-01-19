@@ -20,8 +20,8 @@
     >
       <template v-slot:interval="{ date }">
         <div
-          @dragover="e => onDragover(e, 'repas')"
-          @drop="e => onDrop(e, 'repas')"
+          @dragover="onIntervalDragover($event, date)"
+          @drop="onIntervalDrop($event, date)"
           class="dragover overflow-y-auto"
         >
           <liste-repas
@@ -51,8 +51,8 @@
     >
       <template v-slot:interval="{ date }">
         <div
-          @dragover="e => onDragover(e, 'repas')"
-          @drop="e => onDrop(e, 'repas')"
+          @dragover="onIntervalDragover($event, date)"
+          @drop="onIntervalDrop($event, date)"
           class="dragover y-overflow-auto"
         >
           <liste-repas
@@ -162,6 +162,35 @@ export default class Calendar extends Props {
       });
     }
     return out;
+  }
+
+  onIntervalDragover(event: DragEvent, date: string) {
+    if (!event.dataTransfer || this.sejour == null) return;
+    const debut = new Date(this.sejour.date_debut).valueOf();
+    const target = new Date(date).valueOf();
+    if (target < debut) return; // empêche un offset négatif
+    const isRepas = event.dataTransfer.types.includes("repas");
+    // const isDay = event.dataTransfer.types.includes("journee");
+    if (isRepas) {
+      event.preventDefault();
+      event.dataTransfer.dropEffect = "move";
+    }
+  }
+
+  async onIntervalDrop(event: DragEvent, date: string) {
+    if (!event.dataTransfer || C.state.idSejour == null) return;
+    event.preventDefault();
+    const repas: RepasWithGroupe = JSON.parse(
+      event.dataTransfer.getData("repas")
+    );
+    const targetOffset = C.dateToOffset(C.state.idSejour, new Date(date));
+    if (targetOffset == repas.jour_offset) return;
+    repas.jour_offset = targetOffset;
+    await C.data.updateManyRepas([repas]);
+    if (C.notifications.getError() == null) {
+      C.notifications.setMessage("Repas déplacé avec succès.");
+    }
+    //   this.onDropJournee(data, target);
   }
 
   mounted() {
@@ -286,7 +315,7 @@ export default class Calendar extends Props {
   cursor: pointer;
 }
 .two-weeks-calendar .v-calendar-daily__day-interval:hover {
-  background-color: rgba(34, 182, 187, 0.267);
+  background-color: rgba(99, 131, 133, 0.158);
 }
 .dragover {
   height: 100%;

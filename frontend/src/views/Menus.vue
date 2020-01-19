@@ -67,7 +67,7 @@ import EditMenu from "../components/menus/EditMenu.vue";
 import EditRecette from "../components/menus/EditRecette.vue";
 import { C } from "../logic/controller";
 import { Menu, Recette, Ingredient } from "../logic/types";
-import { IngredientOptions, EditMode, New } from "../logic/types2";
+import { IngredientOptions, EditMode, New, deepcopy } from "../logic/types2";
 import {
   StateMenus,
   DefautRecette,
@@ -108,7 +108,7 @@ export default class Menus extends Vue {
 
   startCreateMenu() {
     if (C.idUtilisateur == null) return;
-    const newMenu: Menu = JSON.parse(JSON.stringify(DefautMenu));
+    const newMenu: Menu = { ...deepcopy(DefautMenu), id: -1 };
     newMenu.id_proprietaire.Int64 = C.idUtilisateur;
     this.state.selection.menu = newMenu;
     this.editMode = "new";
@@ -139,7 +139,7 @@ export default class Menus extends Vue {
 
   startCreateRecette() {
     if (C.idUtilisateur == null) return;
-    const newRecette: Recette = JSON.parse(JSON.stringify(DefautRecette));
+    const newRecette: Recette = { ...deepcopy(DefautRecette), id: -1 };
     newRecette.id_proprietaire.Int64 = C.idUtilisateur;
     this.state.selection.recette = newRecette;
     this.editMode = "new";

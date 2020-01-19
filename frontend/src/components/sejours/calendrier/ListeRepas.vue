@@ -1,11 +1,15 @@
 <template>
-  <v-list dense style="border-radius: 0;">
+  <v-list dense style="border-radius: 0;" v-if="repass">
     <v-list-item-group>
       <v-list-item
         v-for="repas in repass"
         :key="repas.id"
-        @click.stop="$emit('edit', repas)"
         class="px-1"
+        @click.stop="$emit('edit', repas)"
+        draggable
+        @dragstart="onDragstart($event, repas)"
+        @dragover.stop="onDragover($event, repas)"
+        @drop.stop="onDrop($event, repas)"
       >
         <v-list-item-icon class="mx-0"
           ><v-chip label small :color="getColorRepas(repas)" class="px-1">
@@ -29,7 +33,7 @@
 import Vue from "vue";
 import Component from "vue-class-component";
 import { RepasWithGroupe } from "../../../logic/types";
-import { CalendarMode } from "../../../logic/types2";
+import { CalendarMode, deepcopy } from "../../../logic/types2";
 import { C } from "../../../logic/controller";
 import { HorairesColors } from "../../utils/utils";
 import { fmtHoraire } from "../../../logic/enums";
@@ -64,6 +68,39 @@ export default class ListeRepas extends ListeRepasProps {
   getHoraireInitiale(repas: RepasWithGroupe) {
     const horaire = fmtHoraire(repas.horaire);
     return horaire.substr(0, 2);
+  }
+
+  onDragstart(event: DragEvent, repas: RepasWithGroupe) {
+    if (event == null || event.dataTransfer == null) return;
+    event.dataTransfer.setData("repas", JSON.stringify(repas));
+    event.dataTransfer.effectAllowed = "linkMove";
+  }
+
+  onDragover(event: DragEvent, target: RepasWithGroupe) {
+    if (!event.dataTransfer) return;
+    if (event.dataTransfer.types.includes("repas")) {
+      event.preventDefault();
+      event.dataTransfer.dropEffect = "link";
+    }
+  }
+
+  // on échange les deux repas
+  async onDrop(event: DragEvent, target: RepasWithGroupe) {
+    if (!event.dataTransfer) return;
+    event.preventDefault();
+    const origin: RepasWithGroupe = JSON.parse(
+      event.dataTransfer.getData("repas")
+    );
+    target = deepcopy(target);
+    [origin.jour_offset, target.jour_offset] = [
+      target.jour_offset,
+      origin.jour_offset
+    ];
+    [origin.horaire, target.horaire] = [target.horaire, origin.horaire];
+    await C.data.updateManyRepas([target, origin]);
+    if (C.notifications.getError() == null) {
+      C.notifications.setMessage("Repas échangés avec succès.");
+    }
   }
 }
 </script>

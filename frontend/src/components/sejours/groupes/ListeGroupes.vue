@@ -151,7 +151,7 @@ import { SejourRepas, Sejour, Groupe } from "../../../logic/types";
 import { C } from "../../../logic/controller";
 
 import TooltipBtn from "../../utils/TooltipBtn.vue";
-import { EditMode, New } from "../../../logic/types2";
+import { EditMode, New, deepcopy } from "../../../logic/types2";
 import { Watch } from "vue-property-decorator";
 
 const ListeGroupesProps = Vue.extend({
@@ -171,7 +171,7 @@ export default class ListeGroupes extends ListeGroupesProps {
   @Watch("groupe")
   onGroupeChange(groupe: Groupe | null) {
     if (this.editMode == "new") return;
-    this.tmpGroupe = JSON.parse(JSON.stringify(groupe));
+    this.tmpGroupe = deepcopy(groupe);
   }
 
   showColorPicker = false;

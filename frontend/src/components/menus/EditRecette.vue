@@ -101,7 +101,7 @@ import MenuOrRecetteIngredient from "./MenuOrRecetteIngredient.vue";
 
 import { C } from "../../logic/controller";
 import { Recette, RecetteIngredient } from "../../logic/types";
-import { New, EditMode } from "../../logic/types2";
+import { New, EditMode, deepcopy } from "../../logic/types2";
 import { Watch } from "vue-property-decorator";
 const EditRecetteProps = Vue.extend({
   props: {
@@ -115,7 +115,7 @@ const EditRecetteProps = Vue.extend({
 })
 export default class EditRecette extends EditRecetteProps {
   // recette actuellement éditée
-  recette: Recette = JSON.parse(JSON.stringify(this.initialRecette));
+  recette: Recette = deepcopy(this.initialRecette);
 
   showEditIngredient = false;
   editedIngredient: RecetteIngredient | null = null;

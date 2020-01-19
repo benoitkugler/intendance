@@ -124,7 +124,7 @@ import {
   MenuIngredient,
   RecetteIngredient
 } from "../../logic/types";
-import { New, EditMode } from "../../logic/types2";
+import { New, EditMode, deepcopy } from "../../logic/types2";
 import { Watch } from "vue-property-decorator";
 const EditMenuProps = Vue.extend({
   props: {
@@ -138,7 +138,7 @@ const EditMenuProps = Vue.extend({
 })
 export default class EditMenu extends EditMenuProps {
   // menu actuellement édité
-  menu: Menu = JSON.parse(JSON.stringify(this.initialMenu));
+  menu: Menu = deepcopy(this.initialMenu);
 
   showEditIngredient = false;
   editedIngredient: MenuIngredient | null = null;

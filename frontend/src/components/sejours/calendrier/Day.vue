@@ -99,7 +99,7 @@ import TooltipBtn from "../../utils/TooltipBtn.vue";
 import { toDateVuetify, DataEvent, formatNbOffset } from "./utils";
 import { C } from "../../../logic/controller";
 import { RepasWithGroupe, Groupe } from "../../../logic/types";
-import { New, NullId } from "../../../logic/types2";
+import { New, NullId, deepcopy } from "../../../logic/types2";
 import { Horaires } from "../../../logic/enums";
 import { HorairesColors } from "../../utils/utils";
 
@@ -171,7 +171,7 @@ export default class Day extends DayProps {
     const grs = C.getRepasGroupes(repas);
     const maxChar = 8;
     return grs.map(groupe => {
-      const g: Groupe = JSON.parse(JSON.stringify(groupe));
+      const g: Groupe = deepcopy(groupe);
       g.nom = g.nom.substr(0, maxChar) + (g.nom.length <= maxChar ? "" : ".");
       return groupe;
     });
@@ -238,7 +238,7 @@ export default class Day extends DayProps {
     data.repas.groupes = (data.repas.groupes || []).filter(
       g => g.id_groupe != data.idGroupe
     );
-    target = JSON.parse(JSON.stringify(target)); // force deepcopy
+    target = deepcopy(target); // force deepcopy
     target.groupes = (target.groupes || []).concat({
       id_repas: target.id,
       id_groupe: data.idGroupe

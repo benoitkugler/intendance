@@ -39,6 +39,7 @@ import Vue from "vue";
 import Component from "vue-class-component";
 import { RecetteIngredient } from "../../logic/types";
 import { Watch } from "vue-property-decorator";
+import { deepcopy } from "../../logic/types2";
 
 const MenuOrRecetteIngredientProps = Vue.extend({
   props: {
@@ -48,11 +49,11 @@ const MenuOrRecetteIngredientProps = Vue.extend({
 
 @Component({})
 export default class MenuOrRecetteIngredient extends MenuOrRecetteIngredientProps {
-  current: RecetteIngredient = JSON.parse(JSON.stringify(this.ingredient));
+  current: RecetteIngredient = deepcopy(this.ingredient);
 
   @Watch("ingredient")
   onPropChange() {
-    this.current = JSON.parse(JSON.stringify(this.ingredient));
+    this.current = deepcopy(this.ingredient);
   }
 
   $refs!: {

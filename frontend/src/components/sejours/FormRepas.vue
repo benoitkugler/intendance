@@ -82,7 +82,13 @@ import {
   IngredientQuantite,
   RepasGroupe
 } from "../../logic/types";
-import { New, DetailsRepas, EditMode, toNullableId } from "../../logic/types2";
+import {
+  New,
+  DetailsRepas,
+  EditMode,
+  toNullableId,
+  deepcopy
+} from "../../logic/types2";
 import DateField from "../utils/DateField.vue";
 import HoraireField from "../utils/HoraireField.vue";
 import TooltipBtn from "../utils/TooltipBtn.vue";
@@ -104,7 +110,7 @@ const Props = Vue.extend({
   components: { DateField, HoraireField, TooltipBtn, ListeIngredients }
 })
 export default class FormRepas extends Props {
-  repas: DetailsRepas = JSON.parse(JSON.stringify(this.initialRepas));
+  repas: DetailsRepas = deepcopy(this.initialRepas);
 
   horaires = Horaires;
 
@@ -114,7 +120,7 @@ export default class FormRepas extends Props {
 
   @Watch("initialRepas")
   onPropChange() {
-    this.repas = JSON.parse(JSON.stringify(this.initialRepas));
+    this.repas = deepcopy(this.initialRepas);
   }
 
   get idMenu() {
