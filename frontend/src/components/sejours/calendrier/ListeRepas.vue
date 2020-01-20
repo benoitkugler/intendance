@@ -11,7 +11,7 @@
         @dragover.stop="onDragover($event, repas)"
         @drop.stop="onDrop($event, repas)"
       >
-        <v-list-item-icon class="mx-0"
+        <v-list-item-icon class="ml-0 mr-1 y-0 align-self-center"
           ><v-chip label small :color="getColorRepas(repas)" class="px-1">
             {{ getHoraireInitiale(repas) }}
           </v-chip>
@@ -32,8 +32,8 @@
 <script lang="ts">
 import Vue from "vue";
 import Component from "vue-class-component";
-import { RepasWithGroupe } from "../../../logic/types";
-import { CalendarMode, deepcopy } from "../../../logic/types2";
+import { RepasWithGroupe, Menu } from "../../../logic/types";
+import { CalendarMode, deepcopy, toNullableId } from "../../../logic/types2";
 import { C } from "../../../logic/controller";
 import { HorairesColors } from "../../utils/utils";
 import { fmtHoraire } from "../../../logic/enums";
@@ -58,7 +58,12 @@ export default class ListeRepas extends ListeRepasProps {
   }
 
   repasSubTitle(repas: RepasWithGroupe) {
-    return formatNbOffset(repas);
+    if (this.mode == "groupes") {
+      return formatNbOffset(repas);
+    } else {
+      const nbPersonnes = C.getRepasNbPersonnes(repas);
+      return `${nbPersonnes} pers.`;
+    }
   }
 
   getColorRepas(repas: RepasWithGroupe) {
@@ -76,18 +81,33 @@ export default class ListeRepas extends ListeRepasProps {
     event.dataTransfer.effectAllowed = "linkMove";
   }
 
+  // deux types de drop sont possibles :
+  // - un autre repas pour échange
+  // - un menu
   onDragover(event: DragEvent, target: RepasWithGroupe) {
     if (!event.dataTransfer) return;
     if (event.dataTransfer.types.includes("repas")) {
       event.preventDefault();
       event.dataTransfer.dropEffect = "link";
+    } else if (event.dataTransfer.types.includes("menu")) {
+      event.preventDefault();
+      event.dataTransfer.dropEffect = "link";
     }
   }
 
-  // on échange les deux repas
-  async onDrop(event: DragEvent, target: RepasWithGroupe) {
+  // cf onDragover
+  onDrop(event: DragEvent, target: RepasWithGroupe) {
     if (!event.dataTransfer) return;
-    event.preventDefault();
+    if (event.dataTransfer.types.includes("repas")) {
+      event.preventDefault();
+      this.onDropRepas(event, target);
+    } else if (event.dataTransfer.types.includes("menu")) {
+      event.preventDefault();
+      this.onDropMenu(event, target);
+    }
+  }
+  private async onDropRepas(event: DragEvent, target: RepasWithGroupe) {
+    if (!event.dataTransfer) return;
     const origin: RepasWithGroupe = JSON.parse(
       event.dataTransfer.getData("repas")
     );
@@ -101,6 +121,18 @@ export default class ListeRepas extends ListeRepasProps {
     await C.data.updateManyRepas([target, origin]);
     if (C.notifications.getError() == null) {
       C.notifications.setMessage("Repas échangés avec succès.");
+    }
+  }
+
+  private async onDropMenu(event: DragEvent, target: RepasWithGroupe) {
+    if (!event.dataTransfer) return;
+    const menu: Menu = JSON.parse(event.dataTransfer.getData("menu"));
+    if (target.id_menu.Valid && target.id_menu.Int64 == menu.id) return; // on évite les requettes inutiles
+    target = deepcopy(target); // on évite la modification locale
+    target.id_menu = toNullableId(menu.id);
+    await C.data.updateManyRepas([target]);
+    if (C.notifications.getError() == null) {
+      C.notifications.setMessage("Menu associé avec succès.");
     }
   }
 }

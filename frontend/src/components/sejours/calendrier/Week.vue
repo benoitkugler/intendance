@@ -5,21 +5,6 @@
     :start="start"
     :weekdays="weekdays"
   >
-    <template v-slot:day="{ date }">
-      <div
-        @dragover="onDayDragover($event, date)"
-        @drop="onDayDrop($event, date)"
-        class="overflow-y-auto"
-        :style="{ height: dayHeight }"
-        @mouseover="$emit('hover', date)"
-      >
-        <liste-repas
-          :repass="events[date]"
-          :mode="mode"
-          @edit="args => $emit('editRepas', args)"
-        ></liste-repas>
-      </div>
-    </template>
     <template v-slot:day-label="{ date }">
       <v-row no-gutters @mouseover="$emit('hover', date)" class="mb-1">
         <v-col>
@@ -45,6 +30,21 @@
           ></tooltip-btn>
         </v-col>
       </v-row>
+    </template>
+    <template v-slot:day="{ date }">
+      <div
+        @dragover="onDayDragover($event, date)"
+        @drop="onDayDrop($event, date)"
+        class="overflow-y-auto"
+        :style="{ height: dayHeight }"
+        @mouseover="$emit('hover', date)"
+      >
+        <liste-repas
+          :repass="events[date]"
+          :mode="mode"
+          @edit="args => $emit('editRepas', args)"
+        ></liste-repas>
+      </div>
     </template>
   </v-calendar>
 </template>

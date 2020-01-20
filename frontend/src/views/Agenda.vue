@@ -53,7 +53,6 @@
             </v-toolbar-items>
           </v-toolbar>
           <v-row>
-            <v-col v-if="calendarMode == 'menus'"></v-col>
             <v-col cols="8">
               <calendar
                 ref="calendar"
@@ -66,12 +65,23 @@
                 @editRepas="startEditRepas"
               />
             </v-col>
-            <v-col cols="4" class="align-self-center">
-              <day
-                :jourOffset="activeJourOffset"
-                v-if="activeJourOffset != null"
-                @addRepas="startAddRepasFromHoraire"
-              ></day>
+            <v-col cols="4">
+              <div :style="{ height: '83vh' }" class="overflow-y-auto">
+                <div v-if="calendarMode == 'menus'">
+                  <choix-menus></choix-menus>
+                </div>
+                <div v-else>
+                  <day
+                    :jourOffset="activeJourOffset"
+                    v-if="activeJourOffset != null"
+                    @addRepas="startAddRepasFromHoraire"
+                    @editRepas="startEditRepas"
+                  ></day>
+                  <v-alert v-else type="info" :value="true">
+                    Sélectionner une journée pour afficher les détails...
+                  </v-alert>
+                </div>
+              </div>
             </v-col>
           </v-row>
         </v-col>
@@ -95,10 +105,12 @@ import {
 
 import Calendar from "../components/sejours/calendrier/Calendar.vue";
 import Day from "../components/sejours/calendrier/Day.vue";
+import ChoixMenus from "../components/sejours/calendrier/ChoixMenus.vue";
 import TooltipBtn from "../components/utils/TooltipBtn.vue";
 import ToolbarSwitch from "../components/utils/ToolbarSwitch.vue";
 import FormPreferences from "../components/sejours/calendrier/FormPreferences.vue";
 import FormRepas from "../components/sejours/FormRepas.vue";
+
 import { RepasGroupe, RepasWithGroupe } from "../logic/types";
 
 @Component({
@@ -108,6 +120,7 @@ import { RepasGroupe, RepasWithGroupe } from "../logic/types";
     FormPreferences,
     ToolbarSwitch,
     Day,
+    ChoixMenus,
     FormRepas
   }
 })

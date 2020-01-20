@@ -12,7 +12,7 @@
         }}</v-toolbar-title
       >
     </v-toolbar>
-    <div class="overflow-y-auto" :style="{ height: '90vh' }">
+    <div class="overflow-y-auto">
       <v-list dense>
         <v-list-item-group color="primary">
           <div v-for="horaire in horaires" :key="horaire.value">
@@ -34,59 +34,61 @@
                 ></tooltip-btn>
               </v-subheader>
             </v-hover>
-            <v-hover v-slot="{ hover }">
-              <v-list-item
-                v-for="repas in events[horaire.value]"
-                :key="repas.id"
-                @dragover="onDragoverRepas($event)"
-                @drop="onDropRepas($event, repas)"
-              >
-                <v-list-item-content>
-                  <v-row no-gutters class="fill-height">
-                    <v-col class="px-1 align-self-center overflow-x-auto">
-                      <v-chip
-                        label
-                        v-for="groupe in getGroupes(repas)"
-                        :key="groupe.id"
-                        class="mr-1 px-1 align-self-center"
-                        :color="groupe.couleur"
-                        small
-                        :style="{ borderWidth: ' 1.5px' }"
-                        outlined
-                        draggable
-                        @dragstart="onDragStart($event, repas, groupe)"
-                      >
-                        {{ groupe.nom }}
-                      </v-chip>
-                      <small
-                        v-if="getGroupes(repas).length == 0"
-                        class="font-italic mr-1"
-                        >Aucun groupe.
-                      </small>
-                      <v-chip
-                        v-if="repas.offset_personnes != 0"
-                        label
-                        class="mr-1 px-1 align-self-center"
-                        small
-                        :style="{ borderWidth: ' 1.5px' }"
-                        outlined
-                      >
-                        {{ formatNbOffset(repas) }}
-                      </v-chip>
-                    </v-col>
-                  </v-row>
-                </v-list-item-content>
-                <v-list-item-action class="my-1" v-if="hover">
-                  <tooltip-btn
-                    mdi-icon="close"
-                    color="red"
-                    small
-                    tooltip="Supprimer ce repas..."
-                    @click="deleteRepas(repas)"
-                  ></tooltip-btn>
-                </v-list-item-action>
-              </v-list-item>
-            </v-hover>
+            <template v-for="repas in events[horaire.value]">
+              <v-hover :key="repas.id" v-slot="{ hover }">
+                <v-list-item
+                  @dragover="onDragoverRepas($event)"
+                  @drop="onDropRepas($event, repas)"
+                  @click="$emit('editRepas', repas)"
+                >
+                  <v-list-item-content>
+                    <v-row no-gutters class="fill-height">
+                      <v-col class="px-1 align-self-center overflow-x-auto">
+                        <v-chip
+                          label
+                          v-for="groupe in getGroupes(repas)"
+                          :key="groupe.id"
+                          class="mr-1 px-1 align-self-center"
+                          :color="groupe.couleur"
+                          small
+                          :style="{ borderWidth: ' 1.5px' }"
+                          outlined
+                          draggable
+                          @dragstart="onDragStart($event, repas, groupe)"
+                        >
+                          {{ groupe.nom }}
+                        </v-chip>
+                        <small
+                          v-if="getGroupes(repas).length == 0"
+                          class="font-italic mr-1"
+                          >Aucun groupe.
+                        </small>
+                        <v-chip
+                          v-if="repas.offset_personnes != 0"
+                          label
+                          class="mr-1 px-1 align-self-center"
+                          small
+                          :style="{ borderWidth: ' 1.5px' }"
+                          outlined
+                        >
+                          {{ formatNbOffset(repas) }}
+                        </v-chip>
+                      </v-col>
+                    </v-row>
+                  </v-list-item-content>
+                  <v-list-item-action class="my-1">
+                    <tooltip-btn
+                      v-if="hover"
+                      mdi-icon="close"
+                      color="red"
+                      small
+                      tooltip="Supprimer ce repas..."
+                      @click.stop="deleteRepas(repas)"
+                    ></tooltip-btn>
+                  </v-list-item-action>
+                </v-list-item>
+              </v-hover>
+            </template>
           </div>
         </v-list-item-group>
       </v-list>

@@ -144,7 +144,8 @@ export default class Calendar extends Props {
     for (const date in out) {
       const element = out[date];
       out[date] = element.sort((a, b) => {
-        return horaires.indexOf(a.horaire) - horaires.indexOf(b.horaire);
+        const v = horaires.indexOf(a.horaire) - horaires.indexOf(b.horaire);
+        return v == 0 ? a.id - b.id : v; // tri déterministe
       });
     }
     return out;

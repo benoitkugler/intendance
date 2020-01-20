@@ -31,8 +31,7 @@ export class Formatter {
       const menu = this.controller.data.menus[r.id_menu.Int64];
       menuName = menu ? this.formatMenuName(menu) : "";
     }
-    const nbPersonnes = this.controller.getRepasNbPersonnes(r);
-    return `(${nbPersonnes} p.) - ${menuName}`;
+    return menuName;
   };
 
   formatMenuName = (menu: Menu) => {
