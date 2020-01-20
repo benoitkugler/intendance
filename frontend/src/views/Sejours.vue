@@ -29,7 +29,17 @@
         <v-toolbar-title>Séjours</v-toolbar-title>
         <v-spacer></v-spacer>
         <v-toolbar-items>
-          <v-btn text>TODO</v-btn>
+          <v-tooltip bottom>
+            <template v-slot:activator="{ on }">
+              <v-btn text v-on="on">
+                <v-icon class="mx-1" color="green"
+                  >mdi-calendar-multiple</v-icon
+                >
+                Ajouter plusieurs repas
+              </v-btn>
+            </template>
+            Initier plusieurs repas à partir des groupes
+          </v-tooltip>
         </v-toolbar-items>
       </v-toolbar>
       <v-row justify="center">
@@ -48,6 +58,7 @@
               editModeSejour = 'edit';
               showEditFormSejour = true;
             "
+            color="secondary"
           ></tooltip-btn>
           <tooltip-btn
             :disabled="!idSejour"
@@ -59,6 +70,7 @@
           <tooltip-btn
             tooltip="Ajouter un séjour..."
             mdi-icon="plus"
+            color="green"
             @click="
               editModeSejour = 'new';
               showEditFormSejour = true;
