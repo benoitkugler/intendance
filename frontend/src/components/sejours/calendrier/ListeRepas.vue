@@ -91,6 +91,7 @@ export default class ListeRepas extends ListeRepasProps {
     const origin: RepasWithGroupe = JSON.parse(
       event.dataTransfer.getData("repas")
     );
+    if (target.id == origin.id) return; // on évite les échanges inutiles
     target = deepcopy(target);
     [origin.jour_offset, target.jour_offset] = [
       target.jour_offset,

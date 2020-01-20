@@ -1,8 +1,15 @@
-import { Menu, Recette, Sejour, RepasWithGroupe, Groupe } from "./types";
+import {
+  Menu,
+  Recette,
+  Sejour,
+  RepasWithGroupe,
+  Groupe,
+  RepasGroupe
+} from "./types";
 import { Notifications } from "./notifications";
 import { Calculs } from "./calculs";
 import { Data, devMode } from "./data";
-import { IngredientOptions } from "./types2";
+import { IngredientOptions, New, DetailsRepas } from "./types2";
 import { Formatter } from "./formatter";
 import { Loggin as Logger } from "./loggin";
 import { State } from "./state";
@@ -98,13 +105,13 @@ export class Controller {
     });
   }
 
-  getRepasGroupes(repas: RepasWithGroupe): Groupe[] {
+  getRepasGroupes(repas: { groupes: RepasGroupe[] | null }): Groupe[] {
     return (repas.groupes || []).map(
       rg => this.data.sejours.groupes[rg.id_groupe]
     );
   }
 
-  getRepasNbPersonnes(repas: RepasWithGroupe) {
+  getRepasNbPersonnes(repas: DetailsRepas) {
     const nb = this.getRepasGroupes(repas)
       .map(g => g.nb_personnes)
       .reduce((a, b) => a + b, repas.offset_personnes);

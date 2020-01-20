@@ -5,8 +5,8 @@
         <v-card class="py-2">
           <v-card-title primary-title>
             <h3 class="headline mb-0">
-              Ingrédients pour {{ repas.offset_personnes }} personne{{
-                repas.offset_personnes > 1 ? "s" : ""
+              Ingrédients pour {{ repasNbPersonnes }} personne{{
+                repasNbPersonnes > 1 ? "s" : ""
               }}
             </h3>
           </v-card-title>
@@ -150,12 +150,16 @@ export default class FormRepas extends Props {
     });
   }
 
+  get repasNbPersonnes() {
+    return C.getRepasNbPersonnes(this.repas);
+  }
+
   async resoudIngredients() {
     this.loadingIngredients = true;
     this.showPrevisuIngredients = true;
     const data = await C.calculs.resoudIngredientsRepas(
       this.initialRepas.id,
-      this.repas.offset_personnes
+      this.repasNbPersonnes
     );
     if (data == undefined || data.date_ingredients == null) return;
     this.listeIngredients = data.date_ingredients[0].ingredients || [];

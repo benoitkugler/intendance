@@ -40,7 +40,7 @@
               <v-divider vertical></v-divider>
               <toolbar-switch
                 v-model="calendarModeGroupe"
-                label="Afficher les groupes"
+                label="Détails journée"
                 tooltip-on="Passer vers le choix des <b>menus</b>"
                 tooltip-off="Passer vers la répartition des <b>groupes</b>"
               ></toolbar-switch>
@@ -60,6 +60,7 @@
                 :sejour="sejour"
                 :preferences="preferences"
                 :mode="calendarMode"
+                :activeJourOffset="activeJourOffset"
                 @change="onChangeDay"
                 @addRepas="startAddRepasFromDate"
                 @editRepas="startEditRepas"
@@ -98,7 +99,6 @@ import TooltipBtn from "../components/utils/TooltipBtn.vue";
 import ToolbarSwitch from "../components/utils/ToolbarSwitch.vue";
 import FormPreferences from "../components/sejours/calendrier/FormPreferences.vue";
 import FormRepas from "../components/sejours/FormRepas.vue";
-import { DateTime } from "../components/sejours/calendrier/utils";
 import { RepasGroupe, RepasWithGroupe } from "../logic/types";
 
 @Component({
@@ -156,11 +156,11 @@ export default class Agenda extends Vue {
     }
   }
 
-  onChangeDay(event: DateTime) {
+  onChangeDay(date: string) {
     if (C.state.idSejour == null) {
       this.activeJourOffset = null;
     } else {
-      const target = new Date(event.date);
+      const target = new Date(date);
       this.activeJourOffset = C.dateToOffset(C.state.idSejour, target);
     }
   }

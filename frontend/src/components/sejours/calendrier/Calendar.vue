@@ -4,76 +4,48 @@
       <form-calcul :initial-sejour="sejour"></form-calcul>
     </v-dialog>
 
-    <v-calendar
-      type="week"
-      locale="fr"
-      :event-height="22"
-      :short-weekdays="false"
-      :interval-count="1"
-      :interval-height="dayHeight"
-      :interval-width="0"
+    <week
+      :sejour="sejour"
+      :weekdays="weekdays"
       :start="startWeek1"
+      :dayHeight="dayHeight"
+      :events="events"
+      :mode="mode"
+      :currentDay="currentDay"
+      :hoverDay="hoverDay"
+      @editRepas="r => $emit('editRepas', r)"
+      @addRepas="r => $emit('addRepas', r)"
+      @change="o => $emit('change', o)"
+      @hover="d => (hoverDay = d)"
+    ></week>
+    <week
+      :sejour="sejour"
       :weekdays="weekdays"
-      @mousedown:time="registerTime"
-      @click:time="args => $emit('addRepas', args.date)"
-      @click:date="args => $emit('change', args)"
-    >
-      <template v-slot:interval="{ date }">
-        <div
-          @dragover="onIntervalDragover($event, date)"
-          @drop="onIntervalDrop($event, date)"
-          class="dragover overflow-y-auto"
-        >
-          <liste-repas
-            :repass="events[date]"
-            :mode="mode"
-            @edit="args => $emit('editRepas', args)"
-          ></liste-repas>
-        </div>
-      </template>
-      <template v-slot:day-header="{ date }">
-        <div :data-day="date"></div>
-      </template>
-    </v-calendar>
-    <v-calendar
-      class="mt-1"
-      type="week"
-      locale="fr"
-      :interval-count="1"
-      :interval-height="dayHeight"
-      :interval-width="0"
-      :short-weekdays="false"
       :start="startWeek2"
-      :weekdays="weekdays"
-      @mousedown:time="registerTime"
-      @click:time="args => $emit('addRepas', args.date)"
-      @click:date="args => $emit('change', args)"
-    >
-      <template v-slot:interval="{ date }">
-        <div
-          @dragover="onIntervalDragover($event, date)"
-          @drop="onIntervalDrop($event, date)"
-          class="dragover y-overflow-auto"
-        >
-          <liste-repas
-            :repass="events[date]"
-            :mode="mode"
-            @edit="args => $emit('editRepas', args)"
-          ></liste-repas>
-        </div>
-      </template>
-    </v-calendar>
+      :dayHeight="dayHeight"
+      :events="events"
+      :mode="mode"
+      :currentDay="currentDay"
+      :hoverDay="hoverDay"
+      @editRepas="r => $emit('editRepas', r)"
+      @addRepas="r => $emit('addRepas', r)"
+      @change="o => $emit('change', o)"
+      @hover="d => (hoverDay = d)"
+    ></week>
   </div>
 </template>
 
 <script lang="ts">
 import Vue from "vue";
 import Component from "vue-class-component";
-import { Sejour, SejourRepas, RepasWithGroupe } from "../../../logic/types";
+
 import ListeRepas from "./ListeRepas.vue";
 import FormCalcul from "../FormCalcul.vue";
-import { C } from "../../../logic/controller";
 import TooltipBtn from "../../utils/TooltipBtn.vue";
+import Week from "./Week.vue";
+
+import { Sejour, SejourRepas, RepasWithGroupe } from "../../../logic/types";
+import { C } from "../../../logic/controller";
 import {
   DetailsSejour,
   New,
@@ -84,7 +56,7 @@ import {
 } from "../../../logic/types2";
 import { fmtHoraire, Horaires } from "../../../logic/enums";
 import { Formatter } from "../../../logic/formatter";
-import { toDateVuetify, DateTime, DataEvent } from "./utils";
+import { toDateVuetify } from "./utils";
 import { HorairesColors } from "../../utils/utils";
 
 const _days = [0, 1, 2, 3, 4, 5, 6];
@@ -102,7 +74,8 @@ const Props = Vue.extend({
   props: {
     sejour: Object as () => SejourRepas | null,
     preferences: Object as () => PreferencesAgenda,
-    mode: String as () => CalendarMode
+    mode: String as () => CalendarMode,
+    activeJourOffset: Number as () => number | null
   }
 });
 
@@ -110,15 +83,28 @@ const Props = Vue.extend({
   components: {
     TooltipBtn,
     FormCalcul,
-    ListeRepas
+    ListeRepas,
+    Week
   }
 })
 export default class Calendar extends Props {
-  private lastClickedTime: DateTime | null = null;
+  hoverDay = "";
 
   showFormCalcul = false;
 
-  private dayHeight = 250;
+  private dayHeight = "35vh";
+
+  dayTitle(date: string) {
+    return new Date(date).toLocaleDateString("fr-FR", {
+      weekday: "short",
+      day: "numeric"
+    });
+  }
+
+  get currentDay(): string | null {
+    if (this.sejour == null || this.activeJourOffset == null) return null;
+    return toDateVuetify(C.offsetToDate(this.sejour.id, this.activeJourOffset));
+  }
 
   get startDate(): Date {
     if (this.sejour == null) return new Date();
@@ -163,171 +149,7 @@ export default class Calendar extends Props {
     }
     return out;
   }
-
-  onIntervalDragover(event: DragEvent, date: string) {
-    if (!event.dataTransfer || this.sejour == null) return;
-    const debut = new Date(this.sejour.date_debut).valueOf();
-    const target = new Date(date).valueOf();
-    if (target < debut) return; // empêche un offset négatif
-    const isRepas = event.dataTransfer.types.includes("repas");
-    // const isDay = event.dataTransfer.types.includes("journee");
-    if (isRepas) {
-      event.preventDefault();
-      event.dataTransfer.dropEffect = "move";
-    }
-  }
-
-  async onIntervalDrop(event: DragEvent, date: string) {
-    if (!event.dataTransfer || C.state.idSejour == null) return;
-    event.preventDefault();
-    const repas: RepasWithGroupe = JSON.parse(
-      event.dataTransfer.getData("repas")
-    );
-    const targetOffset = C.dateToOffset(C.state.idSejour, new Date(date));
-    if (targetOffset == repas.jour_offset) return;
-    repas.jour_offset = targetOffset;
-    await C.data.updateManyRepas([repas]);
-    if (C.notifications.getError() == null) {
-      C.notifications.setMessage("Repas déplacé avec succès.");
-    }
-    //   this.onDropJournee(data, target);
-  }
-
-  mounted() {
-    // this.setupDrag();
-  }
-
-  updated() {
-    // this.setupDrag();
-  }
-
-  // on stocke le moment correspondant au dernier click,
-  // pour contourner le manque d'une méthode getTime(pos)
-  registerTime(time: DateTime) {
-    this.lastClickedTime = time;
-  }
-
-  private setupDrag() {
-    const sejour = this.sejour;
-    if (sejour == null) return; // désactivé si aucun séjour n'est sélectionné.
-    const htmlEl = this.$refs.weeks as HTMLDivElement;
-    htmlEl.querySelectorAll<HTMLElement>("[data-day]").forEach(item => {
-      if (!item.parentElement) return;
-      item.parentElement.draggable = true;
-      item.parentElement.ondragstart = e =>
-        this.onDragStart(e, "journee", item.dataset.day);
-      item.parentElement.ondragover = e => this.onDragover(e, "journee");
-      item.parentElement.ondrop = e => this.onDrop(e, "journee");
-    });
-    htmlEl.querySelectorAll<HTMLElement>("[data-repas]").forEach(item => {
-      const repas: RepasWithGroupe = JSON.parse(item.dataset.repas || "");
-      item.draggable = repas.id_sejour == sejour.id; // uniquement les repas lié au séjour courant
-      item.ondragstart = e => this.onDragStart(e, "repas", item.dataset.repas);
-    });
-  }
-
-  private onDragStart = (
-    event: DragEvent,
-    kind: DragKind,
-    arg: string | undefined
-  ) => {
-    if (!event.dataTransfer || !arg) return;
-    event.dataTransfer.setData(kind, arg);
-    event.dataTransfer.effectAllowed = "move";
-  };
-
-  onDragover(event: DragEvent, kind: DragKind) {
-    if (!event.dataTransfer) return;
-    const isRepas = event.dataTransfer.types.includes("repas");
-    const isDay = event.dataTransfer.types.includes("journee");
-    if ((kind == "repas" && isRepas) || (kind == "journee" && isDay)) {
-      event.preventDefault();
-      event.dataTransfer.dropEffect = "move";
-    }
-  }
-
-  onDrop(event: DragEvent, kind: DragKind) {
-    if (!event.dataTransfer) return;
-    event.preventDefault();
-    const data = event.dataTransfer.getData(kind);
-    const target = event.currentTarget as HTMLElement;
-    if (kind == "repas") {
-      this.onDropRepas(event, data, target);
-    } else {
-      this.onDropJournee(data, target);
-    }
-  }
-
-  private jobDropRepas(targetTime: DateTime, dataRepas: string) {
-    const repas: RepasWithGroupe = JSON.parse(dataRepas);
-    const jour = new Date(targetTime.date);
-    //FIXME:
-    const horaire = "";
-    C.data.deplaceRepas(repas, jour, horaire);
-  }
-
-  private onDropRepas(
-    event: DragEvent,
-    dataRepas: string,
-    target: HTMLElement
-  ) {
-    // hack pour contourner les limitations de VCalendar
-    const ev = new MouseEvent("mousedown", {
-      view: window,
-      bubbles: true,
-      cancelable: true,
-      clientX: event.clientX,
-      clientY: event.clientY
-    });
-    this.lastClickedTime = null;
-    target.dispatchEvent(ev);
-    // on attend la gestion de l'évènement par 'registerTime'
-    let currentTry = 0;
-    const afterClick = () => {
-      if (currentTry >= 200) {
-        // on évite une boucle infinie
-        return;
-      }
-      if (!this.lastClickedTime) {
-        currentTry += 1;
-        setTimeout(afterClick, 50); // on ressaie plus tard
-        return;
-      }
-      this.jobDropRepas(this.lastClickedTime, dataRepas);
-    };
-    setTimeout(afterClick, 50);
-  }
-
-  private onDropJournee(data: string, target: HTMLElement) {
-    if (this.sejour == null) return;
-    const customDiv = target.querySelector("[data-day]") as HTMLElement;
-    const dateFrom = new Date(data);
-    if (!customDiv || !customDiv.dataset.day) return;
-    const dateTo = new Date(customDiv.dataset.day);
-    if (isNaN(dateFrom.getTime()) || isNaN(dateTo.getTime())) return;
-    C.data.switchDays(this.sejour.id, dateFrom, dateTo);
-  }
 }
 </script>
 
-<style>
-.two-weeks-calendar .v-calendar-daily__day-interval {
-  cursor: pointer;
-}
-.two-weeks-calendar .v-calendar-daily__day-interval:hover {
-  background-color: rgba(99, 131, 133, 0.158);
-}
-.dragover {
-  height: 100%;
-}
-
-.calendar-toolbar .v-input__control {
-  margin: auto;
-}
-.calendar-toolbar .v-input__slot {
-  height: 100%;
-}
-.calendar-toolbar .v-input {
-  height: 100%;
-}
-</style>
+<style></style>

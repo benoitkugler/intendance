@@ -16,73 +16,77 @@
       <v-list dense>
         <v-list-item-group color="primary">
           <div v-for="horaire in horaires" :key="horaire.value">
-            <v-subheader
-              :style="{ color: getHoraireColor(horaire.value) }"
-              @click="startCreateRepas(horaire.value)"
-              @dragover="onDragoverHoraireHeader($event)"
-              @drop="onDropHoraireHeader($event, horaire.value)"
-            >
-              {{ horaire.text }}
-              <v-spacer></v-spacer>
-              <tooltip-btn
-                mdi-icon="plus"
-                color="green"
-                tooltip="Ajouter un repas..."
-                @click="$emit('addRepas', horaire.value)"
-              ></tooltip-btn>
-            </v-subheader>
-            <v-list-item
-              v-for="repas in events[horaire.value]"
-              :key="repas.id"
-              @dragover="onDragoverRepas($event)"
-              @drop="onDropRepas($event, repas)"
-              v-slot:default="{ active }"
-            >
-              <v-list-item-content>
-                <v-row no-gutters class="fill-height">
-                  <v-col class="px-1 align-self-center overflow-x-auto">
-                    <v-chip
-                      label
-                      v-for="groupe in getGroupes(repas)"
-                      :key="groupe.id"
-                      class="mr-1 px-1 align-self-center"
-                      :color="groupe.couleur"
-                      small
-                      :style="{ borderWidth: ' 1.5px' }"
-                      outlined
-                      draggable
-                      @dragstart="onDragStart($event, repas, groupe)"
-                    >
-                      {{ groupe.nom }}
-                    </v-chip>
-                    <small
-                      v-if="getGroupes(repas).length == 0"
-                      class="font-italic mr-1"
-                      >Aucun groupe.
-                    </small>
-                    <v-chip
-                      v-if="repas.offset_personnes != 0"
-                      label
-                      class="mr-1 px-1 align-self-center"
-                      small
-                      :style="{ borderWidth: ' 1.5px' }"
-                      outlined
-                    >
-                      {{ formatNbOffset(repas) }}
-                    </v-chip>
-                  </v-col>
-                </v-row>
-              </v-list-item-content>
-              <v-list-item-action class="my-1" v-if="active">
+            <v-hover v-slot="{ hover }">
+              <v-subheader
+                :style="{ color: getHoraireColor(horaire.value) }"
+                @click="startCreateRepas(horaire.value)"
+                @dragover="onDragoverHoraireHeader($event)"
+                @drop="onDropHoraireHeader($event, horaire.value)"
+              >
+                {{ horaire.text }}
+                <v-spacer></v-spacer>
                 <tooltip-btn
-                  mdi-icon="close"
-                  color="red"
-                  small
-                  tooltip="Supprimer ce repas..."
-                  @click="deleteRepas(repas)"
+                  v-if="hover"
+                  mdi-icon="plus"
+                  color="green"
+                  tooltip="Ajouter un repas..."
+                  @click="$emit('addRepas', horaire.value)"
                 ></tooltip-btn>
-              </v-list-item-action>
-            </v-list-item>
+              </v-subheader>
+            </v-hover>
+            <v-hover v-slot="{ hover }">
+              <v-list-item
+                v-for="repas in events[horaire.value]"
+                :key="repas.id"
+                @dragover="onDragoverRepas($event)"
+                @drop="onDropRepas($event, repas)"
+              >
+                <v-list-item-content>
+                  <v-row no-gutters class="fill-height">
+                    <v-col class="px-1 align-self-center overflow-x-auto">
+                      <v-chip
+                        label
+                        v-for="groupe in getGroupes(repas)"
+                        :key="groupe.id"
+                        class="mr-1 px-1 align-self-center"
+                        :color="groupe.couleur"
+                        small
+                        :style="{ borderWidth: ' 1.5px' }"
+                        outlined
+                        draggable
+                        @dragstart="onDragStart($event, repas, groupe)"
+                      >
+                        {{ groupe.nom }}
+                      </v-chip>
+                      <small
+                        v-if="getGroupes(repas).length == 0"
+                        class="font-italic mr-1"
+                        >Aucun groupe.
+                      </small>
+                      <v-chip
+                        v-if="repas.offset_personnes != 0"
+                        label
+                        class="mr-1 px-1 align-self-center"
+                        small
+                        :style="{ borderWidth: ' 1.5px' }"
+                        outlined
+                      >
+                        {{ formatNbOffset(repas) }}
+                      </v-chip>
+                    </v-col>
+                  </v-row>
+                </v-list-item-content>
+                <v-list-item-action class="my-1" v-if="hover">
+                  <tooltip-btn
+                    mdi-icon="close"
+                    color="red"
+                    small
+                    tooltip="Supprimer ce repas..."
+                    @click="deleteRepas(repas)"
+                  ></tooltip-btn>
+                </v-list-item-action>
+              </v-list-item>
+            </v-hover>
           </div>
         </v-list-item-group>
       </v-list>
@@ -96,7 +100,7 @@ import Component from "vue-class-component";
 
 import TooltipBtn from "../../utils/TooltipBtn.vue";
 
-import { toDateVuetify, DataEvent, formatNbOffset } from "./utils";
+import { toDateVuetify, formatNbOffset } from "./utils";
 import { C } from "../../../logic/controller";
 import { RepasWithGroupe, Groupe } from "../../../logic/types";
 import { New, NullId, deepcopy } from "../../../logic/types2";
@@ -117,16 +121,6 @@ const DayProps = Vue.extend({
   components: { TooltipBtn }
 })
 export default class Day extends DayProps {
-  showCreateFormRepas = false;
-  editedRepas: New<RepasWithGroupe> = {
-    id_sejour: -1,
-    horaire: "",
-    id_menu: NullId,
-    offset_personnes: 0,
-    jour_offset: 0,
-    groupes: []
-  };
-
   get day(): Date | null {
     if (this.jourOffset == null) return null;
     return C.offsetToDate(C.state.idSejour!, this.jourOffset);
@@ -247,10 +241,6 @@ export default class Day extends DayProps {
     if (C.notifications.getError() == null) {
       C.notifications.setMessage("Groupe déplacé avec succès.");
     }
-  }
-
-  startCreateRepas(horaire: string) {
-    console.log("oj");
   }
 
   async deleteRepas(repas: RepasWithGroupe) {
