@@ -43,28 +43,26 @@
               :value="groupe"
               @click="editMode = 'edit'"
             >
-              <template v-slot:default="{ active }">
-                <v-list-item-content>
-                  <v-list-item-title>
-                    {{ groupe.nom }}
-                  </v-list-item-title>
-                  <v-list-item-subtitle>
-                    {{ groupe.nb_personnes }} personne(s)
-                  </v-list-item-subtitle>
-                </v-list-item-content>
-                <v-list-item-action>
-                  <v-row no-gutters>
-                    <v-col>
-                      <tooltip-btn
-                        mdi-icon="close"
-                        tooltip="Supprimer ce groupe"
-                        color="red"
-                        @click.stop="askConfirmeSupprime(groupe)"
-                      ></tooltip-btn>
-                    </v-col>
-                  </v-row>
-                </v-list-item-action>
-              </template>
+              <v-list-item-content>
+                <v-list-item-title>
+                  {{ groupe.nom }}
+                </v-list-item-title>
+                <v-list-item-subtitle>
+                  {{ groupe.nb_personnes }} personne(s)
+                </v-list-item-subtitle>
+              </v-list-item-content>
+              <v-list-item-action>
+                <v-row no-gutters>
+                  <v-col>
+                    <tooltip-btn
+                      mdi-icon="close"
+                      tooltip="Supprimer ce groupe"
+                      color="red"
+                      @click.stop="askConfirmeSupprime(groupe)"
+                    ></tooltip-btn>
+                  </v-col>
+                </v-row>
+              </v-list-item-action>
             </v-list-item>
           </v-list-item-group>
         </v-list>

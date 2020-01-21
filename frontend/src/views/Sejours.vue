@@ -24,6 +24,10 @@
       </v-card>
     </v-dialog>
 
+    <v-dialog v-model="showAssistantCreate" max-width="1000px">
+      <assistant-create-repass></assistant-create-repass>
+    </v-dialog>
+
     <v-container>
       <v-toolbar dense>
         <v-toolbar-title>Séjours</v-toolbar-title>
@@ -31,7 +35,7 @@
         <v-toolbar-items>
           <v-tooltip bottom>
             <template v-slot:activator="{ on }">
-              <v-btn text v-on="on">
+              <v-btn text v-on="on" @click="showAssistantCreate = true">
                 <v-icon class="mx-1" color="green"
                   >mdi-calendar-multiple</v-icon
                 >
@@ -90,25 +94,35 @@
 <script lang="ts">
 import Vue from "vue";
 import Component from "vue-class-component";
-import { EditMode, DetailsSejour, New } from "../logic/types2";
-import { C } from "../logic/controller";
-import { Sejour } from "../logic/types";
+
 import TooltipBtn from "../components/utils/TooltipBtn.vue";
 import SelectSejour from "../components/sejours/SelectSejour.vue";
 import FormSejour from "../components/sejours/FormSejour.vue";
 import ListeGroupes from "../components/sejours/groupes/ListeGroupes.vue";
+import AssistantCreateRepass from "../components/sejours/groupes/AssistantCreateRepass.vue";
+
+import { EditMode, DetailsSejour, New } from "../logic/types2";
+import { C } from "../logic/controller";
+import { Sejour } from "../logic/types";
 
 const SejoursProps = Vue.extend({
   props: {}
 });
 
 @Component({
-  components: { TooltipBtn, FormSejour, SelectSejour, ListeGroupes }
+  components: {
+    TooltipBtn,
+    FormSejour,
+    SelectSejour,
+    ListeGroupes,
+    AssistantCreateRepass
+  }
 })
 export default class Sejours extends SejoursProps {
   editModeSejour: EditMode = "new";
   showEditFormSejour = false;
   showConfirmeSupprime = false;
+  showAssistantCreate = false;
 
   get idSejour() {
     const sej = this.sejour;
