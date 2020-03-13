@@ -481,6 +481,16 @@ func DeleteRepas(c echo.Context) error {
 	return c.JSON(200, OutSejours{Token: ct.Token, Sejours: out})
 }
 
+// -------------------------- Assistant de création --------------------------
+
+// func AssistantCreateRepas(c echo.Context) error {
+// 	ct, err := Server.Authentifie(c.Request())
+// 	if err != nil {
+// 		return err
+// 	}
+
+// }
+
 // --------------------------------------------------------------------------
 // -------------------- Résolutions des ingrédients -------------------------
 // --------------------------------------------------------------------------

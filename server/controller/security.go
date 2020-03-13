@@ -99,6 +99,8 @@ func refreshToken(token string, idUtilisateur int64) (newToken string, err error
 	return creeToken(idUtilisateur)
 }
 
+// Authentifie vérifie le champ `BasicAuth` de `r`.
+// Renvoie l'ID du propriétaire et un token mis à jour.
 func (s Server) Authentifie(r *http.Request) (ct RequeteContext, err error) {
 	idString, token, _ := r.BasicAuth()
 	id0, err := strconv.Atoi(idString)

@@ -1,6 +1,6 @@
-cd server/models && 
-../../../scaneo/scaneo models.go && 
-cd ../..
+cd server/models &&
+    ../../../scaneo/scaneo models.go &&
+    cd ../..
 
 ../struct2ts/main -H -i -D -o frontend/src/logic/types.ts \
     views.OutIngredient views.OutIngredients \
@@ -12,7 +12,7 @@ cd ../..
     views.OutDeleteGroupe \
     views.OutSejours \
     views.InResoudIngredients views.OutResoudIngredients controller.OutLoggin views.InLoggin \
-    views.OutIngredientProduits \
-    
-go run macros/enums.go > frontend/src/logic/enums.ts
+    views.InAssistantCreateRepass \
+    views.OutIngredientProduits
 
+go run macros/enums.go >frontend/src/logic/enums.ts

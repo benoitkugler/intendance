@@ -12,10 +12,10 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="warning" @click="onConfirme(false)"
+          <v-btn color="warning" @click="onConfirme(true)"
             >Effacer les repas existants</v-btn
           >
-          <v-btn color="success" @click="onConfirme(true)"
+          <v-btn color="success" @click="onConfirme(false)"
             >Conserver les repas existants</v-btn
           >
         </v-card-actions>
@@ -103,7 +103,7 @@ interface Options {
   duree: number;
   withCinquieme: boolean;
   withGouter: boolean;
-  append: boolean;
+  deleteExisting: boolean;
 }
 
 @Component({})
@@ -112,9 +112,10 @@ export default class AssitantCreateRepass extends AssitantCreateRepassProps {
     duree: 7,
     withCinquieme: true,
     withGouter: true,
-    append: true
+    deleteExisting: false
   };
   groupesSorties: { [key: number]: number[] } = {};
+
   showConfirme = false;
 
   get offsets() {
@@ -151,9 +152,9 @@ export default class AssitantCreateRepass extends AssitantCreateRepassProps {
     }
   }
 
-  onConfirme(append: boolean) {
+  onConfirme(deleteExisting: boolean) {
     this.showConfirme = false;
-    this.options.append = append;
+    this.options.deleteExisting = deleteExisting;
     this.create();
   }
 
