@@ -233,6 +233,9 @@ func TestProduits(t *testing.T) {
 	}
 
 	prods, err := ig.GetProduits(tx)
+	if err != nil {
+		t.Fatal(err)
+	}
 	if L := len(prods); L != 2 {
 		t.Errorf("expected 2 produits, got %d", L)
 	}

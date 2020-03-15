@@ -279,6 +279,10 @@ func ScanRecetteIngredients(rs *sql.Rows) ([]RecetteIngredient, error) {
 
 // Insert the links RecetteIngredient in the database.
 func InsertManyRecetteIngredients(tx *sql.Tx, items []RecetteIngredient) error {
+	if len(items) == 0 {
+		return nil
+	}
+
 	stmt, err := tx.Prepare(pq.CopyIn("recette_ingredients",
 		"id_recette", "id_ingredient", "quantite", "cuisson",
 	))
@@ -422,6 +426,10 @@ func ScanMenuIngredients(rs *sql.Rows) ([]MenuIngredient, error) {
 
 // Insert the links MenuIngredient in the database.
 func InsertManyMenuIngredients(tx *sql.Tx, items []MenuIngredient) error {
+	if len(items) == 0 {
+		return nil
+	}
+
 	stmt, err := tx.Prepare(pq.CopyIn("menu_ingredients",
 		"id_menu", "id_ingredient", "quantite", "cuisson",
 	))
@@ -486,6 +494,10 @@ func ScanMenuRecettes(rs *sql.Rows) ([]MenuRecette, error) {
 
 // Insert the links MenuRecette in the database.
 func InsertManyMenuRecettes(tx *sql.Tx, items []MenuRecette) error {
+	if len(items) == 0 {
+		return nil
+	}
+
 	stmt, err := tx.Prepare(pq.CopyIn("menu_recettes",
 		"id_menu", "id_recette",
 	))
@@ -787,6 +799,10 @@ func ScanRepasGroupes(rs *sql.Rows) ([]RepasGroupe, error) {
 
 // Insert the links RepasGroupe in the database.
 func InsertManyRepasGroupes(tx *sql.Tx, items []RepasGroupe) error {
+	if len(items) == 0 {
+		return nil
+	}
+
 	stmt, err := tx.Prepare(pq.CopyIn("repas_groupes",
 		"id_repas", "id_groupe",
 	))
@@ -1013,6 +1029,10 @@ func ScanIngredientProduits(rs *sql.Rows) ([]IngredientProduit, error) {
 
 // Insert the links IngredientProduit in the database.
 func InsertManyIngredientProduits(tx *sql.Tx, items []IngredientProduit) error {
+	if len(items) == 0 {
+		return nil
+	}
+
 	stmt, err := tx.Prepare(pq.CopyIn("ingredient_produits",
 		"id_ingredient", "id_produit", "id_ajouteur",
 	))
@@ -1156,6 +1176,10 @@ func ScanCommandeProduits(rs *sql.Rows) ([]CommandeProduit, error) {
 
 // Insert the links CommandeProduit in the database.
 func InsertManyCommandeProduits(tx *sql.Tx, items []CommandeProduit) error {
+	if len(items) == 0 {
+		return nil
+	}
+
 	stmt, err := tx.Prepare(pq.CopyIn("commande_produits",
 		"id_commande", "id_produit", "quantite",
 	))

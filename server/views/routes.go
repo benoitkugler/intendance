@@ -483,13 +483,24 @@ func DeleteRepas(c echo.Context) error {
 
 // -------------------------- Assistant de création --------------------------
 
-// func AssistantCreateRepas(c echo.Context) error {
-// 	ct, err := Server.Authentifie(c.Request())
-// 	if err != nil {
-// 		return err
-// 	}
-
-// }
+func AssistantCreateRepas(c echo.Context) error {
+	ct, err := Server.Authentifie(c.Request())
+	if err != nil {
+		return err
+	}
+	var params InAssistantCreateRepass
+	if err := c.Bind(&params); err != nil {
+		return err
+	}
+	if err := Server.InitiateRepas(ct, params); err != nil {
+		return err
+	}
+	out, err := Server.LoadSejoursUtilisateur(ct)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, OutSejours{Token: ct.Token, Sejours: out})
+}
 
 // --------------------------------------------------------------------------
 // -------------------- Résolutions des ingrédients -------------------------

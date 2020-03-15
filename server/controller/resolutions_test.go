@@ -11,10 +11,10 @@ import (
 
 func TestResoudRepas(t *testing.T) {
 	db, err := models.ConnectDB(logs.DB_DEV)
-	defer db.Close()
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer db.Close()
 	s := Server{db: db}
 	row := s.db.QueryRow("SELECT * FROM repass LIMIT 1")
 	repas, err := models.ScanRepas(row)
@@ -44,10 +44,10 @@ func TestJsonNil(t *testing.T) {
 
 func TestResoudSejour(t *testing.T) {
 	db, err := models.ConnectDB(logs.DB_DEV)
-	defer db.Close()
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer db.Close()
 	s := Server{db: db}
 	row := s.db.QueryRow("SELECT * FROM repass LIMIT 1")
 	repas, err := models.ScanRepas(row)

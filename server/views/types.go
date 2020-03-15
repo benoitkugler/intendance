@@ -60,17 +60,8 @@ type OutDeleteGroupe struct {
 	NbRepas int    `json:"nb_repas"`
 }
 
-type OptionsAssistantCreateRepass struct {
-	Duree          int  `json:"duree"`
-	WithCinquieme  bool `json:"with_cinquieme"`
-	WithGouter     bool `json:"with_gouter"`
-	DeleteExisting bool `json:"delete_existing"`
-}
-
-type InAssistantCreateRepass struct {
-	Options        OptionsAssistantCreateRepass
-	GroupesSorties map[int64][]int64 // offset -> ids_groupes
-}
+// to be converted by struct2ts
+type InAssistantCreateRepass = controller.InAssistantCreateRepass
 
 type OutUtilisateurs struct {
 	Token        string                           `json:"token"`

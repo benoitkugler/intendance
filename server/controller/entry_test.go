@@ -12,10 +12,10 @@ import (
 
 func TestLoggin(t *testing.T) {
 	db, err := models.ConnectDB(logs.DB_DEV)
-	defer db.Close()
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer db.Close()
 	s := Server{db: db}
 
 	out, err := s.Loggin("mldks", "sdsd")
@@ -33,10 +33,10 @@ func TestLoggin(t *testing.T) {
 
 func TestLoadData(t *testing.T) {
 	db, err := models.ConnectDB(logs.DB_DEV)
-	defer db.Close()
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer db.Close()
 	s := Server{db: db}
 	a, err := s.LoadSejoursUtilisateur(RequeteContext{idProprietaire: 2})
 	if err != nil {
@@ -79,10 +79,10 @@ func (a Sejours) String() string {
 
 func TestCRUD(t *testing.T) {
 	db, err := models.ConnectDB(logs.DB_DEV)
-	defer db.Close()
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer db.Close()
 	s := Server{db: db}
 	r := RequeteContext{idProprietaire: 2}
 

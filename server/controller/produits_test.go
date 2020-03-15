@@ -10,10 +10,10 @@ import (
 
 func TestGetProduits(t *testing.T) {
 	db, err := models.ConnectDB(logs.DB_DEV)
-	defer db.Close()
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer db.Close()
 	s := Server{db: db}
 	ct := RequeteContext{idProprietaire: 2}
 	out, err := s.GetIngredientProduits(ct, 56)
