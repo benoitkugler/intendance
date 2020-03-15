@@ -44,8 +44,9 @@ func TestAssistant(t *testing.T) {
 			3: {groupe1.Id, groupe2.Id, groupe3.Id},
 		},
 		Options: OptionsAssistantCreateRepass{
-			Duree:         5,
-			WithCinquieme: true,
+			Duree:          5,
+			WithCinquieme:  true,
+			DeleteExisting: true,
 		},
 	})
 	if err != nil {

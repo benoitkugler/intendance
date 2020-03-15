@@ -167,9 +167,13 @@ export default class ListeGroupes extends ListeGroupesProps {
   tmpGroupe: New<Groupe> | null = null;
 
   @Watch("groupe")
-  onGroupeChange(groupe: Groupe | null) {
+  onGroupeChange(groupe: Groupe | undefined) {
     if (this.editMode == "new") return;
-    this.tmpGroupe = deepcopy(groupe);
+    if (groupe == undefined) {
+      this.tmpGroupe = null;
+    } else {
+      this.tmpGroupe = deepcopy(groupe);
+    }
   }
 
   showColorPicker = false;
@@ -181,7 +185,7 @@ export default class ListeGroupes extends ListeGroupesProps {
   get groupes() {
     const sej = this.sejour;
     if (sej === null) return [];
-    return Object.values(C.data.sejours.groupes).filter(
+    return Object.values(C.data.sejours.groupes || {}).filter(
       groupe => groupe.id_sejour == sej.id
     );
   }

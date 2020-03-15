@@ -1,5 +1,5 @@
 import { Controller } from "./controller";
-import { Menu, Recette, RepasWithGroupe } from "./types";
+import { Menu, Recette, RepasWithGroupe, Time } from "./types";
 
 const Months = [
   "Janvier",

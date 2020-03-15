@@ -62,12 +62,12 @@ func (s Server) InitiateRepas(ct RequeteContext, params InAssistantCreateRepass)
 		// on supprime tous les repas liés au séjour
 		// lien repas-groupes
 		_, err := s.db.Exec(`DELETE FROM repas_groupes WHERE id_repas = 
-			ANY(SELECT id_repas FROM sejours WHERE id_sejour = $1)`, params.IdSejour)
+			ANY(SELECT id_repas FROM sejours WHERE id = $1)`, params.IdSejour)
 		if err != nil {
 			return ct.rollbackTx(err)
 		}
 		// repas
-		_, err = s.db.Exec(`DELETE FROM repas WHERE id_sejour = $1`, params.IdSejour)
+		_, err = s.db.Exec(`DELETE FROM repass WHERE id_sejour = $1`, params.IdSejour)
 		if err != nil {
 			return ct.rollbackTx(err)
 		}

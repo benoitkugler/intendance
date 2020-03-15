@@ -131,7 +131,7 @@ export default class FormRepas extends Props {
   }
 
   get sejour() {
-    return C.data.sejours.sejours[this.initialRepas.id_sejour];
+    return (C.data.sejours.sejours || {})[this.initialRepas.id_sejour];
   }
 
   get menus() {

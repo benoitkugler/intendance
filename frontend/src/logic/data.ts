@@ -18,7 +18,9 @@ import {
   OutGroupe,
   OutDeleteGroupe,
   RepasGroupe,
-  RepasWithGroupe
+  RepasWithGroupe,
+  OptionsAssistantCreateRepass,
+  InAssistantCreateRepass
 } from "./types";
 import axios, { AxiosResponse } from "axios";
 import { Ingredients, Recettes, Menus, Utilisateurs, New } from "./types2";
@@ -62,7 +64,7 @@ export class Data {
         }
       );
       this.controller.token = response.data.token;
-      this.utilisateurs = response.data.utilisateurs;
+      this.utilisateurs = response.data.utilisateurs || {};
     } catch (error) {
       this.controller.notifications.setAxiosError(error);
     }
@@ -78,7 +80,7 @@ export class Data {
         }
       );
       this.controller.token = response.data.token;
-      this.ingredients = response.data.ingredients;
+      this.ingredients = response.data.ingredients || {};
     } catch (error) {
       this.controller.notifications.setAxiosError(error);
     }
@@ -129,7 +131,7 @@ export class Data {
           auth: this.controller.auth()
         }
       );
-      this.ingredients = response.data.ingredients;
+      this.ingredients = response.data.ingredients || {};
       this.controller.token = response.data.token;
     } catch (error) {
       this.controller.notifications.setAxiosError(error);
@@ -165,7 +167,7 @@ export class Data {
         }
       );
       this.controller.token = response.data.token;
-      this.recettes = response.data.recettes;
+      this.recettes = response.data.recettes || {};
     } catch (error) {
       this.controller.notifications.setAxiosError(error);
     }
@@ -212,7 +214,7 @@ export class Data {
           auth: this.controller.auth()
         }
       );
-      this.recettes = response.data.recettes;
+      this.recettes = response.data.recettes || {};
       this.controller.token = response.data.token;
     } catch (error) {
       this.controller.notifications.setAxiosError(error);
@@ -229,7 +231,7 @@ export class Data {
         }
       );
       this.controller.token = response.data.token;
-      this.menus = response.data.menus;
+      this.menus = response.data.menus || {};
     } catch (error) {
       this.controller.notifications.setAxiosError(error);
     }
@@ -276,7 +278,7 @@ export class Data {
           auth: this.controller.auth()
         }
       );
-      this.menus = response.data.menus;
+      this.menus = response.data.menus || {};
       this.controller.token = response.data.token;
     } catch (error) {
       this.controller.notifications.setAxiosError(error);
@@ -314,7 +316,7 @@ export class Data {
         }
       );
       Vue.set(
-        this.sejours.sejours,
+        this.sejours.sejours || {},
         response.data.sejour.id,
         response.data.sejour
       ); // VRC
@@ -365,7 +367,7 @@ export class Data {
         }
       );
       Vue.set(
-        this.sejours.groupes,
+        this.sejours.groupes || {},
         response.data.groupe.id,
         response.data.groupe
       ); // VRC
@@ -395,7 +397,7 @@ export class Data {
           auth: this.controller.auth()
         }
       );
-      Vue.delete(this.sejours.groupes, groupe.id); // VRC
+      Vue.delete(this.sejours.groupes || {}, groupe.id); // VRC
       this.controller.token = response.data.token;
       return response.data.nb_repas;
     } catch (error) {
@@ -479,7 +481,7 @@ export class Data {
 
   // gère l'erreur d'un séjour introuvable
   getSejour(idSejour: number) {
-    return this.sejours.sejours[idSejour];
+    return (this.sejours.sejours || {})[idSejour];
   }
 
   // échange les deux journées, en modifiant les dates
@@ -523,6 +525,32 @@ export class Data {
       this.controller.notifications.setMessage(
         "Le repas a été déplacé avec succès."
       );
+    }
+  }
+
+  async assitantCreateRepass(
+    idSejour: number,
+    options: OptionsAssistantCreateRepass,
+    groupesSorties: { [key: number]: number[] }
+  ) {
+    this.controller.notifications.startSpin();
+    const params: InAssistantCreateRepass = {
+      id_sejour: idSejour,
+      options: options,
+      groupes_sorties: groupesSorties
+    };
+    try {
+      const response: AxiosResponse<OutSejours> = await axios.put(
+        ServerURL + "/sejours/assistant",
+        params,
+        {
+          auth: this.controller.auth()
+        }
+      );
+      this.sejours = response.data.sejours;
+      this.controller.token = response.data.token;
+    } catch (error) {
+      this.controller.notifications.setAxiosError(error);
     }
   }
 }

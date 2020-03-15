@@ -47,7 +47,7 @@
               <v-col
                 ><v-switch
                   label="Inclure un goûter"
-                  v-model="options.withGouter"
+                  v-model="options.with_gouter"
                 ></v-switch
               ></v-col>
             </v-row>
@@ -55,7 +55,7 @@
               <v-col
                 ><v-switch
                   label="Inclure un cinquième"
-                  v-model="options.withCinquieme"
+                  v-model="options.with_cinquieme"
                 ></v-switch
               ></v-col>
             </v-row>
@@ -92,27 +92,23 @@
 <script lang="ts">
 import Vue from "vue";
 import Component from "vue-class-component";
-import { RepasGroupe } from "../../../logic/types";
+import {
+  RepasGroupe,
+  OptionsAssistantCreateRepass
+} from "../../../logic/types";
 import { C } from "../../../logic/controller";
 
 const AssitantCreateRepassProps = Vue.extend({
   props: {}
 });
 
-interface Options {
-  duree: number;
-  withCinquieme: boolean;
-  withGouter: boolean;
-  deleteExisting: boolean;
-}
-
 @Component({})
 export default class AssitantCreateRepass extends AssitantCreateRepassProps {
-  options: Options = {
+  options: OptionsAssistantCreateRepass = {
     duree: 7,
-    withCinquieme: true,
-    withGouter: true,
-    deleteExisting: false
+    with_cinquieme: true,
+    with_gouter: true,
+    delete_existing: false
   };
   groupesSorties: { [key: number]: number[] } = {};
 
@@ -154,12 +150,12 @@ export default class AssitantCreateRepass extends AssitantCreateRepassProps {
 
   onConfirme(deleteExisting: boolean) {
     this.showConfirme = false;
-    this.options.deleteExisting = deleteExisting;
+    this.options.delete_existing = deleteExisting;
     this.create();
   }
 
   private create() {
-    console.log("TODO");
+    this.$emit("create", this.options, this.groupesSorties);
   }
 }
 </script>

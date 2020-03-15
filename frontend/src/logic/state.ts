@@ -21,7 +21,7 @@ export class State {
   getGroupes() {
     const idS = this.idSejour;
     if (idS == null) return [];
-    return Object.values(this.controller.data.sejours.groupes).filter(
+    return Object.values(this.controller.data.sejours.groupes || {}).filter(
       groupe => groupe.id_sejour == idS
     );
   }

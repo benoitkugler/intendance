@@ -131,6 +131,19 @@ export interface OutIngredients {
 	ingredients: Ingredients,
 }
 
+// github.com/benoitkugler/intendance/server/controller.Utilisateur
+export interface Utilisateur {
+	id: number,
+	prenom_nom: string,
+}
+
+// github.com/benoitkugler/intendance/server/controller.OutLoggin
+export interface OutLoggin {
+	erreur: string,
+	token: string,
+	utilisateur: Utilisateur,
+}
+
 // github.com/benoitkugler/intendance/server/models.MenuRecette
 export interface MenuRecette {
 	id_menu: number,
@@ -272,12 +285,6 @@ export interface Sejours {
 export interface OutSejours {
 	token: string,
 	sejours: Sejours,
-}
-
-// github.com/benoitkugler/intendance/server/controller.Utilisateur
-export interface Utilisateur {
-	id: number,
-	prenom_nom: string,
 }
 
 // server/views.OutUtilisateurs

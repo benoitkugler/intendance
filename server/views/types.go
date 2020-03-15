@@ -10,6 +10,8 @@ type InLoggin struct {
 	Password string `json:"password,omitempty"`
 }
 
+type OutLoggin = controller.OutLoggin
+
 type OutSejours struct {
 	Token   string             `json:"token"`
 	Sejours controller.Sejours `json:"sejours"`

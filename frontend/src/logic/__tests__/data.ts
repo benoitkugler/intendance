@@ -140,14 +140,14 @@ test("crud menu", async () => {
 }, 10000);
 
 test("crud sejour", async () => {
-  const l = Object.keys(C.data.sejours.sejours).length;
+  const l = Object.keys(C.data.sejours.sejours || {}).length;
   let sejour = await C.data.createSejour({
     date_debut: new Date().toISOString(),
     nom: "C2 Again !",
     id_proprietaire: IdProprietaire
   });
   expect(C.notifications.getError()).toBeNull();
-  expect(Object.keys(C.data.sejours.sejours)).toHaveLength(l + 1);
+  expect(Object.keys(C.data.sejours.sejours || {})).toHaveLength(l + 1);
   if (!sejour) return;
 
   sejour.nom = "Ah non C3";
@@ -158,16 +158,16 @@ test("crud sejour", async () => {
   expect(sejour.nom).toBe("Ah non C3");
 
   await C.data.deleteSejour(sejour);
-  expect(Object.keys(C.data.sejours.sejours)).toHaveLength(l);
+  expect(Object.keys(C.data.sejours.sejours || {})).toHaveLength(l);
 });
 
 test("crud groupe", async () => {
   await C.data.loadSejours();
   expect(C.notifications.getError()).toBeNull();
 
-  const sejourId = Number(Object.keys(C.data.sejours.sejours)[0]);
+  const sejourId = Number(Object.keys(C.data.sejours.sejours || {})[0]);
 
-  const l = Object.keys(C.data.sejours.groupes).length;
+  const l = Object.keys(C.data.sejours.groupes || {}).length;
   let groupe = await C.data.createGroupe({
     id_sejour: sejourId,
     nom: "Moussaillons",
@@ -175,7 +175,7 @@ test("crud groupe", async () => {
     nb_personnes: 0
   });
   expect(C.notifications.getError()).toBeNull();
-  expect(Object.keys(C.data.sejours.groupes)).toHaveLength(l + 1);
+  expect(Object.keys(C.data.sejours.groupes || {})).toHaveLength(l + 1);
   if (!groupe) return;
 
   groupe.nom = "Ah non Marins";
@@ -186,7 +186,7 @@ test("crud groupe", async () => {
   expect(groupe.nom).toBe("Ah non Marins");
 
   await C.data.deleteGroupe(groupe);
-  expect(Object.keys(C.data.sejours.groupes)).toHaveLength(l);
+  expect(Object.keys(C.data.sejours.groupes || {})).toHaveLength(l);
 });
 
 test("crud repas", async () => {
@@ -194,7 +194,7 @@ test("crud repas", async () => {
   expect(C.notifications.getError()).toBeNull();
 
   const menuId = Number(Object.keys(C.data.menus)[0]);
-  const sejourId = Number(Object.keys(C.data.sejours.sejours)[0]);
+  const sejourId = Number(Object.keys(C.data.sejours.sejours || {})[0]);
 
   await C.data.createRepas({
     horaire: HoraireFields.Cinquieme,
@@ -206,7 +206,7 @@ test("crud repas", async () => {
   });
   expect(C.notifications.getError()).toBeNull();
 
-  const repas = (C.data.sejours.sejours[sejourId].repass || [])[0];
+  const repas = ((C.data.sejours.sejours || {})[sejourId].repass || [])[0];
   repas.horaire = HoraireFields.Midi;
   await C.data.updateManyRepas([repas]);
   expect(C.notifications.getError()).toBeNull();

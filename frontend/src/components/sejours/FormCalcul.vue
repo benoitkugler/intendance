@@ -97,7 +97,7 @@ export default class FormCalcul extends FormCalculProps {
 
   get choixJournees(): number[] {
     const s = new Set(
-      (C.data.sejours.sejours[this.sejour].repass || []).map(
+      ((C.data.sejours.sejours || {})[this.sejour].repass || []).map(
         rep => rep.jour_offset
       )
     );

@@ -25,7 +25,9 @@
     </v-dialog>
 
     <v-dialog v-model="showAssistantCreate" max-width="1000px">
-      <assistant-create-repass></assistant-create-repass>
+      <assistant-create-repass
+        @create="assistantCreate"
+      ></assistant-create-repass>
     </v-dialog>
 
     <v-container>
@@ -103,7 +105,7 @@ import AssistantCreateRepass from "../components/sejours/groupes/AssistantCreate
 
 import { EditMode, DetailsSejour, New } from "../logic/types2";
 import { C } from "../logic/controller";
-import { Sejour } from "../logic/types";
+import { Sejour, OptionsAssistantCreateRepass } from "../logic/types";
 
 const SejoursProps = Vue.extend({
   props: {}
@@ -145,7 +147,7 @@ export default class Sejours extends SejoursProps {
   }
 
   private setClosestSejour() {
-    const sejours = Object.values(C.data.sejours.sejours);
+    const sejours = Object.values(C.data.sejours.sejours || {});
     if (sejours.length == 0) return;
     const now = new Date().valueOf();
     const computeDistance = (sejour: Sejour) => {
@@ -203,6 +205,18 @@ export default class Sejours extends SejoursProps {
       C.notifications.setMessage("Le séjour a été supprimé avec succès.");
       this.setClosestSejour();
     }
+  }
+
+  async assistantCreate(
+    options: OptionsAssistantCreateRepass,
+    groupesSorties: { [key: number]: number[] }
+  ) {
+    if (this.idSejour == null) return;
+    await C.data.assitantCreateRepass(this.idSejour, options, groupesSorties);
+    if (C.notifications.getError() == null) {
+      C.notifications.setMessage("Les repas ont été créés avec succès.");
+    }
+    this.showAssistantCreate = false;
   }
 }
 </script>
