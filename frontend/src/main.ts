@@ -13,6 +13,7 @@ Vue.config.warnHandler = function(msg, vm, trace) {
   if (msg === ignoreWarnMessage) {
     return;
   }
+  // eslint-disable-next-line no-console
   console.error("[Vue warn]: " + msg + trace);
 };
 
