@@ -231,5 +231,8 @@ func (s Server) ResoudIngredientsJournees(idSejour int64, journeesOffsets []int6
 			Date:        sejour.DateFromOffset(jourOffset),
 		})
 	}
+	sort.Slice(out, func(i, j int) bool {
+		return out[i].Date.Before(out[j].Date)
+	})
 	return out, nil
 }

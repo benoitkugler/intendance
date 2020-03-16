@@ -14,19 +14,14 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-toolbar color="secondary" class="my-1">
-      <v-toolbar-title>Menus</v-toolbar-title>
-      <v-spacer></v-spacer>
-      <v-toolbar-items>
-        <tooltip-btn
-          mdi-icon="plus-thick"
-          color="green"
-          tooltip="Ajouter un menu..."
-          @click="$emit('new')"
-          v-if="state.mode == 'visu'"
-        />
-      </v-toolbar-items>
-    </v-toolbar>
+
+    <toolbar
+      v-model="search"
+      tooltipAdd="Ajouter un menu..."
+      title="Menus"
+      :showAdd="state.mode == 'visu'"
+      @add="$emit('new')"
+    ></toolbar>
     <v-list dense class="overflow-y-auto">
       <v-list-item-group
         :value="state.selection.menu"
@@ -71,10 +66,14 @@
 import Vue from "vue";
 import Component from "vue-class-component";
 import { Prop, Watch } from "vue-property-decorator";
+
+import TooltipBtn from "../utils/TooltipBtn.vue";
+import Toolbar from "../utils/Toolbar.vue";
+
 import { C } from "../../logic/controller";
 import { Menu } from "../../logic/types";
-import TooltipBtn from "../utils/TooltipBtn.vue";
 import { StateMenus } from "./types";
+import { searchFunction } from "../utils/utils";
 
 const Props = Vue.extend({
   props: {
@@ -83,15 +82,17 @@ const Props = Vue.extend({
 });
 
 @Component({
-  components: { TooltipBtn }
+  components: { TooltipBtn, Toolbar }
 })
 export default class ListeMenus extends Props {
   confirmeSupprime = false;
   formatMenuName = C.formatter.formatMenuName;
   formatMenuProprietaire = C.formatter.formatMenuOrRecetteProprietaire;
 
+  search = "";
+
   get menus() {
-    return Object.values(C.data.menus);
+    return C.searchMenu(this.search);
   }
 
   showButtons(active: boolean, menu: Menu) {

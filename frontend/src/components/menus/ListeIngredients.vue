@@ -9,7 +9,10 @@
     </v-dialog>
 
     <v-dialog v-model="showEditProduits" scrollable max-width="1000px">
-      <ingredient-produits></ingredient-produits>
+      <association-ingredient
+        :ingredient="editedIngredientProduit"
+        :activated="showEditProduits"
+      ></association-ingredient>
     </v-dialog>
 
     <v-dialog v-model="confirmeSupprime" max-width="800px">
@@ -42,51 +45,17 @@
       </v-card>
     </v-dialog>
 
-    <v-toolbar color="secondary" class="toolbar-ingredients my-1">
-      <v-toolbar-title class="px-2">
-        <v-row no-gutters class="mt-1">
-          <v-col>
-            Ingrédients
-          </v-col>
-        </v-row>
-        <v-row no-gutters
-          ><v-col>
-            <small>
-              <i>{{ bonusTitle }}</i></small
-            >
-          </v-col></v-row
-        >
-      </v-toolbar-title>
-      <v-spacer></v-spacer>
-      <v-toolbar-items>
-        <tooltip-btn
-          mdi-icon="magnify"
-          tooltip="Filtrer les ingrédients..."
-          @click="showSearch = !showSearch"
-        />
-        <tooltip-btn
-          mdi-icon="plus-thick"
-          tooltip="Ajouter un ingrédient..."
-          @click="startCreateIngredient"
-          color="green"
-          v-if="
-            state.mode == 'visu' &&
-              state.selection.menu == null &&
-              state.selection.recette == null
-          "
-        />
-      </v-toolbar-items>
-    </v-toolbar>
-    <v-text-field
-      outlined
-      label="Rechercher"
-      placeholder="Tappez pour lancer la recherche"
+    <toolbar
       v-model="search"
-      hide-details
-      v-if="showSearch"
-      class="my-2"
-      ref="search"
-    ></v-text-field>
+      tooltipAdd="Ajouter un ingrédient..."
+      :title="title"
+      :showAdd="
+        state.mode == 'visu' &&
+          state.selection.menu == null &&
+          state.selection.recette == null
+      "
+      @add="startCreateIngredient"
+    ></toolbar>
     <v-list dense :max-height="height" class="overflow-y-auto">
       <v-list-item-group
         :value="state.selection.ingredient"
@@ -151,7 +120,8 @@ import Component from "vue-class-component";
 import { Prop, Watch } from "vue-property-decorator";
 
 import EditIngredient from "./EditIngredient.vue";
-import IngredientProduits from "../produits/IngredientProduits.vue";
+import AssociationIngredient from "../produits/AssociationIngredient.vue";
+import Toolbar from "../utils/Toolbar.vue";
 
 import { C } from "../../logic/controller";
 import { Ingredient, RecetteIngredient } from "../../logic/types";
@@ -159,6 +129,7 @@ import { IngredientOptions, EditMode, New } from "../../logic/types2";
 import TooltipBtn from "../utils/TooltipBtn.vue";
 import levenshtein from "js-levenshtein";
 import { StateMenus, DefautIngredient } from "./types";
+import { searchFunction } from "../utils/utils";
 
 const Props = Vue.extend({
   props: {
@@ -169,7 +140,9 @@ const Props = Vue.extend({
 
 const MAX_DIST_LEVENSHTEIN = 4;
 
-@Component({ components: { TooltipBtn, EditIngredient, IngredientProduits } })
+@Component({
+  components: { TooltipBtn, EditIngredient, AssociationIngredient, Toolbar }
+})
 export default class ListeIngredients extends Props {
   confirmeSupprime = false;
 
@@ -179,11 +152,6 @@ export default class ListeIngredients extends Props {
   showEditProduits = false;
 
   search = "";
-  showSearch = false;
-
-  $refs!: {
-    search: Vue;
-  };
 
   subtitle(ingredient: IngredientOptions) {
     if (ingredient.options) {
@@ -194,34 +162,29 @@ export default class ListeIngredients extends Props {
     return `<i>${ingredient.ingredient.unite}</i>`;
   }
 
-  get bonusTitle() {
+  get title() {
     if (this.state.mode == "editMenu") {
-      return "Tous";
+      return "Choisir un ingrédient";
     }
     if (this.state.selection.recette != null) {
-      return "Recette courante";
+      return "Ingrédients liés à la recette";
     } else if (this.state.selection.menu != null) {
-      return "Menu courant";
+      return "Ingrédients liés au menu";
     }
-    return "";
+    return "Tous les ingrédients";
+  }
+
+  get editedIngredientProduit() {
+    if (this.state.selection.ingredient == null) return null;
+    return this.state.selection.ingredient.ingredient;
   }
 
   // filtre suivant la recherche
-  private searchIngredients(ingredients: IngredientOptions[]) {
-    if (!this.search || !this.showSearch) return ingredients;
-    let filterNom: (nom: string) => boolean;
-    try {
-      const s = new RegExp(this.search, "i");
-      filterNom = nom => s.test(nom);
-    } catch {
-      const sl = this.search.toLowerCase();
-      filterNom = (nom: string) => nom.includes(sl);
-    }
+  private searchIngredients(ingredients: IngredientOptions[], search: string) {
+    const predicat = searchFunction(search);
+    // cas spécial pour l'unité
     return ingredients.filter(ing => {
-      if (this.search == ing.ingredient.unite) return true;
-      const nom = ing.ingredient.nom.toLowerCase();
-      if (filterNom(nom)) return true;
-      return levenshtein(nom, this.search) <= MAX_DIST_LEVENSHTEIN;
+      return search == ing.ingredient.unite || predicat(ing.ingredient.nom);
     });
   }
 
@@ -236,7 +199,7 @@ export default class ListeIngredients extends Props {
     } else {
       baseIngredients = C.getAllIngredients();
     }
-    return this.searchIngredients(baseIngredients);
+    return this.searchIngredients(baseIngredients, this.search);
   }
 
   showActions(active: boolean) {
@@ -263,15 +226,6 @@ export default class ListeIngredients extends Props {
     if (!event.dataTransfer) return;
     event.dataTransfer.setData("id-ingredient", String(ingredient.id));
     event.dataTransfer.effectAllowed = "copy";
-  }
-
-  @Watch("showSearch")
-  onShowSearch(b: boolean) {
-    if (!b) return;
-    setTimeout(() => {
-      const input = this.$refs.search.$el.querySelector("input");
-      if (input != null) input.select();
-    }, 50);
   }
 
   startEditIngredient(ing: IngredientOptions) {
@@ -308,15 +262,4 @@ export default class ListeIngredients extends Props {
 }
 </script>
 
-<style>
-.toolbar-ingredients .v-input__control {
-  margin: auto;
-}
-.toolbar-ingredients .v-input__slot {
-  height: 100%;
-}
-.toolbar-ingredients .v-input {
-  height: 100%;
-  width: 50%;
-}
-</style>
+<style></style>

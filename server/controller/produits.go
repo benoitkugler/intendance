@@ -72,6 +72,7 @@ func (s Server) AjouteIngredientProduit(ct RequeteContext, idIngredient int64, p
 	if err != nil {
 		return ErrorSQL(err)
 	}
+
 	// L'unité Piece est particulière car elle laisse la responsabilité au produit
 	// pour définir l'unité utilisée.
 	// Pour les autres, les unités du produit et de l'ingrédient doivent être identiques.

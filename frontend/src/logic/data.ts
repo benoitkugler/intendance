@@ -20,7 +20,8 @@ import {
   RepasGroupe,
   RepasWithGroupe,
   OptionsAssistantCreateRepass,
-  InAssistantCreateRepass
+  InAssistantCreateRepass,
+  InAjouteIngredientProduit
 } from "./types";
 import axios, { AxiosResponse } from "axios";
 import { Ingredients, Recettes, Menus, Utilisateurs, New } from "./types2";
@@ -142,7 +143,7 @@ export class Data {
     this.controller.notifications.startSpin();
     try {
       const response: AxiosResponse<OutIngredientProduits> = await axios.get(
-        ServerURL + "/recettes",
+        ServerURL + "/ingredient-produit",
         {
           auth: this.controller.auth(),
           params: {
@@ -151,6 +152,26 @@ export class Data {
         }
       );
       this.controller.token = response.data.token;
+      this.controller.notifications.setMessage(null);
+      return response.data.produits;
+    } catch (error) {
+      this.controller.notifications.setAxiosError(error);
+    }
+  };
+
+  // renvoie la liste des produits mise à jour
+  ajouteIngredientProduit = async (ip: InAjouteIngredientProduit) => {
+    this.controller.notifications.startSpin();
+    try {
+      const response: AxiosResponse<OutIngredientProduits> = await axios.post(
+        ServerURL + "/ingredient-produit",
+        ip,
+        {
+          auth: this.controller.auth()
+        }
+      );
+      this.controller.token = response.data.token;
+      this.controller.notifications.setMessage("Produit associé avec succès.");
       return response.data.produits;
     } catch (error) {
       this.controller.notifications.setAxiosError(error);

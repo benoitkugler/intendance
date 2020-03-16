@@ -13,6 +13,7 @@ import { IngredientOptions, New, DetailsRepas } from "./types2";
 import { Formatter } from "./formatter";
 import { Loggin as Logger } from "./loggin";
 import { State } from "./state";
+import { searchFunction } from "@/components/utils/utils";
 
 export class Controller {
   readonly data: Data;
@@ -79,6 +80,13 @@ export class Controller {
         options: ing
       };
     });
+  }
+
+  searchMenu(search: string) {
+    const menus = Object.values(this.data.menus);
+    const predicat = searchFunction(search);
+    // on cherche dans le nom du menu, composé des recettes
+    return menus.filter(menu => predicat(this.formatter.formatMenuName(menu)));
   }
 
   offsetToDate(idSejour: number, offset: number) {

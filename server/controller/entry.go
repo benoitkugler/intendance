@@ -153,6 +153,7 @@ func (s Server) LoadSejoursUtilisateur(ct RequeteContext) (out Sejours, err erro
 	return out, nil
 }
 
+// TODO: Ajouter les fournisseurs
 // LoadUtilisateurs renvois les données publiques des utilisateurs enregistrés.
 func (s Server) LoadUtilisateurs() (map[int64]Utilisateur, error) {
 	rows, err := s.db.Query("SELECT * FROM utilisateurs")

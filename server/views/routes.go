@@ -14,6 +14,7 @@ import (
 // Il est à instancier dans le main
 var Server controller.Server
 
+// return the query parameter 'id'
 func getId(c echo.Context) (int64, error) {
 	idS := c.QueryParam("id")
 	id, err := strconv.ParseInt(idS, 10, 64)

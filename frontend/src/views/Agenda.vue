@@ -32,22 +32,16 @@
             </v-toolbar-title>
             <v-spacer></v-spacer>
             <v-toolbar-items>
-              <tooltip-btn
-                tooltip="Calculer les ingrédients nécessaires..."
-                mdi-icon="food-variant"
-                @click="showFormCalcul = true"
-              ></tooltip-btn>
-              <v-divider vertical></v-divider>
               <toolbar-switch
                 v-model="calendarModeGroupe"
                 label="Détails journée"
-                tooltip-on="Passer vers le choix des <b>menus</b>"
-                tooltip-off="Passer vers la répartition des <b>groupes</b>"
+                tooltip-off="Passer vers le choix des <b>menus</b>"
+                tooltip-on="Passer vers la répartition des <b>groupes</b>"
               ></toolbar-switch>
               <v-divider vertical></v-divider>
               <tooltip-btn
                 tooltip="Préférences d'affichage..."
-                mdi-icon="settings"
+                mdi-icon="cogs"
                 @click="showPreferences = true"
               ></tooltip-btn>
             </v-toolbar-items>
@@ -66,12 +60,13 @@
               />
             </v-col>
             <v-col cols="4">
-              <div :style="{ height: '83vh' }" class="overflow-y-auto">
+              <div>
                 <div v-if="calendarMode == 'menus'">
-                  <choix-menus></choix-menus>
+                  <choix-menus height="67vh"></choix-menus>
                 </div>
                 <div v-else>
                   <day
+                    height="67vh"
                     :jourOffset="activeJourOffset"
                     v-if="activeJourOffset != null"
                     @addRepas="startAddRepasFromHoraire"
@@ -143,7 +138,7 @@ export default class Agenda extends Vue {
     groupes: []
   };
 
-  calendarMode: CalendarMode = "menus";
+  calendarMode: CalendarMode = "groupes";
   activeJourOffset: number | null = null; // mode "groupes" only
 
   $refs!: {
@@ -155,10 +150,10 @@ export default class Agenda extends Vue {
   }
 
   get calendarModeGroupe() {
-    return this.calendarMode == "groupes";
+    return this.calendarMode == "menus";
   }
   set calendarModeGroupe(b: boolean) {
-    this.calendarMode = b ? "groupes" : "menus";
+    this.calendarMode = b ? "menus" : "groupes";
   }
 
   async mounted() {

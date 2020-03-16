@@ -17,14 +17,9 @@ test("resoud ingredients", async () => {
     s => Object.keys(s.journees).length > 0
   )[0];
   const N = Object.keys(sejour.journees).length;
-  let res = await C.calculs.resoudIngredientsSejour(sejour.sejour.id);
-  expect(C.notifications.getError()).toBeNull();
-  expect(res).not.toBeUndefined();
-  if (res == undefined) return;
-  expect(res.date_ingredients).toHaveLength(N);
 
   const jourOffsets = Object.keys(sejour.journees).map(k => Number(k));
-  res = await C.calculs.resoudIngredientsJournees(
+  const res = await C.calculs.resoudIngredientsJournees(
     sejour.sejour.id,
     jourOffsets
   );

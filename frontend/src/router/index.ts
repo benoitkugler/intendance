@@ -42,6 +42,20 @@ export const routes: RouteType[] = [
     }
   },
   {
+    path: "/recap",
+    name: "recap",
+    // route level code-splitting
+    // this generates a separate chunk (agenda.[hash].js) for this route
+    // which is lazy-loaded when the route is visited.
+    component: () =>
+      import(/* webpackChunkName: "agenda" */ "../views/RecapIngredients.vue"),
+    meta: {
+      title: "Bilan des ingrédients",
+      tooltip: "Calcule les ingrédients nécessaires au séjour.",
+      icon: "mdi-beaker-check"
+    }
+  },
+  {
     path: "/menus",
     name: "menus",
     // route level code-splitting
@@ -51,7 +65,7 @@ export const routes: RouteType[] = [
       import(/* webpackChunkName: "menus" */ "../views/Menus.vue"),
     meta: {
       title: "Menus, recettes et ingrédients",
-      tooltip: "Accès aux menus, recettes et ingrédients.",
+      tooltip: "Banque de données des menus, recettes et ingrédients.",
       icon: "mdi-food-variant"
     }
   }

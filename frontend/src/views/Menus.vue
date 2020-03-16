@@ -1,58 +1,59 @@
 <template>
-  <v-container fluid class="pa-1">
+  <v-container fluid class="py-1 px-2">
     <v-row wrap>
-      <v-fade-transition group hide-on-leave :style="{ maxWidth: '35%' }">
-        <v-col v-if="state.mode == 'visu'" key="liste">
+      <v-col cols="4" v-if="state.mode == 'visu' || state.mode == 'editMenu'">
+        <v-fade-transition group hide-on-leave>
           <liste-menus
-            :style="{ height: '80vh' }"
+            v-if="state.mode == 'visu'"
+            key="liste"
+            style="height: 75vh;"
             :state="state"
             @change="menu => (state.selection.menu = menu)"
             @edit="startEditMenu"
             @new="startCreateMenu"
           />
-        </v-col>
-        <v-col v-if="state.mode == 'editMenu'" key="edit">
           <edit-menu
+            v-if="state.mode == 'editMenu'"
+            key="edit"
             :mode="editMode"
             :initialMenu="state.selection.menu"
-            @undo="state.mode = 'visu'"
+            @undo="editMenuCancel"
             @done="editMenuDone"
           ></edit-menu>
-        </v-col>
-      </v-fade-transition>
-      <v-slide-x-reverse-transition group hide-on-leave>
-        <v-col
-          v-if="state.mode == 'visu' || state.mode == 'editMenu'"
-          key="liste"
-        >
+        </v-fade-transition>
+      </v-col>
+      <v-col>
+        <v-slide-x-reverse-transition group hide-on-leave>
           <liste-recettes
-            height="80vh"
+            v-if="state.mode == 'visu' || state.mode == 'editMenu'"
+            key="liste"
+            height="75vh"
             :state="state"
             @change="rec => (state.selection.recette = rec)"
             @edit="startEditRecette"
             @new="startCreateRecette"
           />
-        </v-col>
-        <v-col v-if="state.mode == 'editRecette'" key="edit">
           <edit-recette
+            v-if="state.mode == 'editRecette'"
+            key="edit"
             :mode="editMode"
             :initialRecette="state.selection.recette"
-            @undo="state.mode = 'visu'"
+            @undo="editRecetteCancel"
             @done="editRecetteDone"
           ></edit-recette>
-        </v-col>
-      </v-slide-x-reverse-transition>
-      <transition name="slide-fade">
-        <keep-alive>
-          <v-col>
+        </v-slide-x-reverse-transition>
+      </v-col>
+      <v-col cols="4">
+        <transition name="slide-fade">
+          <keep-alive>
             <liste-ingredients
-              height="80vh"
+              height="75vh"
               :state="state"
               @change="ing => (state.selection.ingredient = ing)"
             />
-          </v-col>
-        </keep-alive>
-      </transition>
+          </keep-alive>
+        </transition>
+      </v-col>
     </v-row>
   </v-container>
 </template>
@@ -115,6 +116,14 @@ export default class Menus extends Vue {
     this.state.mode = "editMenu";
   }
 
+  editMenuCancel() {
+    if (this.editMode == "new") {
+      // on remet le menu courant à zéro
+      this.state.selection.menu = null;
+    }
+    this.state.mode = "visu";
+  }
+
   async editMenuDone(menu: Menu) {
     let message = "";
     if (this.editMode == "edit") {
@@ -144,6 +153,13 @@ export default class Menus extends Vue {
     this.state.selection.recette = newRecette;
     this.editMode = "new";
     this.state.mode = "editRecette";
+  }
+  editRecetteCancel() {
+    if (this.editMode == "new") {
+      // on remet la recette ourante à zéro
+      this.state.selection.recette = null;
+    }
+    this.state.mode = "visu";
   }
 
   async editRecetteDone(recette: Recette) {

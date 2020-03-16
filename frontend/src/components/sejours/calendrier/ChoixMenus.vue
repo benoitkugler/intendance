@@ -1,11 +1,11 @@
 <template>
   <div>
-    <v-toolbar dense>
-      <v-toolbar-title>Menus disponibles</v-toolbar-title>
-      <v-spacer></v-spacer>
-      <v-toolbar-items> </v-toolbar-items>
-    </v-toolbar>
-    <v-list dense class="overflow-y-auto">
+    <toolbar
+      title="Menus disponibles"
+      :showAdd="false"
+      v-model="search"
+    ></toolbar>
+    <v-list dense class="overflow-y-auto" :style="{ height: height }">
       <v-list-item-group>
         <v-list-item
           v-for="menu in menus"
@@ -28,20 +28,29 @@
 <script lang="ts">
 import Vue from "vue";
 import Component from "vue-class-component";
+
+import Toolbar from "../../utils/Toolbar.vue";
+
 import { C } from "../../../logic/controller";
 import { Menu } from "../../../logic/types";
 
 const ChoixMenusProps = Vue.extend({
-  props: {}
+  props: {
+    height: String
+  }
 });
 
-@Component({})
+@Component({
+  components: { Toolbar }
+})
 export default class ChoixMenus extends ChoixMenusProps {
+  search = "";
+
   formatMenuName = C.formatter.formatMenuName;
   formatMenuProprietaire = C.formatter.formatMenuOrRecetteProprietaire;
 
   get menus() {
-    return Object.values(C.data.menus);
+    return C.searchMenu(this.search);
   }
 
   onDrag(event: DragEvent, menu: Menu) {

@@ -1,9 +1,5 @@
 <template>
   <div class="two-weeks-calendar" ref="weeks">
-    <v-dialog v-model="showFormCalcul" max-width="600px">
-      <form-calcul :initial-sejour="sejour"></form-calcul>
-    </v-dialog>
-
     <week
       :sejour="sejour"
       :weekdays="weekdays"
@@ -40,7 +36,6 @@ import Vue from "vue";
 import Component from "vue-class-component";
 
 import ListeRepas from "./ListeRepas.vue";
-import FormCalcul from "../FormCalcul.vue";
 import TooltipBtn from "../../utils/TooltipBtn.vue";
 import Week from "./Week.vue";
 
@@ -82,15 +77,12 @@ const Props = Vue.extend({
 @Component({
   components: {
     TooltipBtn,
-    FormCalcul,
     ListeRepas,
     Week
   }
 })
 export default class Calendar extends Props {
   hoverDay = "";
-
-  showFormCalcul = false;
 
   private dayHeight = "35vh";
 

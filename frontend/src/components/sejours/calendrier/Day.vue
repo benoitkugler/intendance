@@ -1,5 +1,24 @@
 <template>
   <div>
+    <v-dialog v-model="showPrevisuIngredients" max-width="600px">
+      <v-skeleton-loader type="card" :loading="loadingIngredients">
+        <v-card class="py-2">
+          <v-card-title primary-title>
+            <h3 class="headline mb-0">
+              Ingrédients pour {{ repasNbPersonnes }} personne{{
+                repasNbPersonnes > 1 ? "s" : ""
+              }}
+            </h3>
+          </v-card-title>
+          <div height="50vh">
+            <liste-ingredients
+              :ingredients="listeIngredients"
+            ></liste-ingredients>
+          </div>
+        </v-card>
+      </v-skeleton-loader>
+    </v-dialog>
+
     <v-toolbar dense>
       <v-toolbar-title v-if="day">
         Repas du
@@ -12,14 +31,15 @@
         }}</v-toolbar-title
       >
     </v-toolbar>
-    <div class="overflow-y-auto">
+    <div class="overflow-y-auto" :style="{ height: height }">
       <v-list dense>
         <v-list-item-group color="primary">
-          <div v-for="horaire in horaires" :key="horaire.value">
+          <div v-for="(horaire, i) in horaires" :key="horaire.value">
+            <v-divider v-if="i > 0"></v-divider>
+
             <v-hover v-slot="{ hover }">
               <v-subheader
                 :style="{ color: getHoraireColor(horaire.value) }"
-                @click="startCreateRepas(horaire.value)"
                 @dragover="onDragoverHoraireHeader($event)"
                 @drop="onDropHoraireHeader($event, horaire.value)"
               >
@@ -77,14 +97,27 @@
                     </v-row>
                   </v-list-item-content>
                   <v-list-item-action class="my-1">
-                    <tooltip-btn
-                      v-if="hover"
-                      mdi-icon="close"
-                      color="red"
-                      small
-                      tooltip="Supprimer ce repas..."
-                      @click.stop="deleteRepas(repas)"
-                    ></tooltip-btn>
+                    <v-row no-gutters>
+                      <v-col
+                        ><tooltip-btn
+                          v-if="hover"
+                          mdi-icon="food-variant"
+                          small
+                          tooltip="Calculer les <b>ingrédients</b> nécessaires au repas..."
+                          @click.stop="resoudIngredients(repas)"
+                        ></tooltip-btn
+                      ></v-col>
+                      <v-col
+                        ><tooltip-btn
+                          v-if="hover"
+                          mdi-icon="close"
+                          color="red"
+                          small
+                          tooltip="Supprimer ce repas..."
+                          @click.stop="deleteRepas(repas)"
+                        ></tooltip-btn
+                      ></v-col>
+                    </v-row>
                   </v-list-item-action>
                 </v-list-item>
               </v-hover>
@@ -101,10 +134,15 @@ import Vue from "vue";
 import Component from "vue-class-component";
 
 import TooltipBtn from "../../utils/TooltipBtn.vue";
+import ListeIngredients from "../../utils/ListeIngredients.vue";
 
 import { toDateVuetify, formatNbOffset } from "./utils";
 import { C } from "../../../logic/controller";
-import { RepasWithGroupe, Groupe } from "../../../logic/types";
+import {
+  RepasWithGroupe,
+  Groupe,
+  IngredientQuantite
+} from "../../../logic/types";
 import { New, NullId, deepcopy } from "../../../logic/types2";
 import { Horaires } from "../../../logic/enums";
 import { HorairesColors } from "../../utils/utils";
@@ -116,13 +154,19 @@ interface dragData {
 
 const DayProps = Vue.extend({
   props: {
-    jourOffset: Number as () => number | null
+    jourOffset: Number as () => number | null,
+    height: String
   }
 });
 @Component({
-  components: { TooltipBtn }
+  components: { TooltipBtn, ListeIngredients }
 })
 export default class Day extends DayProps {
+  showPrevisuIngredients = false;
+  loadingIngredients = true;
+  listeIngredients: IngredientQuantite[] = [];
+  repasNbPersonnes = 0;
+
   get day(): Date | null {
     if (this.jourOffset == null) return null;
     return C.offsetToDate(C.state.idSejour!, this.jourOffset);
@@ -250,6 +294,16 @@ export default class Day extends DayProps {
     if (C.notifications.getError() == null) {
       C.notifications.setMessage("Repas supprimé avec succès.");
     }
+  }
+
+  async resoudIngredients(repas: RepasWithGroupe) {
+    this.loadingIngredients = true;
+    this.showPrevisuIngredients = true;
+    const data = await C.calculs.resoudIngredientsRepas(repas.id);
+    if (data == undefined || data.date_ingredients == null) return;
+    this.repasNbPersonnes = C.getRepasNbPersonnes(repas);
+    this.listeIngredients = data.date_ingredients[0].ingredients || [];
+    this.loadingIngredients = false;
   }
 }
 </script>

@@ -21,47 +21,13 @@
       </v-card>
     </v-dialog>
 
-    <v-toolbar color="secondary" class="my-1">
-      <v-toolbar-title>
-        <v-row no-gutters class="mt-1">
-          <v-col>
-            Recettes
-          </v-col>
-        </v-row>
-        <v-row no-gutters>
-          <v-col>
-            <small>
-              <i>{{ bonusTitle }}</i>
-            </small>
-          </v-col>
-        </v-row>
-      </v-toolbar-title>
-      <v-spacer></v-spacer>
-      <v-toolbar-items>
-        <tooltip-btn
-          mdi-icon="magnify"
-          tooltip="Filtrer les recettes..."
-          @click="showSearch = !showSearch"
-        />
-        <tooltip-btn
-          mdi-icon="plus-thick"
-          color="green"
-          tooltip="Ajouter une recette..."
-          @click="$emit('new')"
-          v-if="state.mode == 'visu' && state.selection.menu == null"
-        />
-      </v-toolbar-items>
-    </v-toolbar>
-    <v-text-field
-      outlined
-      label="Rechercher"
-      placeholder="Tappez pour lancer la recherche"
+    <toolbar
       v-model="search"
-      hide-details
-      v-if="showSearch"
-      class="my-2"
-      ref="search"
-    ></v-text-field>
+      tooltipAdd="Ajouter une recette..."
+      :title="title"
+      :showAdd="state.mode == 'visu' && state.selection.menu == null"
+      @add="$emit('new')"
+    ></toolbar>
     <v-list dense :max-height="height" class="overflow-y-auto">
       <v-list-item-group
         :value="state.selection.recette"
@@ -117,11 +83,14 @@ import Component from "vue-class-component";
 import { Prop, Watch } from "vue-property-decorator";
 
 import TooltipBtn from "../utils/TooltipBtn.vue";
+import Toolbar from "../utils/Toolbar.vue";
 
 import { C } from "../../logic/controller";
 import { Recette } from "../../logic/types";
 import { StateMenus } from "./types";
 import levenshtein from "js-levenshtein";
+import { searchFunction } from "../utils/utils";
+const MAX_DIST_LEVENSHTEIN = 5;
 
 const Props = Vue.extend({
   props: {
@@ -130,36 +99,17 @@ const Props = Vue.extend({
   }
 });
 
-const MAX_DIST_LEVENSHTEIN = 5;
-
 @Component({
-  components: { TooltipBtn }
+  components: { TooltipBtn, Toolbar }
 })
 export default class ListeRecettes extends Props {
   confirmeSupprime = false;
 
   search = "";
-  showSearch = false;
 
-  $refs!: {
-    search: Vue;
-  };
-
-  private searchRecettes(recettes: Recette[]) {
-    if (!this.search || !this.showSearch) return recettes;
-    let filterNom: (nom: string) => boolean;
-    try {
-      const s = new RegExp(this.search, "i");
-      filterNom = nom => s.test(nom);
-    } catch {
-      const sl = this.search.toLowerCase();
-      filterNom = (nom: string) => nom.includes(sl);
-    }
-    return recettes.filter(ing => {
-      const nom = ing.nom.toLowerCase();
-      if (filterNom(nom)) return true;
-      return levenshtein(nom, this.search) <= MAX_DIST_LEVENSHTEIN;
-    });
+  private searchRecettes(recettes: Recette[], search: string) {
+    const predicat = searchFunction(search);
+    return recettes.filter(recette => predicat(recette.nom));
   }
 
   get recettes() {
@@ -171,17 +121,17 @@ export default class ListeRecettes extends Props {
     } else {
       baseRecettes = Object.values(C.data.recettes);
     }
-    return this.searchRecettes(baseRecettes);
+    return this.searchRecettes(baseRecettes, this.search);
   }
 
-  get bonusTitle() {
+  get title() {
     if (this.state.mode == "editMenu") {
-      return "Toutes";
+      return "Choisir une recette";
     }
     if (this.state.selection.menu != null) {
-      return "Menu courant";
+      return "Recettes liées au menu";
     }
-    return "";
+    return "Toutes les recettes";
   }
   formatRecetteProprietaire = C.formatter.formatMenuOrRecetteProprietaire;
 
@@ -208,15 +158,6 @@ export default class ListeRecettes extends Props {
     if (!event.dataTransfer) return;
     event.dataTransfer.setData("id-recette", String(recette.id));
     event.dataTransfer.effectAllowed = "copy";
-  }
-
-  @Watch("showSearch")
-  onShowSearch(b: boolean) {
-    if (!b) return;
-    setTimeout(() => {
-      const input = this.$refs.search.$el.querySelector("input");
-      if (input != null) input.select();
-    }, 50);
   }
 }
 </script>

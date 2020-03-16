@@ -37,24 +37,13 @@ export class Calculs {
     return this.resoudIngredients(params);
   }
 
-  resoudIngredientsSejour(idSejour: number) {
-    const params: InResoudIngredients = {
-      mode: "journees",
-      id_repas: -1, // ignoré
-      nb_personnes: -1, // ignoré
-      id_sejour: idSejour,
-      jour_offset: null // tout le séjour
-    };
-    return this.resoudIngredients(params);
-  }
-
   resoudIngredientsJournees(idSejour: number, jourOffsets: number[]) {
     const params: InResoudIngredients = {
       mode: "journees",
       id_repas: -1, // ignoré
       nb_personnes: -1, // ignoré
       id_sejour: idSejour,
-      jour_offset: jourOffsets // tout le séjour
+      jour_offset: jourOffsets // journées données
     };
     return this.resoudIngredients(params);
   }
