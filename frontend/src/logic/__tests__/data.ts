@@ -13,7 +13,7 @@ test("crud ingredient", async () => {
   await C.data.loadIngredients();
   expect(C.notifications.getError()).toBeNull();
 
-  const l = Object.keys(C.data.ingredients).length;
+  const l = Object.keys(C.data.ingredients || {}).length;
   const ing = await C.data.createIngredient({
     nom:
       "Concombres" +
@@ -27,7 +27,7 @@ test("crud ingredient", async () => {
     unite: "L"
   });
   expect(C.notifications.getError()).toBeNull();
-  expect(Object.keys(C.data.ingredients)).toHaveLength(l + 1);
+  expect(Object.keys(C.data.ingredients || {})).toHaveLength(l + 1);
   if (!ing) return;
 
   await C.data.updateIngredient({
@@ -46,14 +46,14 @@ test("crud ingredient", async () => {
   expect(C.notifications.getError()).toBeNull();
 
   await C.data.deleteIngredient(ing, false);
-  expect(Object.keys(C.data.ingredients)).toHaveLength(l);
+  expect(Object.keys(C.data.ingredients || {})).toHaveLength(l);
 });
 
 test("crud recette", async () => {
   await Promise.all([C.data.loadRecettes(), C.data.loadIngredients()]);
   expect(C.notifications.getError()).toBeNull();
 
-  const ingId = Number(Object.keys(C.data.ingredients)[0]);
+  const ingId = Number(Object.keys(C.data.ingredients || {})[0]);
 
   const l = Object.keys(C.data.recettes).length;
   let recette = await C.data.createRecette({
@@ -111,7 +111,7 @@ test("crud menu", async () => {
   expect(Object.keys(C.data.menus)).toHaveLength(l + 1);
   if (!menu) return;
 
-  const ingId = Number(Object.keys(C.data.ingredients)[0]);
+  const ingId = Number(Object.keys(C.data.ingredients || {})[0]);
   const recId = Number(Object.keys(C.data.recettes)[0]);
 
   menu.ingredients = [

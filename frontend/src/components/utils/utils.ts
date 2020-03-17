@@ -9,6 +9,10 @@ Horaires.forEach((h, i) => {
   HorairesColors[h.value] = `rgb(100,${200 * (1 - i / N)}, ${(255 * i) / N}`;
 });
 
+export function sortByText<T extends { text: string }>(l: T[]) {
+  return l.sort((a, b) => Number(a.text < b.text));
+}
+
 // Renvoie `true` si les deux tableaux sont égaux, vus comme ensembles.
 export function compareArrays<T>(a: T[], b: T[]) {
   const sa = new Set(a);

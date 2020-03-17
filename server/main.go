@@ -119,6 +119,7 @@ func routes(e *echo.Echo) {
 
 	e.POST("/api/resolution", views.ResoudIngredients)
 
+	e.GET("/api/fournisseurs", views.GetFournisseurs)
 	e.GET("/api/ingredient-produit", views.GetIngredientProduits)
 	e.POST("/api/ingredient-produit", views.AjouteIngredientProduit)
 }

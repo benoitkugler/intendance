@@ -19,12 +19,12 @@ type templateArgs struct {
 }
 
 const tplt = `
-	interface enumItem {
-		value: string;
+	export interface EnumItem<T = string> {
+		value: T;
 		text: string;
-	}
+  	}
 	
-	function fmt(enums: enumItem[], value: string) {
+	function fmt(enums: EnumItem[], value: string) {
 		const data = enums.find(v => v.value == value);
 		if (data) return data.text;
 		return "";
@@ -36,7 +36,7 @@ const tplt = `
 			{{ .VarName }}: {{ .Value}},
 		{{ end -}}
 	};
-  	export const {{ $typeName }}s = [
+  	export const {{ $typeName }}s : EnumItem[] = [
 		  {{- range $items -}}
 		 	 { value: {{ $typeName }}Fields.{{ .VarName }}, text: "{{ .Text }}" },
 		  {{ end -}}

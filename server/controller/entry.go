@@ -109,7 +109,7 @@ func (s Server) LoadSejoursUtilisateur(ct RequeteContext) (out Sejours, err erro
 	}
 
 	// on résoud les repas
-	rows, err = s.db.Query(`SELECT * FROM repass WHERE id_sejour = ANY($1)`, sejours.Ids())
+	rows, err = s.db.Query(`SELECT * FROM repass WHERE id_sejour = ANY($1)`, sejours.Ids().AsSQL())
 	if err != nil {
 		err = ErrorSQL(err)
 		return
@@ -120,7 +120,7 @@ func (s Server) LoadSejoursUtilisateur(ct RequeteContext) (out Sejours, err erro
 		return
 	}
 	// on charge les groupes pour chaque repas
-	rows, err = s.db.Query(`SELECT * FROM repas_groupes WHERE id_repas = ANY($1)`, repas.Ids())
+	rows, err = s.db.Query(`SELECT * FROM repas_groupes WHERE id_repas = ANY($1)`, repas.Ids().AsSQL())
 	if err != nil {
 		err = ErrorSQL(err)
 		return
@@ -202,26 +202,30 @@ func (s Server) CreateIngredient(ct RequeteContext) (out models.Ingredient, err 
 }
 
 func (s Server) UpdateIngredient(ct RequeteContext, ig models.Ingredient) (models.Ingredient, error) {
+	// contrainte interne à l'ingrédient
+	contrainte := ContrainteIngredient{ingredient: ig}
+	if err := contrainte.Check(); err != nil {
+		return ig, err
+	}
+
 	if err := ct.beginTx(s); err != nil {
 		return ig, err
 	}
-	tx := ct.tx
+
 	// vérification de la compatilibité des unités et des contionnements
-	produits, err := ig.GetProduits(tx)
+	produits, err := ig.GetProduits(ct.tx)
 	if err != nil {
 		return ig, ErrorSQL(err)
 	}
 	for _, prod := range produits {
-		if ig.Unite != models.Piece && ig.Unite != prod.Conditionnement.Unite {
-			return ig, ErrorIngredientProduitUnite{ingredient: ig, produit: prod}
-		}
-		if !ig.Conditionnement.IsNull() && ig.Conditionnement != prod.Conditionnement {
-			return ig, ErrorIngredientProduitConditionnement{ingredient: ig, produit: prod}
+		contrainte := ContrainteIngredientProduit{ingredient: ig, produit: prod}
+		if err := contrainte.Check(); err != nil {
+			return ig, err
 		}
 	}
 
 	// modification
-	ig, err = ig.Update(tx)
+	ig, err = ig.Update(ct.tx)
 	if err != nil {
 		return ig, ErrorSQL(err)
 	}

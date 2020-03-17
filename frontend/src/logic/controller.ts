@@ -4,7 +4,8 @@ import {
   Sejour,
   RepasWithGroupe,
   Groupe,
-  RepasGroupe
+  RepasGroupe,
+  Produit
 } from "./types";
 import { Notifications } from "./notifications";
 import { Calculs } from "./calculs";
@@ -50,7 +51,7 @@ export class Controller {
   }
 
   getAllIngredients(): IngredientOptions[] {
-    return Object.values(this.data.ingredients).map(ing => {
+    return Object.values(this.data.ingredients || {}).map(ing => {
       return { ingredient: ing };
     });
   }
@@ -62,7 +63,7 @@ export class Controller {
   getMenuIngredients(menu: Menu): IngredientOptions[] {
     return (menu.ingredients || []).map(ing => {
       return {
-        ingredient: this.data.ingredients[ing.id_ingredient],
+        ingredient: (this.data.ingredients || {})[ing.id_ingredient],
         options: ing
       };
     });
@@ -76,10 +77,14 @@ export class Controller {
   getRecetteIngredients(rec: Recette): IngredientOptions[] {
     return (rec.ingredients || []).map(ing => {
       return {
-        ingredient: this.data.ingredients[ing.id_ingredient],
+        ingredient: (this.data.ingredients || {})[ing.id_ingredient],
         options: ing
       };
     });
+  }
+
+  getFournisseur(produit: Produit) {
+    return (this.data.fournisseurs || {})[produit.id_fournisseur];
   }
 
   searchMenu(search: string) {

@@ -1,5 +1,6 @@
 import { Controller } from "./controller";
-import { Menu, Recette, RepasWithGroupe, Time } from "./types";
+import { Menu, Recette, RepasWithGroupe, Time, Conditionnement } from "./types";
+import { fmtUnite } from "./enums";
 
 const Months = [
   "Janvier",
@@ -63,5 +64,9 @@ export class Formatter {
 
   static formatQuantite(v: number) {
     return v.toFixed(2);
+  }
+
+  static formatConditionnement(c: Conditionnement) {
+    return Formatter.formatQuantite(c.quantite) + " " + fmtUnite(c.unite);
   }
 }

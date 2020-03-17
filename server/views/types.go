@@ -87,6 +87,13 @@ type OutResoudIngredients struct {
 	DateIngredients []controller.DateIngredientQuantites `json:"date_ingredients"`
 }
 
+// Fournisseurs et produits
+
+type OutFournisseurs struct {
+	Token        string              `json:"token"`
+	Fournisseurs models.Fournisseurs `json:"fournisseurs"`
+}
+
 type InLieIngredientProduit struct {
 	IdIngredient int64 `json:"id_ingredient,omitempty"`
 	IdProduit    int64 `json:"id_produit,omitempty"`

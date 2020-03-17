@@ -15,6 +15,7 @@
 import Vue from "vue";
 import Component from "vue-class-component";
 import { C } from "../../logic/controller";
+import { sortByText } from "../utils/utils";
 
 const SelectSejourProps = Vue.extend({
   props: {
@@ -33,8 +34,7 @@ export default class SelectSejour extends SelectSejourProps {
     const items = Object.values(C.data.sejours.sejours || {}).map(sejour => {
       return { value: sejour.id, text: sejour.nom };
     });
-    items.sort((a, b) => Number(a.text < b.text));
-    return items;
+    return sortByText(items);
   }
 }
 </script>

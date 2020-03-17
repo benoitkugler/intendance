@@ -8,7 +8,7 @@
       ></edit-ingredient>
     </v-dialog>
 
-    <v-dialog v-model="showEditProduits" scrollable max-width="1000px">
+    <v-dialog v-model="showEditProduits" scrollable width="90%">
       <association-ingredient
         :ingredient="editedIngredientProduit"
         :activated="showEditProduits"
@@ -183,9 +183,11 @@ export default class ListeIngredients extends Props {
   private searchIngredients(ingredients: IngredientOptions[], search: string) {
     const predicat = searchFunction(search);
     // cas spécial pour l'unité
-    return ingredients.filter(ing => {
-      return search == ing.ingredient.unite || predicat(ing.ingredient.nom);
-    });
+    return ingredients
+      .filter(ing => {
+        return search == ing.ingredient.unite || predicat(ing.ingredient.nom);
+      })
+      .sort((a, b) => Number(a.ingredient.nom < b.ingredient.nom));
   }
 
   get ingredients() {

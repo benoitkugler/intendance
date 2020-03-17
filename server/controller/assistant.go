@@ -30,7 +30,7 @@ type InAssistantCreateRepass struct {
 
 // crée un repas et y ajoute les groupes donnés
 func creeRepasWithGroupe(ct RequeteContext, params InAssistantCreateRepass,
-	horaire models.Horaire, jourOffset int, idsGroupes Set) error {
+	horaire models.Horaire, jourOffset int, idsGroupes models.Set) error {
 	repas := models.Repas{
 		IdSejour:   params.IdSejour,
 		Horaire:    horaire,
@@ -88,8 +88,8 @@ func (s Server) InitiateRepas(ct RequeteContext, params InAssistantCreateRepass)
 
 	for jourOffset := 0; jourOffset < params.Options.Duree; jourOffset++ {
 		// calcule les deux listes ('basique' et 'sorties')
-		sorties := NewSetFromSlice(params.GroupesSorties[jourOffset])
-		basique := NewSet()
+		sorties := models.NewSetFromSlice(params.GroupesSorties[jourOffset])
+		basique := models.NewSet()
 		for idGroupe := range groupes {
 			if !sorties.Has(idGroupe) {
 				basique.Add(idGroupe)

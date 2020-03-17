@@ -7,18 +7,27 @@ import (
 	"github.com/benoitkugler/intendance/server/models"
 )
 
-// renvoie les fournisseurs lié à l'utilisateur
-func (ct RequeteContext) loadIdsFournisseurs() (Set, error) {
-	rows, err := ct.tx.Query("SELECT id_fournisseur FROM utilisateur_fournisseurs WHERE id_utilisateur = $1",
-		ct.idProprietaire)
+func (ct RequeteContext) loadFournisseurs() (models.Fournisseurs, error) {
+	rows, err := ct.tx.Query(`SELECT fournisseurs.* FROM fournisseurs 
+		JOIN utilisateur_fournisseurs ON utilisateur_fournisseurs.id_fournisseur = fournisseurs.id 
+		WHERE utilisateur_fournisseurs.id_utilisateur = $1`, ct.idProprietaire)
 	if err != nil {
 		return nil, ErrorSQL(err)
 	}
-	_ids, err := models.ScanInts(rows)
+	out, err := models.ScanFournisseurs(rows)
 	if err != nil {
 		return nil, ErrorSQL(err)
 	}
-	return NewSetFromSlice(_ids), nil
+	return out, nil
+}
+
+// LoadFournisseurs renvoie les fournisseurs associés à l'utilisateur courant
+func (s Server) LoadFournisseurs(ct RequeteContext) (models.Fournisseurs, error) {
+	if err := ct.beginTx(s); err != nil {
+		return nil, err
+	}
+	defer ct.rollbackTx(nil)
+	return ct.loadFournisseurs()
 }
 
 func (s Server) GetIngredientProduits(ct RequeteContext, idIngredient int64) (IngredientProduits, error) {
@@ -32,10 +41,11 @@ func (s Server) GetIngredientProduits(ct RequeteContext, idIngredient int64) (In
 	}
 
 	// sélection des fournisseurs autorisés
-	idsFournisseurs, err := ct.loadIdsFournisseurs()
+	fourns, err := ct.loadFournisseurs()
 	if err != nil {
 		return IngredientProduits{}, err
 	}
+	idsFournisseurs := fourns.Ids().AsSet()
 	var out IngredientProduits
 	for _, produit := range produits {
 		if idsFournisseurs.Has(produit.IdFournisseur) {
@@ -82,10 +92,11 @@ func (s Server) AjouteIngredientProduit(ct RequeteContext, idIngredient int64, p
 		return ErrorLieIngredientProduit(validUnite, validConditionnement)
 	}
 
-	idsFournisseurs, err := ct.loadIdsFournisseurs()
+	fourns, err := ct.loadFournisseurs()
 	if err != nil {
 		return err
 	}
+	idsFournisseurs := fourns.Ids().AsSet()
 	if !idsFournisseurs.Has(produit.IdFournisseur) {
 		return errors.New("Le fournisseur du produit ne fait pas partie de vos fournisseurs.")
 	}

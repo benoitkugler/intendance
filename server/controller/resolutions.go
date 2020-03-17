@@ -20,18 +20,18 @@ type dataRepas struct {
 	recetteIngredients []models.RecetteIngredient
 	ingredients        models.Ingredients
 
-	menuRecettes map[int64]Set // id menu -> ids recettes
-	repasGroupes map[int64]Set // id repas -> ids groupes
+	menuRecettes map[int64]models.Set // id menu -> ids recettes
+	repasGroupes map[int64]models.Set // id repas -> ids groupes
 }
 
 // idIngredient -> quantité
 type quantites = map[int64]float64
 
 // ajoute id2 au crible de id1
-func addToCribles(crible map[int64]Set, id1, id2 int64) {
+func addToCribles(crible map[int64]models.Set, id1, id2 int64) {
 	s := crible[id1]
 	if s == nil {
-		s = NewSet()
+		s = models.NewSet()
 	}
 	s.Add(id2)
 	crible[id1] = s
@@ -56,7 +56,7 @@ func (s Server) loadDataRepas(rowsRepas *sql.Rows) (out dataRepas, err error) {
 	if err != nil {
 		return out, err
 	}
-	out.repasGroupes = make(map[int64]Set)
+	out.repasGroupes = make(map[int64]models.Set)
 	for _, rg := range tmp {
 		addToCribles(out.repasGroupes, rg.IdRepas, rg.IdGroupe)
 	}
@@ -94,7 +94,7 @@ func (s Server) loadDataRepas(rowsRepas *sql.Rows) (out dataRepas, err error) {
 		return out, err
 	}
 
-	out.menuRecettes = make(map[int64]Set)
+	out.menuRecettes = make(map[int64]models.Set)
 	for _, menuRecette := range menuRecettes {
 		addToCribles(out.menuRecettes, menuRecette.IdMenu, menuRecette.IdRecette)
 	}
@@ -111,7 +111,7 @@ func (s Server) loadDataRepas(rowsRepas *sql.Rows) (out dataRepas, err error) {
 		return out, err
 	}
 
-	idsIngredients := NewSet()
+	idsIngredients := models.NewSet()
 	for _, ing := range out.menuIngredients {
 		idsIngredients.Add(ing.IdIngredient)
 	}
@@ -207,7 +207,7 @@ func (s Server) ResoudIngredientsJournees(idSejour int64, journeesOffsets []int6
 	}
 
 	all := journeesOffsets == nil
-	crible := NewSetFromSlice(journeesOffsets)
+	crible := models.NewSetFromSlice(journeesOffsets)
 	joursQuantites := map[int64]quantites{}
 	for _, repas := range data.repass {
 		if all || crible.Has(repas.JourOffset) {

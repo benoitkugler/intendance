@@ -18,27 +18,18 @@
           </v-col>
         </v-row>
         <v-row>
-          <v-col>
+          <v-col cols="4">
             <v-switch
               label="Conditionnement requis"
               v-model="conditionnement"
             ></v-switch>
           </v-col>
-          <v-col>
-            <v-text-field
+          <v-col cols="8">
+            <conditionnement-field
+              v-model="current.conditionnement"
               :disabled="!conditionnement"
-              label="Conditionnement - Quanité"
-              type="number"
-              v-model.number="current.conditionnement.quantite"
-            ></v-text-field>
-          </v-col>
-          <v-col>
-            <unite-field
-              :disabled="!conditionnement"
-              v-model="current.conditionnement.unite"
-              label="Conditionnement - Unité"
-              :unites="allowedUnitesConditionnement"
-            ></unite-field>
+              :allowedUnites="allowedUnitesConditionnement"
+            ></conditionnement-field>
           </v-col>
         </v-row>
         <v-row>
@@ -71,10 +62,13 @@
 <script lang="ts">
 import Vue from "vue";
 import Component from "vue-class-component";
-import { RecetteIngredient, Ingredient } from "../../logic/types";
 import { Watch } from "vue-property-decorator";
-import { IngredientOptions, EditMode, deepcopy } from "../../logic/types2";
+
 import UniteField from "../utils/UniteField.vue";
+import ConditionnementField from "../utils/ConditionnementField.vue";
+
+import { RecetteIngredient, Ingredient } from "../../logic/types";
+import { IngredientOptions, EditMode, deepcopy } from "../../logic/types2";
 import { Unites, UniteFields } from "../../logic/enums";
 import { DefautIngredient } from "./types";
 
@@ -86,7 +80,7 @@ const EditIngredientProps = Vue.extend({
 });
 
 @Component({
-  components: { UniteField }
+  components: { UniteField, ConditionnementField }
 })
 export default class EditIngredient extends EditIngredientProps {
   current = this.copy(this.initialIngredient);

@@ -51,9 +51,9 @@
             </v-list-item>
             <v-list-item
               v-for="ingredient in recette.ingredients"
-              :key="ingredient.id"
+              :key="ingredient.id_ingredient"
             >
-              <template v-slot:default="{ active }">
+              <template v-slot:default="{}">
                 <v-list-item-content>
                   <v-list-item-title>
                     {{ getIngredient(ingredient).nom }}
@@ -133,7 +133,7 @@ export default class EditRecette extends EditRecetteProps {
   formatRecetteProprietaire = C.formatter.formatMenuOrRecetteProprietaire;
 
   getIngredient(ing: RecetteIngredient) {
-    return C.data.ingredients[ing.id_ingredient];
+    return (C.data.ingredients || {})[ing.id_ingredient];
   }
 
   editIngredient(ing: RecetteIngredient) {

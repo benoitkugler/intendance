@@ -42,7 +42,7 @@
           </v-list-item-subtitle>
         </v-list-item>
         <v-list-item v-for="recette in recettes" :key="recette.id">
-          <template v-slot:default="{ active }">
+          <template v-slot:default="{}">
             <v-list-item-content>
               <v-list-item-title>
                 <v-list-item-title>{{ recette.nom }}</v-list-item-title>
@@ -71,9 +71,9 @@
         </v-list-item>
         <v-list-item
           v-for="ingredient in menu.ingredients"
-          :key="ingredient.id"
+          :key="ingredient.id_ingredient"
         >
-          <template v-slot:default="{ active }">
+          <template v-slot:default="{}">
             <v-list-item-content>
               <v-list-item-title>
                 {{ getIngredient(ingredient).nom }}
@@ -161,7 +161,7 @@ export default class EditMenu extends EditMenuProps {
   formatRecetteProprietaire = C.formatter.formatMenuOrRecetteProprietaire;
 
   getIngredient(ing: MenuIngredient) {
-    return C.data.ingredients[ing.id_ingredient];
+    return (C.data.ingredients || {})[ing.id_ingredient];
   }
 
   removeRecette(toRemove: Recette) {

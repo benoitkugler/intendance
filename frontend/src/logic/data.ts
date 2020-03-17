@@ -17,14 +17,16 @@ import {
   Groupe,
   OutGroupe,
   OutDeleteGroupe,
-  RepasGroupe,
   RepasWithGroupe,
   OptionsAssistantCreateRepass,
   InAssistantCreateRepass,
-  InAjouteIngredientProduit
+  InAjouteIngredientProduit,
+  OutFournisseurs,
+  Fournisseurs,
+  Ingredients
 } from "./types";
 import axios, { AxiosResponse } from "axios";
-import { Ingredients, Recettes, Menus, Utilisateurs, New } from "./types2";
+import { Recettes, Menus, Utilisateurs, New } from "./types2";
 
 import { Controller } from "./controller";
 import Vue from "vue";
@@ -42,6 +44,7 @@ export class Data {
   recettes: Recettes = {};
   menus: Menus = {};
   utilisateurs: Utilisateurs = {};
+  fournisseurs: Fournisseurs = {};
 
   private controller: Controller;
 
@@ -49,7 +52,25 @@ export class Data {
     this.controller = controller;
   }
 
+  async loadFournisseurs() {
+    this.controller.notifications.startSpin();
+    try {
+      const response: AxiosResponse<OutFournisseurs> = await axios.get(
+        ServerURL + "/fournisseurs",
+        {
+          auth: this.controller.auth()
+        }
+      );
+      this.controller.token = response.data.token;
+      this.fournisseurs = response.data.fournisseurs || {};
+    } catch (error) {
+      this.controller.notifications.setAxiosError(error);
+    }
+  }
+
+  // charge transitivement les données nécessaires aux menus
   async loadAllMenus() {
+    this.loadFournisseurs();
     await Promise.all([this.loadIngredients(), this.loadUtilisateurs()]);
     await this.loadRecettes(); // recettes dépend des ingrédients
     await this.loadMenus(); // menus dépends des recettes, ingrédients et utilisateurs
@@ -102,7 +123,7 @@ export class Data {
         }
       );
       Vue.set(
-        this.ingredients,
+        this.ingredients || {},
         response.data.ingredient.id,
         response.data.ingredient
       ); // VRC

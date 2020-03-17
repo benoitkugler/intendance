@@ -538,6 +538,18 @@ func ResoudIngredients(c echo.Context) error {
 // ----------------------------- Produits -----------------------------------
 // --------------------------------------------------------------------------
 
+func GetFournisseurs(c echo.Context) error {
+	ct, err := Server.Authentifie(c.Request())
+	if err != nil {
+		return err
+	}
+	out, err := Server.LoadFournisseurs(ct)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, OutFournisseurs{Token: ct.Token, Fournisseurs: out})
+}
+
 func GetIngredientProduits(c echo.Context) error {
 	ct, err := Server.Authentifie(c.Request())
 	if err != nil {

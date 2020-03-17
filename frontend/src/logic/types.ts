@@ -66,6 +66,26 @@ export interface OutDeleteGroupe {
 	nb_repas: number,
 }
 
+// github.com/benoitkugler/intendance/server/models.JoursLivraison
+export type JoursLivraison = boolean[]
+
+// github.com/benoitkugler/intendance/server/models.Fournisseur
+export interface Fournisseur {
+	id: number,
+	nom: string,
+	delai_commande: number,
+	jours_livraison: JoursLivraison,
+}
+
+// github.com/benoitkugler/intendance/server/models.Fournisseurs
+export type Fournisseurs = { [key: number]: Fournisseur } | null
+
+// server/views.OutFournisseurs
+export interface OutFournisseurs {
+	token: string,
+	fournisseurs: Fournisseurs,
+}
+
 // github.com/benoitkugler/intendance/server/models.Groupe
 export interface Groupe {
 	id: number,

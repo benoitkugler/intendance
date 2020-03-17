@@ -1,5 +1,5 @@
 <template>
-  <v-card>
+  <v-card v-if="ingredient != null">
     <v-card-title primary-title>
       Produits associés à l'ingrédient {{ ingredient.nom }}
     </v-card-title>
@@ -8,40 +8,103 @@
       l'ingrédient générique.
     </v-card-subtitle>
     <v-card-text>
-      <v-skeleton-loader type="paragraph" :loading="loading">
-        {{ ingredientProduits }}
-      </v-skeleton-loader>
+      <v-row>
+        <v-col>
+          <v-skeleton-loader type="paragraph" :loading="loading">
+            <v-simple-table dense fixed-header>
+              <thead>
+                <tr>
+                  <th class="text-left">Fournisseur</th>
+                  <th class="text-left">Nom</th>
+                  <th class="text-center">Prix</th>
+                  <th class="text-center">Conditionnement</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="produit in produits" :key="produit.id">
+                  <td>{{ formatFournisseur(produit) }}</td>
+                  <td>{{ produit.nom }}</td>
+                  <td class="text-center">{{ produit.prix }} €</td>
+                  <td class="text-center">
+                    {{ formatConditionnement(produit.conditionnement) }}
+                  </td>
+                </tr>
+              </tbody>
+            </v-simple-table>
+          </v-skeleton-loader>
+        </v-col>
+        <v-col>
+          <details-produit @add="addProduit" :produit="produit">
+          </details-produit>
+        </v-col>
+      </v-row>
     </v-card-text>
-    <v-card-actions>
-      <v-btn text color="primary">text</v-btn>
-      <v-btn text color="primary">text</v-btn>
-    </v-card-actions>
   </v-card>
 </template>
 
 <script lang="ts">
 import Vue from "vue";
 import Component from "vue-class-component";
-import { Ingredient, IngredientProduits } from "../../logic/types";
+
+import DetailsProduit from "./DetailsProduit.vue";
+
+import { Ingredient, IngredientProduits, Produit } from "../../logic/types";
 import { C } from "../../logic/controller";
 import { Watch } from "vue-property-decorator";
+import { New } from "../../logic/types2";
+import { Formatter } from "../../logic/formatter";
 
 const AssociationIngredientProps = Vue.extend({
   props: {
-    ingredient: Object as () => Ingredient,
+    ingredient: Object as () => Ingredient | null,
     activated: Boolean
   }
 });
 
-@Component({})
+@Component({
+  components: { DetailsProduit }
+})
 export default class AssociationIngredient extends AssociationIngredientProps {
+  formatConditionnement = Formatter.formatConditionnement;
+
+  get produit(): New<Produit> {
+    let cond = { quantite: 0, unite: "" };
+    if (this.ingredient != null) {
+      cond = {
+        quantite: this.ingredient.conditionnement.quantite,
+        unite: this.ingredient.unite
+      };
+    }
+    return {
+      id_fournisseur: -1,
+      nom: "",
+      conditionnement: cond,
+      prix: 0,
+      reference_fournisseur: "",
+      colisage: 0
+    };
+  }
+
   get loading() {
     return C.notifications.getSpin();
   }
 
   ingredientProduits: IngredientProduits | null = null;
 
+  get produits() {
+    if (this.ingredientProduits != null) {
+      return this.ingredientProduits.produits || [];
+    }
+    return [];
+  }
+
+  formatFournisseur(produit: Produit) {
+    const f = C.getFournisseur(produit);
+    return f.nom;
+  }
+
   private async loadProduits() {
+    if (this.ingredient == null) return;
     const res = await C.data.getIngredientProduits(this.ingredient.id);
     if (res == undefined) return;
     this.ingredientProduits = res;
@@ -55,6 +118,20 @@ export default class AssociationIngredient extends AssociationIngredientProps {
   onChangeIngredient(b: boolean) {
     if (!b) return;
     this.loadProduits();
+  }
+
+  async addProduit(produit: Produit) {
+    if (this.ingredient == null) return;
+    const res = await C.data.ajouteIngredientProduit({
+      produit: produit,
+      id_ingredient: this.ingredient.id
+    });
+    if (res) {
+      this.ingredientProduits = res;
+      C.notifications.setMessage(
+        `Produit créé et lié à ${this.ingredient.nom}`
+      );
+    }
   }
 }
 </script>
