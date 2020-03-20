@@ -2,6 +2,7 @@ package controller
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/benoitkugler/intendance/server/models"
 )
@@ -41,6 +42,36 @@ func (c ContrainteIngredient) Check() error {
 	if c.ingredient.Unite != models.Piece && !c.ingredient.Conditionnement.IsNull() {
 		return fmt.Errorf(`Le conditionnement n'est supporté que pour les ingrédients à la pièce.
 		Conditionnement de %s : %s`, c.ingredient.Nom, c.ingredient.Conditionnement)
+	}
+	return nil
+}
+
+type ContrainteListeIngredients struct {
+	ingredients []IngredientQuantite
+}
+
+func (c ContrainteListeIngredients) Check() error {
+	diffs := map[models.Unite]bool{}
+	for _, ig := range c.ingredients {
+		diffs[ig.Ingredient.Unite] = true
+	}
+	if len(diffs) > 1 {
+		var l []string
+		for u := range diffs {
+			l = append(l, u.String())
+		}
+		return fmt.Errorf("Les ingrédients ont des unités incompatibles : %s", strings.Join(l, ", "))
+	}
+	return nil
+}
+
+type ContrainteProduit struct {
+	produit models.Produit
+}
+
+func (c ContrainteProduit) Check() error {
+	if qu := c.produit.Conditionnement.Quantite; qu <= 0 {
+		return fmt.Errorf("Le conditionnement %.3f du produit %s doit être positif", qu, c.produit.Nom)
 	}
 	return nil
 }

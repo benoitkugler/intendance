@@ -48,16 +48,33 @@ func ScanInts(rs *sql.Rows) ([]int64, error) {
 	return ints, nil
 }
 
-// GetProduits renvoie les produits associé à l'ingrédient
-// Seul le champ 'Id' est utilisé
-func (ig Ingredient) GetProduits(tx *sql.Tx) (Produits, error) {
+// GetProduits renvoie les produits associé à l'ingrédient.
+// Si `fournisseurs` est non nil, seul les produits de ces fournisseurs sont renvoyés
+// Seul le champ 'Id' est utilisé.
+func (ig Ingredient) GetProduits(tx *sql.Tx, fournisseurs Fournisseurs) (Produits, error) {
 	rows, err := tx.Query(`SELECT produits.* FROM produits 
 		JOIN ingredient_produits ON ingredient_produits.id_produit = produits.id 
 		WHERE ingredient_produits.id_ingredient = $1`, ig.Id)
 	if err != nil {
 		return nil, err
 	}
-	return ScanProduits(rows)
+	produits, err := ScanProduits(rows)
+	if err != nil {
+		return nil, err
+	}
+
+	if fournisseurs == nil { // aucun critère
+		return produits, nil
+	}
+
+	// sélection des fournisseurs autorisés
+	idsFournisseurs := fournisseurs.Ids().AsSet()
+	for key, produit := range produits {
+		if !idsFournisseurs.Has(produit.IdFournisseur) {
+			delete(produits, key)
+		}
+	}
+	return produits, nil
 }
 
 // ------------------- Json encoding of custom types --------------------------

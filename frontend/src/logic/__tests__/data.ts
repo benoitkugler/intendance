@@ -24,7 +24,7 @@ test("crud ingredient", async () => {
     conditionnement: { unite: "L", quantite: 2 },
     callories: {},
     categorie: "",
-    unite: "L"
+    unite: "P"
   });
   expect(C.notifications.getError()).toBeNull();
   expect(Object.keys(C.data.ingredients || {})).toHaveLength(l + 1);
@@ -38,14 +38,14 @@ test("crud ingredient", async () => {
         .toString(36)
         .replace(/[^a-z]+/g, "")
         .substr(0, 5),
-    conditionnement: { unite: "L", quantite: 4 },
+    conditionnement: { unite: "Kg", quantite: 4 },
     callories: {},
     categorie: "nouvelle cat&gori",
-    unite: "Kg"
+    unite: "P"
   });
   expect(C.notifications.getError()).toBeNull();
 
-  await C.data.deleteIngredient(ing, false);
+  await C.data.deleteIngredient(ing.id, false);
   expect(Object.keys(C.data.ingredients || {})).toHaveLength(l);
 });
 
@@ -92,7 +92,7 @@ test("crud recette", async () => {
   if (!recette) return;
   expect(recette.ingredients).toHaveLength(1);
 
-  await C.data.deleteRecette(recette);
+  await C.data.deleteRecette(recette.id);
   expect(Object.keys(C.data.recettes)).toHaveLength(l);
 });
 
@@ -135,7 +135,7 @@ test("crud menu", async () => {
   expect(menu.ingredients).toHaveLength(1);
   expect(menu.recettes).toHaveLength(1);
 
-  await C.data.deleteMenu(menu);
+  await C.data.deleteMenu(menu.id);
   expect(Object.keys(C.data.menus)).toHaveLength(l);
 }, 10000);
 

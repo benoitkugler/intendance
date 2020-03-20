@@ -21,7 +21,6 @@ import Component from "vue-class-component";
 
 const Props = Vue.extend({
   props: {
-    // Date as string
     tooltip: String,
     mdiIcon: String,
     color: {

@@ -10,6 +10,7 @@
       class="overflow-y-auto"
       style="max-height: 75vh;"
       :date-ingredients="dateIngredients"
+      @go="id => $emit('goToIngredient', id)"
     ></date-ingredients>
   </v-card>
 </template>

@@ -129,7 +129,7 @@ import { Watch } from "vue-property-decorator";
 const EditMenuProps = Vue.extend({
   props: {
     mode: String as () => EditMode,
-    initialMenu: Object as () => Menu
+    initialMenu: Object as () => New<Menu>
   }
 });
 
@@ -138,7 +138,7 @@ const EditMenuProps = Vue.extend({
 })
 export default class EditMenu extends EditMenuProps {
   // menu actuellement édité
-  menu: Menu = deepcopy(this.initialMenu);
+  menu: New<Menu> = deepcopy(this.initialMenu);
 
   showEditIngredient = false;
   editedIngredient: MenuIngredient | null = null;
@@ -146,6 +146,12 @@ export default class EditMenu extends EditMenuProps {
   $refs!: {
     editIngredient: MenuOrRecetteIngredient;
   };
+
+  @Watch("initialMenu")
+  onMenuChange() {
+    this.menu = deepcopy(this.initialMenu);
+  }
+
   get title() {
     if (this.mode == "edit") {
       return "Modifier le menu";
@@ -209,7 +215,7 @@ export default class EditMenu extends EditMenuProps {
     const hasRecette =
       recettes.filter(r => r.id_recette == idRecette).length > 0;
     if (hasRecette) return;
-    recettes.push({ id_menu: this.menu.id, id_recette: idRecette });
+    recettes.push({ id_menu: this.menu.id || -1, id_recette: idRecette });
     this.menu.recettes = recettes;
   }
 
@@ -235,7 +241,7 @@ export default class EditMenu extends EditMenuProps {
       newIngredient = matchingIngredients[0];
     } else {
       newIngredient = {
-        id_menu: this.menu.id,
+        id_menu: this.menu.id || -1,
         id_ingredient: idIngredient,
         quantite: 0,
         cuisson: ""

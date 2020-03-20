@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 
@@ -66,14 +65,4 @@ func (e ErrorIngredientUsed) Error() string {
 		}
 	}
 	return b.String()
-}
-
-func ErrorLieIngredientProduit(validUnite, validConditionnement bool) error {
-	if !validUnite {
-		return errors.New("L'ingrédient et le produit n'utilise pas les mêmes unitées.")
-	}
-	if !validConditionnement {
-		return errors.New("L'ingrédient impose un conditionnement que le produit doit respecter.")
-	}
-	return nil
 }

@@ -232,7 +232,7 @@ func TestProduits(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	prods, err := ig.GetProduits(tx)
+	prods, err := ig.GetProduits(tx, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

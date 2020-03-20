@@ -25,18 +25,19 @@
       v-model="search"
       tooltipAdd="Ajouter une recette..."
       :title="title"
-      :showAdd="state.mode == 'visu' && state.selection.menu == null"
+      :showAdd="state.mode == 'visu' && state.selection.idMenu == null"
       @add="$emit('new')"
     ></toolbar>
-    <v-list dense :max-height="height" class="overflow-y-auto">
+    <v-list dense :max-height="height" class="overflow-y-auto" ref="list">
       <v-list-item-group
-        :value="state.selection.recette"
+        :value="state.selection.idRecette"
         @change="args => $emit('change', args)"
       >
         <v-list-item
           v-for="recette in recettes"
           :key="recette.id"
-          :value="recette"
+          :value="recette.id"
+          :class="classItem(recette.id)"
         >
           <template v-slot:default="{ active }">
             <v-list-item-content
@@ -90,19 +91,18 @@ import { Recette } from "../../logic/types";
 import { StateMenus } from "./types";
 import levenshtein from "js-levenshtein";
 import { searchFunction } from "../utils/utils";
-const MAX_DIST_LEVENSHTEIN = 5;
-
-const Props = Vue.extend({
-  props: {
-    state: Object as () => StateMenus,
-    height: String
-  }
-});
+import { ListKind, BaseList } from "./shared";
 
 @Component({
-  components: { TooltipBtn, Toolbar }
+  components: { TooltipBtn, Toolbar },
+  props: {
+    kind: {
+      type: String as () => ListKind,
+      default: "idRecette"
+    }
+  }
 })
-export default class ListeRecettes extends Props {
+export default class ListeRecettes extends BaseList {
   confirmeSupprime = false;
 
   search = "";
@@ -116,8 +116,8 @@ export default class ListeRecettes extends Props {
     let baseRecettes: Recette[];
     if (this.state.mode == "editMenu") {
       baseRecettes = Object.values(C.data.recettes);
-    } else if (this.state.selection.menu != null) {
-      baseRecettes = C.getMenuRecettes(this.state.selection.menu);
+    } else if (this.state.selection.idMenu != null) {
+      baseRecettes = C.getMenuRecettes(C.getMenu(this.state.selection.idMenu));
     } else {
       baseRecettes = Object.values(C.data.recettes);
     }
@@ -128,7 +128,7 @@ export default class ListeRecettes extends Props {
     if (this.state.mode == "editMenu") {
       return "Choisir une recette";
     }
-    if (this.state.selection.menu != null) {
+    if (this.state.selection.idMenu != null) {
       return "Recettes liées au menu";
     }
     return "Toutes les recettes";
@@ -136,7 +136,7 @@ export default class ListeRecettes extends Props {
   formatRecetteProprietaire = C.formatter.formatMenuOrRecetteProprietaire;
 
   showActions(active: boolean, recette: Recette) {
-    if (this.state.selection.menu != null) return false;
+    if (this.state.selection.idMenu != null) return false;
     return (
       active &&
       (!recette.id_proprietaire.Valid ||
@@ -146,8 +146,8 @@ export default class ListeRecettes extends Props {
 
   async supprime() {
     this.confirmeSupprime = false;
-    if (this.state.selection.recette == null) return;
-    await C.data.deleteRecette(this.state.selection.recette);
+    if (this.state.selection.idRecette == null) return;
+    await C.data.deleteRecette(this.state.selection.idRecette);
     this.$emit("change", null);
     if (C.notifications.getError() == null) {
       C.notifications.setMessage("Recette supprimée avec succès.");

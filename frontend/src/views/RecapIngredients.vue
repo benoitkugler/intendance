@@ -1,14 +1,18 @@
 <template>
-  <v-row class="fill-height" justify="space-around">
-    <v-col cols="auto" class="align-self-center">
+  <v-row class="fill-height px-1">
+    <v-col cols="3" sm="6" class="align-self-center">
       <form-calcul :sejour="sejour" @change="onChange"></form-calcul>
     </v-col>
-    <v-col cols="6" class="align-self-center">
+    <v-col cols="4" sm="6" class="align-self-center">
       <result-ingredients
         :loading="loadingIngredients"
         :dateIngredients="dateIngredients"
+        @goToIngredient="goToIngredient"
       >
       </result-ingredients>
+    </v-col>
+    <v-col class="align-self-center" sm="12">
+      <preview-commande :dateIngredients="dateIngredients"></preview-commande>
     </v-col>
   </v-row>
 </template>
@@ -19,6 +23,7 @@ import Component from "vue-class-component";
 
 import FormCalcul from "../components/recap_ingredients/FormCalcul.vue";
 import ResultIngredients from "../components/recap_ingredients/ResultIngredients.vue";
+import PreviewCommande from "../components/recap_ingredients/PreviewCommande.vue";
 
 import { C } from "../logic/controller";
 import { DateIngredientQuantites, OutResoudIngredients } from "../logic/types";
@@ -28,7 +33,7 @@ const RecapIngredientsProps = Vue.extend({
 });
 
 @Component({
-  components: { FormCalcul, ResultIngredients }
+  components: { FormCalcul, ResultIngredients, PreviewCommande }
 })
 export default class RecapIngredients extends RecapIngredientsProps {
   showFormCalcul = false;
@@ -41,6 +46,14 @@ export default class RecapIngredients extends RecapIngredientsProps {
 
   get sejour() {
     return C.state.getSejour();
+  }
+
+  async mounted() {
+    if (Object.keys(C.data.fournisseurs || {}).length > 0) return;
+    await C.data.loadFournisseurs();
+    if (C.notifications.getError() == null) {
+      C.notifications.setMessage("Fournisseurs chargés.");
+    }
   }
 
   onChange(critere: number[]) {
@@ -63,10 +76,8 @@ export default class RecapIngredients extends RecapIngredientsProps {
     this.dateIngredients = res.date_ingredients || [];
   }
 
-  activated() {
-    // les repas on put changer,
-    // donc on relance une requête de calcul
-    this.calcul();
+  goToIngredient(id: number) {
+    this.$router.push({ name: "menus", query: { idIngredient: String(id) } });
   }
 }
 </script>

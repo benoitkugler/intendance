@@ -2,6 +2,13 @@
   <v-card>
     <v-card-title primary-title>
       Choix des journées
+      <v-spacer></v-spacer>
+      <tooltip-btn
+        tooltip="Rafraichir le calcul"
+        mdi-icon="refresh"
+        small
+        @click="onChange"
+      ></tooltip-btn>
     </v-card-title>
     <v-card-subtitle>Ingrédients nécessaires aux journées :</v-card-subtitle>
     <v-card-text>
@@ -29,6 +36,8 @@
 import Vue from "vue";
 import Component from "vue-class-component";
 
+import TooltipBtn from "../utils/TooltipBtn.vue";
+
 import { Watch } from "vue-property-decorator";
 import { C } from "../../logic/controller";
 import { Formatter } from "../../logic/formatter";
@@ -37,7 +46,7 @@ import {
   OutResoudIngredients,
   SejourRepas
 } from "../../logic/types";
-import { compareArrays } from "../utils/utils";
+import { compareArrays, Debounce } from "../utils/utils";
 
 const FormCalculProps = Vue.extend({
   props: {
@@ -46,9 +55,11 @@ const FormCalculProps = Vue.extend({
 });
 
 @Component({
-  components: {}
+  components: { TooltipBtn }
 })
 export default class FormCalcul extends FormCalculProps {
+  debounce = new Debounce(this.emitEvent, 700);
+
   get selectAll() {
     return compareArrays(this.choixJournees, this.critere);
   }
@@ -80,9 +91,13 @@ export default class FormCalcul extends FormCalculProps {
     return Formatter.formatDate(d.toISOString());
   }
 
+  private emitEvent() {
+    this.$emit("change", this.critere);
+  }
+
   @Watch("critere")
   onChange() {
-    this.$emit("change", this.critere);
+    this.debounce.delayJob();
   }
 }
 </script>

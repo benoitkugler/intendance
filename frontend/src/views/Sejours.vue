@@ -141,7 +141,7 @@ export default class Sejours extends SejoursProps {
   async mounted() {
     await C.data.loadSejours();
     if (C.notifications.getError() == null) {
-      C.notifications.setMessage("Les séjours ont bien été chargés.");
+      C.notifications.setMessage("Séjours chargés.");
       this.setClosestSejour();
     }
   }

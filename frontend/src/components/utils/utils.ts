@@ -50,3 +50,30 @@ export function searchFunction(search: string) {
     return levenshtein(item, search) <= MAX_DIST_LEVENSHTEIN;
   };
 }
+
+// Implémente le délai d'un requête
+export class Debounce {
+  private timerId: null | number = null;
+  private job: () => void;
+  private delay = 500; // default ms
+
+  constructor(job: () => void, delay?: number) {
+    this.job = job;
+    if (delay !== undefined) {
+      this.delay = delay;
+    }
+  }
+
+  // lance le job après un delai
+  delayJob() {
+    // un job a déjà était proposé :
+    // on l'annule et on reset le timer
+    if (this.timerId != null) {
+      clearTimeout(this.timerId);
+      this.timerId = null;
+    }
+
+    // on sauvegarde le lancement du job
+    this.timerId = setTimeout(this.job, this.delay);
+  }
+}

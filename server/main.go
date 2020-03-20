@@ -77,7 +77,9 @@ func setup(e *echo.Echo, dev bool) string {
 func routes(e *echo.Echo) {
 	for _, route := range []string{
 		"/",
+		"/sejours",
 		"/agenda",
+		"/recap",
 		"/menus",
 	} {
 		e.GET(route, views.Accueil)
@@ -122,4 +124,8 @@ func routes(e *echo.Echo) {
 	e.GET("/api/fournisseurs", views.GetFournisseurs)
 	e.GET("/api/ingredient-produit", views.GetIngredientProduits)
 	e.POST("/api/ingredient-produit", views.AjouteIngredientProduit)
+	e.POST("/api/produits", views.UpdateProduit)
+	e.DELETE("/api/produits", views.DeleteGroupe)
+
+	e.POST("/api/commande", views.EtablitCommande)
 }

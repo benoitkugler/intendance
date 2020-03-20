@@ -22,12 +22,17 @@
       :showAdd="state.mode == 'visu'"
       @add="$emit('new')"
     ></toolbar>
-    <v-list dense class="overflow-y-auto">
+    <v-list dense :max-height="height" class="overflow-y-auto" ref="list">
       <v-list-item-group
-        :value="state.selection.menu"
+        :value="state.selection.idMenu"
         @change="args => $emit('change', args)"
       >
-        <v-list-item v-for="menu in menus" :key="menu.id" :value="menu">
+        <v-list-item
+          v-for="menu in menus"
+          :key="menu.id"
+          :value="menu.id"
+          :class="classItem(menu.id)"
+        >
           <template v-slot:default="{ active }">
             <v-list-item-content>
               <v-list-item-title>{{ formatMenuName(menu) }}</v-list-item-title>
@@ -74,17 +79,18 @@ import { C } from "../../logic/controller";
 import { Menu } from "../../logic/types";
 import { StateMenus } from "./types";
 import { searchFunction } from "../utils/utils";
-
-const Props = Vue.extend({
-  props: {
-    state: Object as () => StateMenus
-  }
-});
+import { BaseList, ListKind } from "./shared";
 
 @Component({
-  components: { TooltipBtn, Toolbar }
+  components: { TooltipBtn, Toolbar },
+  props: {
+    kind: {
+      type: String as () => ListKind,
+      default: "idMenu"
+    }
+  }
 })
-export default class ListeMenus extends Props {
+export default class ListeMenus extends BaseList {
   confirmeSupprime = false;
   formatMenuName = C.formatter.formatMenuName;
   formatMenuProprietaire = C.formatter.formatMenuOrRecetteProprietaire;
@@ -105,8 +111,8 @@ export default class ListeMenus extends Props {
 
   async supprime() {
     this.confirmeSupprime = false;
-    if (this.state.selection.menu == null) return;
-    await C.data.deleteMenu(this.state.selection.menu);
+    if (this.state.selection.idMenu == null) return;
+    await C.data.deleteMenu(this.state.selection.idMenu);
     if (C.notifications.getError() == null) {
       C.notifications.setMessage("Menu supprimé avec succès.");
     }

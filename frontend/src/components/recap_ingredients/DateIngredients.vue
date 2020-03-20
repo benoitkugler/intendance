@@ -19,6 +19,7 @@
         <v-expansion-panel-content>
           <liste-ingredients
             :ingredients="jour.ingredients"
+            @go="id => $emit('go', id)"
           ></liste-ingredients>
         </v-expansion-panel-content>
       </v-expansion-panel>

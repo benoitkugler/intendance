@@ -13,18 +13,14 @@ test("resoud ingredients", async () => {
   await C.calculs.resoudIngredientsRepas(repas[0].id);
   expect(C.notifications.getError()).toBeNull();
 
-  const sejour = Object.values(C.data.sejours).filter(
-    s => Object.keys(s.journees).length > 0
-  )[0];
-  const N = Object.keys(sejour.journees).length;
+  const sejour = Object.values(C.data.sejours.sejours || {})[0];
 
-  const jourOffsets = Object.keys(sejour.journees).map(k => Number(k));
-  const res = await C.calculs.resoudIngredientsJournees(
-    sejour.sejour.id,
-    jourOffsets
-  );
+  const res = await C.calculs.resoudIngredientsJournees(sejour.id, [
+    0,
+    1,
+    2,
+    3
+  ]);
   expect(C.notifications.getError()).toBeNull();
   expect(res).not.toBeUndefined();
-  if (res == undefined) return;
-  expect(res.date_ingredients).toHaveLength(N);
 });

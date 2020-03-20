@@ -584,5 +584,56 @@ func AjouteIngredientProduit(c echo.Context) error {
 		return err
 	}
 	return c.JSON(200, OutIngredientProduits{Token: ct.Token, Produits: out})
+}
 
+func UpdateProduit(c echo.Context) error {
+	ct, err := Server.Authentifie(c.Request())
+	if err != nil {
+		return err
+	}
+	var produit models.Produit
+	if err = c.Bind(&produit); err != nil {
+		return err
+	}
+	produit, err = Server.UpdateProduit(ct, produit)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, OutProduit{Token: ct.Token, Produit: produit})
+}
+
+//TODO: debug
+func DeleteProduit(c echo.Context) error {
+	ct, err := Server.Authentifie(c.Request())
+	if err != nil {
+		return err
+	}
+	id, err := getId(c)
+	if err != nil {
+		return err
+	}
+	if err = Server.DeleteProduit(ct, id); err != nil {
+		return err
+	}
+	return c.NoContent(200)
+}
+
+// --------------------------------------------------------------------------
+// ----------------------------- Commandes ----------------------------------
+// --------------------------------------------------------------------------
+
+func EtablitCommande(c echo.Context) error {
+	ct, err := Server.Authentifie(c.Request())
+	if err != nil {
+		return err
+	}
+	var params InCommande
+	if err = c.Bind(&params); err != nil {
+		return err
+	}
+	out, err := Server.EtablitCommande(ct, params.Ingredients, params.Contraintes)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, OutCommande{Token: ct.Token, Commande: out})
 }

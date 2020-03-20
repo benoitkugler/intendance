@@ -10,7 +10,7 @@
     <v-card-text>
       <v-row>
         <v-col>
-          <v-skeleton-loader type="paragraph" :loading="loading">
+          <v-skeleton-loader type="paragraph" :loading="loading" class="h-100">
             <v-simple-table dense fixed-header>
               <thead>
                 <tr>
@@ -18,6 +18,7 @@
                   <th class="text-left">Nom</th>
                   <th class="text-center">Prix</th>
                   <th class="text-center">Conditionnement</th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody>
@@ -27,6 +28,15 @@
                   <td class="text-center">{{ produit.prix }} €</td>
                   <td class="text-center">
                     {{ formatConditionnement(produit.conditionnement) }}
+                  </td>
+                  <td>
+                    <tooltip-btn
+                      small
+                      mdi-icon="close"
+                      color="red"
+                      tooltip="Supprimer ce produit"
+                      @click="deleteProduit(produit)"
+                    ></tooltip-btn>
                   </td>
                 </tr>
               </tbody>
@@ -47,12 +57,14 @@ import Vue from "vue";
 import Component from "vue-class-component";
 
 import DetailsProduit from "./DetailsProduit.vue";
+import TooltipBtn from "../utils/TooltipBtn.vue";
 
 import { Ingredient, IngredientProduits, Produit } from "../../logic/types";
 import { C } from "../../logic/controller";
 import { Watch } from "vue-property-decorator";
 import { New } from "../../logic/types2";
 import { Formatter } from "../../logic/formatter";
+import { UniteFields } from "../../logic/enums";
 
 const AssociationIngredientProps = Vue.extend({
   props: {
@@ -62,7 +74,7 @@ const AssociationIngredientProps = Vue.extend({
 });
 
 @Component({
-  components: { DetailsProduit }
+  components: { DetailsProduit, TooltipBtn }
 })
 export default class AssociationIngredient extends AssociationIngredientProps {
   formatConditionnement = Formatter.formatConditionnement;
@@ -70,10 +82,11 @@ export default class AssociationIngredient extends AssociationIngredientProps {
   get produit(): New<Produit> {
     let cond = { quantite: 0, unite: "" };
     if (this.ingredient != null) {
-      cond = {
-        quantite: this.ingredient.conditionnement.quantite,
-        unite: this.ingredient.unite
-      };
+      cond = this.ingredient.conditionnement;
+      if (this.ingredient.unite != UniteFields.Piece) {
+        // les unités doivent être indentiques
+        cond.unite = this.ingredient.unite;
+      }
     }
     return {
       id_fournisseur: -1,
@@ -132,6 +145,16 @@ export default class AssociationIngredient extends AssociationIngredientProps {
         `Produit créé et lié à ${this.ingredient.nom}`
       );
     }
+  }
+
+  async deleteProduit(produit: Produit) {
+    if (this.ingredient == null) return;
+    await C.data.deleteProduit(produit.id);
+    if (C.notifications.getError() != null) return;
+    C.notifications.setMessage(
+      `Produit ${this.produit.nom} supprimé avec succès`
+    );
+    this.loadProduits();
   }
 }
 </script>

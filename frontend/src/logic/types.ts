@@ -1,10 +1,7 @@
-// github.com/benoitkugler/intendance/server/models.Unite
-export type Unite = string
-
 // github.com/benoitkugler/intendance/server/models.Conditionnement
 export interface Conditionnement {
 	quantite: number,
-	unite: Unite,
+	unite: string,
 }
 
 // github.com/benoitkugler/intendance/server/models.Produit
@@ -18,7 +15,7 @@ export interface Produit {
 	colisage: number,
 }
 
-// server/views.InAjouteIngredientProduit
+// github.com/benoitkugler/intendance/server/views.InAjouteIngredientProduit
 export interface InAjouteIngredientProduit {
 	id_ingredient: number,
 	produit: Produit,
@@ -39,19 +36,59 @@ export interface InAssistantCreateRepass {
 	groupes_sorties: { [key: number]: number[] | null } | null,
 }
 
-// server/views.InLieIngredientProduit
+// ISO date string
+export type Time = string
+
+// github.com/benoitkugler/intendance/server/models.Callories
+export interface Callories {
+}
+
+// github.com/benoitkugler/intendance/server/models.Ingredient
+export interface Ingredient {
+	id: number,
+	nom: string,
+	unite: string,
+	categorie: string,
+	callories: Callories,
+	conditionnement: Conditionnement,
+}
+
+// github.com/benoitkugler/intendance/server/controller.IngredientQuantite
+export interface IngredientQuantite {
+	ingredient: Ingredient,
+	quantite: number,
+}
+
+// github.com/benoitkugler/intendance/server/controller.DateIngredientQuantites
+export interface DateIngredientQuantites {
+	date: Time,
+	ingredients: IngredientQuantite[] | null,
+}
+
+// github.com/benoitkugler/intendance/server/controller.CommandeContraintes
+export interface CommandeContraintes {
+	contrainte_produits: { [key: number]: number } | null,
+}
+
+// github.com/benoitkugler/intendance/server/views.InCommande
+export interface InCommande {
+	ingredients: DateIngredientQuantites[] | null,
+	contraintes: CommandeContraintes,
+}
+
+// github.com/benoitkugler/intendance/server/views.InLieIngredientProduit
 export interface InLieIngredientProduit {
 	id_ingredient: number,
 	id_produit: number,
 }
 
-// server/views.InLoggin
+// github.com/benoitkugler/intendance/server/views.InLoggin
 export interface InLoggin {
 	mail: string,
 	password: string,
 }
 
-// server/views.InResoudIngredients
+// github.com/benoitkugler/intendance/server/views.InResoudIngredients
 export interface InResoudIngredients {
 	mode: string,
 	id_repas: number,
@@ -60,7 +97,21 @@ export interface InResoudIngredients {
 	jour_offset: number[] | null,
 }
 
-// server/views.OutDeleteGroupe
+// github.com/benoitkugler/intendance/server/controller.CommandeItem
+export interface CommandeItem {
+	produit: Produit,
+	jour_commande: Time,
+	quantite: number,
+	origines: IngredientQuantite[] | null,
+}
+
+// github.com/benoitkugler/intendance/server/views.OutCommande
+export interface OutCommande {
+	token: string,
+	commande: CommandeItem[] | null,
+}
+
+// github.com/benoitkugler/intendance/server/views.OutDeleteGroupe
 export interface OutDeleteGroupe {
 	token: string,
 	nb_repas: number,
@@ -80,7 +131,7 @@ export interface Fournisseur {
 // github.com/benoitkugler/intendance/server/models.Fournisseurs
 export type Fournisseurs = { [key: number]: Fournisseur } | null
 
-// server/views.OutFournisseurs
+// github.com/benoitkugler/intendance/server/views.OutFournisseurs
 export interface OutFournisseurs {
 	token: string,
 	fournisseurs: Fournisseurs,
@@ -95,30 +146,13 @@ export interface Groupe {
 	couleur: string,
 }
 
-// server/views.OutGroupe
+// github.com/benoitkugler/intendance/server/views.OutGroupe
 export interface OutGroupe {
 	token: string,
 	groupe: Groupe,
 }
 
-// github.com/benoitkugler/intendance/server/models.Categorie
-export type Categorie = string
-
-// github.com/benoitkugler/intendance/server/models.Callories
-export interface Callories {
-}
-
-// github.com/benoitkugler/intendance/server/models.Ingredient
-export interface Ingredient {
-	id: number,
-	nom: string,
-	unite: Unite,
-	categorie: Categorie,
-	callories: Callories,
-	conditionnement: Conditionnement,
-}
-
-// server/views.OutIngredient
+// github.com/benoitkugler/intendance/server/views.OutIngredient
 export interface OutIngredient {
 	token: string,
 	ingredient: Ingredient,
@@ -136,7 +170,7 @@ export interface IngredientProduits {
 	id_default: NullInt64,
 }
 
-// server/views.OutIngredientProduits
+// github.com/benoitkugler/intendance/server/views.OutIngredientProduits
 export interface OutIngredientProduits {
 	token: string,
 	produits: IngredientProduits,
@@ -145,7 +179,7 @@ export interface OutIngredientProduits {
 // github.com/benoitkugler/intendance/server/models.Ingredients
 export type Ingredients = { [key: number]: Ingredient } | null
 
-// server/views.OutIngredients
+// github.com/benoitkugler/intendance/server/views.OutIngredients
 export interface OutIngredients {
 	token: string,
 	ingredients: Ingredients,
@@ -187,16 +221,22 @@ export interface Menu {
 	ingredients: MenuIngredient[] | null,
 }
 
-// server/views.OutMenu
+// github.com/benoitkugler/intendance/server/views.OutMenu
 export interface OutMenu {
 	token: string,
 	menu: Menu,
 }
 
-// server/views.OutMenus
+// github.com/benoitkugler/intendance/server/views.OutMenus
 export interface OutMenus {
 	token: string,
 	menus: { [key: number]: Menu } | null,
+}
+
+// github.com/benoitkugler/intendance/server/views.OutProduit
+export interface OutProduit {
+	token: string,
+	produit: Produit,
 }
 
 // github.com/benoitkugler/intendance/server/models.RecetteIngredient
@@ -216,34 +256,19 @@ export interface Recette {
 	ingredients: RecetteIngredient[] | null,
 }
 
-// server/views.OutRecette
+// github.com/benoitkugler/intendance/server/views.OutRecette
 export interface OutRecette {
 	token: string,
 	recette: Recette,
 }
 
-// server/views.OutRecettes
+// github.com/benoitkugler/intendance/server/views.OutRecettes
 export interface OutRecettes {
 	token: string,
 	recettes: { [key: number]: Recette } | null,
 }
 
-// 
-export type Time = string
-
-// github.com/benoitkugler/intendance/server/controller.IngredientQuantite
-export interface IngredientQuantite {
-	ingredient: Ingredient,
-	quantite: number,
-}
-
-// github.com/benoitkugler/intendance/server/controller.DateIngredientQuantites
-export interface DateIngredientQuantites {
-	date: Time,
-	ingredients: IngredientQuantite[] | null,
-}
-
-// server/views.OutResoudIngredients
+// github.com/benoitkugler/intendance/server/views.OutResoudIngredients
 export interface OutResoudIngredients {
 	token: string,
 	date_ingredients: DateIngredientQuantites[] | null,
@@ -257,14 +282,11 @@ export interface Sejour {
 	nom: string,
 }
 
-// server/views.OutSejour
+// github.com/benoitkugler/intendance/server/views.OutSejour
 export interface OutSejour {
 	token: string,
 	sejour: Sejour,
 }
-
-// github.com/benoitkugler/intendance/server/models.Horaire
-export type Horaire = string
 
 // github.com/benoitkugler/intendance/server/models.RepasGroupe
 export interface RepasGroupe {
@@ -279,7 +301,7 @@ export interface RepasWithGroupe {
 	id_menu: NullInt64,
 	offset_personnes: number,
 	jour_offset: number,
-	horaire: Horaire,
+	horaire: string,
 	groupes: RepasGroupe[] | null,
 }
 
@@ -301,13 +323,13 @@ export interface Sejours {
 	groupes: Groupes,
 }
 
-// server/views.OutSejours
+// github.com/benoitkugler/intendance/server/views.OutSejours
 export interface OutSejours {
 	token: string,
 	sejours: Sejours,
 }
 
-// server/views.OutUtilisateurs
+// github.com/benoitkugler/intendance/server/views.OutUtilisateurs
 export interface OutUtilisateurs {
 	token: string,
 	utilisateurs: { [key: number]: Utilisateur } | null,

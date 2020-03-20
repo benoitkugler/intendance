@@ -60,7 +60,6 @@ type IngredientProduits struct {
 	IdDefault sql.NullInt64    `json:"id_default"`
 }
 
-type Commande struct {
-	models.Commande
-	Produits []models.CommandeProduit
+type PreviewCommande struct {
+	Produits []CommandeItem
 }

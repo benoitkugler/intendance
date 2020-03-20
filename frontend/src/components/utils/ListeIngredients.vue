@@ -1,22 +1,29 @@
 <template>
   <v-simple-table dense fixed-header>
-    <template v-slot:default>
-      <thead>
-        <tr>
-          <th class="text-left">Ingrédient</th>
-          <th class="text-center">Quantité</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="ingredient in ingredients" :key="ingredient.ingredient.id">
-          <td>{{ ingredient.ingredient.nom }}</td>
-          <td class="text-center">
-            {{ formatQuantite(ingredient.quantite) }}
-            <i class="grey--text">{{ ingredient.ingredient.unite }}</i>
-          </td>
-        </tr>
-      </tbody>
-    </template>
+    <thead>
+      <tr>
+        <th class="text-left">Ingrédient</th>
+        <th class="text-center">Quantité</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr v-for="ingredient in ingredients" :key="ingredient.ingredient.id">
+        <td>
+          <v-tooltip left>
+            <template v-slot:activator="{ on }">
+              <a @click="$emit('go', ingredient.ingredient.id)" v-on="on">
+                {{ ingredient.ingredient.nom }}
+              </a>
+            </template>
+            Aller à l'ingrédient...
+          </v-tooltip>
+        </td>
+        <td class="text-center">
+          {{ formatQuantite(ingredient.quantite) }}
+          <i class="grey--text">{{ ingredient.ingredient.unite }}</i>
+        </td>
+      </tr>
+    </tbody>
   </v-simple-table>
 </template>
 

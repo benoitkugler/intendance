@@ -108,3 +108,18 @@ type OutIngredientProduits struct {
 	Token    string                        `json:"token"`
 	Produits controller.IngredientProduits `json:"produits"`
 }
+
+type OutProduit struct {
+	Token   string         `json:"token"`
+	Produit models.Produit `json:"produit"`
+}
+
+type InCommande struct {
+	Ingredients []controller.DateIngredientQuantites `json:"ingredients"`
+	Contraintes controller.CommandeContraintes       `json:"contraintes"`
+}
+
+type OutCommande struct {
+	Token    string                    `json:"token"`
+	Commande []controller.CommandeItem `json:"commande"`
+}

@@ -213,7 +213,7 @@ func (s Server) UpdateIngredient(ct RequeteContext, ig models.Ingredient) (model
 	}
 
 	// vérification de la compatilibité des unités et des contionnements
-	produits, err := ig.GetProduits(ct.tx)
+	produits, err := ig.GetProduits(ct.tx, nil)
 	if err != nil {
 		return ig, ErrorSQL(err)
 	}
@@ -262,7 +262,7 @@ func (s Server) DeleteIngredient(ct RequeteContext, id int64, checkProduits bool
 	}
 
 	ing := models.Ingredient{Id: id}
-	check.produits, err = ing.GetProduits(tx)
+	check.produits, err = ing.GetProduits(tx, nil)
 	if err != nil {
 		return ErrorSQL(err)
 	}
@@ -584,7 +584,14 @@ func (s Server) DeleteSejour(ct RequeteContext, id int64) error {
 		return err
 	}
 
-	_, err := ct.tx.Exec("DELETE FROM repass WHERE id_sejour = $1", id)
+	// table de lien
+	_, err := ct.tx.Exec(`DELETE FROM repas_groupes 
+	USING repass WHERE repass.id = repas_groupes.id_repas 
+	AND repass.id_sejour = $1`, id)
+	if err != nil {
+		return ErrorSQL(err)
+	}
+	_, err = ct.tx.Exec("DELETE FROM repass WHERE id_sejour = $1", id)
 	if err != nil {
 		return ErrorSQL(err)
 	}

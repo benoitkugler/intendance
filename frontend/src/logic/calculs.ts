@@ -1,7 +1,12 @@
 import { Controller } from "./controller";
 import axios, { AxiosResponse } from "axios";
 import { ServerURL } from "./data";
-import { OutResoudIngredients, InResoudIngredients } from "./types";
+import {
+  OutResoudIngredients,
+  InResoudIngredients,
+  OutCommande,
+  InCommande
+} from "./types";
 
 export class Calculs {
   private controller: Controller;
@@ -46,5 +51,21 @@ export class Calculs {
       jour_offset: jourOffsets // journées données
     };
     return this.resoudIngredients(params);
+  }
+
+  async previewCommande(params: InCommande) {
+    try {
+      const response: AxiosResponse<OutCommande> = await axios.post(
+        ServerURL + "/commande",
+        params,
+        {
+          auth: this.controller.auth()
+        }
+      );
+      this.controller.token = response.data.token;
+      return response.data;
+    } catch (error) {
+      this.controller.notifications.setAxiosError(error);
+    }
   }
 }

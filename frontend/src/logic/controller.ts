@@ -56,12 +56,24 @@ export class Controller {
     });
   }
 
-  getMenuRecettes(menu: Menu) {
+  getMenu(idMenu: number) {
+    return (this.data.menus || {})[idMenu];
+  }
+
+  getRecette(idRecette: number) {
+    return (this.data.recettes || {})[idRecette];
+  }
+
+  getIngredient(idIngredient: number) {
+    return (this.data.ingredients || {})[idIngredient];
+  }
+
+  getMenuRecettes(menu: New<Menu>) {
     return (menu.recettes || []).map(rec => this.data.recettes[rec.id_recette]);
   }
 
-  getMenuIngredients(menu: Menu): IngredientOptions[] {
-    return (menu.ingredients || []).map(ing => {
+  getMenuIngredients(idMenu: number): IngredientOptions[] {
+    return (this.getMenu(idMenu).ingredients || []).map(ing => {
       return {
         ingredient: (this.data.ingredients || {})[ing.id_ingredient],
         options: ing
@@ -74,8 +86,8 @@ export class Controller {
     return this.data.utilisateurs[item.id_proprietaire.Int64];
   }
 
-  getRecetteIngredients(rec: Recette): IngredientOptions[] {
-    return (rec.ingredients || []).map(ing => {
+  getRecetteIngredients(idRecette: number): IngredientOptions[] {
+    return (this.getRecette(idRecette).ingredients || []).map(ing => {
       return {
         ingredient: (this.data.ingredients || {})[ing.id_ingredient],
         options: ing

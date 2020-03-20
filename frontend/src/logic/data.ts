@@ -143,13 +143,16 @@ export class Data {
     return this.createOrUpdateIngredient(ing, "post");
   };
 
-  deleteIngredient = async (ing: Ingredient, checkProduits: boolean) => {
+  deleteIngredient = async (idIngredient: number, checkProduits: boolean) => {
     this.controller.notifications.startSpin();
     try {
       const response: AxiosResponse<OutIngredients> = await axios.delete(
         ServerURL + "/ingredients",
         {
-          params: { id: ing.id, check_produits: checkProduits ? "check" : "" },
+          params: {
+            id: idIngredient,
+            check_produits: checkProduits ? "check" : ""
+          },
           auth: this.controller.auth()
         }
       );
@@ -194,6 +197,18 @@ export class Data {
       this.controller.token = response.data.token;
       this.controller.notifications.setMessage("Produit associé avec succès.");
       return response.data.produits;
+    } catch (error) {
+      this.controller.notifications.setAxiosError(error);
+    }
+  };
+
+  deleteProduit = async (idProduit: number) => {
+    this.controller.notifications.startSpin();
+    try {
+      await axios.delete(ServerURL + "/produits", {
+        params: { id: idProduit },
+        auth: this.controller.auth()
+      });
     } catch (error) {
       this.controller.notifications.setAxiosError(error);
     }
@@ -246,13 +261,13 @@ export class Data {
     return this.createOrUpdateRecette(recette, "post");
   };
 
-  deleteRecette = async (recette: Recette) => {
+  deleteRecette = async (idRecette: number) => {
     this.controller.notifications.startSpin();
     try {
       const response: AxiosResponse<OutRecettes> = await axios.delete(
         ServerURL + "/recettes",
         {
-          params: { id: recette.id },
+          params: { id: idRecette },
           auth: this.controller.auth()
         }
       );
@@ -310,13 +325,13 @@ export class Data {
     return this.createOrUpdateMenu(menu, "post");
   };
 
-  deleteMenu = async (menu: Menu) => {
+  deleteMenu = async (idMenu: number) => {
     this.controller.notifications.startSpin();
     try {
       const response: AxiosResponse<OutMenus> = await axios.delete(
         ServerURL + "/menus",
         {
-          params: { id: menu.id },
+          params: { id: idMenu },
           auth: this.controller.auth()
         }
       );

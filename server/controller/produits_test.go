@@ -37,3 +37,11 @@ func TestGetFournisseurs(t *testing.T) {
 	}
 	fmt.Println(out)
 }
+
+func TestDelete(t *testing.T) {
+	s, ct := setupTest(t)
+	defer s.db.Close()
+	if err := s.DeleteProduit(ct, 67); err != nil {
+		t.Fatal(err)
+	}
+}

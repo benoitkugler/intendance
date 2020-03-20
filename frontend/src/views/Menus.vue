@@ -1,58 +1,61 @@
 <template>
   <v-container fluid class="py-1 px-2">
     <v-row wrap>
-      <v-col cols="4" v-if="state.mode == 'visu' || state.mode == 'editMenu'">
-        <v-fade-transition group hide-on-leave>
+      <v-col
+        md="4"
+        sm="6"
+        v-if="state.mode == 'visu' || state.mode == 'editMenu'"
+      >
+        <transition-group name="fade" mode="out-in" duration="200">
           <liste-menus
-            v-if="state.mode == 'visu'"
-            key="liste"
-            style="height: 75vh;"
-            :state="state"
-            @change="menu => (state.selection.menu = menu)"
-            @edit="startEditMenu"
-            @new="startCreateMenu"
-          />
-          <edit-menu
-            v-if="state.mode == 'editMenu'"
-            key="edit"
-            :mode="editMode"
-            :initialMenu="state.selection.menu"
-            @undo="editMenuCancel"
-            @done="editMenuDone"
-          ></edit-menu>
-        </v-fade-transition>
-      </v-col>
-      <v-col>
-        <v-slide-x-reverse-transition group hide-on-leave>
-          <liste-recettes
-            v-if="state.mode == 'visu' || state.mode == 'editMenu'"
+            v-show="state.mode == 'visu'"
             key="liste"
             height="75vh"
             :state="state"
-            @change="rec => (state.selection.recette = rec)"
-            @edit="startEditRecette"
-            @new="startCreateRecette"
+            @change="idMenu => (state.selection.idMenu = idMenu)"
+            @edit="startEditMenu"
+            @new="startCreateMenu"
+            ref="listeMenus"
           />
-          <edit-recette
-            v-if="state.mode == 'editRecette'"
+          <edit-menu
+            v-show="state.mode == 'editMenu'"
             key="edit"
             :mode="editMode"
-            :initialRecette="state.selection.recette"
-            @undo="editRecetteCancel"
-            @done="editRecetteDone"
-          ></edit-recette>
-        </v-slide-x-reverse-transition>
+            :initialMenu="editedMenu"
+            @undo="editMenuCancel"
+            @done="editMenuDone"
+          ></edit-menu>
+        </transition-group>
       </v-col>
-      <v-col cols="4">
-        <transition name="slide-fade">
-          <keep-alive>
-            <liste-ingredients
-              height="75vh"
-              :state="state"
-              @change="ing => (state.selection.ingredient = ing)"
-            />
-          </keep-alive>
-        </transition>
+      <v-col md="4" sm="6">
+        <liste-recettes
+          v-show="state.mode == 'visu' || state.mode == 'editMenu'"
+          key="liste"
+          height="75vh"
+          :state="state"
+          @change="idRecette => (state.selection.idRecette = idRecette)"
+          @edit="startEditRecette"
+          @new="startCreateRecette"
+          ref="listeRecettes"
+        />
+        <edit-recette
+          v-show="state.mode == 'editRecette'"
+          key="edit"
+          :mode="editMode"
+          :initialRecette="editedRecette"
+          @undo="editRecetteCancel"
+          @done="editRecetteDone"
+        ></edit-recette>
+      </v-col>
+      <v-col md="4" sm="12">
+        <liste-ingredients
+          height="75vh"
+          :state="state"
+          @change="
+            idIngredient => (state.selection.idIngredient = idIngredient)
+          "
+          ref="listeIngredients"
+        />
       </v-col>
     </v-row>
   </v-container>
@@ -74,6 +77,7 @@ import {
   DefautRecette,
   DefautMenu
 } from "../components/menus/types";
+import { Watch } from "vue-property-decorator";
 
 @Component({
   components: {
@@ -87,10 +91,20 @@ import {
 export default class Menus extends Vue {
   state: StateMenus = {
     mode: "visu",
-    selection: { menu: null, recette: null, ingredient: null }
+    selection: { idMenu: null, idRecette: null, idIngredient: null }
   };
 
   editMode: EditMode = "new"; // s'applique au menu, recette ou ingrédient
+
+  // ces champs vont être mis à jour avant édition
+  editedMenu: New<Menu> = DefautMenu;
+  editedRecette: New<Recette> = DefautRecette;
+
+  $refs!: {
+    listeMenus: ListeMenus;
+    listeRecettes: ListeRecettes;
+    listeIngredients: ListeIngredients;
+  };
 
   async mounted() {
     await C.data.loadAllMenus();
@@ -99,10 +113,27 @@ export default class Menus extends Vue {
         "Les menus, recettes et ingrédients ont bien été chargés."
       );
     }
+    this.selectIngredient();
+  }
+
+  activated() {
+    if (C.notifications.getSpin()) {
+      return; // données en cours de chargement
+    }
+    this.selectIngredient();
+  }
+
+  private selectIngredient() {
+    const idIngredient = Number(this.$route.query["idIngredient"]);
+    if (idIngredient) {
+      this.state.mode = "visu";
+      this.$refs.listeIngredients.goToItem(idIngredient);
+    }
   }
 
   startEditMenu(menu: Menu) {
-    this.state.selection.menu = menu;
+    this.editedMenu = menu;
+    this.state.selection.idMenu = menu.id;
     this.state.mode = "editMenu";
     this.editMode = "edit";
   }
@@ -111,37 +142,36 @@ export default class Menus extends Vue {
     if (C.idUtilisateur == null) return;
     const newMenu: Menu = { ...deepcopy(DefautMenu), id: -1 };
     newMenu.id_proprietaire.Int64 = C.idUtilisateur;
-    this.state.selection.menu = newMenu;
+    this.editedMenu = newMenu;
     this.editMode = "new";
     this.state.mode = "editMenu";
   }
 
   editMenuCancel() {
-    if (this.editMode == "new") {
-      // on remet le menu courant à zéro
-      this.state.selection.menu = null;
-    }
     this.state.mode = "visu";
   }
 
   async editMenuDone(menu: Menu) {
     let message = "";
     if (this.editMode == "edit") {
-      await C.data.updateMenu(menu);
+      menu = (await C.data.updateMenu(menu)) as Menu;
       message = "Le menu a bien été mis à jour.";
     } else {
-      await C.data.createMenu(menu);
+      menu = (await C.data.createMenu(menu)) as Menu;
       message = "Le menu a bien été ajouté.";
     }
+    this.state.mode = "visu";
     if (C.notifications.getError() == null) {
       C.notifications.setMessage(message);
+      this.$nextTick(() => {
+        this.$refs.listeMenus.goToItem(menu.id);
+      });
     }
-    this.state.selection.menu = null;
-    this.state.mode = "visu";
   }
 
   startEditRecette(recette: Recette) {
-    this.state.selection.recette = recette;
+    this.editedRecette = recette;
+    // this.state.selection.idRecette = recette.id;
     this.editMode = "edit";
     this.state.mode = "editRecette";
   }
@@ -150,32 +180,28 @@ export default class Menus extends Vue {
     if (C.idUtilisateur == null) return;
     const newRecette: Recette = { ...deepcopy(DefautRecette), id: -1 };
     newRecette.id_proprietaire.Int64 = C.idUtilisateur;
-    this.state.selection.recette = newRecette;
+    this.editedRecette = newRecette;
     this.editMode = "new";
     this.state.mode = "editRecette";
   }
   editRecetteCancel() {
-    if (this.editMode == "new") {
-      // on remet la recette ourante à zéro
-      this.state.selection.recette = null;
-    }
     this.state.mode = "visu";
   }
 
   async editRecetteDone(recette: Recette) {
     let message = "";
     if (this.editMode == "edit") {
-      await C.data.updateRecette(recette);
+      recette = (await C.data.updateRecette(recette)) as Recette;
       message = "La recette a bien été mise à jour.";
     } else {
-      await C.data.createRecette(recette);
+      recette = (await C.data.createRecette(recette)) as Recette;
       message = "La recette a bien été ajoutée.";
     }
+    this.state.mode = "visu";
     if (C.notifications.getError() == null) {
       C.notifications.setMessage(message);
+      this.$refs.listeRecettes.goToItem(recette.id);
     }
-    this.state.selection.recette = null;
-    this.state.mode = "visu";
   }
 }
 </script>

@@ -3,10 +3,10 @@ import { Menu, Recette, Ingredient } from "@/logic/types";
 import { IngredientOptions, New } from "@/logic/types2";
 
 type ModeMenu = "visu" | "editMenu" | "editRecette" | "editIngredient";
-interface SelectionMenu {
-  menu: Menu | null;
-  recette: Recette | null;
-  ingredient: IngredientOptions | null;
+export interface SelectionMenu {
+  idMenu: number | null;
+  idRecette: number | null;
+  idIngredient: number | null;
 }
 export interface StateMenus {
   mode: ModeMenu;

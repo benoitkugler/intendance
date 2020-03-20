@@ -2,7 +2,7 @@
   <div>
     <v-dialog v-model="showEditIngredient" max-width="800px">
       <edit-ingredient
-        :initialIngredient="state.selection.ingredient"
+        :initialIngredient="editedIngredient"
         :mode="editMode"
         @edit="editIngredientDone"
       ></edit-ingredient>
@@ -51,20 +51,21 @@
       :title="title"
       :showAdd="
         state.mode == 'visu' &&
-          state.selection.menu == null &&
-          state.selection.recette == null
+          state.selection.idMenu == null &&
+          state.selection.idRecette == null
       "
       @add="startCreateIngredient"
     ></toolbar>
-    <v-list dense :max-height="height" class="overflow-y-auto">
+    <v-list dense :max-height="height" class="overflow-y-auto" ref="list">
       <v-list-item-group
-        :value="state.selection.ingredient"
+        :value="state.selection.idIngredient"
         @change="args => $emit('change', args)"
       >
         <v-list-item
           v-for="ingredient in ingredients"
           :key="ingredient.ingredient.id"
-          :value="ingredient"
+          :value="ingredient.ingredient.id"
+          :class="classItem(ingredient.ingredient.id)"
         >
           <template v-slot:default="{ active }">
             <v-list-item-content
@@ -116,6 +117,7 @@
 
 <script lang="ts">
 import Vue from "vue";
+import Vuetify from "vuetify";
 import Component from "vue-class-component";
 import { Prop, Watch } from "vue-property-decorator";
 
@@ -130,30 +132,35 @@ import TooltipBtn from "../utils/TooltipBtn.vue";
 import levenshtein from "js-levenshtein";
 import { StateMenus, DefautIngredient } from "./types";
 import { searchFunction } from "../utils/utils";
-
-const Props = Vue.extend({
-  props: {
-    height: String,
-    state: Object as () => StateMenus
-  }
-});
-
-const MAX_DIST_LEVENSHTEIN = 4;
+import { BaseList, ListKind } from "./shared";
 
 @Component({
-  components: { TooltipBtn, EditIngredient, AssociationIngredient, Toolbar }
+  components: { TooltipBtn, EditIngredient, AssociationIngredient, Toolbar },
+  props: {
+    kind: {
+      type: String as () => ListKind,
+      default: "idIngredient"
+    }
+  }
 })
-export default class ListeIngredients extends Props {
+export default class ListeIngredients extends BaseList {
   confirmeSupprime = false;
 
   showEditIngredient = false;
   editMode: EditMode = "new";
+  editedIngredient: IngredientOptions = {
+    ingredient: { ...DefautIngredient, id: -1 }
+  };
 
   showEditProduits = false;
 
   search = "";
 
-  subtitle(ingredient: IngredientOptions) {
+  $refs!: {
+    list: HTMLElement;
+  };
+
+  private subtitle(ingredient: IngredientOptions) {
     if (ingredient.options) {
       return `${ingredient.options.quantite} <i>${
         ingredient.ingredient.unite
@@ -162,21 +169,21 @@ export default class ListeIngredients extends Props {
     return `<i>${ingredient.ingredient.unite}</i>`;
   }
 
-  get title() {
+  private get title() {
     if (this.state.mode == "editMenu") {
       return "Choisir un ingrédient";
     }
-    if (this.state.selection.recette != null) {
+    if (this.state.selection.idRecette != null) {
       return "Ingrédients liés à la recette";
-    } else if (this.state.selection.menu != null) {
+    } else if (this.state.selection.idMenu != null) {
       return "Ingrédients liés au menu";
     }
     return "Tous les ingrédients";
   }
 
-  get editedIngredientProduit() {
-    if (this.state.selection.ingredient == null) return null;
-    return this.state.selection.ingredient.ingredient;
+  private get editedIngredientProduit() {
+    if (this.state.selection.idIngredient == null) return null;
+    return C.getIngredient(this.state.selection.idIngredient);
   }
 
   // filtre suivant la recherche
@@ -190,33 +197,33 @@ export default class ListeIngredients extends Props {
       .sort((a, b) => Number(a.ingredient.nom < b.ingredient.nom));
   }
 
-  get ingredients() {
+  private get ingredients() {
     let baseIngredients: IngredientOptions[];
     if (this.state.mode == "editMenu" || this.state.mode == "editRecette") {
       baseIngredients = C.getAllIngredients();
-    } else if (this.state.selection.recette != null) {
-      baseIngredients = C.getRecetteIngredients(this.state.selection.recette);
-    } else if (this.state.selection.menu != null) {
-      baseIngredients = C.getMenuIngredients(this.state.selection.menu);
+    } else if (this.state.selection.idRecette != null) {
+      baseIngredients = C.getRecetteIngredients(this.state.selection.idRecette);
+    } else if (this.state.selection.idMenu != null) {
+      baseIngredients = C.getMenuIngredients(this.state.selection.idMenu);
     } else {
       baseIngredients = C.getAllIngredients();
     }
     return this.searchIngredients(baseIngredients, this.search);
   }
 
-  showActions(active: boolean) {
+  private showActions(active: boolean) {
     return (
-      this.state.selection.menu == null &&
-      this.state.selection.recette == null &&
+      this.state.selection.idMenu == null &&
+      this.state.selection.idRecette == null &&
       active
     );
   }
 
-  async supprime(checkProduits: boolean) {
+  private async supprime(checkProduits: boolean) {
     this.confirmeSupprime = false;
-    if (this.state.selection.ingredient == null) return;
+    if (this.state.selection.idIngredient == null) return;
     await C.data.deleteIngredient(
-      this.state.selection.ingredient.ingredient,
+      this.state.selection.idIngredient,
       checkProduits
     );
     if (C.notifications.getError() == null) {
@@ -224,41 +231,43 @@ export default class ListeIngredients extends Props {
     }
   }
 
-  onDragStart(event: DragEvent, ingredient: Ingredient) {
+  private onDragStart(event: DragEvent, ingredient: Ingredient) {
     if (!event.dataTransfer) return;
     event.dataTransfer.setData("id-ingredient", String(ingredient.id));
     event.dataTransfer.effectAllowed = "copy";
   }
 
-  startEditIngredient(ing: IngredientOptions) {
+  private startEditIngredient(ing: IngredientOptions) {
     this.$emit("change", ing);
+    this.editedIngredient = ing;
     this.editMode = "edit";
     this.showEditIngredient = true;
   }
 
-  async editIngredientDone(ing: Ingredient) {
+  private async editIngredientDone(ing: Ingredient) {
     this.showEditIngredient = false;
     let message = "";
     if (this.editMode == "edit") {
-      await C.data.updateIngredient(ing);
+      ing = (await C.data.updateIngredient(ing)) as Ingredient;
       message = "L'ingrédient a été modifié avec succès.";
     } else {
-      await C.data.createIngredient(ing);
+      ing = (await C.data.createIngredient(ing)) as Ingredient;
       message = "L'ingrédient a été ajouté avec succès.";
     }
     if (C.notifications.getError() == null) {
       C.notifications.setMessage(message);
+      this.state.selection.idIngredient = ing.id;
     }
     this.$emit("change", null);
   }
 
-  startCreateIngredient() {
+  private startCreateIngredient() {
     this.$emit("change", { ingredient: DefautIngredient });
     this.editMode = "new";
     this.showEditIngredient = true;
   }
 
-  startEditProduits(ingredient: IngredientOptions) {
+  private startEditProduits(ingredient: IngredientOptions) {
     this.showEditProduits = true;
   }
 }
