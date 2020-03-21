@@ -47,7 +47,7 @@ func (c ContrainteIngredient) Check() error {
 }
 
 type ContrainteListeIngredients struct {
-	ingredients []IngredientQuantite
+	ingredients []TimedIngredientQuantite
 }
 
 func (c ContrainteListeIngredients) Check() error {

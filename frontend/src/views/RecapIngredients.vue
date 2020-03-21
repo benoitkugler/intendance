@@ -1,5 +1,5 @@
 <template>
-  <v-row class="fill-height px-1">
+  <v-row class="fill-height px-2">
     <v-col md="3" sm="6" class="align-self-center">
       <form-calcul :sejour="sejour" @change="onChange"></form-calcul>
     </v-col>
@@ -7,12 +7,16 @@
       <result-ingredients
         :loading="loadingIngredients"
         :dateIngredients="dateIngredients"
+        :origineIngredients="origineIngredients"
         @goToIngredient="goToIngredient"
       >
       </result-ingredients>
     </v-col>
     <v-col class="align-self-center" md="5" sm="12">
-      <preview-commande :dateIngredients="dateIngredients"></preview-commande>
+      <preview-commande
+        :dateIngredients="dateIngredients"
+        @showOrigines="o => (origineIngredients = o)"
+      ></preview-commande>
     </v-col>
   </v-row>
 </template>
@@ -26,7 +30,11 @@ import ResultIngredients from "../components/recap_ingredients/ResultIngredients
 import PreviewCommande from "../components/recap_ingredients/PreviewCommande.vue";
 
 import { C } from "../logic/controller";
-import { DateIngredientQuantites, OutResoudIngredients } from "../logic/types";
+import {
+  DateIngredientQuantites,
+  OutResoudIngredients,
+  TimedIngredientQuantite
+} from "../logic/types";
 
 const RecapIngredientsProps = Vue.extend({
   props: {}
@@ -40,6 +48,8 @@ export default class RecapIngredients extends RecapIngredientsProps {
 
   loadingIngredients = false;
   dateIngredients: DateIngredientQuantites[] = [];
+
+  origineIngredients: TimedIngredientQuantite[] = [];
 
   // pour pouvoir raffraichir la requête
   critere: number[] = [];

@@ -2,8 +2,16 @@
   <v-card>
     <v-card-title primary-title class="secondary py-2 px-3">
       <h3 class="headline mb-0 ">
-        Produits nécessaires
+        Commande
       </h3>
+      <v-spacer></v-spacer>
+      <v-switch
+        label="Regroupe"
+        v-model="regroupe"
+        @change="computeCommande"
+        hide-details
+        class="my-auto"
+      ></v-switch>
     </v-card-title>
     <v-progress-linear indeterminate :active="loading"></v-progress-linear>
     <v-expansion-panels
@@ -35,7 +43,14 @@
             <tbody>
               <tr v-for="(item, j) in commandeJour.produits" :key="j">
                 <td>
-                  {{ formatProduit(item.produit) }}
+                  <v-tooltip left>
+                    <template v-slot:activator="{ on }">
+                      <a v-on="on" @click="showOrigines(item)">
+                        {{ formatProduit(item.produit) }}
+                      </a>
+                    </template>
+                    {{ tooltipOrigin(item) }}
+                  </v-tooltip>
                 </td>
                 <td class="text-center">
                   {{ item.quantite }}
@@ -55,6 +70,8 @@
 <script lang="ts">
 import Vue from "vue";
 import Component from "vue-class-component";
+
+import TooltipBtn from "../utils/TooltipBtn.vue";
 
 import {
   CommandeItem,
@@ -77,7 +94,9 @@ interface commandeJour {
   produits: CommandeItem[];
 }
 
-@Component({})
+@Component({
+  components: { TooltipBtn }
+})
 export default class PreviewCommande extends PreviewCommandeProps {
   data: CommandeItem[] = [];
   loading = false;
@@ -85,12 +104,18 @@ export default class PreviewCommande extends PreviewCommandeProps {
   formatDate = Formatter.formatDate;
   formatQuantite = Formatter.formatQuantite;
 
+  regroupe = false;
+
   @Watch("dateIngredients")
-  async onIngredientsChange() {
+  onIngredientsChange() {
+    this.computeCommande();
+  }
+
+  private async computeCommande() {
     this.loading = true;
     const res = await C.calculs.previewCommande({
       ingredients: this.dateIngredients,
-      contraintes: { contrainte_produits: {} } //TODO:
+      contraintes: { contrainte_produits: {}, regroupe: this.regroupe } //TODO:
     });
     this.loading = false;
     if (res == undefined) {
@@ -117,6 +142,18 @@ export default class PreviewCommande extends PreviewCommandeProps {
   formatProduit(produit: Produit) {
     const fournisseur = C.getFournisseur(produit);
     return `${fournisseur.nom} - ${produit.nom}`;
+  }
+
+  tooltipOrigin(item: CommandeItem) {
+    const or = item.origines || [];
+    if (or.length == 1) {
+      return "Afficher l'ingrédient d'origine";
+    }
+    return `Affiches les ${or.length} ingrédients d'origine`;
+  }
+
+  showOrigines(item: CommandeItem) {
+    this.$emit("showOrigines", item.origines);
   }
 }
 </script>

@@ -2,6 +2,7 @@ package controller
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 
@@ -34,6 +35,16 @@ const jourDuration = 24 * time.Hour
 type CommandeContraintes struct {
 	// Force l'utilisation du produit pour l'ingrédient (idIngredient -> idProduit)
 	ContrainteProduits map[int64]int64 `json:"contrainte_produits"`
+
+	// Si `true`, regroupe toutes les commandes
+	// à la date courante (prototype)
+	Regroupe bool `json:"regroupe"`
+}
+
+// TimedIngredientQuantite ajoute la date de demande de l'ingrédient
+type TimedIngredientQuantite struct {
+	IngredientQuantite
+	Date time.Time `json:"date"`
 }
 
 // CommandeItem représente la commande d'un produit.
@@ -45,14 +56,14 @@ type CommandeItem struct {
 
 	Quantite int64 `json:"quantite"`
 
-	// ids des ingrédients liés à ce produit
-	Origines []IngredientQuantite `json:"origines"`
+	// ingrédients liés à ce produit
+	Origines []TimedIngredientQuantite `json:"origines"`
 }
 
 // renvoie la quantité équivalente à la somme
 // des ingrédients contenus dans `l`
 // les ingrédients doivent avoir tous la même unité
-func aggregeIngredients(l []IngredientQuantite) (float64, error) {
+func aggregeIngredients(l []TimedIngredientQuantite) (float64, error) {
 	contrainte := ContrainteListeIngredients{ingredients: l}
 	if err := contrainte.Check(); err != nil {
 		return 0, nil
@@ -70,15 +81,15 @@ type timedProduit struct {
 }
 
 type timedProduits struct {
-	data map[timedProduit][]IngredientQuantite
+	data map[timedProduit][]TimedIngredientQuantite
 	ids  models.Set
 }
 
 func newTimedProduits() timedProduits {
-	return timedProduits{data: make(map[timedProduit][]IngredientQuantite), ids: models.NewSet()}
+	return timedProduits{data: make(map[timedProduit][]TimedIngredientQuantite), ids: models.NewSet()}
 }
 
-func (ts timedProduits) addIngredient(idProduit int64, jour time.Time, ing IngredientQuantite) {
+func (ts timedProduits) addIngredient(idProduit int64, jour time.Time, ing TimedIngredientQuantite) {
 	// on normalise les dates
 	jour = jour.Truncate(jourDuration)
 	key := timedProduit{idProduit: idProduit, date: jour}
@@ -129,9 +140,14 @@ func (s Server) EtablitCommande(ct RequeteContext, ingredients []DateIngredientQ
 			// TODO: prendre en compte le délai du fournisseur
 			// pour l'instant on commande le même jour
 			dateCommande := dateArrivee
+			if contraintes.Regroupe {
+				dateCommande = time.Now()
+			}
 
 			// on ajoute au timed-produit l'ingrédient et sa quantité
-			accu.addIngredient(targetIdProduit, dateCommande, ing)
+			// avec la date de demande
+			ting := TimedIngredientQuantite{IngredientQuantite: ing, Date: demande.Date}
+			accu.addIngredient(targetIdProduit, dateCommande, ting)
 		}
 	}
 
@@ -166,5 +182,10 @@ func (s Server) EtablitCommande(ct RequeteContext, ingredients []DateIngredientQ
 		colisage := prod.ColisageNeeded(total)
 		out = append(out, CommandeItem{Produit: prod, JourCommande: key.date, Quantite: colisage, Origines: value})
 	}
+
+	sort.Slice(out, func(i, j int) bool {
+		return out[i].Quantite > out[j].Quantite
+	})
+
 	return out, nil
 }

@@ -13,6 +13,8 @@ export function sortByText<T extends { text: string }>(l: T[]) {
   return l.sort((a, b) => Number(a.text < b.text));
 }
 
+export type Crible = { [key: number]: boolean };
+
 // Renvoie `true` si les deux tableaux sont égaux, vus comme ensembles.
 export function compareArrays<T>(a: T[], b: T[]) {
   const sa = new Set(a);

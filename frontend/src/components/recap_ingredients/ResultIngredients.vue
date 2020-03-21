@@ -10,6 +10,7 @@
       class="overflow-y-auto"
       style="max-height: 75vh;"
       :date-ingredients="dateIngredients"
+      :highlight="origineIngredients"
       @go="id => $emit('goToIngredient', id)"
     ></date-ingredients>
   </v-card>
@@ -21,12 +22,16 @@ import Component from "vue-class-component";
 
 import DateIngredients from "./DateIngredients.vue";
 
-import { DateIngredientQuantites } from "../../logic/types";
+import {
+  DateIngredientQuantites,
+  TimedIngredientQuantite
+} from "../../logic/types";
 
 const ResultIngredientsProps = Vue.extend({
   props: {
     loading: Boolean,
-    dateIngredients: Array as () => DateIngredientQuantites[] | null
+    dateIngredients: Array as () => DateIngredientQuantites[] | null,
+    origineIngredients: Array as () => TimedIngredientQuantite[]
   }
 });
 

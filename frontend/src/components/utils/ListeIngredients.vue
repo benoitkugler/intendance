@@ -7,7 +7,11 @@
       </tr>
     </thead>
     <tbody>
-      <tr v-for="ingredient in ingredients" :key="ingredient.ingredient.id">
+      <tr
+        v-for="ingredient in ingredients"
+        :key="ingredient.ingredient.id"
+        :class="getRowClass(ingredient)"
+      >
         <td>
           <v-tooltip left>
             <template v-slot:activator="{ on }">
@@ -32,15 +36,24 @@ import Vue from "vue";
 import Component from "vue-class-component";
 import { IngredientQuantite } from "../../logic/types";
 import { Formatter } from "../../logic/formatter";
+import { Crible } from "./utils";
 
 const ListeIngredientsProps = Vue.extend({
   props: {
-    ingredients: Array as () => IngredientQuantite[]
+    ingredients: Array as () => IngredientQuantite[],
+    highlights: Object as () => Crible // ids
   }
 });
 @Component({})
 export default class ListeIngredients extends ListeIngredientsProps {
   formatQuantite = Formatter.formatQuantite;
+
+  getRowClass(ingredient: IngredientQuantite) {
+    if (this.highlights[ingredient.ingredient.id]) {
+      return "lime lighten-3";
+    }
+    return "";
+  }
 }
 </script>
 

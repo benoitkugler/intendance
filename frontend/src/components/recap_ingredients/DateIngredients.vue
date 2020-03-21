@@ -1,10 +1,6 @@
 <template>
   <div>
-    <v-expansion-panels
-      :value="dateIngredients.map((_, i) => i)"
-      multiple
-      accordion
-    >
+    <v-expansion-panels :value="openPanels" multiple accordion>
       <v-expansion-panel
         v-for="(jour, i) in dateIngredients"
         :key="i"
@@ -19,6 +15,7 @@
         <v-expansion-panel-content>
           <liste-ingredients
             :ingredients="jour.ingredients"
+            :highlights="getJourHighlights(jour)"
             @go="id => $emit('go', id)"
           ></liste-ingredients>
         </v-expansion-panel-content>
@@ -36,12 +33,18 @@ import Component from "vue-class-component";
 
 import ListeIngredients from "../utils/ListeIngredients.vue";
 
-import { DateIngredientQuantites, IngredientQuantite } from "../../logic/types";
+import {
+  DateIngredientQuantites,
+  IngredientQuantite,
+  TimedIngredientQuantite
+} from "../../logic/types";
 import { Formatter } from "../../logic/formatter";
+import { Crible } from "../utils/utils";
 
 const DateIngredientsProps = Vue.extend({
   props: {
-    dateIngredients: Array as () => DateIngredientQuantites[]
+    dateIngredients: Array as () => DateIngredientQuantites[],
+    highlight: Array as () => TimedIngredientQuantite[]
   }
 });
 
@@ -50,6 +53,33 @@ const DateIngredientsProps = Vue.extend({
 })
 export default class DateIngredients extends DateIngredientsProps {
   formatDate = Formatter.formatDate;
+
+  get openPanels() {
+    // cas particulier en l'absence de highlight : on affiche tout
+    if (this.highlight.length == 0) {
+      return this.dateIngredients.map((_, i) => i);
+    }
+
+    const out: number[] = [];
+    this.dateIngredients.forEach((jour, i) => {
+      const isConcerned =
+        this.highlight.filter(h => h.date == jour.date).length > 0;
+      if (isConcerned) {
+        out.push(i);
+      }
+    });
+    return out;
+  }
+
+  getJourHighlights(jour: DateIngredientQuantites): Crible {
+    const out: Crible = {};
+    this.highlight
+      .filter(h => h.date == jour.date)
+      .forEach(h => {
+        out[h.ingredient.id] = true;
+      });
+    return out;
+  }
 }
 </script>
 

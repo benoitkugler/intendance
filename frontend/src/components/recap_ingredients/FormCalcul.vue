@@ -10,9 +10,8 @@
         @click="emitEvent"
       ></tooltip-btn>
     </v-card-title>
-    <v-card-subtitle>Ingrédients nécessaires aux journées :</v-card-subtitle>
     <v-card-text>
-      <div class="px-3">
+      <div class="px-2">
         <v-checkbox
           label="Tout le séjour"
           v-model="selectAll"
@@ -59,6 +58,7 @@ const FormCalculProps = Vue.extend({
 })
 export default class FormCalcul extends FormCalculProps {
   debounce = new Debounce(this.emitEvent, 700);
+  critere: number[] = [];
 
   get selectAll() {
     return compareArrays(this.choixJournees, this.critere);
@@ -75,8 +75,6 @@ export default class FormCalcul extends FormCalculProps {
   get indeterminate() {
     return this.critere.length > 0 && !this.selectAll;
   }
-
-  critere: number[] = [];
 
   get choixJournees(): number[] {
     if (this.sejour == null) return [];

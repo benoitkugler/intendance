@@ -67,6 +67,7 @@ export interface DateIngredientQuantites {
 // github.com/benoitkugler/intendance/server/controller.CommandeContraintes
 export interface CommandeContraintes {
   contrainte_produits: { [key: number]: number } | null;
+  regroupe: boolean;
 }
 
 // github.com/benoitkugler/intendance/server/views.InCommande
@@ -96,12 +97,19 @@ export interface InResoudIngredients {
   jour_offset: number[] | null;
 }
 
+// github.com/benoitkugler/intendance/server/controller.TimedIngredientQuantite
+export interface TimedIngredientQuantite {
+  ingredient: Ingredient;
+  quantite: number;
+  date: Time;
+}
+
 // github.com/benoitkugler/intendance/server/controller.CommandeItem
 export interface CommandeItem {
   produit: Produit;
   jour_commande: Time;
   quantite: number;
-  origines: IngredientQuantite[] | null;
+  origines: TimedIngredientQuantite[] | null;
 }
 
 // github.com/benoitkugler/intendance/server/views.OutCommande
