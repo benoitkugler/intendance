@@ -1,9 +1,9 @@
 <template>
   <v-row class="fill-height px-1">
-    <v-col cols="3" sm="6" class="align-self-center">
+    <v-col md="3" sm="6" class="align-self-center">
       <form-calcul :sejour="sejour" @change="onChange"></form-calcul>
     </v-col>
-    <v-col cols="4" sm="6" class="align-self-center">
+    <v-col md="4" sm="6" class="align-self-center">
       <result-ingredients
         :loading="loadingIngredients"
         :dateIngredients="dateIngredients"
@@ -11,7 +11,7 @@
       >
       </result-ingredients>
     </v-col>
-    <v-col class="align-self-center" sm="12">
+    <v-col class="align-self-center" md="5" sm="12">
       <preview-commande :dateIngredients="dateIngredients"></preview-commande>
     </v-col>
   </v-row>

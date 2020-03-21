@@ -54,7 +54,7 @@ func (s Server) InitiateRepas(ct RequeteContext, params InAssistantCreateRepass)
 	if err := ct.beginTx(s); err != nil {
 		return err
 	}
-	if err := s.proprioSejour(ct, models.Sejour{Id: params.IdSejour}, false); err != nil {
+	if err := ct.proprioSejour(models.Sejour{Id: params.IdSejour}, false); err != nil {
 		return err
 	}
 

@@ -44,7 +44,7 @@
           </v-skeleton-loader>
         </v-col>
         <v-col>
-          <details-produit @add="addProduit" :produit="produit">
+          <details-produit @add="addProduit" :produit="newProduit">
           </details-produit>
         </v-col>
       </v-row>
@@ -79,7 +79,7 @@ const AssociationIngredientProps = Vue.extend({
 export default class AssociationIngredient extends AssociationIngredientProps {
   formatConditionnement = Formatter.formatConditionnement;
 
-  get produit(): New<Produit> {
+  get newProduit(): New<Produit> {
     let cond = { quantite: 0, unite: "" };
     if (this.ingredient != null) {
       cond = this.ingredient.conditionnement;
@@ -151,10 +151,9 @@ export default class AssociationIngredient extends AssociationIngredientProps {
     if (this.ingredient == null) return;
     await C.data.deleteProduit(produit.id);
     if (C.notifications.getError() != null) return;
-    C.notifications.setMessage(
-      `Produit ${this.produit.nom} supprimé avec succès`
-    );
-    this.loadProduits();
+    await this.loadProduits();
+    if (C.notifications.getError() != null) return;
+    C.notifications.setMessage(`Produit ${produit.nom} supprimé avec succès`);
   }
 }
 </script>

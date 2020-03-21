@@ -1,7 +1,6 @@
 package models
 
 import (
-	"fmt"
 	"math"
 )
 
@@ -10,10 +9,7 @@ import (
 // (exprimée dans l'unité du produit).
 // Le colisage est pris en compte (c'est à dire que le résultat
 // est un multiple du colisage du produit).
-func (p Produit) ColisageNeeded(quantite float64) (int64, error) {
-	if p.Conditionnement.Quantite <= 0 {
-		return 0, fmt.Errorf("Le conditionnement du produit <b>%s</b> est invalide : <i>%0.3f</i>", p.Nom, p.Conditionnement.Quantite)
-	}
+func (p Produit) ColisageNeeded(quantite float64) int64 {
 	// arrondi au supérieur pour ne pas manquer
 	nb := int64(math.Ceil(quantite / p.Conditionnement.Quantite))
 	colisage := p.Colisage
@@ -24,5 +20,5 @@ func (p Produit) ColisageNeeded(quantite float64) (int64, error) {
 		// on ajoute pour être un multiple
 		nb = nb - reste + colisage
 	}
-	return nb, nil
+	return nb
 }

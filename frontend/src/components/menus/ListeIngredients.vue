@@ -170,7 +170,7 @@ export default class ListeIngredients extends BaseList {
   }
 
   private get title() {
-    if (this.state.mode == "editMenu") {
+    if (this.state.mode == "editMenu" || this.state.mode == "editRecette") {
       return "Choisir un ingrédient";
     }
     if (this.state.selection.idRecette != null) {

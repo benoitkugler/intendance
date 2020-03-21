@@ -123,6 +123,12 @@ export default class EditRecette extends EditRecetteProps {
   $refs!: {
     editIngredient: MenuOrRecetteIngredient;
   };
+
+  @Watch("initialRecette")
+  onRecetteChange() {
+    this.recette = deepcopy(this.initialRecette);
+  }
+
   get title() {
     if (this.mode == "edit") {
       return "Modifier la recette";

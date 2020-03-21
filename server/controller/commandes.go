@@ -2,6 +2,7 @@ package controller
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/benoitkugler/intendance/server/models"
@@ -153,10 +154,16 @@ func (s Server) EtablitCommande(ct RequeteContext, ingredients []DateIngredientQ
 			return nil, err
 		}
 		prod := produits[key.idProduit]
-		colisage, err := prod.ColisageNeeded(total)
-		if err != nil {
-			return nil, err
+		if prod.Conditionnement.Quantite <= 0 {
+			var chunks []string
+			for _, ing := range value {
+				chunks = append(chunks, "<b>"+ing.Ingredient.Nom+"</b>")
+			}
+			return nil, fmt.Errorf(`Le conditionnement du produit <b>%s</b> est invalide : <i>%0.3f</i> <br/>
+			Ingrédients liés : %s
+			`, prod.Nom, prod.Conditionnement.Quantite, strings.Join(chunks, ", "))
 		}
+		colisage := prod.ColisageNeeded(total)
 		out = append(out, CommandeItem{Produit: prod, JourCommande: key.date, Quantite: colisage, Origines: value})
 	}
 	return out, nil

@@ -7,7 +7,7 @@
         tooltip="Rafraichir le calcul"
         mdi-icon="refresh"
         small
-        @click="onChange"
+        @click="emitEvent"
       ></tooltip-btn>
     </v-card-title>
     <v-card-subtitle>Ingrédients nécessaires aux journées :</v-card-subtitle>
@@ -91,7 +91,7 @@ export default class FormCalcul extends FormCalculProps {
     return Formatter.formatDate(d.toISOString());
   }
 
-  private emitEvent() {
+  emitEvent() {
     this.$emit("change", this.critere);
   }
 

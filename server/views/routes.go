@@ -602,7 +602,6 @@ func UpdateProduit(c echo.Context) error {
 	return c.JSON(200, OutProduit{Token: ct.Token, Produit: produit})
 }
 
-//TODO: debug
 func DeleteProduit(c echo.Context) error {
 	ct, err := Server.Authentifie(c.Request())
 	if err != nil {

@@ -33,6 +33,25 @@ func (ct RequeteContext) checkFournisseurs(produit models.Produit) error {
 	return nil
 }
 
+// vérifie que tous les ingrédients liés au produit
+// appartiennent à l'utilisateur courant
+func (ct RequeteContext) checkProprioAllIngredient(produit models.Produit) error {
+	rows, err := ct.tx.Query("SELECT id_ajouteur FROM ingredient_produits WHERE id_produit = $1", produit.Id)
+	if err != nil {
+		return ErrorSQL(err)
+	}
+	ids, err := models.ScanInts(rows)
+	if err != nil {
+		return ErrorSQL(err)
+	}
+	set := models.NewSetFromSlice(ids)
+	if len(set) > 1 { // le produit est partagé
+		return fmt.Errorf(`Le produit %s est partagé entre plusieurs utilisateurs. 
+			Sa suppression est donc désactivée.`, produit.Nom)
+	}
+	return nil
+}
+
 // vérification de la présence dans les commandes
 func (ct RequeteContext) checkCommandes(produit models.Produit) error {
 	rows, err := ct.tx.Query("SELECT  * FROM commande_produits WHERE id_produit = $1", produit.Id)
@@ -55,7 +74,7 @@ func (s Server) LoadFournisseurs(ct RequeteContext) (models.Fournisseurs, error)
 	if err := ct.beginTx(s); err != nil {
 		return nil, err
 	}
-	defer ct.rollbackTx(nil)
+	defer ct.rollbackTx(nil) // pas de modifications
 	return ct.loadFournisseurs()
 }
 
@@ -199,6 +218,10 @@ func (s Server) DeleteProduit(ct RequeteContext, idProduit int64) error {
 	}
 
 	if err := ct.checkFournisseurs(produit); err != nil {
+		return err
+	}
+
+	if err := ct.checkProprioAllIngredient(produit); err != nil {
 		return err
 	}
 

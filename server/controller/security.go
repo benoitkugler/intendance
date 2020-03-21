@@ -126,7 +126,7 @@ func (s Server) Authentifie(r *http.Request) (ct RequeteContext, err error) {
 // l'accès est légitimite.
 
 // ct doit déjà être setup
-func (s Server) proprioRecette(ct RequeteContext, recette models.Recette, checkProprioField bool) error {
+func (ct RequeteContext) proprioRecette(recette models.Recette, checkProprioField bool) error {
 	row := ct.tx.QueryRow("SELECT id_proprietaire FROM recettes WHERE id = $1", recette.Id)
 	var trueProp sql.NullInt64
 	if err := row.Scan(&trueProp); err != nil {
@@ -143,7 +143,7 @@ func (s Server) proprioRecette(ct RequeteContext, recette models.Recette, checkP
 	return nil
 }
 
-func (s Server) proprioMenu(ct RequeteContext, menu models.Menu, checkProprioField bool) error {
+func (ct RequeteContext) proprioMenu(menu models.Menu, checkProprioField bool) error {
 	row := ct.tx.QueryRow("SELECT id_proprietaire FROM menus WHERE id = $1", menu.Id)
 	var trueProp sql.NullInt64
 	if err := row.Scan(&trueProp); err != nil {
@@ -162,7 +162,7 @@ func (s Server) proprioMenu(ct RequeteContext, menu models.Menu, checkProprioFie
 
 // Vérifie que le séjour donné appartient au propriétaire courant
 // Si `checkProprioField`, vérifie aussi que le champ IdProprietaire est cohérent.
-func (s Server) proprioSejour(ct RequeteContext, sejour models.Sejour, checkProprioField bool) error {
+func (ct RequeteContext) proprioSejour(sejour models.Sejour, checkProprioField bool) error {
 	row := ct.tx.QueryRow("SELECT id_proprietaire FROM sejours WHERE id = $1", sejour.Id)
 	var trueProp int64
 	if err := row.Scan(&trueProp); err != nil {
@@ -179,7 +179,7 @@ func (s Server) proprioSejour(ct RequeteContext, sejour models.Sejour, checkProp
 	return nil
 }
 
-func (s Server) proprioGroupe(ct RequeteContext, idGroupe int64) error {
+func (ct RequeteContext) proprioGroupe(idGroupe int64) error {
 	row := ct.tx.QueryRow(`SELECT sejours.id_proprietaire FROM sejours 
 	JOIN groupes ON groupes.id_sejour = sejours.id
 	WHERE groupes.id = $1`, idGroupe)
@@ -193,7 +193,8 @@ func (s Server) proprioGroupe(ct RequeteContext, idGroupe int64) error {
 	}
 	return nil
 }
-func (s Server) proprioRepas(ct RequeteContext, idRepas int64) error {
+
+func (ct RequeteContext) proprioRepas(idRepas int64) error {
 	row := ct.tx.QueryRow(`SELECT sejours.id_proprietaire FROM sejours 
 	JOIN repass ON repass.id_sejour = sejours.id
 	WHERE repass.id = $1`, idRepas)

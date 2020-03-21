@@ -27,7 +27,7 @@
           ></edit-menu>
         </transition-group>
       </v-col>
-      <v-col md="4" sm="6">
+      <v-col>
         <liste-recettes
           v-show="state.mode == 'visu' || state.mode == 'editMenu'"
           key="liste"
@@ -127,6 +127,9 @@ export default class Menus extends Vue {
     const idIngredient = Number(this.$route.query["idIngredient"]);
     if (idIngredient) {
       this.state.mode = "visu";
+      // pour afficher tout les ingrédients
+      this.state.selection.idRecette = null;
+      this.state.selection.idMenu = null;
       this.$refs.listeIngredients.goToItem(idIngredient);
     }
   }

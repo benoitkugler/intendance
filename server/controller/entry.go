@@ -346,7 +346,7 @@ func (s Server) UpdateRecette(ct RequeteContext, in Recette) (Recette, error) {
 	if err := ct.beginTx(s); err != nil {
 		return in, err
 	}
-	if err := s.proprioRecette(ct, in.Recette, true); err != nil {
+	if err := ct.proprioRecette(in.Recette, true); err != nil {
 		return in, err
 	}
 	tx := ct.tx
@@ -371,7 +371,7 @@ func (s Server) DeleteRecette(ct RequeteContext, id int64) error {
 	if err := ct.beginTx(s); err != nil {
 		return err
 	}
-	if err := s.proprioRecette(ct, models.Recette{Id: id}, false); err != nil {
+	if err := ct.proprioRecette(models.Recette{Id: id}, false); err != nil {
 		return err
 	}
 	rows, err := ct.tx.Query(`SELECT menus.id FROM menus 
@@ -474,7 +474,7 @@ func (s Server) UpdateMenu(ct RequeteContext, in Menu) (Menu, error) {
 	if err := ct.beginTx(s); err != nil {
 		return in, err
 	}
-	if err := s.proprioMenu(ct, in.Menu, true); err != nil {
+	if err := ct.proprioMenu(in.Menu, true); err != nil {
 		return in, err
 	}
 	tx := ct.tx
@@ -507,7 +507,7 @@ func (s Server) DeleteMenu(ct RequeteContext, id int64) error {
 	if err := ct.beginTx(s); err != nil {
 		return err
 	}
-	if err := s.proprioMenu(ct, models.Menu{Id: id}, false); err != nil {
+	if err := ct.proprioMenu(models.Menu{Id: id}, false); err != nil {
 		return err
 	}
 	rows, err := ct.tx.Query(`SELECT sejours.id FROM sejours 
@@ -565,7 +565,7 @@ func (s Server) UpdateSejour(ct RequeteContext, in models.Sejour) (models.Sejour
 	if err := ct.beginTx(s); err != nil {
 		return in, err
 	}
-	if err := s.proprioSejour(ct, in, true); err != nil {
+	if err := ct.proprioSejour(in, true); err != nil {
 		return in, err
 	}
 	tx := ct.tx
@@ -580,7 +580,7 @@ func (s Server) DeleteSejour(ct RequeteContext, id int64) error {
 	if err := ct.beginTx(s); err != nil {
 		return err
 	}
-	if err := s.proprioSejour(ct, models.Sejour{Id: id}, false); err != nil {
+	if err := ct.proprioSejour(models.Sejour{Id: id}, false); err != nil {
 		return err
 	}
 
@@ -613,7 +613,7 @@ func (s Server) CreateGroupe(ct RequeteContext, idSejour int64) (out models.Grou
 		return
 	}
 	tx := ct.tx
-	if err = s.proprioSejour(ct, models.Sejour{Id: idSejour}, false); err != nil {
+	if err = ct.proprioSejour(models.Sejour{Id: idSejour}, false); err != nil {
 		return
 	}
 	out.IdSejour = idSejour
@@ -631,7 +631,7 @@ func (s Server) UpdateGroupe(ct RequeteContext, in models.Groupe) (models.Groupe
 	if err := ct.beginTx(s); err != nil {
 		return in, err
 	}
-	if err := s.proprioGroupe(ct, in.Id); err != nil {
+	if err := ct.proprioGroupe(in.Id); err != nil {
 		return in, err
 	}
 	tx := ct.tx
@@ -647,7 +647,7 @@ func (s Server) DeleteGroupe(ct RequeteContext, id int64) (int, error) {
 	if err := ct.beginTx(s); err != nil {
 		return 0, err
 	}
-	if err := s.proprioGroupe(ct, id); err != nil {
+	if err := ct.proprioGroupe(id); err != nil {
 		return 0, err
 	}
 
@@ -673,7 +673,7 @@ func (s Server) CreateRepas(ct RequeteContext, idSejour int64, idMenu sql.NullIn
 	if err = ct.beginTx(s); err != nil {
 		return
 	}
-	if err = s.proprioSejour(ct, models.Sejour{Id: idSejour}, false); err != nil {
+	if err = ct.proprioSejour(models.Sejour{Id: idSejour}, false); err != nil {
 		return
 	}
 	tx := ct.tx
@@ -695,7 +695,7 @@ func (s Server) UpdateManyRepas(ct RequeteContext, repass []RepasWithGroupe) err
 	var repasIds pq.Int64Array
 	cribleRepasGroupes := map[models.RepasGroupe]bool{} // pour respecter l'unicité
 	for _, repas := range repass {
-		if err := s.proprioRepas(ct, repas.Id); err != nil {
+		if err := ct.proprioRepas(repas.Id); err != nil {
 			return ct.rollbackTx(err)
 		}
 		if _, err := repas.Repas.Update(ct.tx); err != nil {
@@ -727,7 +727,7 @@ func (s Server) DeleteRepas(ct RequeteContext, id int64) error {
 	if err := ct.beginTx(s); err != nil {
 		return err
 	}
-	if err := s.proprioRepas(ct, id); err != nil {
+	if err := ct.proprioRepas(id); err != nil {
 		return err
 	}
 	// suppression des liens avec les groupes
