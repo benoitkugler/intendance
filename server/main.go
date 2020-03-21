@@ -82,7 +82,7 @@ func routes(e *echo.Echo) {
 		"/recap",
 		"/menus",
 	} {
-		e.GET(route, views.Accueil)
+		e.GET(route, views.Accueil, NoCache)
 	}
 
 	e.POST("/api/loggin", views.Loggin)
@@ -128,4 +128,15 @@ func routes(e *echo.Echo) {
 	e.DELETE("/api/produits", views.DeleteProduit)
 
 	e.POST("/api/commande", views.EtablitCommande)
+}
+
+// Empêche le navigateur de mettre en cache
+// pour avoir les dernières versions des fichiers statiques
+// (essentiellement les builds .js)
+func NoCache(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		c.Response().Header().Set("Cache-Control", "no-store")
+		c.Response().Header().Set("Expires", "0")
+		return next(c)
+	}
 }

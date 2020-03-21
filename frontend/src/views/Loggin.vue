@@ -82,7 +82,7 @@ export default class Loggin extends Vue {
       this.error = null;
       const currentPath = this.$router.currentRoute.path;
       if (routes.map(r => r.path).indexOf(currentPath) == -1) {
-        this.$router.push("/agenda");
+        this.$router.push("/sejours");
       }
     } else {
       this.error = err;
