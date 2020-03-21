@@ -9,6 +9,14 @@ export class Loggin {
 
   constructor(c: Controller) {
     this.controller = c;
+    const aut = this.checkCookies();
+
+    //TODO: handle loggin via cookie
+    // if (aut != null) {
+    //   this.controller.token = aut.token;
+    //   this.controller.idUtilisateur = aut.idUtilisateur;
+    //   this.controller.state.isLoggedIn = true;
+    // }
   }
 
   checkCookies() {
