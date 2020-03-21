@@ -33,8 +33,8 @@ export class Loggin {
       }
       this.controller.token = response.data.token;
       this.controller.idUtilisateur = response.data.utilisateur.id;
-      Cookie.set("token", response.data.token)
-      Cookie.set("id_utilisateur", response.data.utilisateur)
+      Cookie.set("token", response.data.token);
+      Cookie.set("id_utilisateur", response.data.utilisateur);
       this.controller.notifications.setMessage(
         `Connecté sous le nom de <b>${response.data.utilisateur.prenom_nom}</b>`
       );
@@ -46,6 +46,7 @@ export class Loggin {
 
   logout() {
     this.controller.state.isLoggedIn = false;
-    // TODO: cookies
+    Cookie.remove("token");
+    Cookie.remove("id_utilisateur");
   }
 }
