@@ -6,78 +6,92 @@ import (
 	"time"
 )
 
-// utilitaires pour données aléatoires
+func randint64() int64 {
+	return int64(rand.Intn(1000000))
+}
 
-var (
-	letterRunes  = []rune("azertyuiopqsdfghjklmwxcvbn123456789")
-	specialRunes = []rune("é@!?&èïab ")
-)
+func randtTime() time.Time {
+	return time.Unix(int64(rand.Int31()), 5)
+}
 
-func randstringExt(n int, specialChars bool) string {
-	b := make([]rune, n)
-	props, maxLength := letterRunes, len(letterRunes)
-	if specialChars {
-		props = append(props, specialRunes...)
-		maxLength += len(specialRunes)
-	}
+var letterRunes2 = []rune("azertyuiopqsdfghjklmwxcvbn123456789é@!?&èïab ")
+
+func randstring() string {
+	b := make([]rune, 50)
+	maxLength := len(letterRunes2)
 	for i := range b {
-		b[i] = props[rand.Intn(maxLength)]
+		b[i] = letterRunes2[rand.Intn(maxLength)]
 	}
 	return string(b)
 }
 
-func randstring() string {
-	return randstringExt(50, true)
+func randCommande() Commande {
+	return Commande{
+		Id:             randint64(),
+		IdProprietaire: randint64(),
+		DateEmission:   randtTime(),
+		Tag:            randstring(),
+	}
 }
 
-func randBool() bool {
+func randCommandeProduit() CommandeProduit {
+	return CommandeProduit{
+		IdCommande: randint64(),
+		IdProduit:  randint64(),
+		Quantite:   randint64(),
+	}
+}
+
+func randbool() bool {
 	i := rand.Int31n(2)
 	return i == 1
 }
 
-func randfloat64() float64 {
-	return rand.Float64() * float64(rand.Int31())
+func randArray7bool() [7]bool {
+	var out [7]bool
+	for i := range out {
+		out[i] = randbool()
+	}
+	return out
 }
 
-func randNullInt64() sql.NullInt64 {
-	return sql.NullInt64{
-		Int64: rand.Int63(),
-		Valid: randBool(),
+func randJoursLivraison() JoursLivraison {
+	return JoursLivraison(randArray7bool())
+}
+
+func randFournisseur() Fournisseur {
+	return Fournisseur{
+		Id:             randint64(),
+		Nom:            randstring(),
+		DelaiCommande:  randint64(),
+		JoursLivraison: randJoursLivraison(),
 	}
 }
 
-func randNullString() sql.NullString {
-	return sql.NullString{
-		String: randstring(),
-		Valid:  randBool(),
+func randGroupe() Groupe {
+	return Groupe{
+		Id:          randint64(),
+		IdSejour:    randint64(),
+		Nom:         randstring(),
+		NbPersonnes: randint64(),
+		Couleur:     randstring(),
 	}
 }
 
-// TODO: update
+func randUnite() Unite {
+	return Unite(randstring())
+}
+
+func randCategorie() Categorie {
+	return Categorie(randstring())
+}
+
 func randCallories() Callories {
 	return Callories{}
 }
 
-// TODO: update
-func randCategorie() Categorie {
-	return ""
-}
-
-func randTime() time.Time {
-	return time.Unix(int64(rand.Int31()), 5)
-}
-
-func randUnite() Unite {
-	i := rand.Intn(3)
-	return [3]Unite{Litres, Kilos, Piece}[i]
-}
-
-func randJoursLivraison() JoursLivraison {
-	var out JoursLivraison
-	for i := range out {
-		out[i] = randBool()
-	}
-	return out
+func randfloat64() float64 {
+	return rand.Float64() * float64(rand.Int31())
 }
 
 func randConditionnement() Conditionnement {
@@ -87,8 +101,122 @@ func randConditionnement() Conditionnement {
 	}
 }
 
+func randIngredient() Ingredient {
+	return Ingredient{
+		Id:              randint64(),
+		Nom:             randstring(),
+		Unite:           randUnite(),
+		Categorie:       randCategorie(),
+		Callories:       randCallories(),
+		Conditionnement: randConditionnement(),
+	}
+}
+
+func randIngredientProduit() IngredientProduit {
+	return IngredientProduit{
+		IdIngredient: randint64(),
+		IdProduit:    randint64(),
+		IdAjouteur:   randint64(),
+	}
+}
+
+func randsqlNullInt64() sql.NullInt64 {
+	return sql.NullInt64{
+		Int64: randint64(),
+		Valid: randbool(),
+	}
+}
+
+func randMenu() Menu {
+	return Menu{
+		Id:             randint64(),
+		IdProprietaire: randsqlNullInt64(),
+		Commentaire:    randstring(),
+	}
+}
+
+func randMenuIngredient() MenuIngredient {
+	return MenuIngredient{
+		IdMenu:       randint64(),
+		IdIngredient: randint64(),
+		Quantite:     randfloat64(),
+		Cuisson:      randstring(),
+	}
+}
+
+func randMenuRecette() MenuRecette {
+	return MenuRecette{
+		IdMenu:    randint64(),
+		IdRecette: randint64(),
+	}
+}
+
+func randProduit() Produit {
+	return Produit{
+		Id:                   randint64(),
+		IdFournisseur:        randint64(),
+		Nom:                  randstring(),
+		Conditionnement:      randConditionnement(),
+		Prix:                 randfloat64(),
+		ReferenceFournisseur: randstring(),
+		Colisage:             randint64(),
+	}
+}
+
+func randRecette() Recette {
+	return Recette{
+		Id:             randint64(),
+		IdProprietaire: randsqlNullInt64(),
+		Nom:            randstring(),
+		ModeEmploi:     randstring(),
+	}
+}
+
+func randRecetteIngredient() RecetteIngredient {
+	return RecetteIngredient{
+		IdRecette:    randint64(),
+		IdIngredient: randint64(),
+		Quantite:     randfloat64(),
+		Cuisson:      randstring(),
+	}
+}
+
 func randHoraire() Horaire {
-	choix := [5]Horaire{Cinquieme, Diner, Gouter, Midi, PetitDejeuner}
-	i := rand.Int31n(int32(len(choix)))
-	return choix[i]
+	return Horaire(randstring())
+}
+
+func randRepas() Repas {
+	return Repas{
+		Id:              randint64(),
+		IdSejour:        randint64(),
+		IdMenu:          randsqlNullInt64(),
+		OffsetPersonnes: randint64(),
+		JourOffset:      randint64(),
+		Horaire:         randHoraire(),
+	}
+}
+
+func randRepasGroupe() RepasGroupe {
+	return RepasGroupe{
+		IdRepas:  randint64(),
+		IdGroupe: randint64(),
+	}
+}
+
+func randSejour() Sejour {
+	return Sejour{
+		Id:             randint64(),
+		IdProprietaire: randint64(),
+		DateDebut:      randtTime(),
+		Nom:            randstring(),
+	}
+}
+
+func randUtilisateur() Utilisateur {
+	return Utilisateur{
+		Id:        randint64(),
+		Password:  randstring(),
+		Mail:      randstring(),
+		PrenomNom: randstring(),
+	}
 }
