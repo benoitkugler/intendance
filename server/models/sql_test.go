@@ -67,7 +67,7 @@ func TestSql(t *testing.T) {
 	}
 
 	i8 := randCommande()
-	i8.IdProprietaire = i1.Id
+	i8.IdUtilisateur = i1.Id
 	i8, err = queriesCommande(tx, i8)
 	if err != nil {
 		t.Fatal(err)
@@ -116,7 +116,7 @@ func TestSql(t *testing.T) {
 	l4 := randIngredientProduit()
 	l4.IdIngredient = i2.Id
 	l4.IdProduit = i7.Id
-	l4.IdAjouteur = i1.Id
+	l4.IdUtilisateur = i1.Id
 	l4, err = queriesIngredientProduit(tx, l4)
 	if err != nil {
 		t.Fatal(err)
@@ -225,8 +225,8 @@ func TestProduits(t *testing.T) {
 	}
 
 	err = InsertManyIngredientProduits(tx, []IngredientProduit{
-		{IdIngredient: ig.Id, IdProduit: pr1.Id, IdAjouteur: 2},
-		{IdIngredient: ig.Id, IdProduit: pr2.Id, IdAjouteur: 2},
+		{IdIngredient: ig.Id, IdProduit: pr1.Id, IdUtilisateur: 2},
+		{IdIngredient: ig.Id, IdProduit: pr2.Id, IdUtilisateur: 2},
 	})
 	if err != nil {
 		t.Fatal(err)

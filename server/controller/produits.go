@@ -151,7 +151,7 @@ func (s Server) AjouteIngredientProduit(ct RequeteContext, idIngredient int64, p
 		return ErrorSQL(err)
 	}
 	err = models.InsertManyIngredientProduits(ct.tx, []models.IngredientProduit{
-		{IdIngredient: idIngredient, IdProduit: produit.Id, IdAjouteur: ct.idProprietaire},
+		{IdIngredient: idIngredient, IdProduit: produit.Id, IdUtilisateur: ct.idProprietaire},
 	})
 	if err != nil {
 		return ct.rollbackTx(err)

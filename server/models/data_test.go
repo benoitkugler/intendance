@@ -27,10 +27,10 @@ func randstring() string {
 
 func randCommande() Commande {
 	return Commande{
-		Id:             randint64(),
-		IdProprietaire: randint64(),
-		DateEmission:   randtTime(),
-		Tag:            randstring(),
+		Id:            randint64(),
+		IdUtilisateur: randint64(),
+		DateEmission:  randtTime(),
+		Tag:           randstring(),
 	}
 }
 
@@ -114,9 +114,9 @@ func randIngredient() Ingredient {
 
 func randIngredientProduit() IngredientProduit {
 	return IngredientProduit{
-		IdIngredient: randint64(),
-		IdProduit:    randint64(),
-		IdAjouteur:   randint64(),
+		IdIngredient:  randint64(),
+		IdProduit:     randint64(),
+		IdUtilisateur: randint64(),
 	}
 }
 

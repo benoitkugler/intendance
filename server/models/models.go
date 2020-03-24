@@ -26,9 +26,9 @@ type Ingredient struct {
 }
 
 type Recette struct {
-	Id             int64         `json:"id"`
-	IdProprietaire sql.NullInt64 `json:"id_proprietaire"`
-	Nom            string        `json:"nom"`
+	Id            int64         `json:"id"`
+	IdUtilisateur sql.NullInt64 `json:"id_utilisateur"`
+	Nom           string        `json:"nom"`
 
 	ModeEmploi string `json:"mode_emploi"`
 }
@@ -41,8 +41,8 @@ type RecetteIngredient struct {
 }
 
 type Menu struct {
-	Id             int64         `json:"id"`
-	IdProprietaire sql.NullInt64 `json:"id_proprietaire"`
+	Id            int64         `json:"id"`
+	IdUtilisateur sql.NullInt64 `json:"id_utilisateur"`
 
 	Commentaire string `json:"commentaire"`
 }
@@ -61,8 +61,8 @@ type MenuRecette struct {
 }
 
 type Sejour struct {
-	Id             int64 `json:"id"`
-	IdProprietaire int64 `json:"id_proprietaire"`
+	Id            int64 `json:"id"`
+	IdUtilisateur int64 `json:"id_utilisateur"`
 
 	// Fixe l'origine du séjour.
 	// Une journée est déterminé par un "offset"
@@ -115,16 +115,16 @@ type Produit struct {
 }
 
 type IngredientProduit struct {
-	IdIngredient int64 `json:"id_ingredient"`
-	IdProduit    int64 `json:"id_produit"`
-	IdAjouteur   int64 `json:"id_ajouteur"`
+	IdIngredient  int64 `json:"id_ingredient"`
+	IdProduit     int64 `json:"id_produit"`
+	IdUtilisateur int64 `json:"id_utilisateur"`
 }
 
 type Commande struct {
-	Id             int64     `json:"id"`
-	IdProprietaire int64     `json:"id_proprietaire"`
-	DateEmission   time.Time `json:"date_emission"`
-	Tag            string    `json:"tag"`
+	Id            int64     `json:"id"`
+	IdUtilisateur int64     `json:"id_utilisateur"`
+	DateEmission  time.Time `json:"date_emission"`
+	Tag           string    `json:"tag"`
 }
 
 type CommandeProduit struct {

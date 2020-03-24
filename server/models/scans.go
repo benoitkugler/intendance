@@ -12,7 +12,7 @@ func ScanCommande(r *sql.Row) (Commande, error) {
 	var s Commande
 	if err := r.Scan(
 		&s.Id,
-		&s.IdProprietaire,
+		&s.IdUtilisateur,
 		&s.DateEmission,
 		&s.Tag,
 	); err != nil {
@@ -38,7 +38,7 @@ func ScanCommandes(rs *sql.Rows) (Commandes, error) {
 		var s Commande
 		if err = rs.Scan(
 			&s.Id,
-			&s.IdProprietaire,
+			&s.IdUtilisateur,
 			&s.DateEmission,
 			&s.Tag,
 		); err != nil {
@@ -60,7 +60,7 @@ func (item Commande) Insert(tx *sql.Tx) (out Commande, err error) {
 			$1,$2,$3
 			) RETURNING 
 			id,id_proprietaire,date_emission,tag;
-			`, item.IdProprietaire, item.DateEmission, item.Tag)
+			`, item.IdUtilisateur, item.DateEmission, item.Tag)
 	return ScanCommande(r)
 }
 
@@ -72,7 +72,7 @@ func (item Commande) Update(tx *sql.Tx) (out Commande, err error) {
 			$2,$3,$4
 			) WHERE id = $1 RETURNING 
 			id,id_proprietaire,date_emission,tag;
-			`, item.Id, item.IdProprietaire, item.DateEmission, item.Tag)
+			`, item.Id, item.IdUtilisateur, item.DateEmission, item.Tag)
 	return ScanCommande(r)
 }
 
@@ -397,7 +397,7 @@ func ScanIngredientProduit(r *sql.Row) (IngredientProduit, error) {
 	if err := r.Scan(
 		&s.IdIngredient,
 		&s.IdProduit,
-		&s.IdAjouteur,
+		&s.IdUtilisateur,
 	); err != nil {
 		return IngredientProduit{}, err
 	}
@@ -412,7 +412,7 @@ func ScanIngredientProduits(rs *sql.Rows) ([]IngredientProduit, error) {
 		if err = rs.Scan(
 			&s.IdIngredient,
 			&s.IdProduit,
-			&s.IdAjouteur,
+			&s.IdUtilisateur,
 		); err != nil {
 			return nil, err
 		}
@@ -438,7 +438,7 @@ func InsertManyIngredientProduits(tx *sql.Tx, items []IngredientProduit) error {
 	}
 
 	for _, item := range items {
-		_, err = stmt.Exec(item.IdIngredient, item.IdProduit, item.IdAjouteur)
+		_, err = stmt.Exec(item.IdIngredient, item.IdProduit, item.IdUtilisateur)
 		if err != nil {
 			return err
 		}
@@ -458,7 +458,7 @@ func InsertManyIngredientProduits(tx *sql.Tx, items []IngredientProduit) error {
 // Only the 'IdIngredient' 'IdProduit' 'IdAjouteur' fields are used.
 func (item IngredientProduit) Delete(tx *sql.Tx) error {
 	_, err := tx.Exec(`DELETE FROM ingredient_produits WHERE 
-		id_ingredient = $1 AND id_produit = $2 AND id_ajouteur = $3;`, item.IdIngredient, item.IdProduit, item.IdAjouteur)
+		id_ingredient = $1 AND id_produit = $2 AND id_ajouteur = $3;`, item.IdIngredient, item.IdProduit, item.IdUtilisateur)
 	return err
 }
 
