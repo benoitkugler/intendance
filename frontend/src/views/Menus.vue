@@ -144,7 +144,7 @@ export default class Menus extends Vue {
   startCreateMenu() {
     if (C.idUtilisateur == null) return;
     const newMenu: Menu = { ...deepcopy(DefautMenu), id: -1 };
-    newMenu.id_proprietaire.Int64 = C.idUtilisateur;
+    newMenu.id_utilisateur.Int64 = C.idUtilisateur;
     this.editedMenu = newMenu;
     this.editMode = "new";
     this.state.mode = "editMenu";
@@ -182,7 +182,7 @@ export default class Menus extends Vue {
   startCreateRecette() {
     if (C.idUtilisateur == null) return;
     const newRecette: Recette = { ...deepcopy(DefautRecette), id: -1 };
-    newRecette.id_proprietaire.Int64 = C.idUtilisateur;
+    newRecette.id_utilisateur.Int64 = C.idUtilisateur;
     this.editedRecette = newRecette;
     this.editMode = "new";
     this.state.mode = "editRecette";

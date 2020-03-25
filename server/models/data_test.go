@@ -189,7 +189,6 @@ func randRepas() Repas {
 	return Repas{
 		Id:              randint64(),
 		IdSejour:        randint64(),
-		IdMenu:          randsqlNullInt64(),
 		OffsetPersonnes: randint64(),
 		JourOffset:      randint64(),
 		Horaire:         randHoraire(),
@@ -200,6 +199,22 @@ func randRepasGroupe() RepasGroupe {
 	return RepasGroupe{
 		IdRepas:  randint64(),
 		IdGroupe: randint64(),
+	}
+}
+
+func randRepasIngredient() RepasIngredient {
+	return RepasIngredient{
+		IdRepas:      randint64(),
+		IdIngredient: randint64(),
+		Quantite:     randfloat64(),
+		Cuisson:      randstring(),
+	}
+}
+
+func randRepasRecette() RepasRecette {
+	return RepasRecette{
+		IdRepas:   randint64(),
+		IdRecette: randint64(),
 	}
 }
 
@@ -218,5 +233,12 @@ func randUtilisateur() Utilisateur {
 		Password:  randstring(),
 		Mail:      randstring(),
 		PrenomNom: randstring(),
+	}
+}
+
+func randUtilisateurFournisseur() UtilisateurFournisseur {
+	return UtilisateurFournisseur{
+		IdUtilisateur: randint64(),
+		IdFournisseur: randint64(),
 	}
 }

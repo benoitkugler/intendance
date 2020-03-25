@@ -17,7 +17,7 @@ import {
   Groupe,
   OutGroupe,
   OutDeleteGroupe,
-  RepasWithGroupe,
+  RepasComplet,
   OptionsAssistantCreateRepass,
   InAssistantCreateRepass,
   InAjouteIngredientProduit,
@@ -462,7 +462,7 @@ export class Data {
     }
   };
 
-  createRepas = async (repas: New<RepasWithGroupe>) => {
+  createRepas = async (repas: New<RepasComplet>) => {
     this.controller.notifications.startSpin();
     try {
       const response: AxiosResponse<OutSejours> = await axios.put(
@@ -479,7 +479,7 @@ export class Data {
     }
   };
 
-  updateManyRepas = async (repass: RepasWithGroupe[]) => {
+  updateManyRepas = async (repass: RepasComplet[]) => {
     this.controller.notifications.startSpin();
     try {
       const response: AxiosResponse<OutSejours> = await axios.post(
@@ -496,7 +496,7 @@ export class Data {
     }
   };
 
-  deleteRepas = async (repas: RepasWithGroupe) => {
+  deleteRepas = async (repas: RepasComplet) => {
     this.controller.notifications.startSpin();
     try {
       const response: AxiosResponse<OutSejours> = await axios.delete(
@@ -570,7 +570,7 @@ export class Data {
   }
 
   // modifie le moment du repas
-  async deplaceRepas(repas: RepasWithGroupe, jour: Date, horaire: string) {
+  async deplaceRepas(repas: RepasComplet, jour: Date, horaire: string) {
     const sejour = this.getSejour(repas.id_sejour);
     if (!sejour) return;
     const offset = this.getOffset(sejour, jour);

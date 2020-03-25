@@ -16,12 +16,12 @@ import (
 type dataRepas struct {
 	repass             models.Repass
 	groupes            models.Groupes
-	menuIngredients    []models.MenuIngredient
+	repasIngredients   []models.RepasIngredient
 	recetteIngredients []models.RecetteIngredient
 	ingredients        models.Ingredients
 
-	menuRecettes map[int64]models.Set // id menu -> ids recettes
-	repasGroupes map[int64]models.Set // id repas -> ids groupes
+	repasRecettes map[int64]models.Set // id repas -> ids recettes
+	repasGroupes  map[int64]models.Set // id repas -> ids groupes
 }
 
 // idIngredient -> quantité
@@ -72,36 +72,36 @@ func (s Server) loadDataRepas(rowsRepas *sql.Rows) (out dataRepas, err error) {
 		return out, err
 	}
 
-	rows, err = s.db.Query(`SELECT menu_ingredients.* FROM menu_ingredients
-	JOIN repass ON repass.id_menu = menu_ingredients.id_menu 
+	rows, err = s.db.Query(`SELECT repas_ingredients.* FROM repas_ingredients
+	JOIN repass ON repass.id_repas = repas_ingredients.id_repas 
 	WHERE repass.id = ANY($1)`, idRepass)
 	if err != nil {
 		return out, err
 	}
-	out.menuIngredients, err = models.ScanMenuIngredients(rows)
+	out.repasIngredients, err = models.ScanRepasIngredients(rows)
 	if err != nil {
 		return out, err
 	}
 
-	rows, err = s.db.Query(`SELECT menu_recettes.* FROM menu_recettes
-	JOIN repass ON repass.id_menu = menu_recettes.id_menu 
+	rows, err = s.db.Query(`SELECT repas_recettes.* FROM repas_recettes
+	JOIN repass ON repass.id_repas = repas_recettes.id_repas 
 	WHERE repass.id = ANY($1)`, idRepass)
 	if err != nil {
 		return out, err
 	}
-	menuRecettes, err := models.ScanMenuRecettes(rows)
+	repasRecettes, err := models.ScanRepasRecettes(rows)
 	if err != nil {
 		return out, err
 	}
 
-	out.menuRecettes = make(map[int64]models.Set)
-	for _, menuRecette := range menuRecettes {
-		addToCribles(out.menuRecettes, menuRecette.IdMenu, menuRecette.IdRecette)
+	out.repasRecettes = make(map[int64]models.Set)
+	for _, repasRecette := range repasRecettes {
+		addToCribles(out.repasRecettes, repasRecette.IdRepas, repasRecette.IdRecette)
 	}
 
 	rows, err = s.db.Query(`SELECT recette_ingredients.* FROM recette_ingredients 
-	JOIN menu_recettes ON menu_recettes.id_recette = recette_ingredients.id_recette
-	JOIN repass ON repass.id_menu = menu_recettes.id_menu 
+	JOIN repas_recettes ON repas_recettes.id_recette = recette_ingredients.id_recette
+	JOIN repass ON repass.id_repas = repas_recettes.id_repas 
 	WHERE repass.id = ANY($1)`, idRepass)
 	if err != nil {
 		return out, err
@@ -112,7 +112,7 @@ func (s Server) loadDataRepas(rowsRepas *sql.Rows) (out dataRepas, err error) {
 	}
 
 	idsIngredients := models.NewSet()
-	for _, ing := range out.menuIngredients {
+	for _, ing := range out.repasIngredients {
 		idsIngredients.Add(ing.IdIngredient)
 	}
 	for _, ing := range out.recetteIngredients {
@@ -130,11 +130,9 @@ func (s Server) loadDataRepas(rowsRepas *sql.Rows) (out dataRepas, err error) {
 }
 
 // si `nbPersonnes` vaut -1, le nombre de personne du repas est utilisé
+// update `quantite`
 func (d dataRepas) resoudRepas(idRepas, nbPersonnes int64, quantite quantites) {
 	repas := d.repass[idRepas]
-	if !repas.IdMenu.Valid { // on ignore ce repas
-		return
-	}
 
 	if nbPersonnes == -1 { // on résoud le nombre de personnes
 		nbPersonnes = repas.OffsetPersonnes
@@ -146,15 +144,15 @@ func (d dataRepas) resoudRepas(idRepas, nbPersonnes int64, quantite quantites) {
 		}
 	}
 	nbPersonnesF := float64(nbPersonnes)
-	cribleRecettes := d.menuRecettes[repas.IdMenu.Int64]
+	cribleRecettes := d.repasRecettes[repas.Id]
 	for _, recetteIngredient := range d.recetteIngredients {
 		if cribleRecettes.Has(recetteIngredient.IdRecette) {
 			quantite[recetteIngredient.IdIngredient] += nbPersonnesF * recetteIngredient.Quantite
 		}
 	}
-	for _, menuIngredient := range d.menuIngredients {
-		if menuIngredient.IdMenu == repas.IdMenu.Int64 {
-			quantite[menuIngredient.IdIngredient] += nbPersonnesF * menuIngredient.Quantite
+	for _, repasIngredient := range d.repasIngredients {
+		if repasIngredient.IdRepas == repas.Id {
+			quantite[repasIngredient.IdIngredient] += nbPersonnesF * repasIngredient.Quantite
 		}
 	}
 }

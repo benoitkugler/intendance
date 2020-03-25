@@ -1,11 +1,11 @@
 import { C } from "../controller";
-import { RepasWithGroupe } from "../types";
+import { RepasComplet } from "../types";
 
 test("resoud ingredients", async () => {
   await C.data.loadSejours();
   expect(C.notifications.getError()).toBeNull();
 
-  const repas: RepasWithGroupe[] = [];
+  const repas: RepasComplet[] = [];
   C.iterateAllRepas((sej, rep) => {
     repas.push(rep);
   });

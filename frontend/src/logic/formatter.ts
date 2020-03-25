@@ -1,5 +1,5 @@
 import { Controller } from "./controller";
-import { Menu, Recette, RepasWithGroupe, Time, Conditionnement } from "./types";
+import { Menu, Recette, RepasComplet, Time, Conditionnement } from "./types";
 import { fmtUnite } from "./enums";
 
 const Months = [
@@ -24,15 +24,10 @@ export class Formatter {
     this.controller = controller;
   }
 
-  formatRepasName = (r: RepasWithGroupe) => {
-    let menuName = "";
-    if (!r.id_menu.Valid) {
-      menuName = "-";
-    } else {
-      const menu = this.controller.data.menus[r.id_menu.Int64];
-      menuName = menu ? this.formatMenuName(menu) : "";
-    }
-    return menuName;
+  formatRepasName = (r: RepasComplet) => {
+    return `${(r.recettes || []).length} rec. - ${
+      (r.ingredients || []).length
+    } ing.`;
   };
 
   formatMenuName = (menu: Menu) => {

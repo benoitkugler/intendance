@@ -106,7 +106,7 @@ import ToolbarSwitch from "../components/utils/ToolbarSwitch.vue";
 import FormPreferences from "../components/sejours/calendrier/FormPreferences.vue";
 import FormRepas from "../components/sejours/FormRepas.vue";
 
-import { RepasGroupe, RepasWithGroupe } from "../logic/types";
+import { RepasGroupe, RepasComplet } from "../logic/types";
 
 @Component({
   components: {
@@ -128,14 +128,15 @@ export default class Agenda extends Vue {
   showEditFormRepas = false;
   editMode: EditMode = "new";
 
-  private editedRepas: RepasWithGroupe = {
+  private editedRepas: RepasComplet = {
     id: -1,
     id_sejour: -1,
     horaire: "",
-    id_menu: NullId,
     offset_personnes: 0,
     jour_offset: 0,
-    groupes: []
+    groupes: [],
+    recettes: [],
+    ingredients: []
   };
 
   calendarMode: CalendarMode = "groupes";
@@ -192,16 +193,17 @@ export default class Agenda extends Vue {
       horaire: horaire,
       jour_offset: jourOffset,
       offset_personnes: 0,
-      id_menu: NullId,
       id_sejour: sejour.id,
       id: -1,
-      groupes: []
+      groupes: [],
+      recettes: [],
+      ingredients: []
     };
     this.editMode = "new";
     this.showEditFormRepas = true;
   }
 
-  startEditRepas(repas: RepasWithGroupe) {
+  startEditRepas(repas: RepasComplet) {
     this.editedRepas = repas;
     this.editMode = "edit";
     this.showEditFormRepas = true;
@@ -212,7 +214,7 @@ export default class Agenda extends Vue {
     if (this.sejour == null) return;
     let message = "";
     if (this.editMode == "new") {
-      const newRepas: New<RepasWithGroupe> = {
+      const newRepas: New<RepasComplet> = {
         ...repas,
         id_sejour: this.sejour.id
       };
@@ -232,7 +234,7 @@ export default class Agenda extends Vue {
     }
   }
 
-  async deleteRepas(repas: RepasWithGroupe) {
+  async deleteRepas(repas: RepasComplet) {
     this.showEditFormRepas = false;
     await C.data.deleteRepas(repas);
     if (C.notifications.getError() == null) {

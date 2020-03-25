@@ -138,18 +138,14 @@ import ListeIngredients from "../../utils/ListeIngredients.vue";
 
 import { toDateVuetify, formatNbOffset } from "./utils";
 import { C } from "../../../logic/controller";
-import {
-  RepasWithGroupe,
-  Groupe,
-  IngredientQuantite
-} from "../../../logic/types";
+import { RepasComplet, Groupe, IngredientQuantite } from "../../../logic/types";
 import { New, NullId, deepcopy } from "../../../logic/types2";
 import { Horaires } from "../../../logic/enums";
 import { HorairesColors } from "../../utils/utils";
 
 interface dragData {
   idGroupe: number;
-  repas: RepasWithGroupe;
+  repas: RepasComplet;
 }
 
 const DayProps = Vue.extend({
@@ -187,8 +183,8 @@ export default class Day extends DayProps {
 
   formatNbOffset = formatNbOffset;
 
-  get events(): { [key: string]: RepasWithGroupe[] } {
-    const out: { [key: string]: RepasWithGroupe[] } = {};
+  get events(): { [key: string]: RepasComplet[] } {
+    const out: { [key: string]: RepasComplet[] } = {};
     C.iterateAllRepas((sejour, repas) => {
       if (sejour.id != C.state.idSejour) return;
       if (this.jourOffset == repas.jour_offset) {
@@ -207,7 +203,7 @@ export default class Day extends DayProps {
     return out;
   }
 
-  getGroupes(repas: RepasWithGroupe) {
+  getGroupes(repas: RepasComplet) {
     const grs = C.getRepasGroupes(repas);
     const maxChar = 8;
     return grs.map(groupe => {
@@ -219,7 +215,7 @@ export default class Day extends DayProps {
 
   // Drag and drop
 
-  onDragStart(event: DragEvent, repas: RepasWithGroupe, groupe: Groupe) {
+  onDragStart(event: DragEvent, repas: RepasComplet, groupe: Groupe) {
     if (event == null || event.dataTransfer == null) return;
     const data: dragData = { repas: repas, idGroupe: groupe.id };
     event.dataTransfer.setData("groupe", JSON.stringify(data));
@@ -243,11 +239,12 @@ export default class Day extends DayProps {
 
     await C.data.createRepas({
       id_sejour: C.state.idSejour!,
-      id_menu: NullId,
       offset_personnes: 0,
       horaire: horaire,
       jour_offset: this.jourOffset,
-      groupes: [{ id_groupe: data.idGroupe, id_repas: -1 }]
+      groupes: [{ id_groupe: data.idGroupe, id_repas: -1 }],
+      recettes: [],
+      ingredients: []
     });
 
     if (C.notifications.getError() != null) return;
@@ -269,7 +266,7 @@ export default class Day extends DayProps {
   }
   // on enlève le groupe du repas de départ et on l'ajoute
   // au repas cible.
-  async onDropRepas(event: DragEvent, target: RepasWithGroupe) {
+  async onDropRepas(event: DragEvent, target: RepasComplet) {
     if (!event.dataTransfer || this.jourOffset == null) return;
     const data: dragData = JSON.parse(event.dataTransfer.getData("groupe"));
     if (target.id == data.repas.id) return; // on déplace vers soi-même
@@ -289,14 +286,14 @@ export default class Day extends DayProps {
     }
   }
 
-  async deleteRepas(repas: RepasWithGroupe) {
+  async deleteRepas(repas: RepasComplet) {
     await C.data.deleteRepas(repas);
     if (C.notifications.getError() == null) {
       C.notifications.setMessage("Repas supprimé avec succès.");
     }
   }
 
-  async resoudIngredients(repas: RepasWithGroupe) {
+  async resoudIngredients(repas: RepasComplet) {
     this.loadingIngredients = true;
     this.showPrevisuIngredients = true;
     const data = await C.calculs.resoudIngredientsRepas(repas.id);

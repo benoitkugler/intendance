@@ -23,11 +23,7 @@
             type="number"
             hint="S'ajoute aux groupes. Peut être négatif."
           ></v-text-field>
-          <v-autocomplete
-            label="Menu"
-            :items="menus"
-            v-model="idMenu"
-          ></v-autocomplete>
+
           <horaire-field v-model="repas.horaire"></horaire-field>
         </v-form>
       </v-card-text>
@@ -51,7 +47,7 @@
 import Vue from "vue";
 import Component from "vue-class-component";
 import {
-  RepasWithGroupe,
+  RepasComplet,
   DateIngredientQuantites,
   IngredientQuantite,
   RepasGroupe
@@ -74,7 +70,7 @@ import { fmtHoraire } from "../../logic/enums";
 
 const Props = Vue.extend({
   props: {
-    initialRepas: Object as () => RepasWithGroupe,
+    initialRepas: Object as () => RepasComplet,
     mode: String as () => EditMode
   }
 });
@@ -90,13 +86,6 @@ export default class FormRepas extends Props {
   @Watch("initialRepas")
   onPropChange() {
     this.repas = deepcopy(this.initialRepas);
-  }
-
-  get idMenu() {
-    return this.repas.id_menu.Valid ? this.repas.id_menu.Int64 : -1;
-  }
-  set idMenu(id: number) {
-    this.repas.id_menu = toNullableId(id);
   }
 
   get sejour() {

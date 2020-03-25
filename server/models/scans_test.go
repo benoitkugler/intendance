@@ -358,6 +358,52 @@ func queriesRepasGroupe(tx *sql.Tx, item RepasGroupe) (RepasGroupe, error) {
 	return item, err
 }
 
+func queriesRepasIngredient(tx *sql.Tx, item RepasIngredient) (RepasIngredient, error) {
+	err := InsertManyRepasIngredients(tx, []RepasIngredient{item})
+	if err != nil {
+		return item, err
+	}
+	rows, err := tx.Query("SELECT * FROM repas_ingredients")
+	if err != nil {
+		return item, err
+	}
+	items, err := ScanRepasIngredients(rows)
+	if err != nil {
+		return item, err
+	}
+
+	_ = len(items)
+
+	row := tx.QueryRow(`SELECT * FROM repas_ingredients WHERE 
+			id_repas = $1 AND id_ingredient = $2;`, item.IdRepas, item.IdIngredient)
+
+	_, err = ScanRepasIngredient(row)
+	return item, err
+}
+
+func queriesRepasRecette(tx *sql.Tx, item RepasRecette) (RepasRecette, error) {
+	err := InsertManyRepasRecettes(tx, []RepasRecette{item})
+	if err != nil {
+		return item, err
+	}
+	rows, err := tx.Query("SELECT * FROM repas_recettes")
+	if err != nil {
+		return item, err
+	}
+	items, err := ScanRepasRecettes(rows)
+	if err != nil {
+		return item, err
+	}
+
+	_ = len(items)
+
+	row := tx.QueryRow(`SELECT * FROM repas_recettes WHERE 
+			id_repas = $1 AND id_recette = $2;`, item.IdRepas, item.IdRecette)
+
+	_, err = ScanRepasRecette(row)
+	return item, err
+}
+
 func queriesSejour(tx *sql.Tx, item Sejour) (Sejour, error) {
 	item, err := item.Insert(tx)
 
@@ -409,5 +455,28 @@ func queriesUtilisateur(tx *sql.Tx, item Utilisateur) (Utilisateur, error) {
 	row := tx.QueryRow("SELECT * FROM utilisateurs WHERE id = $1", item.Id)
 
 	_, err = ScanUtilisateur(row)
+	return item, err
+}
+
+func queriesUtilisateurFournisseur(tx *sql.Tx, item UtilisateurFournisseur) (UtilisateurFournisseur, error) {
+	err := InsertManyUtilisateurFournisseurs(tx, []UtilisateurFournisseur{item})
+	if err != nil {
+		return item, err
+	}
+	rows, err := tx.Query("SELECT * FROM utilisateur_fournisseurs")
+	if err != nil {
+		return item, err
+	}
+	items, err := ScanUtilisateurFournisseurs(rows)
+	if err != nil {
+		return item, err
+	}
+
+	_ = len(items)
+
+	row := tx.QueryRow(`SELECT * FROM utilisateur_fournisseurs WHERE 
+			id_utilisateur = $1 AND id_fournisseur = $2;`, item.IdUtilisateur, item.IdFournisseur)
+
+	_, err = ScanUtilisateurFournisseur(row)
 	return item, err
 }

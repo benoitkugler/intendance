@@ -29,7 +29,7 @@ type InAssistantCreateRepass struct {
 }
 
 // crée un repas et y ajoute les groupes donnés
-func creeRepasWithGroupe(ct RequeteContext, params InAssistantCreateRepass,
+func creeRepasComplet(ct RequeteContext, params InAssistantCreateRepass,
 	horaire models.Horaire, jourOffset int, idsGroupes models.Set) error {
 	repas := models.Repas{
 		IdSejour:   params.IdSejour,
@@ -99,7 +99,7 @@ func (s Server) InitiateRepas(ct RequeteContext, params InAssistantCreateRepass)
 		for _, horaire := range horaires {
 			if len(sorties) != 0 {
 				// on crée le repas 'sorties'
-				err = creeRepasWithGroupe(ct, params, horaire, jourOffset, sorties)
+				err = creeRepasComplet(ct, params, horaire, jourOffset, sorties)
 				if err != nil {
 					return ct.rollbackTx(err)
 				}
@@ -107,7 +107,7 @@ func (s Server) InitiateRepas(ct RequeteContext, params InAssistantCreateRepass)
 
 			if len(sorties) == 0 || len(basique) > 0 {
 				// 'sorties' vide ou 'basique' plein -> repas 'basique'
-				err = creeRepasWithGroupe(ct, params, horaire, jourOffset, basique)
+				err = creeRepasComplet(ct, params, horaire, jourOffset, basique)
 				if err != nil {
 					return ct.rollbackTx(err)
 				}

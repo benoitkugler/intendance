@@ -82,7 +82,6 @@ func TestSql(t *testing.T) {
 
 	i10 := randRepas()
 	i10.IdSejour = i5.Id
-	i10.IdMenu = NullableId(i4.Id)
 	i10, err = queriesRepas(tx, i10)
 	if err != nil {
 		t.Fatal(err)
@@ -113,6 +112,22 @@ func TestSql(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	l2bis := randRepasIngredient()
+	l2bis.IdIngredient = i2.Id
+	l2bis.IdRepas = i4.Id
+	l2bis, err = queriesRepasIngredient(tx, l2bis)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	l3bis := randRepasRecette()
+	l3bis.IdRecette = i3.Id
+	l3bis.IdRepas = i4.Id
+	l3bis, err = queriesRepasRecette(tx, l3bis)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	l4 := randIngredientProduit()
 	l4.IdIngredient = i2.Id
 	l4.IdProduit = i7.Id
@@ -138,6 +153,12 @@ func TestSql(t *testing.T) {
 		t.Fatal(err)
 	}
 	if err := l3.Delete(tx); err != nil {
+		t.Fatal(err)
+	}
+	if err := l2bis.Delete(tx); err != nil {
+		t.Fatal(err)
+	}
+	if err := l3bis.Delete(tx); err != nil {
 		t.Fatal(err)
 	}
 	if err := l4.Delete(tx); err != nil {

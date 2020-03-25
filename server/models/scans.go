@@ -914,7 +914,6 @@ func ScanRepas(r *sql.Row) (Repas, error) {
 	if err := r.Scan(
 		&s.Id,
 		&s.IdSejour,
-		&s.IdMenu,
 		&s.OffsetPersonnes,
 		&s.JourOffset,
 		&s.Horaire,
@@ -942,7 +941,6 @@ func ScanRepass(rs *sql.Rows) (Repass, error) {
 		if err = rs.Scan(
 			&s.Id,
 			&s.IdSejour,
-			&s.IdMenu,
 			&s.OffsetPersonnes,
 			&s.JourOffset,
 			&s.Horaire,
@@ -960,24 +958,24 @@ func ScanRepass(rs *sql.Rows) (Repass, error) {
 // Insert Repas in the database and returns the item with id filled.
 func (item Repas) Insert(tx *sql.Tx) (out Repas, err error) {
 	r := tx.QueryRow(`INSERT INTO repass (
-			id_sejour,id_menu,offset_personnes,jour_offset,horaire
+			id_sejour,offset_personnes,jour_offset,horaire
 			) VALUES (
-			$1,$2,$3,$4,$5
+			$1,$2,$3,$4
 			) RETURNING 
-			id,id_sejour,id_menu,offset_personnes,jour_offset,horaire;
-			`, item.IdSejour, item.IdMenu, item.OffsetPersonnes, item.JourOffset, item.Horaire)
+			id,id_sejour,offset_personnes,jour_offset,horaire;
+			`, item.IdSejour, item.OffsetPersonnes, item.JourOffset, item.Horaire)
 	return ScanRepas(r)
 }
 
 // Update Repas in the database and returns the new version.
 func (item Repas) Update(tx *sql.Tx) (out Repas, err error) {
 	r := tx.QueryRow(`UPDATE repass SET (
-			id_sejour,id_menu,offset_personnes,jour_offset,horaire
+			id_sejour,offset_personnes,jour_offset,horaire
 			) = (
-			$2,$3,$4,$5,$6
+			$2,$3,$4,$5
 			) WHERE id = $1 RETURNING 
-			id,id_sejour,id_menu,offset_personnes,jour_offset,horaire;
-			`, item.Id, item.IdSejour, item.IdMenu, item.OffsetPersonnes, item.JourOffset, item.Horaire)
+			id,id_sejour,offset_personnes,jour_offset,horaire;
+			`, item.Id, item.IdSejour, item.OffsetPersonnes, item.JourOffset, item.Horaire)
 	return ScanRepas(r)
 }
 
@@ -1055,6 +1053,146 @@ func InsertManyRepasGroupes(tx *sql.Tx, items []RepasGroupe) error {
 func (item RepasGroupe) Delete(tx *sql.Tx) error {
 	_, err := tx.Exec(`DELETE FROM repas_groupes WHERE 
 		id_repas = $1 AND id_groupe = $2;`, item.IdRepas, item.IdGroupe)
+	return err
+}
+
+func ScanRepasIngredient(r *sql.Row) (RepasIngredient, error) {
+	var s RepasIngredient
+	if err := r.Scan(
+		&s.IdRepas,
+		&s.IdIngredient,
+		&s.Quantite,
+		&s.Cuisson,
+	); err != nil {
+		return RepasIngredient{}, err
+	}
+	return s, nil
+}
+
+func ScanRepasIngredients(rs *sql.Rows) ([]RepasIngredient, error) {
+	structs := make([]RepasIngredient, 0, 16)
+	var err error
+	for rs.Next() {
+		var s RepasIngredient
+		if err = rs.Scan(
+			&s.IdRepas,
+			&s.IdIngredient,
+			&s.Quantite,
+			&s.Cuisson,
+		); err != nil {
+			return nil, err
+		}
+		structs = append(structs, s)
+	}
+	if err = rs.Err(); err != nil {
+		return nil, err
+	}
+	return structs, nil
+}
+
+// Insert the links RepasIngredient in the database.
+func InsertManyRepasIngredients(tx *sql.Tx, items []RepasIngredient) error {
+	if len(items) == 0 {
+		return nil
+	}
+
+	stmt, err := tx.Prepare(pq.CopyIn("repas_ingredients",
+		"id_repas", "id_ingredient", "quantite", "cuisson",
+	))
+	if err != nil {
+		return err
+	}
+
+	for _, item := range items {
+		_, err = stmt.Exec(item.IdRepas, item.IdIngredient, item.Quantite, item.Cuisson)
+		if err != nil {
+			return err
+		}
+	}
+
+	if _, err = stmt.Exec(); err != nil {
+		return err
+	}
+
+	if err = stmt.Close(); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Delete the link RepasIngredient in the database.
+// Only the 'IdRepas' 'IdIngredient' fields are used.
+func (item RepasIngredient) Delete(tx *sql.Tx) error {
+	_, err := tx.Exec(`DELETE FROM repas_ingredients WHERE 
+		id_repas = $1 AND id_ingredient = $2;`, item.IdRepas, item.IdIngredient)
+	return err
+}
+
+func ScanRepasRecette(r *sql.Row) (RepasRecette, error) {
+	var s RepasRecette
+	if err := r.Scan(
+		&s.IdRepas,
+		&s.IdRecette,
+	); err != nil {
+		return RepasRecette{}, err
+	}
+	return s, nil
+}
+
+func ScanRepasRecettes(rs *sql.Rows) ([]RepasRecette, error) {
+	structs := make([]RepasRecette, 0, 16)
+	var err error
+	for rs.Next() {
+		var s RepasRecette
+		if err = rs.Scan(
+			&s.IdRepas,
+			&s.IdRecette,
+		); err != nil {
+			return nil, err
+		}
+		structs = append(structs, s)
+	}
+	if err = rs.Err(); err != nil {
+		return nil, err
+	}
+	return structs, nil
+}
+
+// Insert the links RepasRecette in the database.
+func InsertManyRepasRecettes(tx *sql.Tx, items []RepasRecette) error {
+	if len(items) == 0 {
+		return nil
+	}
+
+	stmt, err := tx.Prepare(pq.CopyIn("repas_recettes",
+		"id_repas", "id_recette",
+	))
+	if err != nil {
+		return err
+	}
+
+	for _, item := range items {
+		_, err = stmt.Exec(item.IdRepas, item.IdRecette)
+		if err != nil {
+			return err
+		}
+	}
+
+	if _, err = stmt.Exec(); err != nil {
+		return err
+	}
+
+	if err = stmt.Close(); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Delete the link RepasRecette in the database.
+// Only the 'IdRepas' 'IdRecette' fields are used.
+func (item RepasRecette) Delete(tx *sql.Tx) error {
+	_, err := tx.Exec(`DELETE FROM repas_recettes WHERE 
+		id_repas = $1 AND id_recette = $2;`, item.IdRepas, item.IdRecette)
 	return err
 }
 
@@ -1210,4 +1348,72 @@ func (item Utilisateur) Delete(tx *sql.Tx) (int64, error) {
 	r := tx.QueryRow("DELETE FROM utilisateurs WHERE id = $1 RETURNING id;", item.Id)
 	err := r.Scan(&deleted_id)
 	return deleted_id, err
+}
+
+func ScanUtilisateurFournisseur(r *sql.Row) (UtilisateurFournisseur, error) {
+	var s UtilisateurFournisseur
+	if err := r.Scan(
+		&s.IdUtilisateur,
+		&s.IdFournisseur,
+	); err != nil {
+		return UtilisateurFournisseur{}, err
+	}
+	return s, nil
+}
+
+func ScanUtilisateurFournisseurs(rs *sql.Rows) ([]UtilisateurFournisseur, error) {
+	structs := make([]UtilisateurFournisseur, 0, 16)
+	var err error
+	for rs.Next() {
+		var s UtilisateurFournisseur
+		if err = rs.Scan(
+			&s.IdUtilisateur,
+			&s.IdFournisseur,
+		); err != nil {
+			return nil, err
+		}
+		structs = append(structs, s)
+	}
+	if err = rs.Err(); err != nil {
+		return nil, err
+	}
+	return structs, nil
+}
+
+// Insert the links UtilisateurFournisseur in the database.
+func InsertManyUtilisateurFournisseurs(tx *sql.Tx, items []UtilisateurFournisseur) error {
+	if len(items) == 0 {
+		return nil
+	}
+
+	stmt, err := tx.Prepare(pq.CopyIn("utilisateur_fournisseurs",
+		"id_utilisateur", "id_fournisseur",
+	))
+	if err != nil {
+		return err
+	}
+
+	for _, item := range items {
+		_, err = stmt.Exec(item.IdUtilisateur, item.IdFournisseur)
+		if err != nil {
+			return err
+		}
+	}
+
+	if _, err = stmt.Exec(); err != nil {
+		return err
+	}
+
+	if err = stmt.Close(); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Delete the link UtilisateurFournisseur in the database.
+// Only the 'IdUtilisateur' 'IdFournisseur' fields are used.
+func (item UtilisateurFournisseur) Delete(tx *sql.Tx) error {
+	_, err := tx.Exec(`DELETE FROM utilisateur_fournisseurs WHERE 
+		id_utilisateur = $1 AND id_fournisseur = $2;`, item.IdUtilisateur, item.IdFournisseur)
+	return err
 }

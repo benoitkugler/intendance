@@ -39,7 +39,7 @@ import ListeRepas from "./ListeRepas.vue";
 import TooltipBtn from "../../utils/TooltipBtn.vue";
 import Week from "./Week.vue";
 
-import { Sejour, SejourRepas, RepasWithGroupe } from "../../../logic/types";
+import { Sejour, SejourRepas, RepasComplet } from "../../../logic/types";
 import { C } from "../../../logic/controller";
 import {
   DetailsSejour,
@@ -121,10 +121,10 @@ export default class Calendar extends Props {
     return toDateVuetify(out);
   }
 
-  get events(): { [key: string]: RepasWithGroupe[] } {
+  get events(): { [key: string]: RepasComplet[] } {
     const sejour = this.sejour;
     if (sejour == null) return {};
-    let out: { [key: string]: RepasWithGroupe[] } = {};
+    let out: { [key: string]: RepasComplet[] } = {};
     C.iterateAllRepas((_, repas) => {
       if (repas.id_sejour != sejour.id) return;
       const d = toDateVuetify(C.offsetToDate(sejour.id, repas.jour_offset));

@@ -63,11 +63,11 @@ Le logiciel est disponible sous la forme d'une **application web** accessible pa
 
 - Table **ingredients_produits** : id_ingredient, id_produit, id_ajouteur
 
-* Table **recettes** : id, id_proprietaire, nom, mode_emploi
+* Table **recettes** : id, id_utilisateur, nom, mode_emploi
 
 - Table **recettes_ingredients** : id_recette, id_ingredient, quantite, (optionnel: cuisson)
 
-* Table **menus** : id, id_proprietaire
+* Table **menus** : id, id_utilisateur
 
 * Table **menus_recettes** : id_menu, id_recette
 
@@ -81,7 +81,7 @@ Les recettes et menus peuvent n'être liés à aucun propriétaire, et sont alor
 Le concept de journée nécessite d'être lié à la donnée du nombre de personnes pour chaque menu. Cela ne colle pas bien avec un schéma SQL classique. De plus, une journée n'a pas vraiment d'intérêt à être partagée : la modification sur une journée entrainerait celle sur une autre, ce qui est serait plutôt déroutant.
 On propose donc de ne pas utiliser de table "journée", mais de construire (dynamiquement) les journées à partir de la table _repas_ (voir ci dessous). En revanche, le concept de journée sera bien présent pour l'utilisateur, pour organiser son emploi du temps, ou pour copier des journées déjà existantes.
 
-- Table **sejours** : id, id_proprietaire, date_debut
+- Table **sejours** : id, id_utilisateur, date_debut
 
 - Table **groupes** : id, id_sejour, nom, nb_personnes, couleur
 
@@ -97,7 +97,7 @@ Les séjours sont _privés_, mais les journées formées peuvent être copiées.
 
 - Table **produits** : id, nom, conditionnement (quantité + unité), colisage (quantité minimal), prix (pour le conditionnement), id_fournisseur, reference_fournisseur
 
-- Table **commandes**: id, id_proprietaire, date_emission, tag (permet de classer les commandes)
+- Table **commandes**: id, id_utilisateur, date_emission, tag (permet de classer les commandes)
 
 - Table **commandes_produits**: id_commande, id_produit, quantite
 

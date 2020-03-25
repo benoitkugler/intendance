@@ -43,6 +43,8 @@ type RecetteIngredient struct {
 	Cuisson      string  `json:"cuisson"`
 }
 
+// Menu définit un raccourci pour organiser recettes et ingrédients
+// Voir `Repas` pour un repas effectif.
 type Menu struct {
 	Id            int64         `json:"id"`
 	IdUtilisateur sql.NullInt64 `json:"id_utilisateur"`
@@ -85,14 +87,29 @@ type Groupe struct {
 	Couleur     string `json:"couleur"`
 }
 
-// Repas est bien
+// Repas représente un repas effectif, lié à un séjour.
+// Il est constitué de recettes et d'ingrédients (de la même manière qu'un menu)
 type Repas struct {
-	Id              int64         `json:"id"`
-	IdSejour        int64         `json:"id_sejour"`
-	IdMenu          sql.NullInt64 `json:"id_menu"`
-	OffsetPersonnes int64         `json:"offset_personnes"`
-	JourOffset      int64         `json:"jour_offset"`
-	Horaire         Horaire       `json:"horaire"`
+	Id              int64   `json:"id"`
+	IdSejour        int64   `json:"id_sejour"`
+	OffsetPersonnes int64   `json:"offset_personnes"`
+	JourOffset      int64   `json:"jour_offset"`
+	Horaire         Horaire `json:"horaire"`
+}
+
+// sql:UNIQUE(id_repas, id_ingredient)
+type RepasIngredient struct {
+	IdRepas      int64 `json:"id_repas"`
+	IdIngredient int64 `json:"id_ingredient"`
+
+	Quantite float64 `json:"quantite"`
+	Cuisson  string  `json:"cuisson"`
+}
+
+// sql:UNIQUE(id_repas, id_recette)
+type RepasRecette struct {
+	IdRepas   int64 `json:"id_repas"`
+	IdRecette int64 `json:"id_recette"`
 }
 
 // sql:UNIQUE(id_repas, id_groupe)
@@ -108,6 +125,13 @@ type Fournisseur struct {
 
 	DelaiCommande  int64          `json:"delai_commande"`
 	JoursLivraison JoursLivraison `json:"jours_livraison"`
+}
+
+// Enregistre les fournisseurs associés à chaque utilisateur
+// sql:UNIQUE(id_utilisateur,id_fournisseur)
+type UtilisateurFournisseur struct {
+	IdUtilisateur int64 `json:"id_utilisateur"`
+	IdFournisseur int64 `json:"id_fournisseur"`
 }
 
 type Produit struct {

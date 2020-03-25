@@ -139,13 +139,13 @@ func TestCRUD(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	rep, err := s.CreateRepas(ct, sej.Id, models.NullableId(m.Id))
+	rep, err := s.CreateRepas(ct, sej.Id)
 	if err != nil {
 		t.Fatal(err)
 	}
 	rep.OffsetPersonnes = 55
 	rep.Horaire = models.Midi
-	if err = s.UpdateManyRepas(ct, []RepasWithGroupe{{Repas: rep, Groupes: []models.RepasGroupe{
+	if err = s.UpdateManyRepas(ct, []RepasComplet{{Repas: rep, Groupes: []models.RepasGroupe{
 		{IdRepas: rep.Id, IdGroupe: groupe.Id}},
 	}}); err != nil {
 		t.Fatal(err)

@@ -86,7 +86,7 @@ func (s Server) Loggin(mail, password string) (out OutLoggin, err error) {
 func (s Server) LoadSejoursUtilisateur(ct RequeteContext) (out Sejours, err error) {
 	rows, err := s.db.Query(`SELECT groupes.* FROM groupes 
 	JOIN sejours ON sejours.id = groupes.id_sejour
-	WHERE sejours.id_proprietaire = $1`, ct.idProprietaire)
+	WHERE sejours.id_utilisateur = $1`, ct.idProprietaire)
 	if err != nil {
 		err = ErrorSQL(err)
 		return
@@ -97,7 +97,7 @@ func (s Server) LoadSejoursUtilisateur(ct RequeteContext) (out Sejours, err erro
 		return
 	}
 
-	rows, err = s.db.Query("SELECT * FROM sejours WHERE id_proprietaire = $1", ct.idProprietaire)
+	rows, err = s.db.Query("SELECT * FROM sejours WHERE id_utilisateur = $1", ct.idProprietaire)
 	if err != nil {
 		err = ErrorSQL(err)
 		return
@@ -119,7 +119,8 @@ func (s Server) LoadSejoursUtilisateur(ct RequeteContext) (out Sejours, err erro
 		err = ErrorSQL(err)
 		return
 	}
-	// on charge les groupes pour chaque repas
+
+	// on charge les groupes, recettes et ingrédients pour chaque repas
 	rows, err = s.db.Query(`SELECT * FROM repas_groupes WHERE id_repas = ANY($1)`, repas.Ids().AsSQL())
 	if err != nil {
 		err = ErrorSQL(err)
@@ -130,17 +131,41 @@ func (s Server) LoadSejoursUtilisateur(ct RequeteContext) (out Sejours, err erro
 		err = ErrorSQL(err)
 		return
 	}
+	rows, err = s.db.Query(`SELECT * FROM repas_recettes WHERE id_repas = ANY($1)`, repas.Ids().AsSQL())
+	if err != nil {
+		return out, ErrorSQL(err)
+	}
+	repasRecettes, err := models.ScanRepasRecettes(rows)
+	if err != nil {
+		return out, ErrorSQL(err)
+	}
+	rows, err = s.db.Query(`SELECT * FROM repas_ingredients WHERE id_repas = ANY($1)`, repas.Ids().AsSQL())
+	if err != nil {
+		return out, ErrorSQL(err)
+	}
+	repasIngredients, err := models.ScanRepasIngredients(rows)
+	if err != nil {
+		return out, ErrorSQL(err)
+	}
 
-	// on commence par associer les groupes aux repas
+	// on commence par associer les groupes, recettes, ingredients aux repas
 	tmpGroupes := map[int64][]models.RepasGroupe{} // idRepas -> groupes
-	for _, rg := range repasGroupes {
-		tmpGroupes[rg.IdRepas] = append(tmpGroupes[rg.IdRepas], rg)
+	tmpRecettes := map[int64][]models.RepasRecette{}
+	tmpIngredients := map[int64][]models.RepasIngredient{}
+	for _, lien := range repasGroupes {
+		tmpGroupes[lien.IdRepas] = append(tmpGroupes[lien.IdRepas], lien)
+	}
+	for _, lien := range repasRecettes {
+		tmpRecettes[lien.IdRepas] = append(tmpRecettes[lien.IdRepas], lien)
+	}
+	for _, lien := range repasIngredients {
+		tmpIngredients[lien.IdRepas] = append(tmpIngredients[lien.IdRepas], lien)
 	}
 
 	// puis on associe à chaque séjour ses repas
-	tmpRepas := map[int64][]RepasWithGroupe{} // idSejour -> repas
-	for _, rep := range repas {               // on ajoute les repas aux séjours
-		repG := RepasWithGroupe{Repas: rep, Groupes: tmpGroupes[rep.Id]}
+	tmpRepas := map[int64][]RepasComplet{} // idSejour -> repas
+	for _, rep := range repas {            // on ajoute les repas aux séjours
+		repG := RepasComplet{Repas: rep, Groupes: tmpGroupes[rep.Id], Recettes: tmpRecettes[rep.Id], Ingredients: tmpIngredients[rep.Id]}
 		tmpRepas[repG.IdSejour] = append(tmpRepas[repG.IdSejour], repG)
 	}
 
@@ -510,24 +535,9 @@ func (s Server) DeleteMenu(ct RequeteContext, id int64) error {
 	if err := ct.proprioMenu(models.Menu{Id: id}, false); err != nil {
 		return err
 	}
-	rows, err := ct.tx.Query(`SELECT sejours.id FROM sejours 
-	JOIN repass ON repass.id_sejour = sejours.id
-	WHERE repass.id_menu = $1`, id)
-	if err != nil {
-		return ErrorSQL(err)
-	}
-	ids, err := models.ScanInts(rows)
-	if err != nil {
-		return ErrorSQL(err)
-	}
-	//TODO: notification aux utilisateurs avec possibilité de copie
-	// nécessite de rassembler les données nécessaires à la re-création
 
-	if L := len(ids); L > 0 {
-		return fmt.Errorf(`Ce menu est présent dans <b>%d séjours(s)</b>.
-		Si vous souhaitez vraiment le supprimer, il faudra d'abord l'en retirer.`, L)
-	}
-	_, err = ct.tx.Exec("DELETE FROM menu_recettes WHERE id_menu = $1", id)
+	// supression des liens
+	_, err := ct.tx.Exec("DELETE FROM menu_recettes WHERE id_menu = $1", id)
 	if err != nil {
 		return ErrorSQL(err)
 	}
@@ -669,7 +679,7 @@ func (s Server) DeleteGroupe(ct RequeteContext, id int64) (int, error) {
 
 // Repas
 
-func (s Server) CreateRepas(ct RequeteContext, idSejour int64, idMenu sql.NullInt64) (out models.Repas, err error) {
+func (s Server) CreateRepas(ct RequeteContext, idSejour int64) (out models.Repas, err error) {
 	if err = ct.beginTx(s); err != nil {
 		return
 	}
@@ -678,7 +688,6 @@ func (s Server) CreateRepas(ct RequeteContext, idSejour int64, idMenu sql.NullIn
 	}
 	tx := ct.tx
 	out.IdSejour = idSejour
-	out.IdMenu = idMenu
 	out, err = out.Insert(tx)
 	if err != nil {
 		err = ErrorSQL(err)
@@ -688,7 +697,7 @@ func (s Server) CreateRepas(ct RequeteContext, idSejour int64, idMenu sql.NullIn
 	return
 }
 
-func (s Server) UpdateManyRepas(ct RequeteContext, repass []RepasWithGroupe) error {
+func (s Server) UpdateManyRepas(ct RequeteContext, repass []RepasComplet) error {
 	if err := ct.beginTx(s); err != nil {
 		return err
 	}

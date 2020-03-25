@@ -104,8 +104,8 @@ export default class ListeMenus extends BaseList {
   showButtons(active: boolean, menu: Menu) {
     return (
       active &&
-      (!menu.id_proprietaire.Valid ||
-        menu.id_proprietaire.Int64 == C.idUtilisateur)
+      (!menu.id_utilisateur.Valid ||
+        menu.id_utilisateur.Int64 == C.idUtilisateur)
     );
   }
 

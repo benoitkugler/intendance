@@ -175,7 +175,7 @@ export default class Sejours extends SejoursProps {
     const sejour: New<Sejour> = {
       nom: modif.nom,
       date_debut: modif.date_debut,
-      id_proprietaire: C.idUtilisateur
+      id_utilisateur: C.idUtilisateur
     };
     const newSejour = await C.data.createSejour(sejour);
     if (C.notifications.getError() == null && newSejour != undefined) {

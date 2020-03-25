@@ -7,7 +7,7 @@ import {
   MenuIngredient,
   Utilisateur,
   Groupe,
-  RepasWithGroupe,
+  RepasComplet,
   NullInt64
 } from "./types";
 
@@ -21,8 +21,13 @@ export type Groupes = { [key: number]: Groupe };
 
 export type DetailsSejour = Pick<Sejour, "nom" | "date_debut">;
 export type DetailsRepas = Pick<
-  RepasWithGroupe,
-  "horaire" | "id_menu" | "offset_personnes" | "jour_offset" | "groupes"
+  RepasComplet,
+  | "horaire"
+  | "offset_personnes"
+  | "jour_offset"
+  | "groupes"
+  | "recettes"
+  | "ingredients"
 >;
 
 export interface IngredientOptions {
@@ -45,4 +50,9 @@ export function toNullableId(id: number): NullInt64 {
 
 export function deepcopy<T>(v: T): T {
   return JSON.parse(JSON.stringify(v));
+}
+
+// compare object as JSON
+export function deepequal<T>(v1: T, v2: T): boolean {
+  return JSON.stringify(v1) === JSON.stringify(v2);
 }

@@ -22,7 +22,7 @@ export const DefautIngredient: New<Ingredient> = {
 };
 
 export const DefautRecette: New<Recette> = {
-  id_proprietaire: { Valid: true, Int64: -1 },
+  id_utilisateur: { Valid: true, Int64: -1 },
   ingredients: [],
   mode_emploi: "",
   nom: ""
@@ -30,7 +30,7 @@ export const DefautRecette: New<Recette> = {
 
 export const DefautMenu: New<Menu> = {
   commentaire: "",
-  id_proprietaire: { Valid: true, Int64: -1 },
+  id_utilisateur: { Valid: true, Int64: -1 },
   ingredients: [],
   recettes: []
 };

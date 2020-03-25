@@ -139,8 +139,8 @@ export default class ListeRecettes extends BaseList {
     if (this.state.selection.idMenu != null) return false;
     return (
       active &&
-      (!recette.id_proprietaire.Valid ||
-        recette.id_proprietaire.Int64 == C.idUtilisateur)
+      (!recette.id_utilisateur.Valid ||
+        recette.id_utilisateur.Int64 == C.idUtilisateur)
     );
   }
 

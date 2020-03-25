@@ -198,11 +198,12 @@ test("crud repas", async () => {
 
   await C.data.createRepas({
     horaire: HoraireFields.Cinquieme,
-    id_menu: toNullableId(menuId),
     id_sejour: sejourId,
     jour_offset: 2,
     offset_personnes: 50,
-    groupes: []
+    groupes: [],
+    recettes: [],
+    ingredients: []
   });
   expect(C.notifications.getError()).toBeNull();
 

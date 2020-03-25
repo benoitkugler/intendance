@@ -57,7 +57,7 @@ import ListeRepas from "./ListeRepas.vue";
 import TooltipBtn from "../../utils/TooltipBtn.vue";
 import { C } from "../../../logic/controller";
 import { CalendarMode } from "../../../logic/types2";
-import { RepasWithGroupe, Sejour } from "../../../logic/types";
+import { RepasComplet, Sejour } from "../../../logic/types";
 
 const Props = Vue.extend({
   props: {
@@ -65,7 +65,7 @@ const Props = Vue.extend({
     weekdays: Array,
     start: String,
     dayHeight: String,
-    events: Object as () => { [key: string]: RepasWithGroupe[] },
+    events: Object as () => { [key: string]: RepasComplet[] },
     mode: String as () => CalendarMode,
     currentDay: String as () => string | null,
     hoverDay: String
@@ -102,9 +102,7 @@ export default class Week extends Props {
   async onDayDrop(event: DragEvent, date: string) {
     if (!event.dataTransfer || C.state.idSejour == null) return;
     event.preventDefault();
-    const repas: RepasWithGroupe = JSON.parse(
-      event.dataTransfer.getData("repas")
-    );
+    const repas: RepasComplet = JSON.parse(event.dataTransfer.getData("repas"));
     const targetOffset = C.dateToOffset(C.state.idSejour, new Date(date));
     if (targetOffset == repas.jour_offset) return;
     repas.jour_offset = targetOffset;

@@ -2,7 +2,7 @@ import {
   Menu,
   Recette,
   Sejour,
-  RepasWithGroupe,
+  RepasComplet,
   Groupe,
   RepasGroupe,
   Produit
@@ -82,8 +82,8 @@ export class Controller {
   }
 
   getMenuOrRecetteProprietaire(item: Menu | Recette) {
-    if (!item.id_proprietaire.Valid) return null;
-    return this.data.utilisateurs[item.id_proprietaire.Int64];
+    if (!item.id_utilisateur.Valid) return null;
+    return this.data.utilisateurs[item.id_utilisateur.Int64];
   }
 
   getRecetteIngredients(idRecette: number): IngredientOptions[] {
@@ -121,7 +121,7 @@ export class Controller {
     );
   }
 
-  iterateAllRepas(fn: (sejour: Sejour, rep: RepasWithGroupe) => void) {
+  iterateAllRepas(fn: (sejour: Sejour, rep: RepasComplet) => void) {
     Object.values(this.data.sejours.sejours || {}).forEach(sejour => {
       if (!sejour.repass) return;
       sejour.repass.forEach(repas => {
