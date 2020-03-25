@@ -18,6 +18,73 @@
       </v-card>
     </v-dialog>
 
+    <v-dialog v-if="tmpGroupe != null" v-model="showEdit" max-width="600px">
+      <v-card>
+        <v-card-title primary-title>
+          {{
+            editMode == "edit" ? "Groupe " + tmpGroupe.nom : "Nouveau groupe"
+          }}
+        </v-card-title>
+        <v-card-text>
+          <v-form>
+            <v-row>
+              <v-col>
+                <v-text-field
+                  label="Nom du groupe"
+                  v-model="tmpGroupe.nom"
+                ></v-text-field>
+                <v-text-field
+                  type="number"
+                  label="Taille du groupe"
+                  v-model.number="tmpGroupe.nb_personnes"
+                ></v-text-field>
+                <v-text-field
+                  label="Couleur"
+                  v-model="tmpGroupe.couleur"
+                  hide-details
+                  class="ma-0 pa-0"
+                >
+                  <template v-slot:append-outer>
+                    <v-menu
+                      v-model="showColorPicker"
+                      top
+                      nudge-bottom="105"
+                      nudge-left="16"
+                      :close-on-content-click="false"
+                    >
+                      <template v-slot:activator="{ on }">
+                        <div
+                          class="color-preview"
+                          :style="{ backgroundColor: tmpGroupe.couleur }"
+                          v-on="on"
+                        />
+                      </template>
+                      <v-card>
+                        <v-card-text class="pa-0">
+                          <v-color-picker
+                            v-model="tmpGroupe.couleur"
+                            flat
+                            mode="hexa"
+                            hide-inputs
+                          />
+                        </v-card-text>
+                      </v-card>
+                    </v-menu>
+                  </template>
+                </v-text-field>
+              </v-col>
+            </v-row>
+          </v-form>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="green" @click="editDone">
+            {{ editMode == "new" ? "Créer" : "Enregistrer les modifications" }}
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
     <v-row>
       <v-col>
         <v-toolbar dense color="secondary" class="my-1">
@@ -41,15 +108,21 @@
               v-for="groupe in groupes"
               :key="groupe.id"
               :value="groupe"
-              @click="editMode = 'edit'"
+              @click="startEditGroupe"
             >
               <v-list-item-content>
                 <v-list-item-title>
-                  {{ groupe.nom }}
-                </v-list-item-title>
-                <v-list-item-subtitle>
+                  <v-chip
+                    label
+                    class="mr-1 px-1 align-self-center"
+                    :color="groupe.couleur"
+                    :style="{ borderWidth: ' 1.5px' }"
+                    outlined
+                  >
+                    {{ groupe.nom }}
+                  </v-chip>
                   {{ groupe.nb_personnes }} personne(s)
-                </v-list-item-subtitle>
+                </v-list-item-title>
               </v-list-item-content>
               <v-list-item-action>
                 <v-row no-gutters>
@@ -66,77 +139,6 @@
             </v-list-item>
           </v-list-item-group>
         </v-list>
-      </v-col>
-      <v-col class="align-self-center">
-        <div v-if="tmpGroupe == null">
-          <i>Sélectionnez un groupe ou créez un nouveau groupe...</i>
-        </div>
-        <v-card v-else>
-          <v-card-title primary-title>
-            {{
-              editMode == "edit" ? "Groupe " + tmpGroupe.nom : "Nouveau groupe"
-            }}
-          </v-card-title>
-          <v-card-text>
-            <v-form>
-              <v-row>
-                <v-col>
-                  <v-text-field
-                    label="Nom du groupe"
-                    v-model="tmpGroupe.nom"
-                  ></v-text-field>
-                  <v-text-field
-                    type="number"
-                    label="Taille du groupe"
-                    v-model.number="tmpGroupe.nb_personnes"
-                  ></v-text-field>
-                  <v-text-field
-                    label="Couleur"
-                    v-model="tmpGroupe.couleur"
-                    hide-details
-                    class="ma-0 pa-0"
-                  >
-                    <template v-slot:append-outer>
-                      <v-menu
-                        v-model="showColorPicker"
-                        top
-                        nudge-bottom="105"
-                        nudge-left="16"
-                        :close-on-content-click="false"
-                      >
-                        <template v-slot:activator="{ on }">
-                          <div
-                            class="color-preview"
-                            :style="{ backgroundColor: tmpGroupe.couleur }"
-                            v-on="on"
-                          />
-                        </template>
-                        <v-card>
-                          <v-card-text class="pa-0">
-                            <v-color-picker
-                              v-model="tmpGroupe.couleur"
-                              flat
-                              mode="hexa"
-                              hide-inputs
-                            />
-                          </v-card-text>
-                        </v-card>
-                      </v-menu>
-                    </template>
-                  </v-text-field>
-                </v-col>
-              </v-row>
-            </v-form>
-          </v-card-text>
-          <v-card-actions>
-            <v-spacer></v-spacer>
-            <v-btn color="green" @click="editDone">
-              {{
-                editMode == "new" ? "Créer" : "Enregistrer les modifications"
-              }}
-            </v-btn>
-          </v-card-actions>
-        </v-card>
       </v-col>
     </v-row>
   </div>
@@ -181,6 +183,7 @@ export default class ListeGroupes extends ListeGroupesProps {
   confirmeSupprime = false;
 
   editMode: EditMode = "edit";
+  showEdit = false;
 
   get groupes() {
     const sej = this.sejour;
@@ -192,7 +195,6 @@ export default class ListeGroupes extends ListeGroupesProps {
 
   startCreateGroupe() {
     if (this.sejour === null) return;
-    this.editMode = "new";
     this.groupe = null;
     this.tmpGroupe = {
       id_sejour: this.sejour.id,
@@ -200,21 +202,28 @@ export default class ListeGroupes extends ListeGroupesProps {
       nb_personnes: 0,
       couleur: "#D1CA3D"
     };
+    this.editMode = "new";
+    this.showEdit = true;
   }
 
-  startEditGroupe(groupe: Groupe) {}
+  startEditGroupe() {
+    this.tmpGroupe = deepcopy(this.groupe);
+    this.editMode = "edit";
+    this.showEdit = true;
+  }
 
   async editDone() {
     if (this.tmpGroupe === null) return;
     let message: string;
     if (this.editMode == "new") {
       message = "Groupe ajouté avec succès.";
-      this.groupe = (await C.data.createGroupe(this.tmpGroupe)) || null;
-      this.editMode = "edit";
+      await C.data.createGroupe(this.tmpGroupe);
     } else {
       message = "Groupe modifié avec succès.";
       await C.data.updateGroupe(this.tmpGroupe as Groupe);
     }
+    this.tmpGroupe = null;
+    this.showEdit = false;
     if (C.notifications.getError() == null) {
       C.notifications.setMessage(message);
     }
