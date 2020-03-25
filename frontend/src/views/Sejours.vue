@@ -88,6 +88,9 @@
         <v-col>
           <liste-groupes :sejour="sejour"></liste-groupes>
         </v-col>
+        <v-col>
+          <liste-fournisseurs></liste-fournisseurs>
+        </v-col>
       </v-row>
     </v-container>
   </div>
@@ -101,6 +104,7 @@ import TooltipBtn from "../components/utils/TooltipBtn.vue";
 import SelectSejour from "../components/sejours/SelectSejour.vue";
 import FormSejour from "../components/sejours/FormSejour.vue";
 import ListeGroupes from "../components/sejours/groupes/ListeGroupes.vue";
+import ListeFournisseurs from "../components/sejours/ListeFournisseurs.vue";
 import AssistantCreateRepass from "../components/sejours/groupes/AssistantCreateRepass.vue";
 
 import { EditMode, DetailsSejour, New } from "../logic/types2";
@@ -116,6 +120,7 @@ const SejoursProps = Vue.extend({
     TooltipBtn,
     FormSejour,
     SelectSejour,
+    ListeFournisseurs,
     ListeGroupes,
     AssistantCreateRepass
   }

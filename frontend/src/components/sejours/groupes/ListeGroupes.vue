@@ -85,32 +85,32 @@
       </v-card>
     </v-dialog>
 
-    <v-row>
-      <v-col>
-        <v-toolbar dense color="secondary" class="my-1">
-          <v-toolbar-title class="px-2">
-            Groupes
-          </v-toolbar-title>
-          <v-spacer></v-spacer>
-          <v-toolbar-items>
-            <tooltip-btn
-              mdi-icon="plus-thick"
-              tooltip="Ajouter un groupe..."
-              @click="startCreateGroupe"
-              color="green"
-              :disabled="!sejour"
-            />
-          </v-toolbar-items>
-        </v-toolbar>
-        <v-list dense max-height="75vh" class="overflow-y-auto">
-          <v-list-item-group v-model="groupe" mandatory>
-            <v-list-item
-              v-for="groupe in groupes"
-              :key="groupe.id"
-              :value="groupe"
-              @click="startEditGroupe"
-            >
-              <v-list-item-content>
+    <v-toolbar dense color="secondary" class="my-1">
+      <v-toolbar-title class="px-2">
+        Groupes
+      </v-toolbar-title>
+      <v-spacer></v-spacer>
+      <v-toolbar-items>
+        <tooltip-btn
+          mdi-icon="plus-thick"
+          tooltip="Ajouter un groupe..."
+          @click="startCreateGroupe"
+          color="green"
+          :disabled="!sejour"
+        />
+      </v-toolbar-items>
+    </v-toolbar>
+    <v-list dense max-height="75vh" class="overflow-y-auto">
+      <v-list-item-group v-model="groupe" mandatory>
+        <v-list-item
+          v-for="groupe in groupes"
+          :key="groupe.id"
+          :value="groupe"
+          @click="startEditGroupe"
+        >
+          <v-list-item-content>
+            <v-row no-gutters
+              ><v-col>
                 <v-list-item-title>
                   <v-chip
                     label
@@ -121,26 +121,30 @@
                   >
                     {{ groupe.nom }}
                   </v-chip>
-                  {{ groupe.nb_personnes }} personne(s)
                 </v-list-item-title>
-              </v-list-item-content>
-              <v-list-item-action>
-                <v-row no-gutters>
-                  <v-col>
-                    <tooltip-btn
-                      mdi-icon="close"
-                      tooltip="Supprimer ce groupe"
-                      color="red"
-                      @click.stop="askConfirmeSupprime(groupe)"
-                    ></tooltip-btn>
-                  </v-col>
-                </v-row>
-              </v-list-item-action>
-            </v-list-item>
-          </v-list-item-group>
-        </v-list>
-      </v-col>
-    </v-row>
+              </v-col>
+              <v-col class="text-right align-self-center">
+                <v-list-item-subtitle>
+                  {{ groupe.nb_personnes }} personne(s)
+                </v-list-item-subtitle>
+              </v-col></v-row
+            >
+          </v-list-item-content>
+          <v-list-item-action>
+            <v-row no-gutters>
+              <v-col>
+                <tooltip-btn
+                  mdi-icon="close"
+                  tooltip="Supprimer ce groupe"
+                  color="red"
+                  @click.stop="askConfirmeSupprime(groupe)"
+                ></tooltip-btn>
+              </v-col>
+            </v-row>
+          </v-list-item-action>
+        </v-list-item>
+      </v-list-item-group>
+    </v-list>
   </div>
 </template>
 
