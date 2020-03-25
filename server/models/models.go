@@ -6,6 +6,7 @@ import (
 	"time"
 )
 
+// sql:UNIQUE(mail)
 type Utilisateur struct {
 	Id       int64  `json:"id"`
 	Password string `json:"password"`
@@ -14,6 +15,7 @@ type Utilisateur struct {
 	PrenomNom string `json:"prenom_nom"`
 }
 
+// sql:UNIQUE(nom)
 type Ingredient struct {
 	Id    int64  `json:"id"`
 	Nom   string `json:"nom"`
@@ -33,6 +35,7 @@ type Recette struct {
 	ModeEmploi string `json:"mode_emploi"`
 }
 
+// sql:UNIQUE(id_recette, id_ingredient)
 type RecetteIngredient struct {
 	IdRecette    int64   `json:"id_recette"`
 	IdIngredient int64   `json:"id_ingredient"`
@@ -47,6 +50,7 @@ type Menu struct {
 	Commentaire string `json:"commentaire"`
 }
 
+// sql:UNIQUE(id_menu, id_ingredient)
 type MenuIngredient struct {
 	IdMenu       int64 `json:"id_menu"`
 	IdIngredient int64 `json:"id_ingredient"`
@@ -55,6 +59,7 @@ type MenuIngredient struct {
 	Cuisson  string  `json:"cuisson"`
 }
 
+// sql:UNIQUE(id_menu, id_recette)
 type MenuRecette struct {
 	IdMenu    int64 `json:"id_menu"`
 	IdRecette int64 `json:"id_recette"`
@@ -80,6 +85,7 @@ type Groupe struct {
 	Couleur     string `json:"couleur"`
 }
 
+// Repas est bien
 type Repas struct {
 	Id              int64         `json:"id"`
 	IdSejour        int64         `json:"id_sejour"`
@@ -89,11 +95,13 @@ type Repas struct {
 	Horaire         Horaire       `json:"horaire"`
 }
 
+// sql:UNIQUE(id_repas, id_groupe)
 type RepasGroupe struct {
 	IdRepas  int64 `json:"id_repas"`
 	IdGroupe int64 `json:"id_groupe"`
 }
 
+// sql:UNIQUE(nom)
 type Fournisseur struct {
 	Id  int64  `json:"id"`
 	Nom string `json:"nom"`
@@ -114,6 +122,7 @@ type Produit struct {
 	Colisage int64 `json:"colisage"`
 }
 
+// sql:UNIQUE(id_ingredient, id_produit)
 type IngredientProduit struct {
 	IdIngredient  int64 `json:"id_ingredient"`
 	IdProduit     int64 `json:"id_produit"`
@@ -127,6 +136,7 @@ type Commande struct {
 	Tag           string    `json:"tag"`
 }
 
+// sql:UNIQUE(id_commande, id_produit)
 type CommandeProduit struct {
 	IdCommande int64 `json:"id_commande"`
 	IdProduit  int64 `json:"id_produit"`

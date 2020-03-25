@@ -136,7 +136,7 @@ func (ct RequeteContext) proprioRecette(recette models.Recette, checkProprioFiel
 		return fmt.Errorf(`Votre requête est impossible car la <b>recette</b> 
 		concernée ne vous <b>appartient pas</b> !`)
 	}
-	if checkProprioField && trueProp.Valid && ct.idProprietaire != recette.IdProprietaire.Int64 {
+	if checkProprioField && trueProp.Valid && ct.idProprietaire != recette.IdUtilisateur.Int64 {
 		return fmt.Errorf(`Votre requête est impossible car le propriétaire indiqué
 		est <b>invalide</b> !`)
 	}
@@ -153,7 +153,7 @@ func (ct RequeteContext) proprioMenu(menu models.Menu, checkProprioField bool) e
 		return fmt.Errorf(`Votre requête est impossible car le <b>menu</b> 
 		concerné ne vous <b>appartient pas</b> !`)
 	}
-	if checkProprioField && trueProp.Valid && ct.idProprietaire != menu.IdProprietaire.Int64 {
+	if checkProprioField && trueProp.Valid && ct.idProprietaire != menu.IdUtilisateur.Int64 {
 		return fmt.Errorf(`Votre requête est impossible car le propriétaire indiqué
 		est <b>invalide</b> !`)
 	}
@@ -161,7 +161,7 @@ func (ct RequeteContext) proprioMenu(menu models.Menu, checkProprioField bool) e
 }
 
 // Vérifie que le séjour donné appartient au propriétaire courant
-// Si `checkProprioField`, vérifie aussi que le champ IdProprietaire est cohérent.
+// Si `checkProprioField`, vérifie aussi que le champ IdUtilisateur est cohérent.
 func (ct RequeteContext) proprioSejour(sejour models.Sejour, checkProprioField bool) error {
 	row := ct.tx.QueryRow("SELECT id_proprietaire FROM sejours WHERE id = $1", sejour.Id)
 	var trueProp int64
@@ -172,7 +172,7 @@ func (ct RequeteContext) proprioSejour(sejour models.Sejour, checkProprioField b
 		return fmt.Errorf(`Votre requête est impossible car le <b>séjour</b> 
 		concerné ne vous <b>appartient pas</b> !`)
 	}
-	if checkProprioField && ct.idProprietaire != sejour.IdProprietaire {
+	if checkProprioField && ct.idProprietaire != sejour.IdUtilisateur {
 		return fmt.Errorf(`Votre requête est impossible car le propriétaire indiqué
 		est <b>invalide</b> !`)
 	}

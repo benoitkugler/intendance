@@ -327,7 +327,7 @@ func (s Server) CreateRecette(ct RequeteContext) (out models.Recette, err error)
 	}
 	tx := ct.tx
 	out.Nom = fmt.Sprintf("R%d", time.Now().UnixNano())
-	out.IdProprietaire = models.NullableId(ct.idProprietaire)
+	out.IdUtilisateur = models.NullableId(ct.idProprietaire)
 	out, err = out.Insert(tx)
 	if err != nil {
 		err = ErrorSQL(err)
@@ -450,7 +450,7 @@ func (s Server) CreateMenu(ct RequeteContext) (out models.Menu, err error) {
 		return
 	}
 	tx := ct.tx
-	out.IdProprietaire = models.NullableId(ct.idProprietaire)
+	out.IdUtilisateur = models.NullableId(ct.idProprietaire)
 	out, err = out.Insert(tx)
 	if err != nil {
 		err = ErrorSQL(err)
@@ -551,7 +551,7 @@ func (s Server) CreateSejour(ct RequeteContext) (out models.Sejour, err error) {
 		return
 	}
 	tx := ct.tx
-	out.IdProprietaire = ct.idProprietaire
+	out.IdUtilisateur = ct.idProprietaire
 	out, err = out.Insert(tx)
 	if err != nil {
 		err = ErrorSQL(err)

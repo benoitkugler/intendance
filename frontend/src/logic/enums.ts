@@ -20,7 +20,7 @@ export const Horaires: EnumItem[] = [
   { value: HoraireFields.PetitDejeuner, text: "Petit déjeuner" },
   { value: HoraireFields.Midi, text: "Midi" },
   { value: HoraireFields.Gouter, text: "Goûter" },
-  { value: HoraireFields.Diner, text: "Dinner" },
+  { value: HoraireFields.Diner, text: "Dîner" },
   { value: HoraireFields.Cinquieme, text: "Cinquième" }
 ];
 export const fmtHoraire = (v: string) => fmt(Horaires, v);

@@ -222,7 +222,7 @@ export interface MenuIngredient {
 // github.com/benoitkugler/intendance/server/controller.Menu
 export interface Menu {
   id: number;
-  id_proprietaire: NullInt64;
+  id_utilisateur: NullInt64;
   commentaire: string;
   recettes: MenuRecette[] | null;
   ingredients: MenuIngredient[] | null;
@@ -257,7 +257,7 @@ export interface RecetteIngredient {
 // github.com/benoitkugler/intendance/server/controller.Recette
 export interface Recette {
   id: number;
-  id_proprietaire: NullInt64;
+  id_utilisateur: NullInt64;
   nom: string;
   mode_emploi: string;
   ingredients: RecetteIngredient[] | null;
@@ -284,7 +284,7 @@ export interface OutResoudIngredients {
 // github.com/benoitkugler/intendance/server/models.Sejour
 export interface Sejour {
   id: number;
-  id_proprietaire: number;
+  id_utilisateur: number;
   date_debut: Time;
   nom: string;
 }
@@ -315,7 +315,7 @@ export interface RepasWithGroupe {
 // github.com/benoitkugler/intendance/server/controller.SejourRepas
 export interface SejourRepas {
   id: number;
-  id_proprietaire: number;
+  id_utilisateur: number;
   date_debut: Time;
   nom: string;
   repass: RepasWithGroupe[] | null;

@@ -55,11 +55,11 @@ func ScanCommandes(rs *sql.Rows) (Commandes, error) {
 // Insert Commande in the database and returns the item with id filled.
 func (item Commande) Insert(tx *sql.Tx) (out Commande, err error) {
 	r := tx.QueryRow(`INSERT INTO commandes (
-			id_proprietaire,date_emission,tag
+			id_utilisateur,date_emission,tag
 			) VALUES (
 			$1,$2,$3
 			) RETURNING 
-			id,id_proprietaire,date_emission,tag;
+			id,id_utilisateur,date_emission,tag;
 			`, item.IdUtilisateur, item.DateEmission, item.Tag)
 	return ScanCommande(r)
 }
@@ -67,11 +67,11 @@ func (item Commande) Insert(tx *sql.Tx) (out Commande, err error) {
 // Update Commande in the database and returns the new version.
 func (item Commande) Update(tx *sql.Tx) (out Commande, err error) {
 	r := tx.QueryRow(`UPDATE commandes SET (
-			id_proprietaire,date_emission,tag
+			id_utilisateur,date_emission,tag
 			) = (
 			$2,$3,$4
 			) WHERE id = $1 RETURNING 
-			id,id_proprietaire,date_emission,tag;
+			id,id_utilisateur,date_emission,tag;
 			`, item.Id, item.IdUtilisateur, item.DateEmission, item.Tag)
 	return ScanCommande(r)
 }
@@ -431,7 +431,7 @@ func InsertManyIngredientProduits(tx *sql.Tx, items []IngredientProduit) error {
 	}
 
 	stmt, err := tx.Prepare(pq.CopyIn("ingredient_produits",
-		"id_ingredient", "id_produit", "id_ajouteur",
+		"id_ingredient", "id_produit", "id_utilisateur",
 	))
 	if err != nil {
 		return err
@@ -455,10 +455,10 @@ func InsertManyIngredientProduits(tx *sql.Tx, items []IngredientProduit) error {
 }
 
 // Delete the link IngredientProduit in the database.
-// Only the 'IdIngredient' 'IdProduit' 'IdAjouteur' fields are used.
+// Only the 'IdIngredient' 'IdProduit' 'IdUtilisateur' fields are used.
 func (item IngredientProduit) Delete(tx *sql.Tx) error {
 	_, err := tx.Exec(`DELETE FROM ingredient_produits WHERE 
-		id_ingredient = $1 AND id_produit = $2 AND id_ajouteur = $3;`, item.IdIngredient, item.IdProduit, item.IdUtilisateur)
+		id_ingredient = $1 AND id_produit = $2 AND id_utilisateur = $3;`, item.IdIngredient, item.IdProduit, item.IdUtilisateur)
 	return err
 }
 
@@ -466,7 +466,7 @@ func ScanMenu(r *sql.Row) (Menu, error) {
 	var s Menu
 	if err := r.Scan(
 		&s.Id,
-		&s.IdProprietaire,
+		&s.IdUtilisateur,
 		&s.Commentaire,
 	); err != nil {
 		return Menu{}, err
@@ -491,7 +491,7 @@ func ScanMenus(rs *sql.Rows) (Menus, error) {
 		var s Menu
 		if err = rs.Scan(
 			&s.Id,
-			&s.IdProprietaire,
+			&s.IdUtilisateur,
 			&s.Commentaire,
 		); err != nil {
 			return nil, err
@@ -507,24 +507,24 @@ func ScanMenus(rs *sql.Rows) (Menus, error) {
 // Insert Menu in the database and returns the item with id filled.
 func (item Menu) Insert(tx *sql.Tx) (out Menu, err error) {
 	r := tx.QueryRow(`INSERT INTO menus (
-			id_proprietaire,commentaire
+			id_utilisateur,commentaire
 			) VALUES (
 			$1,$2
 			) RETURNING 
-			id,id_proprietaire,commentaire;
-			`, item.IdProprietaire, item.Commentaire)
+			id,id_utilisateur,commentaire;
+			`, item.IdUtilisateur, item.Commentaire)
 	return ScanMenu(r)
 }
 
 // Update Menu in the database and returns the new version.
 func (item Menu) Update(tx *sql.Tx) (out Menu, err error) {
 	r := tx.QueryRow(`UPDATE menus SET (
-			id_proprietaire,commentaire
+			id_utilisateur,commentaire
 			) = (
 			$2,$3
 			) WHERE id = $1 RETURNING 
-			id,id_proprietaire,commentaire;
-			`, item.Id, item.IdProprietaire, item.Commentaire)
+			id,id_utilisateur,commentaire;
+			`, item.Id, item.IdUtilisateur, item.Commentaire)
 	return ScanMenu(r)
 }
 
@@ -764,7 +764,7 @@ func ScanRecette(r *sql.Row) (Recette, error) {
 	var s Recette
 	if err := r.Scan(
 		&s.Id,
-		&s.IdProprietaire,
+		&s.IdUtilisateur,
 		&s.Nom,
 		&s.ModeEmploi,
 	); err != nil {
@@ -790,7 +790,7 @@ func ScanRecettes(rs *sql.Rows) (Recettes, error) {
 		var s Recette
 		if err = rs.Scan(
 			&s.Id,
-			&s.IdProprietaire,
+			&s.IdUtilisateur,
 			&s.Nom,
 			&s.ModeEmploi,
 		); err != nil {
@@ -807,24 +807,24 @@ func ScanRecettes(rs *sql.Rows) (Recettes, error) {
 // Insert Recette in the database and returns the item with id filled.
 func (item Recette) Insert(tx *sql.Tx) (out Recette, err error) {
 	r := tx.QueryRow(`INSERT INTO recettes (
-			id_proprietaire,nom,mode_emploi
+			id_utilisateur,nom,mode_emploi
 			) VALUES (
 			$1,$2,$3
 			) RETURNING 
-			id,id_proprietaire,nom,mode_emploi;
-			`, item.IdProprietaire, item.Nom, item.ModeEmploi)
+			id,id_utilisateur,nom,mode_emploi;
+			`, item.IdUtilisateur, item.Nom, item.ModeEmploi)
 	return ScanRecette(r)
 }
 
 // Update Recette in the database and returns the new version.
 func (item Recette) Update(tx *sql.Tx) (out Recette, err error) {
 	r := tx.QueryRow(`UPDATE recettes SET (
-			id_proprietaire,nom,mode_emploi
+			id_utilisateur,nom,mode_emploi
 			) = (
 			$2,$3,$4
 			) WHERE id = $1 RETURNING 
-			id,id_proprietaire,nom,mode_emploi;
-			`, item.Id, item.IdProprietaire, item.Nom, item.ModeEmploi)
+			id,id_utilisateur,nom,mode_emploi;
+			`, item.Id, item.IdUtilisateur, item.Nom, item.ModeEmploi)
 	return ScanRecette(r)
 }
 
@@ -1062,7 +1062,7 @@ func ScanSejour(r *sql.Row) (Sejour, error) {
 	var s Sejour
 	if err := r.Scan(
 		&s.Id,
-		&s.IdProprietaire,
+		&s.IdUtilisateur,
 		&s.DateDebut,
 		&s.Nom,
 	); err != nil {
@@ -1088,7 +1088,7 @@ func ScanSejours(rs *sql.Rows) (Sejours, error) {
 		var s Sejour
 		if err = rs.Scan(
 			&s.Id,
-			&s.IdProprietaire,
+			&s.IdUtilisateur,
 			&s.DateDebut,
 			&s.Nom,
 		); err != nil {
@@ -1105,24 +1105,24 @@ func ScanSejours(rs *sql.Rows) (Sejours, error) {
 // Insert Sejour in the database and returns the item with id filled.
 func (item Sejour) Insert(tx *sql.Tx) (out Sejour, err error) {
 	r := tx.QueryRow(`INSERT INTO sejours (
-			id_proprietaire,date_debut,nom
+			id_utilisateur,date_debut,nom
 			) VALUES (
 			$1,$2,$3
 			) RETURNING 
-			id,id_proprietaire,date_debut,nom;
-			`, item.IdProprietaire, item.DateDebut, item.Nom)
+			id,id_utilisateur,date_debut,nom;
+			`, item.IdUtilisateur, item.DateDebut, item.Nom)
 	return ScanSejour(r)
 }
 
 // Update Sejour in the database and returns the new version.
 func (item Sejour) Update(tx *sql.Tx) (out Sejour, err error) {
 	r := tx.QueryRow(`UPDATE sejours SET (
-			id_proprietaire,date_debut,nom
+			id_utilisateur,date_debut,nom
 			) = (
 			$2,$3,$4
 			) WHERE id = $1 RETURNING 
-			id,id_proprietaire,date_debut,nom;
-			`, item.Id, item.IdProprietaire, item.DateDebut, item.Nom)
+			id,id_utilisateur,date_debut,nom;
+			`, item.Id, item.IdUtilisateur, item.DateDebut, item.Nom)
 	return ScanSejour(r)
 }
 

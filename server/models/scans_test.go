@@ -152,7 +152,7 @@ func queriesIngredientProduit(tx *sql.Tx, item IngredientProduit) (IngredientPro
 	_ = len(items)
 
 	row := tx.QueryRow(`SELECT * FROM ingredient_produits WHERE 
-			id_ingredient = $1 AND id_produit = $2 AND id_ajouteur = $3;`, item.IdIngredient, item.IdProduit, item.IdUtilisateur)
+			id_ingredient = $1 AND id_produit = $2 AND id_utilisateur = $3;`, item.IdIngredient, item.IdProduit, item.IdUtilisateur)
 
 	_, err = ScanIngredientProduit(row)
 	return item, err

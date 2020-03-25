@@ -129,9 +129,9 @@ func randsqlNullInt64() sql.NullInt64 {
 
 func randMenu() Menu {
 	return Menu{
-		Id:             randint64(),
-		IdProprietaire: randsqlNullInt64(),
-		Commentaire:    randstring(),
+		Id:            randint64(),
+		IdUtilisateur: randsqlNullInt64(),
+		Commentaire:   randstring(),
 	}
 }
 
@@ -165,10 +165,10 @@ func randProduit() Produit {
 
 func randRecette() Recette {
 	return Recette{
-		Id:             randint64(),
-		IdProprietaire: randsqlNullInt64(),
-		Nom:            randstring(),
-		ModeEmploi:     randstring(),
+		Id:            randint64(),
+		IdUtilisateur: randsqlNullInt64(),
+		Nom:           randstring(),
+		ModeEmploi:    randstring(),
 	}
 }
 
@@ -205,10 +205,10 @@ func randRepasGroupe() RepasGroupe {
 
 func randSejour() Sejour {
 	return Sejour{
-		Id:             randint64(),
-		IdProprietaire: randint64(),
-		DateDebut:      randtTime(),
-		Nom:            randstring(),
+		Id:            randint64(),
+		IdUtilisateur: randint64(),
+		DateDebut:     randtTime(),
+		Nom:           randstring(),
 	}
 }
 

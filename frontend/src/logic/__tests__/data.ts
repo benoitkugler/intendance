@@ -2,7 +2,7 @@ import { C } from "../controller";
 import { HoraireFields } from "../enums";
 import { toNullableId } from "../types2";
 
-const IdProprietaire = 2;
+const IdUtilisateur = 2;
 
 test("load agenda", async () => {
   await C.data.loadSejours();
@@ -63,7 +63,7 @@ test("crud recette", async () => {
         .toString(36)
         .replace(/[^a-z]+/g, "")
         .substr(0, 5),
-    id_proprietaire: { Valid: true, Int64: IdProprietaire },
+    id_utilisateur: { Valid: true, Int64: IdUtilisateur },
     mode_emploi: "BAtter les oeufs en eige....",
     ingredients: [
       {
@@ -102,7 +102,7 @@ test("crud menu", async () => {
 
   const l = Object.keys(C.data.menus).length;
   let menu = await C.data.createMenu({
-    id_proprietaire: { Valid: true, Int64: IdProprietaire },
+    id_utilisateur: { Valid: true, Int64: IdUtilisateur },
     commentaire: "BAtter les oeufs en eige....",
     ingredients: [],
     recettes: []
@@ -144,7 +144,7 @@ test("crud sejour", async () => {
   let sejour = await C.data.createSejour({
     date_debut: new Date().toISOString(),
     nom: "C2 Again !",
-    id_proprietaire: IdProprietaire
+    id_utilisateur: IdUtilisateur
   });
   expect(C.notifications.getError()).toBeNull();
   expect(Object.keys(C.data.sejours.sejours || {})).toHaveLength(l + 1);
