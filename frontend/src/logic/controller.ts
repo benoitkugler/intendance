@@ -116,9 +116,10 @@ export class Controller {
   dateToOffset(idSejour: number, date: Date) {
     const sejour = (this.data.sejours.sejours || {})[idSejour];
     const dateDebut = new Date(sejour.date_debut);
-    return Math.round(
-      (date.valueOf() - dateDebut.valueOf()) / (24 * 60 * 60 * 1000)
-    );
+    const dayMs = 24 * 60 * 60 * 1000;
+    const truncateDebut = Math.floor(dateDebut.valueOf() / dayMs);
+    const truncateFin = Math.floor(date.valueOf() / dayMs);
+    return truncateFin - truncateDebut;
   }
 
   iterateAllRepas(fn: (sejour: Sejour, rep: RepasComplet) => void) {
