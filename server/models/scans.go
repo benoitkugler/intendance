@@ -160,6 +160,7 @@ func ScanFournisseur(r *sql.Row) (Fournisseur, error) {
 	if err := r.Scan(
 		&s.Id,
 		&s.Nom,
+		&s.Lieu,
 		&s.DelaiCommande,
 		&s.JoursLivraison,
 	); err != nil {
@@ -186,6 +187,7 @@ func ScanFournisseurs(rs *sql.Rows) (Fournisseurs, error) {
 		if err = rs.Scan(
 			&s.Id,
 			&s.Nom,
+			&s.Lieu,
 			&s.DelaiCommande,
 			&s.JoursLivraison,
 		); err != nil {
@@ -202,24 +204,24 @@ func ScanFournisseurs(rs *sql.Rows) (Fournisseurs, error) {
 // Insert Fournisseur in the database and returns the item with id filled.
 func (item Fournisseur) Insert(tx *sql.Tx) (out Fournisseur, err error) {
 	r := tx.QueryRow(`INSERT INTO fournisseurs (
-			nom,delai_commande,jours_livraison
+			nom,lieu,delai_commande,jours_livraison
 			) VALUES (
-			$1,$2,$3
+			$1,$2,$3,$4
 			) RETURNING 
-			id,nom,delai_commande,jours_livraison;
-			`, item.Nom, item.DelaiCommande, item.JoursLivraison)
+			id,nom,lieu,delai_commande,jours_livraison;
+			`, item.Nom, item.Lieu, item.DelaiCommande, item.JoursLivraison)
 	return ScanFournisseur(r)
 }
 
 // Update Fournisseur in the database and returns the new version.
 func (item Fournisseur) Update(tx *sql.Tx) (out Fournisseur, err error) {
 	r := tx.QueryRow(`UPDATE fournisseurs SET (
-			nom,delai_commande,jours_livraison
+			nom,lieu,delai_commande,jours_livraison
 			) = (
-			$2,$3,$4
+			$2,$3,$4,$5
 			) WHERE id = $1 RETURNING 
-			id,nom,delai_commande,jours_livraison;
-			`, item.Id, item.Nom, item.DelaiCommande, item.JoursLivraison)
+			id,nom,lieu,delai_commande,jours_livraison;
+			`, item.Id, item.Nom, item.Lieu, item.DelaiCommande, item.JoursLivraison)
 	return ScanFournisseur(r)
 }
 
@@ -1271,6 +1273,74 @@ func (item Sejour) Delete(tx *sql.Tx) (int64, error) {
 	r := tx.QueryRow("DELETE FROM sejours WHERE id = $1 RETURNING id;", item.Id)
 	err := r.Scan(&deleted_id)
 	return deleted_id, err
+}
+
+func ScanSejourFournisseur(r *sql.Row) (SejourFournisseur, error) {
+	var s SejourFournisseur
+	if err := r.Scan(
+		&s.IdSejour,
+		&s.IdFournisseur,
+	); err != nil {
+		return SejourFournisseur{}, err
+	}
+	return s, nil
+}
+
+func ScanSejourFournisseurs(rs *sql.Rows) ([]SejourFournisseur, error) {
+	structs := make([]SejourFournisseur, 0, 16)
+	var err error
+	for rs.Next() {
+		var s SejourFournisseur
+		if err = rs.Scan(
+			&s.IdSejour,
+			&s.IdFournisseur,
+		); err != nil {
+			return nil, err
+		}
+		structs = append(structs, s)
+	}
+	if err = rs.Err(); err != nil {
+		return nil, err
+	}
+	return structs, nil
+}
+
+// Insert the links SejourFournisseur in the database.
+func InsertManySejourFournisseurs(tx *sql.Tx, items []SejourFournisseur) error {
+	if len(items) == 0 {
+		return nil
+	}
+
+	stmt, err := tx.Prepare(pq.CopyIn("sejour_fournisseurs",
+		"id_sejour", "id_fournisseur",
+	))
+	if err != nil {
+		return err
+	}
+
+	for _, item := range items {
+		_, err = stmt.Exec(item.IdSejour, item.IdFournisseur)
+		if err != nil {
+			return err
+		}
+	}
+
+	if _, err = stmt.Exec(); err != nil {
+		return err
+	}
+
+	if err = stmt.Close(); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Delete the link SejourFournisseur in the database.
+// Only the 'IdSejour' 'IdFournisseur' fields are used.
+func (item SejourFournisseur) Delete(tx *sql.Tx) error {
+	_, err := tx.Exec(`DELETE FROM sejour_fournisseurs WHERE 
+		id_sejour = $1 AND id_fournisseur = $2;`, item.IdSejour, item.IdFournisseur)
+	return err
 }
 
 func ScanUtilisateur(r *sql.Row) (Utilisateur, error) {

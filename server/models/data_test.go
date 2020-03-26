@@ -63,6 +63,7 @@ func randFournisseur() Fournisseur {
 	return Fournisseur{
 		Id:             randint64(),
 		Nom:            randstring(),
+		Lieu:           randstring(),
 		DelaiCommande:  randint64(),
 		JoursLivraison: randJoursLivraison(),
 	}
@@ -224,6 +225,13 @@ func randSejour() Sejour {
 		IdUtilisateur: randint64(),
 		DateDebut:     randtTime(),
 		Nom:           randstring(),
+	}
+}
+
+func randSejourFournisseur() SejourFournisseur {
+	return SejourFournisseur{
+		IdSejour:      randint64(),
+		IdFournisseur: randint64(),
 	}
 }
 

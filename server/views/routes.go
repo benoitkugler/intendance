@@ -550,6 +550,25 @@ func GetFournisseurs(c echo.Context) error {
 	return c.JSON(200, OutFournisseurs{Token: ct.Token, Fournisseurs: out})
 }
 
+func UpdateSejourFournisseurs(c echo.Context) error {
+	ct, err := Server.Authentifie(c.Request())
+	if err != nil {
+		return err
+	}
+	var params InSejourFournisseurs
+	if err := c.Bind(&params); err != nil {
+		return err
+	}
+	if err := Server.UpdateSejourFournisseurs(ct, params.IdSejour, params.IdsFournisseurs); err != nil {
+		return err
+	}
+	out, err := Server.LoadSejoursUtilisateur(ct)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, OutSejours{Token: ct.Token, Sejours: out})
+}
+
 func GetIngredientProduits(c echo.Context) error {
 	ct, err := Server.Authentifie(c.Request())
 	if err != nil {

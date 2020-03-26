@@ -78,6 +78,30 @@ func (s Server) LoadFournisseurs(ct RequeteContext) (models.Fournisseurs, error)
 	return ct.loadFournisseurs()
 }
 
+func (s Server) UpdateSejourFournisseurs(ct RequeteContext, idSejour int64, idsFournisseurs []int64) error {
+	if err := ct.beginTx(s); err != nil {
+		return err
+	}
+	if err := ct.proprioSejour(models.Sejour{Id: idSejour}, false); err != nil {
+		return err
+	}
+
+	// reset les fournisseurs du séjour ...
+	_, err := ct.tx.Exec("DELETE FROM sejour_fournisseurs WHERE id_sejour = $1", idSejour)
+	if err != nil {
+		return ct.rollbackTx(err)
+	}
+	sf := make([]models.SejourFournisseur, len(idsFournisseurs))
+	for i, id := range idsFournisseurs {
+		sf[i] = models.SejourFournisseur{IdSejour: idSejour, IdFournisseur: id}
+	}
+	// ... et rajoute les nouveaux
+	if err := models.InsertManySejourFournisseurs(ct.tx, sf); err != nil {
+		return ct.rollbackTx(err)
+	}
+	return ct.commitTx()
+}
+
 func (s Server) GetIngredientProduits(ct RequeteContext, idIngredient int64) (IngredientProduits, error) {
 	if err := ct.beginTx(s); err != nil {
 		return IngredientProduits{}, err

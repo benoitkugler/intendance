@@ -120,9 +120,9 @@ type RepasGroupe struct {
 
 // sql:UNIQUE(nom)
 type Fournisseur struct {
-	Id  int64  `json:"id"`
-	Nom string `json:"nom"`
-
+	Id             int64          `json:"id"`
+	Nom            string         `json:"nom"`
+	Lieu           string         `json:"lieu"`
 	DelaiCommande  int64          `json:"delai_commande"`
 	JoursLivraison JoursLivraison `json:"jours_livraison"`
 }
@@ -131,6 +131,14 @@ type Fournisseur struct {
 // sql:UNIQUE(id_utilisateur,id_fournisseur)
 type UtilisateurFournisseur struct {
 	IdUtilisateur int64 `json:"id_utilisateur"`
+	IdFournisseur int64 `json:"id_fournisseur"`
+}
+
+// Enregistre les fournisseurs associés à un séjour.
+// Le fournisseur doit faire partie des founisseurs du proprietaire du séjour
+// sql:UNIQUE(id_sejour,id_fournisseur)
+type SejourFournisseur struct {
+	IdSejour      int64 `json:"id_sejour"`
 	IdFournisseur int64 `json:"id_fournisseur"`
 }
 

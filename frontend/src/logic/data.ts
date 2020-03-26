@@ -23,7 +23,8 @@ import {
   InAjouteIngredientProduit,
   OutFournisseurs,
   Fournisseurs,
-  Ingredients
+  Ingredients,
+  InSejourFournisseurs
 } from "./types";
 import axios, { AxiosResponse } from "axios";
 import { Recettes, Menus, Utilisateurs, New } from "./types2";
@@ -404,6 +405,30 @@ export class Data {
       );
       this.sejours = response.data.sejours;
       this.controller.token = response.data.token;
+    } catch (error) {
+      this.controller.notifications.setAxiosError(error);
+    }
+  };
+
+  updateSejourFournisseurs = async (
+    sejour: Sejour,
+    idsFournisseurs: number[]
+  ) => {
+    this.controller.notifications.startSpin();
+    const params: InSejourFournisseurs = {
+      id_sejour: sejour.id,
+      ids_fournisseurs: idsFournisseurs
+    };
+    try {
+      const response: AxiosResponse<OutSejours> = await axios.post(
+        ServerURL + "/sejours/fournisseurs",
+        params,
+        {
+          auth: this.controller.auth()
+        }
+      );
+      this.controller.token = response.data.token;
+      this.sejours = response.data.sejours;
     } catch (error) {
       this.controller.notifications.setAxiosError(error);
     }

@@ -98,6 +98,12 @@ export interface InResoudIngredients {
 	jour_offset: number[] | null,
 }
 
+// github.com/benoitkugler/intendance/server/views.InSejourFournisseurs
+export interface InSejourFournisseurs {
+	id_sejour: number,
+	ids_fournisseurs: number[] | null,
+}
+
 // github.com/benoitkugler/intendance/server/controller.TimedIngredientQuantite
 export interface TimedIngredientQuantite {
 	ingredient: Ingredient,
@@ -132,6 +138,7 @@ export type JoursLivraison = boolean[]
 export interface Fournisseur {
 	id: number,
 	nom: string,
+	lieu: string,
 	delai_commande: number,
 	jours_livraison: JoursLivraison,
 }
@@ -296,6 +303,12 @@ export interface OutSejour {
 	sejour: Sejour,
 }
 
+// github.com/benoitkugler/intendance/server/models.SejourFournisseur
+export interface SejourFournisseur {
+	id_sejour: number,
+	id_fournisseur: number,
+}
+
 // github.com/benoitkugler/intendance/server/models.RepasGroupe
 export interface RepasGroupe {
 	id_repas: number,
@@ -334,6 +347,7 @@ export interface SejourRepas {
 	id_utilisateur: number,
 	date_debut: Time,
 	nom: string,
+	fournisseurs: SejourFournisseur[] | null,
 	repass: RepasComplet[] | null,
 }
 

@@ -431,6 +431,29 @@ func queriesSejour(tx *sql.Tx, item Sejour) (Sejour, error) {
 	return item, err
 }
 
+func queriesSejourFournisseur(tx *sql.Tx, item SejourFournisseur) (SejourFournisseur, error) {
+	err := InsertManySejourFournisseurs(tx, []SejourFournisseur{item})
+	if err != nil {
+		return item, err
+	}
+	rows, err := tx.Query("SELECT * FROM sejour_fournisseurs")
+	if err != nil {
+		return item, err
+	}
+	items, err := ScanSejourFournisseurs(rows)
+	if err != nil {
+		return item, err
+	}
+
+	_ = len(items)
+
+	row := tx.QueryRow(`SELECT * FROM sejour_fournisseurs WHERE 
+			id_sejour = $1 AND id_fournisseur = $2;`, item.IdSejour, item.IdFournisseur)
+
+	_, err = ScanSejourFournisseur(row)
+	return item, err
+}
+
 func queriesUtilisateur(tx *sql.Tx, item Utilisateur) (Utilisateur, error) {
 	item, err := item.Insert(tx)
 

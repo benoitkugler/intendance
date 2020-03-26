@@ -28,7 +28,8 @@ type RepasComplet struct {
 }
 type SejourRepas struct {
 	models.Sejour
-	Repass []RepasComplet `json:"repass"`
+	Fournisseurs []models.SejourFournisseur `json:"fournisseurs"`
+	Repass       []RepasComplet             `json:"repass"`
 }
 
 // Sejours contient les séjours, ainsi que les groupes et repas associés.

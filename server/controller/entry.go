@@ -108,6 +108,18 @@ func (s Server) LoadSejoursUtilisateur(ct RequeteContext) (out Sejours, err erro
 		return
 	}
 
+	// on charge les fournisseurs des séjours
+	rows, err = s.db.Query("SELECT * FROM sejour_fournisseurs WHERE id_sejour = ANY($1)", sejours.Ids().AsSQL())
+	if err != nil {
+		err = ErrorSQL(err)
+		return
+	}
+	sejoursFournisseurs, err := models.ScanSejourFournisseurs(rows)
+	if err != nil {
+		err = ErrorSQL(err)
+		return
+	}
+
 	// on résoud les repas
 	rows, err = s.db.Query(`SELECT * FROM repass WHERE id_sejour = ANY($1)`, sejours.Ids().AsSQL())
 	if err != nil {
@@ -169,16 +181,21 @@ func (s Server) LoadSejoursUtilisateur(ct RequeteContext) (out Sejours, err erro
 		tmpRepas[repG.IdSejour] = append(tmpRepas[repG.IdSejour], repG)
 	}
 
+	// et à chaque séjour ses fournisseurs
+	tmpFournisseurs := map[int64][]models.SejourFournisseur{}
+	for _, rep := range sejoursFournisseurs {
+		tmpFournisseurs[rep.IdSejour] = append(tmpFournisseurs[rep.IdSejour], rep)
+	}
+
 	// finalement on assemble tout
 	out.Sejours = make(map[int64]SejourRepas, len(sejours))
 	for k, v := range sejours { // informations basiques
-		out.Sejours[k] = SejourRepas{Sejour: v, Repass: tmpRepas[k]}
+		out.Sejours[k] = SejourRepas{Sejour: v, Repass: tmpRepas[k], Fournisseurs: tmpFournisseurs[k]}
 	}
 
 	return out, nil
 }
 
-// TODO: Ajouter les fournisseurs
 // LoadUtilisateurs renvois les données publiques des utilisateurs enregistrés.
 func (s Server) LoadUtilisateurs() (map[int64]Utilisateur, error) {
 	rows, err := s.db.Query("SELECT * FROM utilisateurs")

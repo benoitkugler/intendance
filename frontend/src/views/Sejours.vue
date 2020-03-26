@@ -89,7 +89,7 @@
           <liste-groupes :sejour="sejour"></liste-groupes>
         </v-col>
         <v-col>
-          <liste-fournisseurs></liste-fournisseurs>
+          <liste-fournisseurs :sejour="sejour"></liste-fournisseurs>
         </v-col>
       </v-row>
     </v-container>
@@ -144,9 +144,9 @@ export default class Sejours extends SejoursProps {
   }
 
   async mounted() {
-    await C.data.loadSejours();
+    await Promise.all([C.data.loadSejours(), C.data.loadFournisseurs()]);
     if (C.notifications.getError() == null) {
-      C.notifications.setMessage("Séjours chargés.");
+      C.notifications.setMessage("Séjours et fournisseurs chargés.");
       this.setClosestSejour();
     }
   }

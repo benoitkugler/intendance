@@ -4,11 +4,14 @@
       <v-btn
         :disabled="disabled"
         v-on="on"
-        icon
+        :icon="!!mdiIcon"
+        :text="!mdiIcon"
+        :color="color"
         @click="e => $emit('click', e)"
         :small="small"
       >
-        <v-icon :color="color">mdi-{{ mdiIcon }}</v-icon>
+        <v-icon v-if="mdiIcon" :color="color">mdi-{{ mdiIcon }}</v-icon>
+        <slot></slot>
       </v-btn>
     </template>
     <div v-html="tooltip"></div>
