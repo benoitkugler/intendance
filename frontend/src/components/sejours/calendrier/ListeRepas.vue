@@ -33,7 +33,7 @@
 import Vue from "vue";
 import Component from "vue-class-component";
 import { RepasComplet, Menu } from "../../../logic/types";
-import { CalendarMode, deepcopy, toNullableId } from "../../../logic/types2";
+import { deepcopy, toNullableId } from "../../../logic/types2";
 import { C } from "../../../logic/controller";
 import { HorairesColors } from "../../utils/utils";
 import { fmtHoraire } from "../../../logic/enums";
@@ -46,29 +46,19 @@ import {
 
 const ListeRepasProps = Vue.extend({
   props: {
-    repass: Array as () => RepasComplet[],
-    mode: String as () => CalendarMode
+    repass: Array as () => RepasComplet[]
   }
 });
 
 @Component({})
 export default class ListeRepas extends ListeRepasProps {
   repasTitle(repas: RepasComplet) {
-    if (this.mode == "groupes") {
-      const nbGroupes = C.getRepasGroupes(repas).length;
-      return `${nbGroupes} gr.`;
-    } else {
-      return C.formatter.formatRepasName(repas);
-    }
+    return C.formatter.formatRepasName(repas);
   }
 
   repasSubTitle(repas: RepasComplet) {
-    if (this.mode == "groupes") {
-      return formatNbOffset(repas);
-    } else {
-      const nbPersonnes = C.getRepasNbPersonnes(repas);
-      return `${nbPersonnes} pers.`;
-    }
+    const nbPersonnes = C.getRepasNbPersonnes(repas);
+    return `${nbPersonnes} pers.`;
   }
 
   getColorRepas(repas: RepasComplet) {
@@ -122,7 +112,6 @@ export default class ListeRepas extends ListeRepasProps {
       target.jour_offset,
       origin.jour_offset
     ];
-    [origin.horaire, target.horaire] = [target.horaire, origin.horaire];
     await C.data.updateManyRepas([target, origin]);
     if (C.notifications.getError() == null) {
       C.notifications.setMessage("Repas échangés avec succès.");

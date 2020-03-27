@@ -6,7 +6,6 @@
       :start="startWeek1"
       :dayHeight="dayHeight"
       :events="events"
-      :mode="mode"
       :currentDay="currentDay"
       :hoverDay="hoverDay"
       @editRepas="r => $emit('editRepas', r)"
@@ -20,7 +19,6 @@
       :start="startWeek2"
       :dayHeight="dayHeight"
       :events="events"
-      :mode="mode"
       :currentDay="currentDay"
       :hoverDay="hoverDay"
       @editRepas="r => $emit('editRepas', r)"
@@ -46,20 +44,20 @@ import {
   New,
   DetailsRepas,
   PreferencesAgenda,
-  CalendarMode,
   NullId
 } from "../../../logic/types2";
 import { fmtHoraire, Horaires } from "../../../logic/enums";
 import { Formatter } from "../../../logic/formatter";
 import { toDateVuetify } from "./utils";
 import { HorairesColors } from "../../utils/utils";
+import { Watch } from "vue-property-decorator";
 
 const _days = [0, 1, 2, 3, 4, 5, 6];
 
 type DragKind = "journee" | "repas";
 
-// renvoie l'ordre des jours pour que `start` soit
-// affiché en premier
+/** renvoie l'ordre des jours pour que `start` soit
+affiché en premier */
 function weekdaysFromStart(start: Date) {
   const d0 = start.getDay();
   return _days.map(d => (d0 + d) % 7);
@@ -69,7 +67,6 @@ const Props = Vue.extend({
   props: {
     sejour: Object as () => SejourRepas | null,
     preferences: Object as () => PreferencesAgenda,
-    mode: String as () => CalendarMode,
     activeJourOffset: Number as () => number | null
   }
 });
@@ -84,7 +81,7 @@ const Props = Vue.extend({
 export default class Calendar extends Props {
   hoverDay = "";
 
-  private dayHeight = "35vh";
+  dayHeight = "35vh";
 
   dayTitle(date: string) {
     return new Date(date).toLocaleDateString("fr-FR", {
@@ -116,7 +113,7 @@ export default class Calendar extends Props {
   }
 
   get startWeek2() {
-    const out = this.startDate;
+    const out = new Date(this.startDate);
     out.setDate(this.startDate.getDate() + 7);
     return toDateVuetify(out);
   }

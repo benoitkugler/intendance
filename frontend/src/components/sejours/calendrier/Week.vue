@@ -41,7 +41,6 @@
       >
         <liste-repas
           :repass="events[date]"
-          :mode="mode"
           @edit="args => $emit('editRepas', args)"
         ></liste-repas>
       </div>
@@ -56,7 +55,6 @@ import Component from "vue-class-component";
 import ListeRepas from "./ListeRepas.vue";
 import TooltipBtn from "../../utils/TooltipBtn.vue";
 import { C } from "../../../logic/controller";
-import { CalendarMode } from "../../../logic/types2";
 import { RepasComplet, Sejour } from "../../../logic/types";
 
 const Props = Vue.extend({
@@ -66,7 +64,6 @@ const Props = Vue.extend({
     start: String,
     dayHeight: String,
     events: Object as () => { [key: string]: RepasComplet[] },
-    mode: String as () => CalendarMode,
     currentDay: String as () => string | null,
     hoverDay: String
   }
@@ -82,7 +79,8 @@ export default class Week extends Props {
   dayTitle(date: string) {
     return new Date(date).toLocaleDateString("fr-FR", {
       weekday: "short",
-      day: "numeric"
+      day: "numeric",
+      month: "short"
     });
   }
 

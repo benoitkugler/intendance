@@ -7,6 +7,7 @@
             :label="label"
             hide-details
             :value="value"
+            :disabled="disabled"
             @change="$emit('input', $event ? true : false)"
           >
           </v-switch>
@@ -26,7 +27,8 @@ const Props = Vue.extend({
     tooltipOn: String,
     tooltipOff: String,
     value: Boolean,
-    label: String
+    label: String,
+    disabled: Boolean
   },
   model: {
     prop: "value",

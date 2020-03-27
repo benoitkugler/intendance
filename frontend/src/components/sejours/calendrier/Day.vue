@@ -19,113 +19,113 @@
       </v-skeleton-loader>
     </v-dialog>
 
-    <v-toolbar dense>
-      <v-toolbar-title v-if="day">
-        Repas du
-        {{
-          day.toLocaleDateString("fr-FR", {
-            weekday: "long",
-            day: "numeric",
-            month: "short"
-          })
-        }}</v-toolbar-title
-      >
-    </v-toolbar>
-    <div class="overflow-y-auto" :style="{ height: height }">
-      <v-list dense>
-        <v-list-item-group color="primary">
-          <div v-for="(horaire, i) in horaires" :key="horaire.value">
-            <v-divider v-if="i > 0"></v-divider>
+    <v-row no-gutters>
+      <v-col cols="8">
+        <div class="overflow-y-auto" style="height: 77vh;">
+          <v-list dense>
+            <v-list-item-group color="primary">
+              <div v-for="(horaire, i) in horaires" :key="horaire.value">
+                <v-divider v-if="i > 0"></v-divider>
 
-            <v-hover v-slot="{ hover }">
-              <v-subheader
-                :style="{ color: getHoraireColor(horaire.value) }"
-                @dragover="onDragoverHoraireHeader($event)"
-                @drop="onDropHoraireHeader($event, horaire.value)"
-              >
-                {{ horaire.text }}
-                <v-spacer></v-spacer>
-                <tooltip-btn
-                  v-if="hover"
-                  mdi-icon="plus"
-                  color="green"
-                  tooltip="Ajouter un repas..."
-                  @click="$emit('addRepas', horaire.value)"
-                ></tooltip-btn>
-              </v-subheader>
-            </v-hover>
-            <template v-for="repas in events[horaire.value]">
-              <v-hover :key="repas.id" v-slot="{ hover }">
-                <v-list-item
-                  @dragover="onDragoverRepas($event)"
-                  @drop="onDropRepas($event, repas)"
-                  @click="$emit('editRepas', repas)"
-                >
-                  <v-list-item-content>
-                    <v-row no-gutters class="fill-height">
-                      <v-col class="px-1 align-self-center overflow-x-auto">
-                        <v-chip
-                          label
-                          v-for="groupe in getGroupes(repas)"
-                          :key="groupe.id"
-                          class="mr-1 px-1 align-self-center"
-                          :color="groupe.couleur"
-                          small
-                          :style="{ borderWidth: ' 1.5px' }"
-                          outlined
-                          draggable
-                          @dragstart="onDragStart($event, repas, groupe)"
-                        >
-                          {{ groupe.nom }}
-                        </v-chip>
-                        <small
-                          v-if="getGroupes(repas).length == 0"
-                          class="font-italic mr-1"
-                          >Aucun groupe.
-                        </small>
-                        <v-chip
-                          v-if="repas.offset_personnes != 0"
-                          label
-                          class="mr-1 px-1 align-self-center"
-                          small
-                          :style="{ borderWidth: ' 1.5px' }"
-                          outlined
-                        >
-                          {{ formatNbOffset(repas) }}
-                        </v-chip>
-                      </v-col>
-                    </v-row>
-                  </v-list-item-content>
-                  <v-list-item-action class="my-1">
-                    <v-row no-gutters>
-                      <v-col
-                        ><tooltip-btn
-                          v-if="hover"
-                          mdi-icon="food-variant"
-                          small
-                          tooltip="Calculer les <b>ingrédients</b> nécessaires au repas..."
-                          @click.stop="resoudIngredients(repas)"
-                        ></tooltip-btn
-                      ></v-col>
-                      <v-col
-                        ><tooltip-btn
-                          v-if="hover"
-                          mdi-icon="close"
-                          color="red"
-                          small
-                          tooltip="Supprimer ce repas..."
-                          @click.stop="deleteRepas(repas)"
-                        ></tooltip-btn
-                      ></v-col>
-                    </v-row>
-                  </v-list-item-action>
-                </v-list-item>
-              </v-hover>
-            </template>
-          </div>
-        </v-list-item-group>
-      </v-list>
-    </div>
+                <v-hover v-slot="{ hover }">
+                  <v-subheader
+                    :style="{ color: getHoraireColor(horaire.value) }"
+                    @dragover="onDragoverHoraireHeader($event)"
+                    @drop="onDropHoraireHeader($event, horaire.value)"
+                  >
+                    {{ horaire.text }}
+                    <v-spacer></v-spacer>
+                    <tooltip-btn
+                      v-if="hover"
+                      mdi-icon="plus"
+                      color="green"
+                      tooltip="Ajouter un repas..."
+                      @click="$emit('addRepas', horaire.value)"
+                    ></tooltip-btn>
+                  </v-subheader>
+                </v-hover>
+                <template v-for="repas in events[horaire.value]">
+                  <v-hover :key="repas.id" v-slot="{ hover }">
+                    <v-list-item
+                      @dragover="onDragoverRepas($event)"
+                      @drop="onDropRepas($event, repas)"
+                      @click="$emit('editRepas', repas)"
+                    >
+                      <v-list-item-content>
+                        <v-row no-gutters class="fill-height">
+                          <v-col class="px-1 align-self-center overflow-x-auto">
+                            <v-chip
+                              label
+                              v-for="groupe in getGroupes(repas)"
+                              :key="groupe.id"
+                              class="mr-1 px-1 align-self-center"
+                              :color="groupe.couleur"
+                              small
+                              :style="{ borderWidth: ' 1.5px' }"
+                              outlined
+                              draggable
+                              @dragstart="onDragStart($event, repas, groupe)"
+                            >
+                              {{ groupe.nom }}
+                            </v-chip>
+                            <small
+                              v-if="getGroupes(repas).length == 0"
+                              class="font-italic mr-1"
+                              >Aucun groupe.
+                            </small>
+                            <v-chip
+                              v-if="repas.offset_personnes != 0"
+                              label
+                              class="mr-1 px-1 align-self-center"
+                              small
+                              :style="{ borderWidth: ' 1.5px' }"
+                              outlined
+                            >
+                              {{ formatNbOffset(repas) }}
+                            </v-chip>
+                          </v-col>
+                          <v-col>
+                            Recettes
+                          </v-col>
+                          <v-col>
+                            ingredients
+                          </v-col>
+                        </v-row>
+                      </v-list-item-content>
+                      <v-list-item-action class="my-1">
+                        <v-row no-gutters>
+                          <v-col
+                            ><tooltip-btn
+                              v-if="hover"
+                              mdi-icon="food-variant"
+                              small
+                              tooltip="Calculer les <b>ingrédients</b> nécessaires au repas..."
+                              @click.stop="resoudIngredients(repas)"
+                            ></tooltip-btn
+                          ></v-col>
+                          <v-col
+                            ><tooltip-btn
+                              v-if="hover"
+                              mdi-icon="close"
+                              color="red"
+                              small
+                              tooltip="Supprimer ce repas..."
+                              @click.stop="deleteRepas(repas)"
+                            ></tooltip-btn
+                          ></v-col>
+                        </v-row>
+                      </v-list-item-action>
+                    </v-list-item>
+                  </v-hover>
+                </template>
+              </div>
+            </v-list-item-group>
+          </v-list></div
+      ></v-col>
+      <v-col class="px-2">
+        <choix-menus height="67vh"></choix-menus>
+      </v-col>
+    </v-row>
   </div>
 </template>
 
@@ -135,6 +135,7 @@ import Component from "vue-class-component";
 
 import TooltipBtn from "../../utils/TooltipBtn.vue";
 import ListeIngredients from "../../utils/ListeIngredients.vue";
+import ChoixMenus from "./ChoixMenus.vue";
 
 import { toDateVuetify, formatNbOffset } from "./utils";
 import { C } from "../../../logic/controller";
@@ -150,12 +151,11 @@ interface dragData {
 
 const DayProps = Vue.extend({
   props: {
-    jourOffset: Number as () => number | null,
-    height: String
+    jourOffset: Number as () => number | null
   }
 });
 @Component({
-  components: { TooltipBtn, ListeIngredients }
+  components: { TooltipBtn, ListeIngredients, ChoixMenus }
 })
 export default class Day extends DayProps {
   showPrevisuIngredients = false;
