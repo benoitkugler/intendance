@@ -158,6 +158,29 @@ func queriesIngredientProduit(tx *sql.Tx, item IngredientProduit) (IngredientPro
 	return item, err
 }
 
+func queriesLienIngredient(tx *sql.Tx, item LienIngredient) (LienIngredient, error) {
+	err := InsertManyLienIngredients(tx, []LienIngredient{item})
+	if err != nil {
+		return item, err
+	}
+	rows, err := tx.Query("SELECT * FROM lien_ingredients")
+	if err != nil {
+		return item, err
+	}
+	items, err := ScanLienIngredients(rows)
+	if err != nil {
+		return item, err
+	}
+
+	_ = len(items)
+
+	row := tx.QueryRow(`SELECT * FROM lien_ingredients WHERE 
+			id_ingredient = $1;`, item.IdIngredient)
+
+	_, err = ScanLienIngredient(row)
+	return item, err
+}
+
 func queriesMenu(tx *sql.Tx, item Menu) (Menu, error) {
 	item, err := item.Insert(tx)
 

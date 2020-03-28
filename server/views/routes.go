@@ -157,7 +157,7 @@ func CreateRecette(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	var recetteIn controller.Recette
+	var recetteIn controller.RecetteComplet
 	if err = c.Bind(&recetteIn); err != nil {
 		return err
 	}
@@ -165,10 +165,8 @@ func CreateRecette(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	recetteIn.Id = newRecette.Id // on garde les valeurs d'entrée
-	for i := range recetteIn.Ingredients {
-		(&recetteIn.Ingredients[i]).IdRecette = newRecette.Id
-	}
+	// on utilise l'id fourni par la recette créée
+	recetteIn.Id = newRecette.Id
 	recetteIn, err = Server.UpdateRecette(ct, recetteIn)
 	if err != nil {
 		return err
@@ -181,7 +179,7 @@ func UpdateRecette(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	var recette controller.Recette
+	var recette controller.RecetteComplet
 	if err = c.Bind(&recette); err != nil {
 		return err
 	}
@@ -232,7 +230,7 @@ func CreateMenu(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	var menuIn controller.Menu
+	var menuIn controller.MenuComplet
 	if err = c.Bind(&menuIn); err != nil {
 		return err
 	}
@@ -240,13 +238,9 @@ func CreateMenu(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	menuIn.Id = newMenu.Id // on garde les valeurs d'entrée
-	for i := range menuIn.Recettes {
-		(&menuIn.Recettes[i]).IdMenu = newMenu.Id
-	}
-	for i := range menuIn.Ingredients {
-		(&menuIn.Ingredients[i]).IdMenu = newMenu.Id
-	}
+
+	// on utilise l'id fourni par le menu créé
+	menuIn.Id = newMenu.Id
 	menuIn, err = Server.UpdateMenu(ct, menuIn)
 	if err != nil {
 		return err
@@ -259,7 +253,7 @@ func UpdateMenu(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	var recette controller.Menu
+	var recette controller.MenuComplet
 	if err = c.Bind(&recette); err != nil {
 		return err
 	}

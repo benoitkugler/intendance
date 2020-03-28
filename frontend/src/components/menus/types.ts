@@ -1,4 +1,10 @@
-import { Menu, Recette, Ingredient } from "@/logic/types";
+import {
+  Menu,
+  Recette,
+  Ingredient,
+  RecetteComplet,
+  MenuComplet
+} from "@/logic/types";
 
 import { IngredientOptions, New } from "@/logic/types2";
 
@@ -21,14 +27,14 @@ export const DefautIngredient: New<Ingredient> = {
   callories: {}
 };
 
-export const DefautRecette: New<Recette> = {
+export const DefautRecette: New<RecetteComplet> = {
   id_utilisateur: { Valid: true, Int64: -1 },
   ingredients: [],
   mode_emploi: "",
   nom: ""
 };
 
-export const DefautMenu: New<Menu> = {
+export const DefautMenu: New<MenuComplet> = {
   commentaire: "",
   id_utilisateur: { Valid: true, Int64: -1 },
   ingredients: [],

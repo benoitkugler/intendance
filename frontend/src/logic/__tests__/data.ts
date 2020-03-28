@@ -69,8 +69,7 @@ test("crud recette", async () => {
       {
         id_ingredient: ingId,
         cuisson: "buit",
-        quantite: 4,
-        id_recette: -1
+        quantite: 4
       }
     ]
   });
@@ -82,8 +81,7 @@ test("crud recette", async () => {
     {
       id_ingredient: ingId,
       cuisson: "buit",
-      quantite: 4,
-      id_recette: recette.id
+      quantite: 4
     }
   ];
 
@@ -118,16 +116,10 @@ test("crud menu", async () => {
     {
       id_ingredient: ingId,
       cuisson: "buit",
-      quantite: 4,
-      id_menu: menu.id
+      quantite: 4
     }
   ];
-  menu.recettes = [
-    {
-      id_recette: recId,
-      id_menu: menu.id
-    }
-  ];
+  menu.recettes = [recId];
 
   menu = await C.data.updateMenu(menu);
   expect(C.notifications.getError()).toBeNull();

@@ -70,7 +70,13 @@ import ListeIngredients from "../components/menus/ListeIngredients.vue";
 import EditMenu from "../components/menus/EditMenu.vue";
 import EditRecette from "../components/menus/EditRecette.vue";
 import { C } from "../logic/controller";
-import { Menu, Recette, Ingredient } from "../logic/types";
+import {
+  Menu,
+  Recette,
+  Ingredient,
+  RecetteComplet,
+  MenuComplet
+} from "../logic/types";
 import { IngredientOptions, EditMode, New, deepcopy } from "../logic/types2";
 import {
   StateMenus,
@@ -154,13 +160,13 @@ export default class Menus extends Vue {
     this.state.mode = "visu";
   }
 
-  async editMenuDone(menu: Menu) {
+  async editMenuDone(menu: MenuComplet) {
     let message = "";
     if (this.editMode == "edit") {
-      menu = (await C.data.updateMenu(menu)) as Menu;
+      menu = (await C.data.updateMenu(menu)) as MenuComplet;
       message = "Le menu a bien été mis à jour.";
     } else {
-      menu = (await C.data.createMenu(menu)) as Menu;
+      menu = (await C.data.createMenu(menu)) as MenuComplet;
       message = "Le menu a bien été ajouté.";
     }
     this.state.mode = "visu";
@@ -191,13 +197,13 @@ export default class Menus extends Vue {
     this.state.mode = "visu";
   }
 
-  async editRecetteDone(recette: Recette) {
+  async editRecetteDone(recette: RecetteComplet) {
     let message = "";
     if (this.editMode == "edit") {
-      recette = (await C.data.updateRecette(recette)) as Recette;
+      recette = (await C.data.updateRecette(recette)) as RecetteComplet;
       message = "La recette a bien été mise à jour.";
     } else {
-      recette = (await C.data.createRecette(recette)) as Recette;
+      recette = (await C.data.createRecette(recette)) as RecetteComplet;
       message = "La recette a bien été ajoutée.";
     }
     this.state.mode = "visu";

@@ -73,7 +73,7 @@ func (s Server) loadDataRepas(rowsRepas *sql.Rows) (out dataRepas, err error) {
 	}
 
 	rows, err = s.db.Query(`SELECT repas_ingredients.* FROM repas_ingredients
-	JOIN repass ON repass.id_repas = repas_ingredients.id_repas 
+	JOIN repass ON repass.id = repas_ingredients.id_repas 
 	WHERE repass.id = ANY($1)`, idRepass)
 	if err != nil {
 		return out, err
@@ -84,7 +84,7 @@ func (s Server) loadDataRepas(rowsRepas *sql.Rows) (out dataRepas, err error) {
 	}
 
 	rows, err = s.db.Query(`SELECT repas_recettes.* FROM repas_recettes
-	JOIN repass ON repass.id_repas = repas_recettes.id_repas 
+	JOIN repass ON repass.id = repas_recettes.id_repas 
 	WHERE repass.id = ANY($1)`, idRepass)
 	if err != nil {
 		return out, err
@@ -101,7 +101,7 @@ func (s Server) loadDataRepas(rowsRepas *sql.Rows) (out dataRepas, err error) {
 
 	rows, err = s.db.Query(`SELECT recette_ingredients.* FROM recette_ingredients 
 	JOIN repas_recettes ON repas_recettes.id_recette = recette_ingredients.id_recette
-	JOIN repass ON repass.id_repas = repas_recettes.id_repas 
+	JOIN repass ON repass.id = repas_recettes.id_repas 
 	WHERE repass.id = ANY($1)`, idRepass)
 	if err != nil {
 		return out, err

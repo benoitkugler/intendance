@@ -121,6 +121,14 @@ func randIngredientProduit() IngredientProduit {
 	}
 }
 
+func randLienIngredient() LienIngredient {
+	return LienIngredient{
+		IdIngredient: randint64(),
+		Quantite:     randfloat64(),
+		Cuisson:      randstring(),
+	}
+}
+
 func randsqlNullInt64() sql.NullInt64 {
 	return sql.NullInt64{
 		Int64: randint64(),
@@ -138,10 +146,8 @@ func randMenu() Menu {
 
 func randMenuIngredient() MenuIngredient {
 	return MenuIngredient{
-		IdMenu:       randint64(),
-		IdIngredient: randint64(),
-		Quantite:     randfloat64(),
-		Cuisson:      randstring(),
+		IdMenu:         randint64(),
+		LienIngredient: randLienIngredient(),
 	}
 }
 
@@ -175,10 +181,8 @@ func randRecette() Recette {
 
 func randRecetteIngredient() RecetteIngredient {
 	return RecetteIngredient{
-		IdRecette:    randint64(),
-		IdIngredient: randint64(),
-		Quantite:     randfloat64(),
-		Cuisson:      randstring(),
+		IdRecette:      randint64(),
+		LienIngredient: randLienIngredient(),
 	}
 }
 
@@ -205,10 +209,8 @@ func randRepasGroupe() RepasGroupe {
 
 func randRepasIngredient() RepasIngredient {
 	return RepasIngredient{
-		IdRepas:      randint64(),
-		IdIngredient: randint64(),
-		Quantite:     randfloat64(),
-		Cuisson:      randstring(),
+		IdRepas:        randint64(),
+		LienIngredient: randLienIngredient(),
 	}
 }
 

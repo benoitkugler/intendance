@@ -4,7 +4,7 @@
       <form-preferences v-model="preferences"></form-preferences>
     </v-dialog>
 
-    <v-dialog v-model="showEditFormRepas" max-width="500">
+    <v-dialog v-model="showEditFormRepas" size="lg">
       <form-repas
         :initialRepas="editedRepas"
         :mode="editMode"

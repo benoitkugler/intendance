@@ -105,11 +105,9 @@ export interface InSejourFournisseurs {
 }
 
 // github.com/benoitkugler/intendance/server/controller.TimedIngredientQuantite
-export interface TimedIngredientQuantite {
-	ingredient: Ingredient,
-	quantite: number,
+export type TimedIngredientQuantite = {
 	date: Time,
-}
+} & IngredientQuantite
 
 // github.com/benoitkugler/intendance/server/controller.CommandeItem
 export interface CommandeItem {
@@ -213,39 +211,39 @@ export interface OutLoggin {
 	utilisateur: Utilisateur,
 }
 
-// github.com/benoitkugler/intendance/server/models.MenuRecette
-export interface MenuRecette {
-	id_menu: number,
-	id_recette: number,
+// github.com/benoitkugler/intendance/server/models.Menu
+export interface Menu {
+	id: number,
+	id_utilisateur: NullInt64,
+	commentaire: string,
 }
 
-// github.com/benoitkugler/intendance/server/models.MenuIngredient
-export interface MenuIngredient {
-	id_menu: number,
+// github.com/benoitkugler/intendance/server/models.LienIngredient
+export interface LienIngredient {
 	id_ingredient: number,
 	quantite: number,
 	cuisson: string,
 }
 
-// github.com/benoitkugler/intendance/server/controller.Menu
-export interface Menu {
-	id: number,
-	id_utilisateur: NullInt64,
-	commentaire: string,
-	recettes: MenuRecette[] | null,
-	ingredients: MenuIngredient[] | null,
-}
+// github.com/benoitkugler/intendance/server/models.LienIngredients
+export type LienIngredients = LienIngredient[] | null
+
+// github.com/benoitkugler/intendance/server/controller.MenuComplet
+export type MenuComplet = {
+	recettes: number[] | null,
+	ingredients: LienIngredients,
+} & Menu
 
 // github.com/benoitkugler/intendance/server/views.OutMenu
 export interface OutMenu {
 	token: string,
-	menu: Menu,
+	menu: MenuComplet,
 }
 
 // github.com/benoitkugler/intendance/server/views.OutMenus
 export interface OutMenus {
 	token: string,
-	menus: { [key: number]: Menu } | null,
+	menus: { [key: number]: MenuComplet } | null,
 }
 
 // github.com/benoitkugler/intendance/server/views.OutProduit
@@ -254,33 +252,29 @@ export interface OutProduit {
 	produit: Produit,
 }
 
-// github.com/benoitkugler/intendance/server/models.RecetteIngredient
-export interface RecetteIngredient {
-	id_recette: number,
-	id_ingredient: number,
-	quantite: number,
-	cuisson: string,
-}
-
-// github.com/benoitkugler/intendance/server/controller.Recette
+// github.com/benoitkugler/intendance/server/models.Recette
 export interface Recette {
 	id: number,
 	id_utilisateur: NullInt64,
 	nom: string,
 	mode_emploi: string,
-	ingredients: RecetteIngredient[] | null,
 }
+
+// github.com/benoitkugler/intendance/server/controller.RecetteComplet
+export type RecetteComplet = {
+	ingredients: LienIngredients,
+} & Recette
 
 // github.com/benoitkugler/intendance/server/views.OutRecette
 export interface OutRecette {
 	token: string,
-	recette: Recette,
+	recette: RecetteComplet,
 }
 
 // github.com/benoitkugler/intendance/server/views.OutRecettes
 export interface OutRecettes {
 	token: string,
-	recettes: { [key: number]: Recette } | null,
+	recettes: { [key: number]: RecetteComplet } | null,
 }
 
 // github.com/benoitkugler/intendance/server/views.OutResoudIngredients
@@ -309,47 +303,33 @@ export interface SejourFournisseur {
 	id_fournisseur: number,
 }
 
+// github.com/benoitkugler/intendance/server/models.Repas
+export interface Repas {
+	id: number,
+	id_sejour: number,
+	offset_personnes: number,
+	jour_offset: number,
+	horaire: string,
+}
+
 // github.com/benoitkugler/intendance/server/models.RepasGroupe
 export interface RepasGroupe {
 	id_repas: number,
 	id_groupe: number,
 }
 
-// github.com/benoitkugler/intendance/server/models.RepasRecette
-export interface RepasRecette {
-	id_repas: number,
-	id_recette: number,
-}
-
-// github.com/benoitkugler/intendance/server/models.RepasIngredient
-export interface RepasIngredient {
-	id_repas: number,
-	id_ingredient: number,
-	quantite: number,
-	cuisson: string,
-}
-
 // github.com/benoitkugler/intendance/server/controller.RepasComplet
-export interface RepasComplet {
-	id: number,
-	id_sejour: number,
-	offset_personnes: number,
-	jour_offset: number,
-	horaire: string,
+export type RepasComplet = {
 	groupes: RepasGroupe[] | null,
-	recettes: RepasRecette[] | null,
-	ingredients: RepasIngredient[] | null,
-}
+	recettes: number[] | null,
+	ingredients: LienIngredients,
+} & Repas
 
 // github.com/benoitkugler/intendance/server/controller.SejourRepas
-export interface SejourRepas {
-	id: number,
-	id_utilisateur: number,
-	date_debut: Time,
-	nom: string,
+export type SejourRepas = {
 	fournisseurs: SejourFournisseur[] | null,
 	repass: RepasComplet[] | null,
-}
+} & Sejour
 
 // github.com/benoitkugler/intendance/server/models.Groupes
 export type Groupes = { [key: number]: Groupe } | null

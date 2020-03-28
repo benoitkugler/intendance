@@ -106,8 +106,8 @@ func TestCRUD(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = s.UpdateRecette(ct, Recette{Recette: re, Ingredients: []models.RecetteIngredient{
-		{IdIngredient: ig.Id, IdRecette: re.Id, Quantite: 4},
+	_, err = s.UpdateRecette(ct, RecetteComplet{Recette: re, Ingredients: models.LienIngredients{
+		{IdIngredient: ig.Id, Quantite: 4},
 	}})
 	if err != nil {
 		t.Fatal(err)
@@ -117,10 +117,10 @@ func TestCRUD(t *testing.T) {
 		t.Fatal(err)
 	}
 	m.Commentaire = "Un menu bien équilibré"
-	_, err = s.UpdateMenu(ct, Menu{Menu: m, Recettes: []models.MenuRecette{
-		{IdMenu: m.Id, IdRecette: re.Id},
-	}, Ingredients: []models.MenuIngredient{
-		{IdMenu: m.Id, IdIngredient: ig.Id},
+	_, err = s.UpdateMenu(ct, MenuComplet{Menu: m, Recettes: models.Ids{
+		re.Id,
+	}, Ingredients: models.LienIngredients{
+		{IdIngredient: ig.Id},
 	}})
 	if err != nil {
 		t.Fatal(err)

@@ -27,6 +27,12 @@ type Ingredient struct {
 	Conditionnement Conditionnement `json:"conditionnement,omitempty"`
 }
 
+type LienIngredient struct {
+	IdIngredient int64   `json:"id_ingredient"`
+	Quantite     float64 `json:"quantite"`
+	Cuisson      string  `json:"cuisson"`
+}
+
 type Recette struct {
 	Id            int64         `json:"id"`
 	IdUtilisateur sql.NullInt64 `json:"id_utilisateur"`
@@ -37,10 +43,8 @@ type Recette struct {
 
 // sql:UNIQUE(id_recette, id_ingredient)
 type RecetteIngredient struct {
-	IdRecette    int64   `json:"id_recette"`
-	IdIngredient int64   `json:"id_ingredient"`
-	Quantite     float64 `json:"quantite"`
-	Cuisson      string  `json:"cuisson"`
+	IdRecette int64 `json:"id_recette"`
+	LienIngredient
 }
 
 // Menu définit un raccourci pour organiser recettes et ingrédients
@@ -54,11 +58,8 @@ type Menu struct {
 
 // sql:UNIQUE(id_menu, id_ingredient)
 type MenuIngredient struct {
-	IdMenu       int64 `json:"id_menu"`
-	IdIngredient int64 `json:"id_ingredient"`
-
-	Quantite float64 `json:"quantite"`
-	Cuisson  string  `json:"cuisson"`
+	IdMenu int64 `json:"id_menu"`
+	LienIngredient
 }
 
 // sql:UNIQUE(id_menu, id_recette)
@@ -99,11 +100,8 @@ type Repas struct {
 
 // sql:UNIQUE(id_repas, id_ingredient)
 type RepasIngredient struct {
-	IdRepas      int64 `json:"id_repas"`
-	IdIngredient int64 `json:"id_ingredient"`
-
-	Quantite float64 `json:"quantite"`
-	Cuisson  string  `json:"cuisson"`
+	IdRepas int64 `json:"id_repas"`
+	LienIngredient
 }
 
 // sql:UNIQUE(id_repas, id_recette)

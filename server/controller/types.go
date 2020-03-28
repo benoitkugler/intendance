@@ -7,24 +7,24 @@ import (
 	"github.com/benoitkugler/intendance/server/models"
 )
 
-type Recette struct {
+type RecetteComplet struct {
 	models.Recette
-	Ingredients []models.RecetteIngredient `json:"ingredients"`
+	Ingredients models.LienIngredients `json:"ingredients"`
 }
 
-type Menu struct {
+type MenuComplet struct {
 	models.Menu
 
-	Recettes    []models.MenuRecette    `json:"recettes"`
-	Ingredients []models.MenuIngredient `json:"ingredients"`
+	Recettes    models.Ids             `json:"recettes"`
+	Ingredients models.LienIngredients `json:"ingredients"`
 }
 
 type RepasComplet struct {
 	models.Repas
 
-	Groupes     []models.RepasGroupe     `json:"groupes"`
-	Recettes    []models.RepasRecette    `json:"recettes"`
-	Ingredients []models.RepasIngredient `json:"ingredients"`
+	Groupes     []models.RepasGroupe   `json:"groupes"`
+	Recettes    models.Ids             `json:"recettes"`
+	Ingredients models.LienIngredients `json:"ingredients"`
 }
 type SejourRepas struct {
 	models.Sejour

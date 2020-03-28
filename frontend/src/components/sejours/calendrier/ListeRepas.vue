@@ -32,17 +32,12 @@
 <script lang="ts">
 import Vue from "vue";
 import Component from "vue-class-component";
-import { RepasComplet, Menu } from "../../../logic/types";
+import { RepasComplet, Menu, MenuComplet } from "../../../logic/types";
 import { deepcopy, toNullableId } from "../../../logic/types2";
 import { C } from "../../../logic/controller";
 import { HorairesColors } from "../../utils/utils";
 import { fmtHoraire } from "../../../logic/enums";
-import {
-  formatNbOffset,
-  asRepasRecette,
-  asRepasIngredient,
-  compareRecettesIngredient
-} from "./utils";
+import { formatNbOffset, compareRecettesIngredient } from "./utils";
 
 const ListeRepasProps = Vue.extend({
   props: {
@@ -120,17 +115,13 @@ export default class ListeRepas extends ListeRepasProps {
 
   private async onDropMenu(event: DragEvent, target: RepasComplet) {
     if (!event.dataTransfer) return;
-    const menu: Menu = JSON.parse(event.dataTransfer.getData("menu"));
+    const menu: MenuComplet = JSON.parse(event.dataTransfer.getData("menu"));
     if (compareRecettesIngredient(menu, target)) return; // on évite les requettes inutiles
 
     target = deepcopy(target); // on évite la modification locale
     // on copie le contenu du menu sur le repas
-    target.recettes = (menu.recettes || []).map(r =>
-      asRepasRecette(r, target.id)
-    );
-    target.ingredients = (menu.ingredients || []).map(r =>
-      asRepasIngredient(r, target.id)
-    );
+    target.recettes = menu.recettes;
+    target.ingredients = menu.ingredients;
     await C.data.updateManyRepas([target]);
     if (C.notifications.getError() == null) {
       C.notifications.setMessage("Menu associé avec succès.");

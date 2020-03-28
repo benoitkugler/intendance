@@ -37,19 +37,19 @@
 <script lang="ts">
 import Vue from "vue";
 import Component from "vue-class-component";
-import { RecetteIngredient } from "../../logic/types";
+import { LienIngredient } from "../../logic/types";
 import { Watch } from "vue-property-decorator";
 import { deepcopy } from "../../logic/types2";
 
-const MenuOrRecetteIngredientProps = Vue.extend({
+const DetailsIngredientProps = Vue.extend({
   props: {
-    ingredient: Object as () => RecetteIngredient
+    ingredient: Object as () => LienIngredient
   }
 });
 
 @Component({})
-export default class MenuOrRecetteIngredient extends MenuOrRecetteIngredientProps {
-  current: RecetteIngredient = deepcopy(this.ingredient);
+export default class DetailsIngredient extends DetailsIngredientProps {
+  current: LienIngredient = deepcopy(this.ingredient);
 
   @Watch("ingredient")
   onPropChange() {

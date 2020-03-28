@@ -10,21 +10,33 @@
       </v-card-title>
       <v-card-text>
         <v-form>
-          <v-select
-            :items="groupes"
-            v-model="repas.groupes"
-            label="Groupes"
-            chips
-            multiple
-          ></v-select>
-          <v-text-field
-            label="Nombre additionnel de personnes "
-            v-model.number="repas.offset_personnes"
-            type="number"
-            hint="S'ajoute aux groupes. Peut être négatif."
-          ></v-text-field>
-
-          <horaire-field v-model="repas.horaire"></horaire-field>
+          <v-row>
+            <v-col md="6">
+              <v-select
+                :items="groupes"
+                v-model="repas.groupes"
+                label="Groupes"
+                chips
+                multiple
+              ></v-select>
+              <v-text-field
+                label="Nombre additionnel de personnes "
+                v-model.number="repas.offset_personnes"
+                type="number"
+                hint="S'ajoute aux groupes. Peut être négatif."
+              ></v-text-field>
+              <horaire-field v-model="repas.horaire"></horaire-field>
+            </v-col>
+            <v-col md="6">
+              <recettes-fields v-model="repas.recettes"></recettes-fields>
+              <liste-lien-ingredients
+                class="ml-n2"
+                subheader="Ingrédients"
+                showAdd
+                v-model="repas.ingredients"
+              ></liste-lien-ingredients>
+            </v-col>
+          </v-row>
         </v-form>
       </v-card-text>
       <v-card-actions>
@@ -67,6 +79,8 @@ import { Watch } from "vue-property-decorator";
 import { Horaires } from "../../logic/enums";
 import { Formatter } from "../../logic/formatter";
 import { fmtHoraire } from "../../logic/enums";
+import RecettesFields from "../utils/RecettesFields.vue";
+import ListeLienIngredients from "../utils/ListeLienIngredients.vue";
 
 const Props = Vue.extend({
   props: {
@@ -76,11 +90,16 @@ const Props = Vue.extend({
 });
 
 @Component({
-  components: { DateField, HoraireField, TooltipBtn }
+  components: {
+    DateField,
+    HoraireField,
+    TooltipBtn,
+    RecettesFields,
+    ListeLienIngredients
+  }
 })
 export default class FormRepas extends Props {
   repas: DetailsRepas = deepcopy(this.initialRepas);
-
   horaires = Horaires;
 
   @Watch("initialRepas")

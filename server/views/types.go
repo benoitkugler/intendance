@@ -28,23 +28,23 @@ type OutIngredients struct {
 }
 
 type OutRecette struct {
-	Token   string             `json:"token"`
-	Recette controller.Recette `json:"recette"`
+	Token   string                    `json:"token"`
+	Recette controller.RecetteComplet `json:"recette"`
 }
 
 type OutRecettes struct {
-	Token    string                        `json:"token"`
-	Recettes map[int64]*controller.Recette `json:"recettes"`
+	Token    string                               `json:"token"`
+	Recettes map[int64]*controller.RecetteComplet `json:"recettes"`
 }
 
 type OutMenu struct {
-	Token string          `json:"token"`
-	Menu  controller.Menu `json:"menu"`
+	Token string                 `json:"token"`
+	Menu  controller.MenuComplet `json:"menu"`
 }
 
 type OutMenus struct {
-	Token string                     `json:"token"`
-	Menus map[int64]*controller.Menu `json:"menus"`
+	Token string                            `json:"token"`
+	Menus map[int64]*controller.MenuComplet `json:"menus"`
 }
 
 type OutSejour struct {

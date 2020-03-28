@@ -162,16 +162,16 @@ func (s Server) LoadSejoursUtilisateur(ct RequeteContext) (out Sejours, err erro
 
 	// on commence par associer les groupes, recettes, ingredients aux repas
 	tmpGroupes := map[int64][]models.RepasGroupe{} // idRepas -> groupes
-	tmpRecettes := map[int64][]models.RepasRecette{}
-	tmpIngredients := map[int64][]models.RepasIngredient{}
+	tmpRecettes := map[int64]models.Ids{}
+	tmpIngredients := map[int64][]models.LienIngredient{}
 	for _, lien := range repasGroupes {
 		tmpGroupes[lien.IdRepas] = append(tmpGroupes[lien.IdRepas], lien)
 	}
 	for _, lien := range repasRecettes {
-		tmpRecettes[lien.IdRepas] = append(tmpRecettes[lien.IdRepas], lien)
+		tmpRecettes[lien.IdRepas] = append(tmpRecettes[lien.IdRepas], lien.IdRecette)
 	}
 	for _, lien := range repasIngredients {
-		tmpIngredients[lien.IdRepas] = append(tmpIngredients[lien.IdRepas], lien)
+		tmpIngredients[lien.IdRepas] = append(tmpIngredients[lien.IdRepas], lien.LienIngredient)
 	}
 
 	// puis on associe à chaque séjour ses repas
@@ -334,7 +334,7 @@ func (s Server) DeleteIngredient(ct RequeteContext, id int64, checkProduits bool
 // ------------------------------------------------------------------------
 // ------------------------ Recettes --------------------------------------
 // ------------------------------------------------------------------------
-func (s Server) LoadRecettes() (out map[int64]*Recette, err error) {
+func (s Server) LoadRecettes() (out map[int64]*RecetteComplet, err error) {
 	rows, err := s.db.Query("SELECT * FROM recettes")
 	if err != nil {
 		return out, ErrorSQL(err)
@@ -353,12 +353,12 @@ func (s Server) LoadRecettes() (out map[int64]*Recette, err error) {
 		err = ErrorSQL(err)
 		return
 	}
-	resolvedRecettes := make(map[int64]*Recette, len(recettes))
+	resolvedRecettes := make(map[int64]*RecetteComplet, len(recettes))
 	for id, r := range recettes {
-		resolvedRecettes[id] = &Recette{Recette: r}
+		resolvedRecettes[id] = &RecetteComplet{Recette: r}
 	}
 	for _, lien := range ris {
-		resolvedRecettes[lien.IdRecette].Ingredients = append(resolvedRecettes[lien.IdRecette].Ingredients, lien)
+		resolvedRecettes[lien.IdRecette].Ingredients = append(resolvedRecettes[lien.IdRecette].Ingredients, lien.LienIngredient)
 	}
 	return resolvedRecettes, nil
 }
@@ -379,12 +379,7 @@ func (s Server) CreateRecette(ct RequeteContext) (out models.Recette, err error)
 	return
 }
 
-func (s Server) UpdateRecette(ct RequeteContext, in Recette) (Recette, error) {
-	for _, r := range in.Ingredients {
-		if r.IdRecette != in.Id {
-			return in, fmt.Errorf("L'ingrédient %d n'est pas associé à la recette fournie !", r.IdIngredient)
-		}
-	}
+func (s Server) UpdateRecette(ct RequeteContext, in RecetteComplet) (RecetteComplet, error) {
 	if err := ct.beginTx(s); err != nil {
 		return in, err
 	}
@@ -398,11 +393,13 @@ func (s Server) UpdateRecette(ct RequeteContext, in Recette) (Recette, error) {
 	if err != nil {
 		return in, ErrorSQL(err)
 	}
-	_, err = tx.Exec("DELETE FROM recette_ingredients WHERE id_recette = $1", in.Id)
+	_, err = tx.Exec("DELETE FROM recette_ingredients WHERE id_recette = $1", in.Recette.Id)
 	if err != nil {
 		return in, ct.rollbackTx(err)
 	}
-	err = models.InsertManyRecetteIngredients(tx, in.Ingredients)
+
+	ings := in.Ingredients.AsRecetteIngredients(in.Recette.Id)
+	err = models.InsertManyRecetteIngredients(tx, ings)
 	if err != nil {
 		return in, ct.rollbackTx(err)
 	}
@@ -448,7 +445,7 @@ func (s Server) DeleteRecette(ct RequeteContext, id int64) error {
 // ----------------------------- Menus ------------------------------------
 // ------------------------------------------------------------------------
 
-func (s Server) LoadMenus() (out map[int64]*Menu, err error) {
+func (s Server) LoadMenus() (out map[int64]*MenuComplet, err error) {
 	rows, err := s.db.Query("SELECT * FROM menus")
 	if err != nil {
 		return nil, ErrorSQL(err)
@@ -457,9 +454,9 @@ func (s Server) LoadMenus() (out map[int64]*Menu, err error) {
 	if err != nil {
 		return nil, ErrorSQL(err)
 	}
-	out = make(map[int64]*Menu, len(menus))
+	out = make(map[int64]*MenuComplet, len(menus))
 	for k, v := range menus { // base
-		out[k] = &Menu{Menu: v}
+		out[k] = &MenuComplet{Menu: v}
 	}
 	rows, err = s.db.Query(`SELECT * FROM menu_recettes`)
 	if err != nil {
@@ -470,7 +467,7 @@ func (s Server) LoadMenus() (out map[int64]*Menu, err error) {
 		return nil, ErrorSQL(err)
 	}
 	for _, l := range mrs {
-		out[l.IdMenu].Recettes = append(out[l.IdMenu].Recettes, l)
+		out[l.IdMenu].Recettes = append(out[l.IdMenu].Recettes, l.IdRecette)
 	}
 
 	rows, err = s.db.Query(`SELECT * FROM menu_ingredients`)
@@ -482,7 +479,7 @@ func (s Server) LoadMenus() (out map[int64]*Menu, err error) {
 		return nil, ErrorSQL(err)
 	}
 	for _, l := range mis {
-		out[l.IdMenu].Ingredients = append(out[l.IdMenu].Ingredients, l)
+		out[l.IdMenu].Ingredients = append(out[l.IdMenu].Ingredients, l.LienIngredient)
 	}
 	return out, nil
 }
@@ -502,17 +499,7 @@ func (s Server) CreateMenu(ct RequeteContext) (out models.Menu, err error) {
 	return
 }
 
-func (s Server) UpdateMenu(ct RequeteContext, in Menu) (Menu, error) {
-	for _, r := range in.Recettes {
-		if r.IdMenu != in.Id {
-			return in, fmt.Errorf("La recette %d n'est pas associée au menu fourni !", r.IdRecette)
-		}
-	}
-	for _, r := range in.Ingredients {
-		if r.IdMenu != in.Id {
-			return in, fmt.Errorf("L'ingrédient %d n'est pas associé au menu fourni !", r.IdIngredient)
-		}
-	}
+func (s Server) UpdateMenu(ct RequeteContext, in MenuComplet) (MenuComplet, error) {
 	if err := ct.beginTx(s); err != nil {
 		return in, err
 	}
@@ -526,19 +513,23 @@ func (s Server) UpdateMenu(ct RequeteContext, in Menu) (Menu, error) {
 	if err != nil {
 		return in, ErrorSQL(err)
 	}
+
 	_, err = tx.Exec("DELETE FROM menu_recettes WHERE id_menu = $1", in.Id)
 	if err != nil {
 		return in, ct.rollbackTx(err)
 	}
-	err = models.InsertManyMenuRecettes(tx, in.Recettes)
+	recettes := in.Recettes.AsMenuRecettes(in.Menu.Id)
+	err = models.InsertManyMenuRecettes(tx, recettes)
 	if err != nil {
 		return in, ct.rollbackTx(err)
 	}
+
 	_, err = tx.Exec("DELETE FROM menu_ingredients WHERE id_menu = $1", in.Id)
 	if err != nil {
 		return in, ct.rollbackTx(err)
 	}
-	err = models.InsertManyMenuIngredients(tx, in.Ingredients)
+	ings := in.Ingredients.AsMenuIngredients(in.Menu.Id)
+	err = models.InsertManyMenuIngredients(tx, ings)
 	if err != nil {
 		return in, ct.rollbackTx(err)
 	}
@@ -719,7 +710,9 @@ func (s Server) UpdateManyRepas(ct RequeteContext, repass []RepasComplet) error 
 		return err
 	}
 	var repasIds pq.Int64Array
-	cribleRepasGroupes := map[models.RepasGroupe]bool{} // pour respecter l'unicité
+	cribleRepasGroupes := map[models.RepasGroupe]bool{}         // pour respecter l'unicité
+	cribleRepasRecettes := map[models.RepasRecette]bool{}       // pour respecter l'unicité
+	cribleRepasIngredients := map[models.RepasIngredient]bool{} // pour respecter l'unicité
 	for _, repas := range repass {
 		if err := ct.proprioRepas(repas.Id); err != nil {
 			return ct.rollbackTx(err)
@@ -730,6 +723,12 @@ func (s Server) UpdateManyRepas(ct RequeteContext, repass []RepasComplet) error 
 		repasIds = append(repasIds, repas.Id)
 		for _, rg := range repas.Groupes {
 			cribleRepasGroupes[rg] = true
+		}
+		for _, rr := range repas.Recettes {
+			cribleRepasRecettes[models.RepasRecette{IdRepas: repas.Id, IdRecette: rr}] = true
+		}
+		for _, ri := range repas.Ingredients {
+			cribleRepasIngredients[models.RepasIngredient{IdRepas: repas.Id, LienIngredient: ri}] = true
 		}
 	}
 
@@ -746,6 +745,32 @@ func (s Server) UpdateManyRepas(ct RequeteContext, repass []RepasComplet) error 
 		return ct.rollbackTx(err)
 	}
 
+	// mise à jour des recettes
+	_, err = ct.tx.Exec("DELETE FROM repas_recettes WHERE id_repas = ANY($1)", repasIds)
+	if err != nil {
+		return ct.rollbackTx(err)
+	}
+	batchRepasRecettes := make([]models.RepasRecette, 0, len(cribleRepasRecettes))
+	for rg := range cribleRepasRecettes {
+		batchRepasRecettes = append(batchRepasRecettes, rg)
+	}
+	if err = models.InsertManyRepasRecettes(ct.tx, batchRepasRecettes); err != nil {
+		return ct.rollbackTx(err)
+	}
+
+	// mise à jour des ingredients
+	_, err = ct.tx.Exec("DELETE FROM repas_ingredients WHERE id_repas = ANY($1)", repasIds)
+	if err != nil {
+		return ct.rollbackTx(err)
+	}
+	batchRepasIngredients := make([]models.RepasIngredient, 0, len(cribleRepasIngredients))
+	for rg := range cribleRepasIngredients {
+		batchRepasIngredients = append(batchRepasIngredients, rg)
+	}
+	if err = models.InsertManyRepasIngredients(ct.tx, batchRepasIngredients); err != nil {
+		return ct.rollbackTx(err)
+	}
+
 	return ct.commitTx()
 }
 
@@ -756,12 +781,21 @@ func (s Server) DeleteRepas(ct RequeteContext, id int64) error {
 	if err := ct.proprioRepas(id); err != nil {
 		return err
 	}
-	// suppression des liens avec les groupes
+	// suppression des liens avec les groupes ...
 	_, err := ct.tx.Exec("DELETE FROM repas_groupes WHERE id_repas = $1", id)
 	if err != nil {
 		return ct.rollbackTx(err)
 	}
-
+	// ... et recettes ...
+	_, err = ct.tx.Exec("DELETE FROM repas_recettes WHERE id_repas = $1", id)
+	if err != nil {
+		return ErrorSQL(err)
+	}
+	// ... et ingrédients
+	_, err = ct.tx.Exec("DELETE FROM repas_ingredients WHERE id_repas = $1", id)
+	if err != nil {
+		return ct.rollbackTx(err)
+	}
 	_, err = models.Repas{Id: id}.Delete(ct.tx)
 	if err != nil {
 		return ct.rollbackTx(err)

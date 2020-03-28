@@ -5,7 +5,8 @@ import {
   RepasComplet,
   Groupe,
   RepasGroupe,
-  Produit
+  Produit,
+  MenuComplet
 } from "./types";
 import { Notifications } from "./notifications";
 import { Calculs } from "./calculs";
@@ -68,8 +69,8 @@ export class Controller {
     return (this.data.ingredients || {})[idIngredient];
   }
 
-  getMenuRecettes(menu: New<Menu>) {
-    return (menu.recettes || []).map(rec => this.data.recettes[rec.id_recette]);
+  getMenuRecettes(menu: New<MenuComplet>) {
+    return (menu.recettes || []).map(id => this.data.recettes[id]);
   }
 
   getMenuIngredients(idMenu: number): IngredientOptions[] {

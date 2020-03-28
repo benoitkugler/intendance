@@ -24,11 +24,11 @@ func ScanCommande(r *sql.Row) (Commande, error) {
 type Commandes map[int64]Commande
 
 func (m Commandes) Ids() Ids {
-	out := make([]int64, 0, len(m))
+	out := make(Ids, 0, len(m))
 	for i := range m {
 		out = append(out, i)
 	}
-	return Ids{ids: out}
+	return out
 }
 
 func ScanCommandes(rs *sql.Rows) (Commandes, error) {
@@ -172,11 +172,11 @@ func ScanFournisseur(r *sql.Row) (Fournisseur, error) {
 type Fournisseurs map[int64]Fournisseur
 
 func (m Fournisseurs) Ids() Ids {
-	out := make([]int64, 0, len(m))
+	out := make(Ids, 0, len(m))
 	for i := range m {
 		out = append(out, i)
 	}
-	return Ids{ids: out}
+	return out
 }
 
 func ScanFournisseurs(rs *sql.Rows) (Fournisseurs, error) {
@@ -251,11 +251,11 @@ func ScanGroupe(r *sql.Row) (Groupe, error) {
 type Groupes map[int64]Groupe
 
 func (m Groupes) Ids() Ids {
-	out := make([]int64, 0, len(m))
+	out := make(Ids, 0, len(m))
 	for i := range m {
 		out = append(out, i)
 	}
-	return Ids{ids: out}
+	return out
 }
 
 func ScanGroupes(rs *sql.Rows) (Groupes, error) {
@@ -331,11 +331,11 @@ func ScanIngredient(r *sql.Row) (Ingredient, error) {
 type Ingredients map[int64]Ingredient
 
 func (m Ingredients) Ids() Ids {
-	out := make([]int64, 0, len(m))
+	out := make(Ids, 0, len(m))
 	for i := range m {
 		out = append(out, i)
 	}
-	return Ids{ids: out}
+	return out
 }
 
 func ScanIngredients(rs *sql.Rows) (Ingredients, error) {
@@ -464,6 +464,76 @@ func (item IngredientProduit) Delete(tx *sql.Tx) error {
 	return err
 }
 
+func ScanLienIngredient(r *sql.Row) (LienIngredient, error) {
+	var s LienIngredient
+	if err := r.Scan(
+		&s.IdIngredient,
+		&s.Quantite,
+		&s.Cuisson,
+	); err != nil {
+		return LienIngredient{}, err
+	}
+	return s, nil
+}
+
+func ScanLienIngredients(rs *sql.Rows) ([]LienIngredient, error) {
+	structs := make([]LienIngredient, 0, 16)
+	var err error
+	for rs.Next() {
+		var s LienIngredient
+		if err = rs.Scan(
+			&s.IdIngredient,
+			&s.Quantite,
+			&s.Cuisson,
+		); err != nil {
+			return nil, err
+		}
+		structs = append(structs, s)
+	}
+	if err = rs.Err(); err != nil {
+		return nil, err
+	}
+	return structs, nil
+}
+
+// Insert the links LienIngredient in the database.
+func InsertManyLienIngredients(tx *sql.Tx, items []LienIngredient) error {
+	if len(items) == 0 {
+		return nil
+	}
+
+	stmt, err := tx.Prepare(pq.CopyIn("lien_ingredients",
+		"id_ingredient", "quantite", "cuisson",
+	))
+	if err != nil {
+		return err
+	}
+
+	for _, item := range items {
+		_, err = stmt.Exec(item.IdIngredient, item.Quantite, item.Cuisson)
+		if err != nil {
+			return err
+		}
+	}
+
+	if _, err = stmt.Exec(); err != nil {
+		return err
+	}
+
+	if err = stmt.Close(); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Delete the link LienIngredient in the database.
+// Only the 'IdIngredient' fields are used.
+func (item LienIngredient) Delete(tx *sql.Tx) error {
+	_, err := tx.Exec(`DELETE FROM lien_ingredients WHERE 
+		id_ingredient = $1;`, item.IdIngredient)
+	return err
+}
+
 func ScanMenu(r *sql.Row) (Menu, error) {
 	var s Menu
 	if err := r.Scan(
@@ -479,11 +549,11 @@ func ScanMenu(r *sql.Row) (Menu, error) {
 type Menus map[int64]Menu
 
 func (m Menus) Ids() Ids {
-	out := make([]int64, 0, len(m))
+	out := make(Ids, 0, len(m))
 	for i := range m {
 		out = append(out, i)
 	}
-	return Ids{ids: out}
+	return out
 }
 
 func ScanMenus(rs *sql.Rows) (Menus, error) {
@@ -698,11 +768,11 @@ func ScanProduit(r *sql.Row) (Produit, error) {
 type Produits map[int64]Produit
 
 func (m Produits) Ids() Ids {
-	out := make([]int64, 0, len(m))
+	out := make(Ids, 0, len(m))
 	for i := range m {
 		out = append(out, i)
 	}
-	return Ids{ids: out}
+	return out
 }
 
 func ScanProduits(rs *sql.Rows) (Produits, error) {
@@ -778,11 +848,11 @@ func ScanRecette(r *sql.Row) (Recette, error) {
 type Recettes map[int64]Recette
 
 func (m Recettes) Ids() Ids {
-	out := make([]int64, 0, len(m))
+	out := make(Ids, 0, len(m))
 	for i := range m {
 		out = append(out, i)
 	}
-	return Ids{ids: out}
+	return out
 }
 
 func ScanRecettes(rs *sql.Rows) (Recettes, error) {
@@ -928,11 +998,11 @@ func ScanRepas(r *sql.Row) (Repas, error) {
 type Repass map[int64]Repas
 
 func (m Repass) Ids() Ids {
-	out := make([]int64, 0, len(m))
+	out := make(Ids, 0, len(m))
 	for i := range m {
 		out = append(out, i)
 	}
-	return Ids{ids: out}
+	return out
 }
 
 func ScanRepass(rs *sql.Rows) (Repass, error) {
@@ -1214,11 +1284,11 @@ func ScanSejour(r *sql.Row) (Sejour, error) {
 type Sejours map[int64]Sejour
 
 func (m Sejours) Ids() Ids {
-	out := make([]int64, 0, len(m))
+	out := make(Ids, 0, len(m))
 	for i := range m {
 		out = append(out, i)
 	}
-	return Ids{ids: out}
+	return out
 }
 
 func ScanSejours(rs *sql.Rows) (Sejours, error) {
@@ -1359,11 +1429,11 @@ func ScanUtilisateur(r *sql.Row) (Utilisateur, error) {
 type Utilisateurs map[int64]Utilisateur
 
 func (m Utilisateurs) Ids() Ids {
-	out := make([]int64, 0, len(m))
+	out := make(Ids, 0, len(m))
 	for i := range m {
 		out = append(out, i)
 	}
-	return Ids{ids: out}
+	return out
 }
 
 func ScanUtilisateurs(rs *sql.Rows) (Utilisateurs, error) {

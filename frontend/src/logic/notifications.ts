@@ -30,6 +30,8 @@ export class Notifications {
   }
 
   startSpin() {
+    // on enlève une éventuelle notication
+    this.message = null;
     this.spin = true;
   }
 

@@ -1,5 +1,12 @@
 import { Controller } from "./controller";
-import { Menu, Recette, RepasComplet, Time, Conditionnement } from "./types";
+import {
+  Menu,
+  Recette,
+  RepasComplet,
+  Time,
+  Conditionnement,
+  MenuComplet
+} from "./types";
 import { fmtUnite } from "./enums";
 
 const Months = [
@@ -30,10 +37,15 @@ export class Formatter {
     } ing.`;
   };
 
-  formatMenuName = (menu: Menu) => {
+  formatMenuName = (menu: MenuComplet) => {
     const recs = this.controller.getMenuRecettes(menu);
     if (recs.length == 0) return `(${menu.id})`;
-    return recs.map(rec => rec.nom || "").join(", ");
+    const nbIngs = (menu.ingredients || []).length;
+    let out = recs.map(rec => rec.nom || "").join(", ");
+    if (nbIngs > 0) {
+      out += ` - ${nbIngs} ing.`;
+    }
+    return out;
   };
 
   formatMenuOrRecetteProprietaire = (item: Menu | Recette) => {

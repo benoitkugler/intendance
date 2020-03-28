@@ -67,7 +67,7 @@ import { Watch } from "vue-property-decorator";
 import UniteField from "../utils/UniteField.vue";
 import ConditionnementField from "../utils/ConditionnementField.vue";
 
-import { RecetteIngredient, Ingredient } from "../../logic/types";
+import { Ingredient } from "../../logic/types";
 import { IngredientOptions, EditMode, deepcopy } from "../../logic/types2";
 import { Unites, UniteFields } from "../../logic/enums";
 import { DefautIngredient } from "./types";

@@ -24,13 +24,16 @@ import {
   OutFournisseurs,
   Fournisseurs,
   Ingredients,
-  InSejourFournisseurs
+  InSejourFournisseurs,
+  RecetteComplet,
+  MenuComplet,
+  Utilisateur
 } from "./types";
 import axios, { AxiosResponse } from "axios";
-import { Recettes, Menus, Utilisateurs, New } from "./types2";
 
 import { Controller } from "./controller";
 import Vue from "vue";
+import { New } from "./types2";
 
 export const devMode = process.env.NODE_ENV != "production";
 const host = devMode ? "http://localhost:1323" : window.location.origin;
@@ -42,9 +45,9 @@ export class Data {
     groupes: {}
   };
   ingredients: Ingredients = {};
-  recettes: Recettes = {};
-  menus: Menus = {};
-  utilisateurs: Utilisateurs = {};
+  recettes: { [key: number]: RecetteComplet } = {};
+  menus: { [key: number]: MenuComplet } = {};
+  utilisateurs: { [key: number]: Utilisateur } = {};
   fournisseurs: Fournisseurs = {};
 
   private controller: Controller;
@@ -232,7 +235,7 @@ export class Data {
   };
 
   private createOrUpdateRecette = async (
-    recette: New<Recette>,
+    recette: New<RecetteComplet>,
     method: "put" | "post"
   ) => {
     this.controller.notifications.startSpin();
@@ -254,11 +257,11 @@ export class Data {
     }
   };
 
-  createRecette = async (recette: New<Recette>) => {
+  createRecette = async (recette: New<RecetteComplet>) => {
     return this.createOrUpdateRecette(recette, "put");
   };
 
-  updateRecette = async (recette: Recette) => {
+  updateRecette = async (recette: RecetteComplet) => {
     return this.createOrUpdateRecette(recette, "post");
   };
 
@@ -296,7 +299,7 @@ export class Data {
   };
 
   private createOrUpdateMenu = async (
-    menu: New<Menu>,
+    menu: New<MenuComplet>,
     method: "put" | "post"
   ) => {
     this.controller.notifications.startSpin();
@@ -318,11 +321,11 @@ export class Data {
     }
   };
 
-  createMenu = async (menu: New<Menu>) => {
+  createMenu = async (menu: New<MenuComplet>) => {
     return this.createOrUpdateMenu(menu, "put");
   };
 
-  updateMenu = async (menu: Menu) => {
+  updateMenu = async (menu: MenuComplet) => {
     return this.createOrUpdateMenu(menu, "post");
   };
 

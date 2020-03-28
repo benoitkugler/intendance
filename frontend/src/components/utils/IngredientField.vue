@@ -1,0 +1,44 @@
+<template>
+  <v-autocomplete
+    color="success"
+    label="Ajouter un ingrédient"
+    :items="items"
+    :filter="filter"
+    @change="id => $emit('change', id)"
+  >
+  </v-autocomplete>
+</template>
+
+<script lang="ts">
+import Vue from "vue";
+import Component from "vue-class-component";
+import { C } from "../../logic/controller";
+import { EnumItem } from "../../logic/enums";
+import { searchFunction } from "./utils";
+const IngredientFieldProps = Vue.extend({
+  props: {}
+});
+
+@Component({})
+export default class IngredientField extends IngredientFieldProps {
+  searchFunctionCache: { [key: string]: (_: string) => boolean } = {};
+
+  filter(ingredient: EnumItem<number>, search: string, _: string) {
+    let sf = this.searchFunctionCache[search];
+    if (sf === undefined) {
+      sf = searchFunction(search);
+      // mise en cache
+      this.searchFunctionCache[search] = sf;
+    }
+    return sf(ingredient.text);
+  }
+
+  get items() {
+    return C.getAllIngredients().map(ing => {
+      return { text: ing.ingredient.nom, value: ing.ingredient.id };
+    });
+  }
+}
+</script>
+
+<style scoped></style>

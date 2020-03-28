@@ -1,13 +1,5 @@
 <template>
   <div>
-    <v-dialog v-model="showEditIngredient" max-width="500px">
-      <menu-or-recette-ingredient
-        :ingredient="editedIngredient"
-        @edit="editIngredientDone"
-        ref="editIngredient"
-      ></menu-or-recette-ingredient>
-    </v-dialog>
-
     <v-toolbar color="secondary" dense class="my-1">
       <v-toolbar-title>{{ title }}</v-toolbar-title>
       <v-spacer></v-spacer>
@@ -33,8 +25,8 @@
       rows="2"
     ></v-textarea>
 
-    <v-list dense max-height="60vh" class="mt-0 pt-0 overflow-y-auto">
-      <div @dragover="onDragoverRecettes" @drop="onDropRecette">
+    <div @dragover="onDragoverRecettes" @drop="onDropRecette">
+      <v-list dense max-height="60vh" class="mt-0 pt-0 overflow-y-auto">
         <v-subheader>Recettes du menu</v-subheader>
         <v-list-item v-if="recettes.length == 0">
           <v-list-item-subtitle>
@@ -61,53 +53,12 @@
             </v-list-item-action>
           </template>
         </v-list-item>
-      </div>
-      <div @dragover="onDragoverIngredients" @drop="onDropIngredient">
-        <v-subheader>Ingrédients additionnels</v-subheader>
-        <v-list-item v-if="(menu.ingredients || []).length == 0">
-          <v-list-item-subtitle>
-            <i>Cliquer-déplacer pour ajouter un ingrédient...</i>
-          </v-list-item-subtitle>
-        </v-list-item>
-        <v-list-item
-          v-for="ingredient in menu.ingredients"
-          :key="ingredient.id_ingredient"
-        >
-          <template v-slot:default="{}">
-            <v-list-item-content>
-              <v-list-item-title>
-                {{ getIngredient(ingredient).nom }}
-              </v-list-item-title>
-              <v-list-item-subtitle>
-                {{ ingredient.quantite }}
-                <i>{{ getIngredient(ingredient).unite }}</i> - Cuisson :
-                {{ ingredient.cuisson }}
-              </v-list-item-subtitle>
-            </v-list-item-content>
-            <v-list-item-action>
-              <v-row no-gutters>
-                <v-col
-                  ><tooltip-btn
-                    mdi-icon="pencil"
-                    tooltip="Modifier les détails..."
-                    color="secondary"
-                    @click.stop="editIngredient(ingredient)"
-                  ></tooltip-btn
-                ></v-col>
-                <v-col
-                  ><tooltip-btn
-                    mdi-icon="close"
-                    tooltip="Retirer cet ingrédient du menu"
-                    color="red"
-                    @click.stop="removeIngredient(ingredient)"
-                  ></tooltip-btn
-                ></v-col>
-              </v-row>
-            </v-list-item-action>
-          </template>
-        </v-list-item>
-      </div>
-    </v-list>
+      </v-list>
+    </div>
+    <liste-lien-ingredients
+      subheader="Ingrédients additionnels"
+      v-model="menu.ingredients"
+    ></liste-lien-ingredients>
   </div>
 </template>
 
@@ -115,37 +66,26 @@
 import Vue from "vue";
 import Component from "vue-class-component";
 import TooltipBtn from "../utils/TooltipBtn.vue";
-import MenuOrRecetteIngredient from "./MenuOrRecetteIngredient.vue";
 
 import { C } from "../../logic/controller";
-import {
-  Menu,
-  Recette,
-  MenuIngredient,
-  RecetteIngredient
-} from "../../logic/types";
+import { Menu, Recette, LienIngredient, MenuComplet } from "../../logic/types";
 import { New, EditMode, deepcopy } from "../../logic/types2";
 import { Watch } from "vue-property-decorator";
+import ListeLienIngredients from "../utils/ListeLienIngredients.vue";
+
 const EditMenuProps = Vue.extend({
   props: {
     mode: String as () => EditMode,
-    initialMenu: Object as () => New<Menu>
+    initialMenu: Object as () => New<MenuComplet>
   }
 });
 
 @Component({
-  components: { TooltipBtn, MenuOrRecetteIngredient }
+  components: { TooltipBtn, ListeLienIngredients }
 })
 export default class EditMenu extends EditMenuProps {
   // menu actuellement édité
-  menu: New<Menu> = deepcopy(this.initialMenu);
-
-  showEditIngredient = false;
-  editedIngredient: MenuIngredient | null = null;
-
-  $refs!: {
-    editIngredient: MenuOrRecetteIngredient;
-  };
+  menu: New<MenuComplet> = deepcopy(this.initialMenu);
 
   @Watch("initialMenu")
   onMenuChange() {
@@ -166,35 +106,9 @@ export default class EditMenu extends EditMenuProps {
 
   formatRecetteProprietaire = C.formatter.formatMenuOrRecetteProprietaire;
 
-  getIngredient(ing: MenuIngredient) {
-    return (C.data.ingredients || {})[ing.id_ingredient];
-  }
-
   removeRecette(toRemove: Recette) {
     this.menu.recettes = (this.menu.recettes || []).filter(
-      rec => rec.id_recette != toRemove.id
-    );
-  }
-
-  editIngredient(ing: MenuIngredient) {
-    this.editedIngredient = ing;
-    this.showEditIngredient = true;
-  }
-
-  editIngredientDone(edited: MenuIngredient) {
-    const ings = this.menu.ingredients;
-    if (ings == null) return;
-    ings.forEach((ing, index) => {
-      if (ing.id_ingredient == edited.id_ingredient) {
-        this.$set(ings, index, edited);
-      }
-    });
-    this.showEditIngredient = false;
-  }
-
-  removeIngredient(toRemove: MenuIngredient) {
-    this.menu.ingredients = (this.menu.ingredients || []).filter(
-      ing => ing.id_ingredient != toRemove.id_ingredient
+      idRecette => idRecette != toRemove.id
     );
   }
 
@@ -212,55 +126,10 @@ export default class EditMenu extends EditMenuProps {
     event.preventDefault();
     const idRecette = Number(event.dataTransfer.getData("id-recette"));
     const recettes = this.menu.recettes || [];
-    const hasRecette =
-      recettes.filter(r => r.id_recette == idRecette).length > 0;
+    const hasRecette = recettes.includes(idRecette);
     if (hasRecette) return;
-    recettes.push({ id_menu: this.menu.id || -1, id_recette: idRecette });
+    recettes.push(idRecette);
     this.menu.recettes = recettes;
-  }
-
-  onDragoverIngredients(event: DragEvent) {
-    if (!event.dataTransfer) return;
-    const isIngredient = event.dataTransfer.types.includes("id-ingredient");
-    if (isIngredient) {
-      event.preventDefault();
-      event.dataTransfer.dropEffect = "copy";
-    }
-  }
-
-  onDropIngredient(event: DragEvent) {
-    if (!event.dataTransfer) return;
-    event.preventDefault();
-    const idIngredient = Number(event.dataTransfer.getData("id-ingredient"));
-    const ingredients = this.menu.ingredients || [];
-    const matchingIngredients = ingredients.filter(
-      r => r.id_ingredient == idIngredient
-    );
-    let newIngredient: MenuIngredient;
-    if (matchingIngredients.length > 0) {
-      newIngredient = matchingIngredients[0];
-    } else {
-      newIngredient = {
-        id_menu: this.menu.id || -1,
-        id_ingredient: idIngredient,
-        quantite: 0,
-        cuisson: ""
-      };
-      ingredients.push(newIngredient);
-      this.menu.ingredients = ingredients;
-    }
-    this.editedIngredient = newIngredient;
-    this.showEditIngredient = true;
-  }
-
-  @Watch("showEditIngredient")
-  onEditIngredient(b: boolean) {
-    if (b) {
-      setTimeout(() => {
-        const ed = this.$refs.editIngredient;
-        if (ed) ed.focus();
-      }, 50);
-    }
   }
 }
 </script>
