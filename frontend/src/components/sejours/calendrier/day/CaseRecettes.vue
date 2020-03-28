@@ -1,0 +1,47 @@
+<template>
+  <div @dragover="onDragoverRecettes" @drop="onDropRecette">
+    <v-chip v-for="idRecette in recettes" :key="idRecette">
+      {{ formatRecette(idRecette) }}
+    </v-chip>
+    <small class="font-italic" v-if="(recettes || []).length == 0"
+      >Déposez une recette ici...</small
+    >
+  </div>
+</template>
+
+<script lang="ts">
+import Vue from "vue";
+import Component from "vue-class-component";
+import { C } from "../../../../logic/controller";
+import { DragKind, getDragData } from "../../../utils/utils_drag";
+const CaseRecettesProps = Vue.extend({
+  props: {
+    recettes: Array as () => number[] | null
+  }
+});
+
+@Component({})
+export default class CaseRecettes extends CaseRecettesProps {
+  formatRecette(idRecette: number) {
+    return C.getRecette(idRecette).nom;
+  }
+
+  onDragoverRecettes(event: DragEvent) {
+    if (!event.dataTransfer) return;
+    const isRecette = event.dataTransfer.types.includes(DragKind.IdRecette);
+    if (isRecette) {
+      event.preventDefault();
+      event.dataTransfer.dropEffect = "copy";
+    }
+  }
+
+  onDropRecette(event: DragEvent) {
+    if (!event.dataTransfer) return;
+    event.preventDefault();
+    const idRecette = getDragData(event.dataTransfer, DragKind.IdRecette);
+    this.$emit("add", idRecette);
+  }
+}
+</script>
+
+<style scoped></style>

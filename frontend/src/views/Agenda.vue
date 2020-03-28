@@ -108,7 +108,7 @@ import {
 } from "../logic/types2";
 
 import Calendar from "../components/sejours/calendrier/Calendar.vue";
-import Day from "../components/sejours/calendrier/Day.vue";
+import Day from "../components/sejours/calendrier/day/Day.vue";
 import TooltipBtn from "../components/utils/TooltipBtn.vue";
 import ToolbarSwitch from "../components/utils/ToolbarSwitch.vue";
 import FormPreferences from "../components/sejours/calendrier/FormPreferences.vue";

@@ -132,6 +132,7 @@ import TooltipBtn from "../utils/TooltipBtn.vue";
 import levenshtein from "js-levenshtein";
 import { StateMenus, DefautIngredient } from "./types";
 import { searchFunction } from "../utils/utils";
+import { DragKind, setDragData } from "../utils/utils_drag";
 import { BaseList, ListKind } from "./shared";
 
 @Component({
@@ -233,7 +234,7 @@ export default class ListeIngredients extends BaseList {
 
   private onDragStart(event: DragEvent, ingredient: Ingredient) {
     if (!event.dataTransfer) return;
-    event.dataTransfer.setData("id-ingredient", String(ingredient.id));
+    setDragData(event.dataTransfer, DragKind.IdIngredient, ingredient.id);
     event.dataTransfer.effectAllowed = "copy";
   }
 

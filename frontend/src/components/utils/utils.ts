@@ -1,5 +1,6 @@
 import { Horaires } from "@/logic/enums";
 import levenshtein from "js-levenshtein";
+import { RepasComplet, MenuComplet } from "@/logic/types";
 const MAX_DIST_LEVENSHTEIN = 5;
 
 const N = Horaires.length;

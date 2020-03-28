@@ -29,10 +29,11 @@
 import Vue from "vue";
 import Component from "vue-class-component";
 
-import Toolbar from "../../utils/Toolbar.vue";
+import Toolbar from "../../../utils/Toolbar.vue";
 
-import { C } from "../../../logic/controller";
-import { Menu } from "../../../logic/types";
+import { C } from "../../../../logic/controller";
+import { Menu, MenuComplet } from "../../../../logic/types";
+import { DragKind, setDragData } from "../../../utils/utils_drag";
 
 const ChoixMenusProps = Vue.extend({
   props: {
@@ -53,9 +54,9 @@ export default class ChoixMenus extends ChoixMenusProps {
     return C.searchMenu(this.search);
   }
 
-  onDrag(event: DragEvent, menu: Menu) {
+  onDrag(event: DragEvent, menu: MenuComplet) {
     if (event == null || event.dataTransfer == null) return;
-    event.dataTransfer.setData("menu", JSON.stringify(menu));
+    setDragData(event.dataTransfer, DragKind.Menu, menu);
     event.dataTransfer.effectAllowed = "link";
   }
 }

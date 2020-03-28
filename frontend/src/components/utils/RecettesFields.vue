@@ -1,7 +1,7 @@
 <template>
   <v-autocomplete
     label="Recettes"
-    :value="idsRecettes"
+    :value="recettes"
     @change="v => $emit('change', v)"
     chips
     multiple
@@ -19,10 +19,10 @@ import { EnumItem } from "../../logic/enums";
 import { searchFunction } from "./utils";
 const RecettesFieldsProps = Vue.extend({
   props: {
-    idsRecettes: Array as () => number[]
+    recettes: Array as () => number[]
   },
   model: {
-    prop: "idsRecettes",
+    prop: "recettes",
     event: "change"
   }
 });

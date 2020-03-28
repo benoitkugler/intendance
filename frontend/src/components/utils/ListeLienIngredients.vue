@@ -79,6 +79,7 @@ import IngredientField from "./IngredientField.vue";
 
 import { LienIngredient } from "../../logic/types";
 import { C } from "../../logic/controller";
+import { DragKind, getDragData } from "./utils_drag";
 
 const ListeLienIngredientsProps = Vue.extend({
   props: {
@@ -132,7 +133,9 @@ export default class ListeLienIngredients extends ListeLienIngredientsProps {
 
   onDragoverIngredients(event: DragEvent) {
     if (!event.dataTransfer) return;
-    const isIngredient = event.dataTransfer.types.includes("id-ingredient");
+    const isIngredient = event.dataTransfer.types.includes(
+      DragKind.IdIngredient
+    );
     if (isIngredient) {
       event.preventDefault();
       event.dataTransfer.dropEffect = "copy";
@@ -142,7 +145,7 @@ export default class ListeLienIngredients extends ListeLienIngredientsProps {
   onDropIngredient(event: DragEvent) {
     if (!event.dataTransfer) return;
     event.preventDefault();
-    const idIngredient = Number(event.dataTransfer.getData("id-ingredient"));
+    const idIngredient = getDragData(event.dataTransfer, DragKind.IdIngredient);
     this.addIngredient(idIngredient);
   }
 

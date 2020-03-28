@@ -84,8 +84,10 @@
                               {{ formatNbOffset(repas) }}
                             </v-chip>
                           </v-col>
-                          <v-col>
-                            Recettes
+                          <v-col class="align-self-center">
+                            <case-recettes
+                              :recettes="repas.recettes"
+                            ></case-recettes>
                           </v-col>
                           <v-col>
                             ingredients
@@ -133,21 +135,22 @@
 import Vue from "vue";
 import Component from "vue-class-component";
 
-import TooltipBtn from "../../utils/TooltipBtn.vue";
-import ListeIngredients from "../../utils/ListeIngredients.vue";
+import TooltipBtn from "../../../utils/TooltipBtn.vue";
+import ListeIngredients from "../../../utils/ListeIngredients.vue";
 import ChoixMenus from "./ChoixMenus.vue";
+import CaseRecettes from "./CaseRecettes.vue";
 
-import { toDateVuetify, formatNbOffset } from "./utils";
-import { C } from "../../../logic/controller";
-import { RepasComplet, Groupe, IngredientQuantite } from "../../../logic/types";
-import { New, NullId, deepcopy } from "../../../logic/types2";
-import { Horaires } from "../../../logic/enums";
-import { HorairesColors } from "../../utils/utils";
-
-interface dragData {
-  idGroupe: number;
-  repas: RepasComplet;
-}
+import { toDateVuetify, formatNbOffset } from "../utils";
+import { C } from "../../../../logic/controller";
+import {
+  RepasComplet,
+  Groupe,
+  IngredientQuantite
+} from "../../../../logic/types";
+import { New, NullId, deepcopy } from "../../../../logic/types2";
+import { Horaires } from "../../../../logic/enums";
+import { HorairesColors } from "../../../utils/utils";
+import { DragKind, getDragData, setDragData } from "../../../utils/utils_drag";
 
 const DayProps = Vue.extend({
   props: {
@@ -155,14 +158,13 @@ const DayProps = Vue.extend({
   }
 });
 @Component({
-  components: { TooltipBtn, ListeIngredients, ChoixMenus }
+  components: { TooltipBtn, ListeIngredients, ChoixMenus, CaseRecettes }
 })
 export default class Day extends DayProps {
   showPrevisuIngredients = false;
   loadingIngredients = true;
   listeIngredients: IngredientQuantite[] = [];
   repasNbPersonnes = 0;
-
   get day(): Date | null {
     if (this.jourOffset == null) return null;
     return C.offsetToDate(C.state.idSejour!, this.jourOffset);
@@ -217,14 +219,14 @@ export default class Day extends DayProps {
 
   onDragStart(event: DragEvent, repas: RepasComplet, groupe: Groupe) {
     if (event == null || event.dataTransfer == null) return;
-    const data: dragData = { repas: repas, idGroupe: groupe.id };
-    event.dataTransfer.setData("groupe", JSON.stringify(data));
+    const data = { repas: repas, idGroupe: groupe.id };
+    setDragData(event.dataTransfer, DragKind.Groupe, data);
     event.dataTransfer.effectAllowed = "copyMove";
   }
 
   onDragoverHoraireHeader(event: DragEvent) {
     if (!event.dataTransfer) return;
-    if (event.dataTransfer.types.includes("groupe")) {
+    if (event.dataTransfer.types.includes(DragKind.Groupe)) {
       event.preventDefault();
       event.dataTransfer.dropEffect = "copy";
     }
@@ -235,7 +237,7 @@ export default class Day extends DayProps {
   async onDropHoraireHeader(event: DragEvent, horaire: string) {
     if (!event.dataTransfer || this.jourOffset == null) return;
     event.preventDefault();
-    const data: dragData = JSON.parse(event.dataTransfer.getData("groupe"));
+    const data = getDragData(event.dataTransfer, DragKind.Groupe);
 
     await C.data.createRepas({
       id_sejour: C.state.idSejour!,
@@ -259,7 +261,7 @@ export default class Day extends DayProps {
 
   onDragoverRepas(event: DragEvent) {
     if (!event.dataTransfer) return;
-    if (event.dataTransfer.types.includes("groupe")) {
+    if (event.dataTransfer.types.includes(DragKind.Groupe)) {
       event.preventDefault();
       event.dataTransfer.dropEffect = "move";
     }
@@ -268,7 +270,7 @@ export default class Day extends DayProps {
   // au repas cible.
   async onDropRepas(event: DragEvent, target: RepasComplet) {
     if (!event.dataTransfer || this.jourOffset == null) return;
-    const data: dragData = JSON.parse(event.dataTransfer.getData("groupe"));
+    const data = getDragData(event.dataTransfer, DragKind.Groupe);
     if (target.id == data.repas.id) return; // on déplace vers soi-même
     event.preventDefault();
 

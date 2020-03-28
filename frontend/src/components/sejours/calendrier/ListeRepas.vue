@@ -36,6 +36,7 @@ import { RepasComplet, Menu, MenuComplet } from "../../../logic/types";
 import { deepcopy, toNullableId } from "../../../logic/types2";
 import { C } from "../../../logic/controller";
 import { HorairesColors } from "../../utils/utils";
+import { DragKind, getDragData, setDragData } from "../../utils/utils_drag";
 import { fmtHoraire } from "../../../logic/enums";
 import { formatNbOffset, compareRecettesIngredient } from "./utils";
 
@@ -67,7 +68,7 @@ export default class ListeRepas extends ListeRepasProps {
 
   onDragstart(event: DragEvent, repas: RepasComplet) {
     if (event == null || event.dataTransfer == null) return;
-    event.dataTransfer.setData("repas", JSON.stringify(repas));
+    setDragData(event.dataTransfer, DragKind.Repas, repas);
     event.dataTransfer.effectAllowed = "linkMove";
   }
 
@@ -76,10 +77,10 @@ export default class ListeRepas extends ListeRepasProps {
   // - un menu
   onDragover(event: DragEvent, target: RepasComplet) {
     if (!event.dataTransfer) return;
-    if (event.dataTransfer.types.includes("repas")) {
+    if (event.dataTransfer.types.includes(DragKind.Repas)) {
       event.preventDefault();
       event.dataTransfer.dropEffect = "link";
-    } else if (event.dataTransfer.types.includes("menu")) {
+    } else if (event.dataTransfer.types.includes(DragKind.Menu)) {
       event.preventDefault();
       event.dataTransfer.dropEffect = "link";
     }
@@ -88,19 +89,18 @@ export default class ListeRepas extends ListeRepasProps {
   // cf onDragover
   onDrop(event: DragEvent, target: RepasComplet) {
     if (!event.dataTransfer) return;
-    if (event.dataTransfer.types.includes("repas")) {
+    if (event.dataTransfer.types.includes(DragKind.Repas)) {
       event.preventDefault();
       this.onDropRepas(event, target);
-    } else if (event.dataTransfer.types.includes("menu")) {
+    } else if (event.dataTransfer.types.includes(DragKind.Menu)) {
       event.preventDefault();
       this.onDropMenu(event, target);
     }
   }
   private async onDropRepas(event: DragEvent, target: RepasComplet) {
     if (!event.dataTransfer) return;
-    const origin: RepasComplet = JSON.parse(
-      event.dataTransfer.getData("repas")
-    );
+    const origin = getDragData(event.dataTransfer, DragKind.Repas);
+
     if (target.id == origin.id) return; // on évite les échanges inutiles
     target = deepcopy(target);
     [origin.jour_offset, target.jour_offset] = [
@@ -115,7 +115,8 @@ export default class ListeRepas extends ListeRepasProps {
 
   private async onDropMenu(event: DragEvent, target: RepasComplet) {
     if (!event.dataTransfer) return;
-    const menu: MenuComplet = JSON.parse(event.dataTransfer.getData("menu"));
+    const menu = getDragData(event.dataTransfer, DragKind.Menu);
+
     if (compareRecettesIngredient(menu, target)) return; // on évite les requettes inutiles
 
     target = deepcopy(target); // on évite la modification locale

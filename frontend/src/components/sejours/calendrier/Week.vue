@@ -56,6 +56,7 @@ import ListeRepas from "./ListeRepas.vue";
 import TooltipBtn from "../../utils/TooltipBtn.vue";
 import { C } from "../../../logic/controller";
 import { RepasComplet, Sejour } from "../../../logic/types";
+import { DragKind, getDragData } from "../../utils/utils_drag";
 
 const Props = Vue.extend({
   props: {
@@ -89,8 +90,7 @@ export default class Week extends Props {
     const debut = new Date(this.sejour.date_debut).valueOf();
     const target = new Date(date).valueOf();
     if (target < debut) return; // empêche un offset négatif
-    const isRepas = event.dataTransfer.types.includes("repas");
-    // const isDay = event.dataTransfer.types.includes("journee");
+    const isRepas = event.dataTransfer.types.includes(DragKind.Repas);
     if (isRepas) {
       event.preventDefault();
       event.dataTransfer.dropEffect = "move";
@@ -100,7 +100,8 @@ export default class Week extends Props {
   async onDayDrop(event: DragEvent, date: string) {
     if (!event.dataTransfer || C.state.idSejour == null) return;
     event.preventDefault();
-    const repas: RepasComplet = JSON.parse(event.dataTransfer.getData("repas"));
+    const repas = getDragData(event.dataTransfer, DragKind.Repas);
+
     const targetOffset = C.dateToOffset(C.state.idSejour, new Date(date));
     if (targetOffset == repas.jour_offset) return;
     repas.jour_offset = targetOffset;

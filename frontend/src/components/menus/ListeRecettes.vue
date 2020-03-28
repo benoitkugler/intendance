@@ -91,6 +91,7 @@ import { Recette } from "../../logic/types";
 import { StateMenus } from "./types";
 import levenshtein from "js-levenshtein";
 import { searchFunction } from "../utils/utils";
+import { DragKind, setDragData } from "../utils/utils_drag";
 import { ListKind, BaseList } from "./shared";
 
 @Component({
@@ -156,7 +157,7 @@ export default class ListeRecettes extends BaseList {
 
   onDragStart(event: DragEvent, recette: Recette) {
     if (!event.dataTransfer) return;
-    event.dataTransfer.setData("id-recette", String(recette.id));
+    setDragData(event.dataTransfer, DragKind.IdRecette, recette.id);
     event.dataTransfer.effectAllowed = "copy";
   }
 }

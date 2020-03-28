@@ -72,6 +72,7 @@ import { Menu, Recette, LienIngredient, MenuComplet } from "../../logic/types";
 import { New, EditMode, deepcopy } from "../../logic/types2";
 import { Watch } from "vue-property-decorator";
 import ListeLienIngredients from "../utils/ListeLienIngredients.vue";
+import { DragKind, getDragData } from "../utils/utils_drag";
 
 const EditMenuProps = Vue.extend({
   props: {
@@ -114,7 +115,7 @@ export default class EditMenu extends EditMenuProps {
 
   onDragoverRecettes(event: DragEvent) {
     if (!event.dataTransfer) return;
-    const isRecette = event.dataTransfer.types.includes("id-recette");
+    const isRecette = event.dataTransfer.types.includes(DragKind.IdRecette);
     if (isRecette) {
       event.preventDefault();
       event.dataTransfer.dropEffect = "copy";
@@ -124,7 +125,7 @@ export default class EditMenu extends EditMenuProps {
   onDropRecette(event: DragEvent) {
     if (!event.dataTransfer) return;
     event.preventDefault();
-    const idRecette = Number(event.dataTransfer.getData("id-recette"));
+    const idRecette = getDragData(event.dataTransfer, DragKind.IdRecette);
     const recettes = this.menu.recettes || [];
     const hasRecette = recettes.includes(idRecette);
     if (hasRecette) return;
