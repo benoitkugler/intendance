@@ -1,6 +1,13 @@
 <template>
-  <div @dragover="onDragoverRecettes" @drop="onDropRecette">
-    <v-chip v-for="idRecette in recettes" :key="idRecette">
+  <div @dragover.stop="onDragoverRecettes" @drop.stop="onDropRecette">
+    <v-chip
+      small
+      v-for="idRecette in recettes"
+      :key="idRecette"
+      close
+      @click.stop
+      @click:close="$emit('remove', idRecette)"
+    >
       {{ formatRecette(idRecette) }}
     </v-chip>
     <small class="font-italic" v-if="(recettes || []).length == 0"

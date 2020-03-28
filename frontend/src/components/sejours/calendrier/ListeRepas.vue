@@ -72,29 +72,20 @@ export default class ListeRepas extends ListeRepasProps {
     event.dataTransfer.effectAllowed = "linkMove";
   }
 
-  // deux types de drop sont possibles :
-  // - un autre repas pour échange
-  // - un menu
+  // drop un repas pour échanger
   onDragover(event: DragEvent, target: RepasComplet) {
     if (!event.dataTransfer) return;
     if (event.dataTransfer.types.includes(DragKind.Repas)) {
       event.preventDefault();
       event.dataTransfer.dropEffect = "link";
-    } else if (event.dataTransfer.types.includes(DragKind.Menu)) {
-      event.preventDefault();
-      event.dataTransfer.dropEffect = "link";
     }
   }
 
-  // cf onDragover
   onDrop(event: DragEvent, target: RepasComplet) {
     if (!event.dataTransfer) return;
     if (event.dataTransfer.types.includes(DragKind.Repas)) {
       event.preventDefault();
       this.onDropRepas(event, target);
-    } else if (event.dataTransfer.types.includes(DragKind.Menu)) {
-      event.preventDefault();
-      this.onDropMenu(event, target);
     }
   }
   private async onDropRepas(event: DragEvent, target: RepasComplet) {
@@ -110,22 +101,6 @@ export default class ListeRepas extends ListeRepasProps {
     await C.data.updateManyRepas([target, origin]);
     if (C.notifications.getError() == null) {
       C.notifications.setMessage("Repas échangés avec succès.");
-    }
-  }
-
-  private async onDropMenu(event: DragEvent, target: RepasComplet) {
-    if (!event.dataTransfer) return;
-    const menu = getDragData(event.dataTransfer, DragKind.Menu);
-
-    if (compareRecettesIngredient(menu, target)) return; // on évite les requettes inutiles
-
-    target = deepcopy(target); // on évite la modification locale
-    // on copie le contenu du menu sur le repas
-    target.recettes = menu.recettes;
-    target.ingredients = menu.ingredients;
-    await C.data.updateManyRepas([target]);
-    if (C.notifications.getError() == null) {
-      C.notifications.setMessage("Menu associé avec succès.");
     }
   }
 }

@@ -13,7 +13,7 @@
         :class="getRowClass(ingredient)"
       >
         <td>
-          <v-tooltip left>
+          <v-tooltip left v-if="!hideLinks">
             <template v-slot:activator="{ on }">
               <a @click="$emit('go', ingredient.ingredient.id)" v-on="on">
                 {{ ingredient.ingredient.nom }}
@@ -21,6 +21,7 @@
             </template>
             Aller à l'ingrédient...
           </v-tooltip>
+          <span v-else>{{ ingredient.ingredient.nom }}</span>
         </td>
         <td class="text-center">
           {{ formatQuantite(ingredient.quantite) }}
@@ -41,7 +42,8 @@ import { Crible } from "./utils";
 const ListeIngredientsProps = Vue.extend({
   props: {
     ingredients: Array as () => IngredientQuantite[],
-    highlights: Object as () => Crible // ids
+    highlights: Object as () => Crible | undefined, // ids
+    hideLinks: Boolean
   }
 });
 @Component({})
@@ -49,7 +51,7 @@ export default class ListeIngredients extends ListeIngredientsProps {
   formatQuantite = Formatter.formatQuantite;
 
   getRowClass(ingredient: IngredientQuantite) {
-    if (this.highlights[ingredient.ingredient.id]) {
+    if (this.highlights && this.highlights[ingredient.ingredient.id]) {
       return "lime lighten-3";
     }
     return "";

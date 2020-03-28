@@ -1,5 +1,5 @@
 <template>
-  <v-toolbar dense color="secondary" class="my-1">
+  <v-toolbar dense color="secondary" class="my-1" :elevation="elevation">
     <v-toolbar-title class="px-2">
       <v-row no-gutters class="mt-1">
         <v-col>
@@ -16,6 +16,7 @@
             dense
             class="mt-3 mb-1"
             @keyup.esc="showSearch = false"
+            @click.stop
             ref="search"
           ></v-text-field>
         </v-col>
@@ -26,7 +27,7 @@
       <tooltip-btn
         mdi-icon="magnify"
         tooltip="Rechercher..."
-        @click="showSearch = !showSearch"
+        @click.stop="showSearch = !showSearch"
       />
       <tooltip-btn
         mdi-icon="plus-thick"
@@ -51,7 +52,11 @@ const ToolbarProps = Vue.extend({
     title: String,
     tooltipAdd: String,
     showAdd: Boolean,
-    search: String
+    search: String,
+    elevation: {
+      type: Number,
+      default: undefined
+    }
   },
   model: {
     prop: "search",
