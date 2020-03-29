@@ -119,6 +119,12 @@ type OutProduit struct {
 	Produit models.Produit `json:"produit"`
 }
 
+type InSetDefautProduit struct {
+	IdIngredient int64 `json:"id_ingredient"`
+	IdProduit    int64 `json:"id_produit"`
+	On           bool  `json:"on"`
+}
+
 type InCommande struct {
 	Ingredients []controller.DateIngredientQuantites `json:"ingredients"`
 	Contraintes controller.CommandeContraintes       `json:"contraintes"`

@@ -42,6 +42,15 @@ func randCommandeProduit() CommandeProduit {
 	}
 }
 
+func randDefautProduit() DefautProduit {
+	return DefautProduit{
+		IdUtilisateur: randint64(),
+		IdIngredient:  randint64(),
+		IdFournisseur: randint64(),
+		IdProduit:     randint64(),
+	}
+}
+
 func randbool() bool {
 	i := rand.Int31n(2)
 	return i == 1

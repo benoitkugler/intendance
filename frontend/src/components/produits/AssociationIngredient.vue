@@ -14,6 +14,7 @@
             <v-simple-table dense fixed-header>
               <thead>
                 <tr>
+                  <th></th>
                   <th class="text-left">Fournisseur</th>
                   <th class="text-left">Nom</th>
                   <th class="text-center">Prix</th>
@@ -23,13 +24,26 @@
               </thead>
               <tbody>
                 <tr v-for="produit in produits" :key="produit.id">
+                  <td class="px-1">
+                    <tooltip-btn
+                      small
+                      mdi-icon="star"
+                      :color="isDefault(produit) ? 'yellow' : ''"
+                      :tooltip="
+                        isDefault(produit)
+                          ? 'Retirer ce produit des favoris'
+                          : 'Définir ce produit par défaut'
+                      "
+                      @click="setDefault(produit)"
+                    ></tooltip-btn>
+                  </td>
                   <td>{{ formatFournisseur(produit) }}</td>
                   <td>{{ produit.nom }}</td>
                   <td class="text-center">{{ produit.prix }} €</td>
                   <td class="text-center">
                     {{ formatConditionnement(produit.conditionnement) }}
                   </td>
-                  <td>
+                  <td class="px-1">
                     <tooltip-btn
                       small
                       mdi-icon="close"
@@ -116,6 +130,11 @@ export default class AssociationIngredient extends AssociationIngredientProps {
     return f.nom;
   }
 
+  isDefault(produit: Produit) {
+    if (this.ingredientProduits == null) return false;
+    return (this.ingredientProduits.defaults || {})[produit.id];
+  }
+
   private async loadProduits() {
     if (this.ingredient == null) return;
     const res = await C.data.getIngredientProduits(this.ingredient.id);
@@ -154,6 +173,21 @@ export default class AssociationIngredient extends AssociationIngredientProps {
     await this.loadProduits();
     if (C.notifications.getError() != null) return;
     C.notifications.setMessage(`Produit ${produit.nom} supprimé avec succès`);
+  }
+
+  async setDefault(produit: Produit) {
+    const newState = !this.isDefault(produit);
+
+    if (this.ingredient == null) return;
+    const res = await C.data.setDefautProduit({
+      id_ingredient: this.ingredient.id,
+      id_produit: produit.id,
+      on: newState
+    });
+    if (res) {
+      this.ingredientProduits = res;
+      C.notifications.setMessage("Préférence modifiée avec succès.");
+    }
   }
 }
 </script>

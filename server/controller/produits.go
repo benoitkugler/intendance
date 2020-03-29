@@ -1,8 +1,8 @@
 package controller
 
 import (
-	"database/sql"
 	"fmt"
+	"sort"
 
 	"github.com/benoitkugler/intendance/server/models"
 )
@@ -21,6 +21,8 @@ func (ct RequeteContext) loadFournisseurs() (models.Fournisseurs, error) {
 	return out, nil
 }
 
+// vérifie que le fournisseur du produit fait partie
+// des fournisseurs associés à l'utilisateur courant
 func (ct RequeteContext) checkFournisseurs(produit models.Produit) error {
 	fourns, err := ct.loadFournisseurs()
 	if err != nil {
@@ -122,23 +124,27 @@ func (s Server) GetIngredientProduits(ct RequeteContext, idIngredient int64) (In
 	for _, produit := range produits {
 		out.Produits = append(out.Produits, produit)
 	}
+	sort.Slice(out.Produits, func(i, j int) bool {
+		return out.Produits[i].Nom < out.Produits[j].Nom
+	})
+	sort.SliceStable(out.Produits, func(i, j int) bool {
+		return out.Produits[i].IdFournisseur < out.Produits[j].IdFournisseur
+	})
 
-	row := ct.tx.QueryRow("SELECT id_produit FROM produits_par_defaut WHERE id_utilisateur = $1 AND id_ingredient = $2",
+	rows, err := ct.tx.Query("SELECT id_produit FROM defaut_produits WHERE id_utilisateur = $1 AND id_ingredient = $2",
 		ct.idProprietaire, idIngredient)
-	var idDefault sql.NullInt64
-	err = row.Scan(&idDefault.Int64)
-	if err == sql.ErrNoRows {
-		// pas de valeur par défaut, idDefault.Valid reste à false
-	} else if err != nil { // "vraie" erreur
+	if err != nil {
 		return IngredientProduits{}, ErrorSQL(err)
-	} else { // on a trouvé une valeur par défault
-		idDefault.Valid = true
 	}
+	defaults, err := models.ScanInts(rows)
+	if err != nil {
+		return IngredientProduits{}, ErrorSQL(err)
+	}
+	out.Defaults = models.NewSetFromSlice(defaults)
 	if err = ct.commitTx(); err != nil {
 		return out, err
 	}
 
-	out.IdDefault = idDefault
 	return out, nil
 }
 
@@ -253,6 +259,12 @@ func (s Server) DeleteProduit(ct RequeteContext, idProduit int64) error {
 		return err
 	}
 
+	// suppression des préférences
+	_, err = ct.tx.Exec("DELETE FROM defaut_produits WHERE id_produit = $1", idProduit)
+	if err != nil {
+		return ct.rollbackTx(err)
+	}
+
 	// suppression de la liaison ingrédient
 	_, err = ct.tx.Exec("DELETE FROM ingredient_produits WHERE id_produit = $1", idProduit)
 	if err != nil {
@@ -263,6 +275,43 @@ func (s Server) DeleteProduit(ct RequeteContext, idProduit int64) error {
 	_, err = produit.Delete(ct.tx)
 	if err != nil {
 		return ct.rollbackTx(err)
+	}
+	return ct.commitTx()
+}
+
+// SetDefautProduit met à jour le produit par défaut pour l'ingrédient donné
+// `GetIngredientProduits` devrait être appelé ensuite.
+func (s Server) SetDefautProduit(ct RequeteContext, idIngredient int64, idProduit int64, on bool) error {
+	if err := ct.beginTx(s); err != nil {
+		return err
+	}
+
+	row := ct.tx.QueryRow("SELECT * FROM produits WHERE id = $1", idProduit)
+	produit, err := models.ScanProduit(row)
+	if err != nil {
+		return ErrorSQL(err)
+	}
+
+	if err := ct.checkFournisseurs(produit); err != nil {
+		return err
+	}
+
+	// on enlève un éventuel produit par défaut du même fournisseur
+	// par la même occasion, on supprime la valeur par défaut (cas `off` == false )
+	_, err = ct.tx.Exec("DELETE FROM defaut_produits WHERE id_utilisateur = $1 AND id_ingredient = $2 AND id_fournisseur = $3",
+		ct.idProprietaire, idIngredient, produit.IdFournisseur)
+	if err != nil {
+		return ct.rollbackTx(err)
+	}
+	if on { // on ajoute le nouveau défaut
+		dp := models.DefautProduit{
+			IdFournisseur: produit.IdFournisseur, // déduit du produit
+			IdIngredient:  idIngredient,
+			IdProduit:     idProduit,
+			IdUtilisateur: ct.idProprietaire}
+		if err := models.InsertManyDefautProduits(ct.tx, []models.DefautProduit{dp}); err != nil {
+			return ct.rollbackTx(err)
+		}
 	}
 	return ct.commitTx()
 }

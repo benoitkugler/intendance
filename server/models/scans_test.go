@@ -54,6 +54,29 @@ func queriesCommandeProduit(tx *sql.Tx, item CommandeProduit) (CommandeProduit, 
 	return item, err
 }
 
+func queriesDefautProduit(tx *sql.Tx, item DefautProduit) (DefautProduit, error) {
+	err := InsertManyDefautProduits(tx, []DefautProduit{item})
+	if err != nil {
+		return item, err
+	}
+	rows, err := tx.Query("SELECT * FROM defaut_produits")
+	if err != nil {
+		return item, err
+	}
+	items, err := ScanDefautProduits(rows)
+	if err != nil {
+		return item, err
+	}
+
+	_ = len(items)
+
+	row := tx.QueryRow(`SELECT * FROM defaut_produits WHERE 
+			id_utilisateur = $1 AND id_ingredient = $2 AND id_fournisseur = $3 AND id_produit = $4;`, item.IdUtilisateur, item.IdIngredient, item.IdFournisseur, item.IdProduit)
+
+	_, err = ScanDefautProduit(row)
+	return item, err
+}
+
 func queriesFournisseur(tx *sql.Tx, item Fournisseur) (Fournisseur, error) {
 	item, err := item.Insert(tx)
 

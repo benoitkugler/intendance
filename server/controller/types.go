@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"database/sql"
 	"time"
 
 	"github.com/benoitkugler/intendance/server/models"
@@ -60,8 +59,8 @@ type DateIngredientQuantites struct {
 }
 
 type IngredientProduits struct {
-	Produits  []models.Produit `json:"produits"`
-	IdDefault sql.NullInt64    `json:"id_default"`
+	Produits []models.Produit `json:"produits"`
+	Defaults models.Set       `json:"defaults"` // id_produit -> is default
 }
 
 type PreviewCommande struct {

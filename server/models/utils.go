@@ -39,16 +39,18 @@ func (ids Ids) AsRepasRecettes(idRepas int64) []RepasRecette {
 }
 
 // ----------------------------------------------------
-type Set map[int64]struct{}
+const has = true
+
+type Set map[int64]bool // on choisit bool pour l'interaction avec .js
 
 func NewSet() Set {
-	return map[int64]struct{}{}
+	return map[int64]bool{}
 }
 
 func NewSetFromSlice(keys []int64) Set {
 	out := make(Set, len(keys))
 	for _, key := range keys {
-		out[key] = struct{}{}
+		out[key] = has
 	}
 	return out
 }
@@ -67,7 +69,7 @@ func (s Set) Has(key int64) bool {
 }
 
 func (s Set) Add(key int64) {
-	s[key] = struct{}{}
+	s[key] = has
 }
 
 // ------------------------------------------------------

@@ -27,7 +27,9 @@ import {
   InSejourFournisseurs,
   RecetteComplet,
   MenuComplet,
-  Utilisateur
+  Utilisateur,
+  Produit,
+  InSetDefautProduit
 } from "./types";
 import axios, { AxiosResponse } from "axios";
 
@@ -206,6 +208,7 @@ export class Data {
     }
   };
 
+  // `getIngredientProduits` devrait être appelé ensuite
   deleteProduit = async (idProduit: number) => {
     this.controller.notifications.startSpin();
     try {
@@ -213,6 +216,24 @@ export class Data {
         params: { id: idProduit },
         auth: this.controller.auth()
       });
+    } catch (error) {
+      this.controller.notifications.setAxiosError(error);
+    }
+  };
+
+  // renvoie la liste des produits mise à jour
+  setDefautProduit = async (params: InSetDefautProduit) => {
+    this.controller.notifications.startSpin();
+    try {
+      const response: AxiosResponse<OutIngredientProduits> = await axios.post(
+        ServerURL + "/ingredient-produit-defaut",
+        params,
+        {
+          auth: this.controller.auth()
+        }
+      );
+      this.controller.token = response.data.token;
+      return response.data.produits;
     } catch (error) {
       this.controller.notifications.setAxiosError(error);
     }

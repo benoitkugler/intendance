@@ -630,6 +630,27 @@ func DeleteProduit(c echo.Context) error {
 	return c.NoContent(200)
 }
 
+func SetDefautProduit(c echo.Context) error {
+	ct, err := Server.Authentifie(c.Request())
+	if err != nil {
+		return err
+	}
+	var def InSetDefautProduit
+	if err = c.Bind(&def); err != nil {
+		return err
+	}
+	err = Server.SetDefautProduit(ct, def.IdIngredient, def.IdProduit, def.On)
+	if err != nil {
+		return err
+	}
+
+	out, err := Server.GetIngredientProduits(ct, def.IdIngredient)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, OutIngredientProduits{Token: ct.Token, Produits: out})
+}
+
 // --------------------------------------------------------------------------
 // ----------------------------- Commandes ----------------------------------
 // --------------------------------------------------------------------------

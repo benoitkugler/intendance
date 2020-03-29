@@ -104,6 +104,13 @@ export interface InSejourFournisseurs {
 	ids_fournisseurs: number[] | null,
 }
 
+// github.com/benoitkugler/intendance/server/views.InSetDefautProduit
+export interface InSetDefautProduit {
+	id_ingredient: number,
+	id_produit: number,
+	on: boolean,
+}
+
 // github.com/benoitkugler/intendance/server/controller.TimedIngredientQuantite
 export type TimedIngredientQuantite = {
 	date: Time,
@@ -171,16 +178,13 @@ export interface OutIngredient {
 	ingredient: Ingredient,
 }
 
-// database/sql.NullInt64
-export interface NullInt64 {
-	Int64: number,
-	Valid: boolean,
-}
+// github.com/benoitkugler/intendance/server/models.Set
+export type Set = { [key: number]: boolean } | null
 
 // github.com/benoitkugler/intendance/server/controller.IngredientProduits
 export interface IngredientProduits {
 	produits: Produit[] | null,
-	id_default: NullInt64,
+	defaults: Set,
 }
 
 // github.com/benoitkugler/intendance/server/views.OutIngredientProduits
@@ -209,6 +213,12 @@ export interface OutLoggin {
 	erreur: string,
 	token: string,
 	utilisateur: Utilisateur,
+}
+
+// database/sql.NullInt64
+export interface NullInt64 {
+	Int64: number,
+	Valid: boolean,
 }
 
 // github.com/benoitkugler/intendance/server/models.Menu

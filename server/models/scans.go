@@ -155,6 +155,78 @@ func (item CommandeProduit) Delete(tx *sql.Tx) error {
 	return err
 }
 
+func ScanDefautProduit(r *sql.Row) (DefautProduit, error) {
+	var s DefautProduit
+	if err := r.Scan(
+		&s.IdUtilisateur,
+		&s.IdIngredient,
+		&s.IdFournisseur,
+		&s.IdProduit,
+	); err != nil {
+		return DefautProduit{}, err
+	}
+	return s, nil
+}
+
+func ScanDefautProduits(rs *sql.Rows) ([]DefautProduit, error) {
+	structs := make([]DefautProduit, 0, 16)
+	var err error
+	for rs.Next() {
+		var s DefautProduit
+		if err = rs.Scan(
+			&s.IdUtilisateur,
+			&s.IdIngredient,
+			&s.IdFournisseur,
+			&s.IdProduit,
+		); err != nil {
+			return nil, err
+		}
+		structs = append(structs, s)
+	}
+	if err = rs.Err(); err != nil {
+		return nil, err
+	}
+	return structs, nil
+}
+
+// Insert the links DefautProduit in the database.
+func InsertManyDefautProduits(tx *sql.Tx, items []DefautProduit) error {
+	if len(items) == 0 {
+		return nil
+	}
+
+	stmt, err := tx.Prepare(pq.CopyIn("defaut_produits",
+		"id_utilisateur", "id_ingredient", "id_fournisseur", "id_produit",
+	))
+	if err != nil {
+		return err
+	}
+
+	for _, item := range items {
+		_, err = stmt.Exec(item.IdUtilisateur, item.IdIngredient, item.IdFournisseur, item.IdProduit)
+		if err != nil {
+			return err
+		}
+	}
+
+	if _, err = stmt.Exec(); err != nil {
+		return err
+	}
+
+	if err = stmt.Close(); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Delete the link DefautProduit in the database.
+// Only the 'IdUtilisateur' 'IdIngredient' 'IdFournisseur' 'IdProduit' fields are used.
+func (item DefautProduit) Delete(tx *sql.Tx) error {
+	_, err := tx.Exec(`DELETE FROM defaut_produits WHERE 
+		id_utilisateur = $1 AND id_ingredient = $2 AND id_fournisseur = $3 AND id_produit = $4;`, item.IdUtilisateur, item.IdIngredient, item.IdFournisseur, item.IdProduit)
+	return err
+}
+
 func ScanFournisseur(r *sql.Row) (Fournisseur, error) {
 	var s Fournisseur
 	if err := r.Scan(

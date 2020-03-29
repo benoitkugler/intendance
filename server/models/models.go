@@ -155,9 +155,18 @@ type Produit struct {
 
 // sql:UNIQUE(id_ingredient, id_produit)
 type IngredientProduit struct {
-	IdIngredient  int64 `json:"id_ingredient"`
-	IdProduit     int64 `json:"id_produit"`
+	IdIngredient int64 `json:"id_ingredient"`
+	IdProduit    int64 `json:"id_produit"`
+
+	IdUtilisateur int64 `json:"id_utilisateur"` // ajouteur
+}
+
+// sql:UNIQUE(id_utilisateur, id_ingredient, id_fournisseur)
+type DefautProduit struct {
 	IdUtilisateur int64 `json:"id_utilisateur"`
+	IdIngredient  int64 `json:"id_ingredient"`
+	IdFournisseur int64 `json:"id_fournisseur"`
+	IdProduit     int64 `json:"id_produit"`
 }
 
 type Commande struct {
