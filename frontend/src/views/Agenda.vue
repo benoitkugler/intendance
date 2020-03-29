@@ -138,9 +138,10 @@ export default class Agenda extends Vue {
   private editedRepas: RepasComplet = {
     id: -1,
     id_sejour: -1,
-    horaire: "",
     offset_personnes: 0,
     jour_offset: 0,
+    horaire: "",
+    anticipation: 0,
     groupes: [],
     recettes: [],
     ingredients: []
@@ -196,11 +197,12 @@ export default class Agenda extends Vue {
     const sejour = this.sejour;
     if (sejour == null) return;
     this.editedRepas = {
-      horaire: horaire,
+      id: -1,
+      id_sejour: sejour.id,
       jour_offset: jourOffset,
       offset_personnes: 0,
-      id_sejour: sejour.id,
-      id: -1,
+      horaire: horaire,
+      anticipation: 0,
       groupes: [],
       recettes: [],
       ingredients: []

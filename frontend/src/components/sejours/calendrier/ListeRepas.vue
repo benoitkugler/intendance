@@ -10,6 +10,7 @@
         @dragstart="onDragstart($event, repas)"
         @dragover.stop="onDragover($event, repas)"
         @drop.stop="onDrop($event, repas)"
+        :class="repas.anticipation == 0 ? '' : colorAnticipation"
       >
         <v-list-item-icon class="ml-0 mr-1 y-0 align-self-center"
           ><v-chip label small :color="getColorRepas(repas)" class="px-1">
@@ -38,16 +39,21 @@ import { C } from "../../../logic/controller";
 import { HorairesColors } from "../../utils/utils";
 import { DragKind, getDragData, setDragData } from "../../utils/utils_drag";
 import { fmtHoraire } from "../../../logic/enums";
-import { formatNbOffset, compareRecettesIngredient } from "./utils";
+import {
+  formatNbOffset,
+  compareRecettesIngredient,
+  ColorAnticipation
+} from "./utils";
 
 const ListeRepasProps = Vue.extend({
   props: {
     repass: Array as () => RepasComplet[]
   }
 });
-
 @Component({})
 export default class ListeRepas extends ListeRepasProps {
+  colorAnticipation = ColorAnticipation;
+
   repasTitle(repas: RepasComplet) {
     return C.formatter.formatRepasName(repas);
   }

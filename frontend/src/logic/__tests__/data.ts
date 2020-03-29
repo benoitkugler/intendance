@@ -193,6 +193,7 @@ test("crud repas", async () => {
     id_sejour: sejourId,
     jour_offset: 2,
     offset_personnes: 50,
+    anticipation: 0,
     groupes: [],
     recettes: [],
     ingredients: []

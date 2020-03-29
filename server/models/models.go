@@ -96,6 +96,7 @@ type Repas struct {
 	OffsetPersonnes int64   `json:"offset_personnes"`
 	JourOffset      int64   `json:"jour_offset"`
 	Horaire         Horaire `json:"horaire"`
+	Anticipation    int64   `json:"anticipation"` // commande les ingrédients en avance (en jours)
 }
 
 // sql:UNIQUE(id_repas, id_ingredient)

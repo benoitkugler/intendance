@@ -197,6 +197,7 @@ func randRepas() Repas {
 		OffsetPersonnes: randint64(),
 		JourOffset:      randint64(),
 		Horaire:         randHoraire(),
+		Anticipation:    randint64(),
 	}
 }
 

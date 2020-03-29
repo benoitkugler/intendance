@@ -1,6 +1,8 @@
 import { RepasComplet, MenuComplet, LienIngredient } from "@/logic/types";
 import { compareArrays } from "@/components/utils/utils";
 
+export const ColorAnticipation = "lime lighten-3";
+
 export function toDateVuetify(d: Date) {
   return d.toISOString().substr(0, 10);
 }

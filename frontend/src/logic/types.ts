@@ -218,6 +218,9 @@ export interface Menu {
 	commentaire: string,
 }
 
+// github.com/benoitkugler/intendance/server/models.Ids
+export type Ids = number[] | null
+
 // github.com/benoitkugler/intendance/server/models.LienIngredient
 export interface LienIngredient {
 	id_ingredient: number,
@@ -230,7 +233,7 @@ export type LienIngredients = LienIngredient[] | null
 
 // github.com/benoitkugler/intendance/server/controller.MenuComplet
 export type MenuComplet = {
-	recettes: number[] | null,
+	recettes: Ids,
 	ingredients: LienIngredients,
 } & Menu
 
@@ -310,6 +313,7 @@ export interface Repas {
 	offset_personnes: number,
 	jour_offset: number,
 	horaire: string,
+	anticipation: number,
 }
 
 // github.com/benoitkugler/intendance/server/models.RepasGroupe
@@ -321,7 +325,7 @@ export interface RepasGroupe {
 // github.com/benoitkugler/intendance/server/controller.RepasComplet
 export type RepasComplet = {
 	groupes: RepasGroupe[] | null,
-	recettes: number[] | null,
+	recettes: Ids,
 	ingredients: LienIngredients,
 } & Repas
 

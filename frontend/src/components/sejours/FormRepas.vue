@@ -26,6 +26,13 @@
                 hint="S'ajoute aux groupes. Peut être négatif."
               ></v-text-field>
               <horaire-field v-model="repas.horaire"></horaire-field>
+              <v-text-field
+                label="Anticiper la commande"
+                v-model.number="repas.anticipation"
+                type="number"
+                suffix="jour(s)"
+                hint="Un nombre positif avance le repas lors de la résolution des ingrédients."
+              ></v-text-field>
             </v-col>
             <v-col md="6">
               <recettes-fields v-model="repas.recettes"></recettes-fields>

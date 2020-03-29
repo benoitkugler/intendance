@@ -209,12 +209,15 @@ func (s Server) ResoudIngredientsJournees(idSejour int64, journeesOffsets []int6
 	joursQuantites := map[int64]quantites{}
 	for _, repas := range data.repass {
 		if all || crible.Has(repas.JourOffset) {
-			quantite := joursQuantites[repas.JourOffset]
-			if quantite == nil {
-				quantite = map[int64]float64{}
+			// dans le cas d'un repas anticipé,
+			// le jour d'utilisation des ingrédients est avancé
+			offsetDemande := repas.JourOffset - repas.Anticipation
+			qu := joursQuantites[offsetDemande]
+			if qu == nil { // attention au map nil
+				qu = quantites{}
 			}
-			data.resoudRepas(repas.Id, -1, quantite)
-			joursQuantites[repas.JourOffset] = quantite
+			data.resoudRepas(repas.Id, -1, qu)
+			joursQuantites[offsetDemande] = qu
 		}
 	}
 

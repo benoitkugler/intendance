@@ -9,16 +9,8 @@ import {
 export type New<T extends { id: number }> = Omit<T, "id"> &
   Partial<Pick<T, "id">>;
 
-export type DetailsSejour = Pick<Sejour, "nom" | "date_debut">;
-export type DetailsRepas = Pick<
-  RepasComplet,
-  | "horaire"
-  | "offset_personnes"
-  | "jour_offset"
-  | "groupes"
-  | "recettes"
-  | "ingredients"
->;
+export type DetailsSejour = Omit<Sejour, "id" | "id_utilisateur">;
+export type DetailsRepas = Omit<RepasComplet, "id" | "id_sejour">;
 
 export interface IngredientOptions {
   ingredient: Ingredient;

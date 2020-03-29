@@ -989,6 +989,7 @@ func ScanRepas(r *sql.Row) (Repas, error) {
 		&s.OffsetPersonnes,
 		&s.JourOffset,
 		&s.Horaire,
+		&s.Anticipation,
 	); err != nil {
 		return Repas{}, err
 	}
@@ -1016,6 +1017,7 @@ func ScanRepass(rs *sql.Rows) (Repass, error) {
 			&s.OffsetPersonnes,
 			&s.JourOffset,
 			&s.Horaire,
+			&s.Anticipation,
 		); err != nil {
 			return nil, err
 		}
@@ -1030,24 +1032,24 @@ func ScanRepass(rs *sql.Rows) (Repass, error) {
 // Insert Repas in the database and returns the item with id filled.
 func (item Repas) Insert(tx *sql.Tx) (out Repas, err error) {
 	r := tx.QueryRow(`INSERT INTO repass (
-			id_sejour,offset_personnes,jour_offset,horaire
+			id_sejour,offset_personnes,jour_offset,horaire,anticipation
 			) VALUES (
-			$1,$2,$3,$4
+			$1,$2,$3,$4,$5
 			) RETURNING 
-			id,id_sejour,offset_personnes,jour_offset,horaire;
-			`, item.IdSejour, item.OffsetPersonnes, item.JourOffset, item.Horaire)
+			id,id_sejour,offset_personnes,jour_offset,horaire,anticipation;
+			`, item.IdSejour, item.OffsetPersonnes, item.JourOffset, item.Horaire, item.Anticipation)
 	return ScanRepas(r)
 }
 
 // Update Repas in the database and returns the new version.
 func (item Repas) Update(tx *sql.Tx) (out Repas, err error) {
 	r := tx.QueryRow(`UPDATE repass SET (
-			id_sejour,offset_personnes,jour_offset,horaire
+			id_sejour,offset_personnes,jour_offset,horaire,anticipation
 			) = (
-			$2,$3,$4,$5
+			$2,$3,$4,$5,$6
 			) WHERE id = $1 RETURNING 
-			id,id_sejour,offset_personnes,jour_offset,horaire;
-			`, item.Id, item.IdSejour, item.OffsetPersonnes, item.JourOffset, item.Horaire)
+			id,id_sejour,offset_personnes,jour_offset,horaire,anticipation;
+			`, item.Id, item.IdSejour, item.OffsetPersonnes, item.JourOffset, item.Horaire, item.Anticipation)
 	return ScanRepas(r)
 }
 

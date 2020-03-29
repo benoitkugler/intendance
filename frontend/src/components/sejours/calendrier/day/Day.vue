@@ -47,6 +47,7 @@
                   @drop="onDropRepas($event, repas)"
                   @click="$emit('editRepas', repas)"
                   :key="repas.id"
+                  :class="repas.anticipation == 0 ? '' : colorAnticipation"
                 >
                   <v-list-item-content>
                     <v-row no-gutters class="fill-height">
@@ -151,7 +152,8 @@ import CaseRecettes from "./CaseRecettes.vue";
 import {
   toDateVuetify,
   formatNbOffset,
-  compareRecettesIngredient
+  compareRecettesIngredient,
+  ColorAnticipation
 } from "../utils";
 import { C } from "../../../../logic/controller";
 import {
@@ -183,6 +185,7 @@ const DayProps = Vue.extend({
   }
 })
 export default class Day extends DayProps {
+  colorAnticipation = ColorAnticipation;
   showPrevisuIngredients = false;
   loadingIngredients = true;
   listeIngredients: IngredientQuantite[] = [];
@@ -267,9 +270,10 @@ export default class Day extends DayProps {
       offset_personnes: 0,
       horaire: horaire,
       jour_offset: this.jourOffset,
+      anticipation: data.repas.anticipation,
       groupes: [{ id_groupe: data.idGroupe, id_repas: -1 }],
-      recettes: [],
-      ingredients: []
+      recettes: data.repas.recettes,
+      ingredients: data.repas.ingredients
     });
 
     if (C.notifications.getError() != null) return;
