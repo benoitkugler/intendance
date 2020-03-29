@@ -92,16 +92,11 @@
                         ></case-recettes>
                       </v-col>
                       <v-col>
-                        <case-ingredients
-                          :ingredients="repas.ingredients"
-                          @add="
-                            idIngredient => addIngredient(repas, idIngredient)
-                          "
-                          @remove="
-                            idIngredient =>
-                              removeIngredient(repas, idIngredient)
-                          "
-                        ></case-ingredients>
+                        <liste-lien-ingredients
+                          chips
+                          v-model="repas.ingredients"
+                          @change="updateIngredients(repas)"
+                        ></liste-lien-ingredients>
                       </v-col>
                     </v-row>
                   </v-list-item-content>
@@ -132,7 +127,7 @@
           </v-list></div
       ></v-col>
       <v-col class="px-2">
-        <v-expansion-panels accordion>
+        <v-expansion-panels accordion :value="0">
           <choix-menus height="45vh"></choix-menus>
           <choix-recettes height="45vh"></choix-recettes>
           <choix-ingredients height="45vh"></choix-ingredients>
@@ -152,7 +147,6 @@ import ListeIngredients from "../../../utils/ListeIngredients.vue";
 import ChoixMenus from "./ChoixMenus.vue";
 import ChoixRecettes from "./ChoixRecettes.vue";
 import CaseRecettes from "./CaseRecettes.vue";
-import CaseIngredients from "./CaseIngredients.vue";
 
 import {
   toDateVuetify,
@@ -170,6 +164,7 @@ import { Horaires } from "../../../../logic/enums";
 import { HorairesColors } from "../../../utils/utils";
 import { DragKind, getDragData, setDragData } from "../../../utils/utils_drag";
 import ChoixIngredients from "./ChoixIngredients.vue";
+import ListeLienIngredients from "../../../utils/ListeLienIngredients.vue";
 
 const DayProps = Vue.extend({
   props: {
@@ -184,7 +179,7 @@ const DayProps = Vue.extend({
     ChoixRecettes,
     ChoixIngredients,
     CaseRecettes,
-    CaseIngredients
+    ListeLienIngredients
   }
 })
 export default class Day extends DayProps {
@@ -258,6 +253,7 @@ export default class Day extends DayProps {
       event.dataTransfer.dropEffect = "copy";
     }
   }
+
   // on enlève le groupe du repas de départ
   // et on crée un nouveau repas à l'horaire choisi avec le groupe
   // en question
@@ -280,7 +276,12 @@ export default class Day extends DayProps {
     data.repas.groupes = (data.repas.groupes || []).filter(
       g => g.id_groupe != data.idGroupe
     );
-    await C.data.updateManyRepas([data.repas]);
+    if (data.repas.groupes.length == 0 && data.repas.offset_personnes == 0) {
+      // le repas est maintenant vide, on le supprime
+      await C.data.deleteRepas(data.repas);
+    } else {
+      await C.data.updateManyRepas([data.repas]);
+    }
     if (C.notifications.getError() == null) {
       C.notifications.setMessage("Nouveau repas ajouté.");
     }
@@ -304,7 +305,6 @@ export default class Day extends DayProps {
     if (!event.dataTransfer || this.jourOffset == null) return;
     if (event.dataTransfer.types.includes(DragKind.Groupe)) {
       event.preventDefault();
-
       this.onDropGroupe(event.dataTransfer, target);
     } else if (event.dataTransfer.types.includes(DragKind.Menu)) {
       event.preventDefault();
@@ -318,15 +318,27 @@ export default class Day extends DayProps {
     const data = getDragData(dataTransfer, DragKind.Groupe);
     if (target.id == data.repas.id) return; // on déplace vers soi-même
 
+    // on enlève le groupe
     data.repas.groupes = (data.repas.groupes || []).filter(
       g => g.id_groupe != data.idGroupe
     );
+
+    // on l'ajoute à la cible
     target = deepcopy(target); // force deepcopy
     target.groupes = (target.groupes || []).concat({
       id_repas: target.id,
       id_groupe: data.idGroupe
     });
-    await C.data.updateManyRepas([data.repas, target]);
+
+    if (data.repas.groupes.length == 0 && data.repas.offset_personnes == 0) {
+      // le repas est maintenant vide, on le supprime
+      await Promise.all([
+        C.data.deleteRepas(data.repas),
+        C.data.updateManyRepas([target])
+      ]);
+    } else {
+      await C.data.updateManyRepas([data.repas, target]);
+    }
     if (C.notifications.getError() == null) {
       C.notifications.setMessage("Groupe déplacé avec succès.");
     }
@@ -366,35 +378,42 @@ export default class Day extends DayProps {
     }
   }
 
-  async addIngredient(repas: RepasComplet, idIngredient: number) {
-    // check pour éviter une requête inutile
-    if (
-      (repas.ingredients || [])
-        .map(ing => ing.id_ingredient)
-        .includes(idIngredient)
-    )
-      return;
-
-    repas.ingredients = (repas.ingredients || []).concat({
-      id_ingredient: idIngredient,
-      quantite: 0,
-      cuisson: ""
-    });
+  async updateIngredients(repas: RepasComplet) {
     await C.data.updateManyRepas([repas]);
     if (C.notifications.getError() == null) {
-      C.notifications.setMessage("Ingredient ajouté avec succès.");
+      C.notifications.setMessage("Ingredients mis à jour avec succès.");
     }
   }
 
-  async removeIngredient(repas: RepasComplet, toRemove: number) {
-    repas.ingredients = (repas.ingredients || []).filter(
-      ing => ing.id_ingredient != toRemove
-    );
-    await C.data.updateManyRepas([repas]);
-    if (C.notifications.getError() == null) {
-      C.notifications.setMessage("Ingredient enlevé avec succès.");
-    }
-  }
+  // async addIngredient(repas: RepasComplet, idIngredient: number) {
+  //   // check pour éviter une requête inutile
+  //   if (
+  //     (repas.ingredients || [])
+  //       .map(ing => ing.id_ingredient)
+  //       .includes(idIngredient)
+  //   )
+  //     return;
+
+  //   repas.ingredients = (repas.ingredients || []).concat({
+  //     id_ingredient: idIngredient,
+  //     quantite: 0,
+  //     cuisson: ""
+  //   });
+  //   await C.data.updateManyRepas([repas]);
+  //   if (C.notifications.getError() == null) {
+  //     C.notifications.setMessage("Ingredient ajouté avec succès.");
+  //   }
+  // }
+
+  // async removeIngredient(repas: RepasComplet, toRemove: number) {
+  //   repas.ingredients = (repas.ingredients || []).filter(
+  //     ing => ing.id_ingredient != toRemove
+  //   );
+  //   await C.data.updateManyRepas([repas]);
+  //   if (C.notifications.getError() == null) {
+  //     C.notifications.setMessage("Ingredient enlevé avec succès.");
+  //   }
+  // }
 
   async deleteRepas(repas: RepasComplet) {
     await C.data.deleteRepas(repas);

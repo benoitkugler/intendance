@@ -9,7 +9,24 @@
     </v-dialog>
 
     <div @dragover="onDragoverIngredients" @drop="onDropIngredient">
-      <v-list dense>
+      <div v-if="chips">
+        <v-chip
+          color="teal"
+          small
+          v-for="ingredient in ingredients"
+          :key="ingredient.id_ingredient"
+          close
+          @click.stop="editIngredient(ingredient)"
+          @click:close="removeIngredient(ingredient)"
+        >
+          {{ getIngredient(ingredient).nom }}
+        </v-chip>
+        <small class="font-italic" v-if="(ingredients || []).length == 0"
+          >Déposez un ingredient ici...</small
+        >
+      </div>
+
+      <v-list dense v-else>
         <v-subheader>
           {{ subheader }}
         </v-subheader>
@@ -85,7 +102,8 @@ const ListeLienIngredientsProps = Vue.extend({
   props: {
     subheader: String,
     showAdd: Boolean,
-    ingredients: Array as () => LienIngredient[] | null
+    ingredients: Array as () => LienIngredient[] | null,
+    chips: Boolean
   },
   model: {
     prop: "ingredients",
@@ -119,7 +137,13 @@ export default class ListeLienIngredients extends ListeLienIngredientsProps {
     const index = ings.findIndex(
       ing => ing.id_ingredient == edited.id_ingredient
     );
-    ings[index] = edited;
+    if (index == -1) {
+      // nouvel ingrédient
+      ings.push(edited);
+    } else {
+      // édition
+      ings[index] = edited;
+    }
     this.showEditIngredient = false;
     this.$emit("change", ings);
   }
@@ -163,9 +187,7 @@ export default class ListeLienIngredients extends ListeLienIngredientsProps {
         quantite: 0,
         cuisson: ""
       };
-      ingredients.push(newIngredient);
     }
-    this.$emit("change", ingredients);
     this.editedIngredient = newIngredient;
     this.showEditIngredient = true;
   }
