@@ -25,7 +25,9 @@ export type EditMode = "new" | "edit";
 
 export type ViewMode = "month" | "day";
 
-export const NullId: NullInt64 = { Valid: false, Int64: 0 };
+export const NullId = (): NullInt64 => {
+  return { Valid: false, Int64: 0 };
+};
 export function toNullableId(id: number): NullInt64 {
   return { Valid: true, Int64: id };
 }

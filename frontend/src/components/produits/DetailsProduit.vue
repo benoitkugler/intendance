@@ -13,6 +13,13 @@
             ></v-select>
           </v-col>
           <v-col>
+            <v-select
+              :items="optionsLivraisons"
+              label="Contrainte de livraison"
+              v-model="idLivraison"
+            ></v-select>
+          </v-col>
+          <v-col>
             <v-text-field
               label="Nom"
               :rules="[rules.required]"
@@ -70,7 +77,7 @@ import { Produit } from "../../logic/types";
 import { C } from "../../logic/controller";
 import { EnumItem } from "../../logic/enums";
 import { sortByText } from "../utils/utils";
-import { New, deepcopy } from "../../logic/types2";
+import { New, deepcopy, NullId, toNullableId } from "../../logic/types2";
 import { Watch } from "vue-property-decorator";
 
 const DetailsProduitProps = Vue.extend({
@@ -101,12 +108,46 @@ export default class DetailsProduit extends DetailsProduitProps {
     return deepcopy<Produit>(this.produit);
   }
 
+  // custom v-model pour NullInt64
+  get idLivraison() {
+    return this.innerProduit.id_livraison.Valid
+      ? this.innerProduit.id_livraison.Int64
+      : null;
+  }
+  set idLivraison(id: number | null) {
+    if (id == null) {
+      this.innerProduit.id_livraison = NullId();
+    } else {
+      this.innerProduit.id_livraison = toNullableId(id);
+    }
+  }
+
   get optionsFournisseurs(): EnumItem<number>[] {
     if (C.data == null) return [];
     const items = Object.values(C.data.fournisseurs || {}).map(fourn => {
       return { text: fourn.nom, value: fourn.id };
     });
     return sortByText(items);
+  }
+
+  get optionsLivraisons() {
+    if (C.data == null) return [];
+    const items: EnumItem<number | null>[] = Object.values(
+      C.data.livraisons || {}
+    )
+      .filter(
+        livraison =>
+          !livraison.id_fournisseur.Valid ||
+          livraison.id_fournisseur.Int64 == this.innerProduit.id_fournisseur
+      )
+      .map(livraison => {
+        return { text: livraison.nom, value: livraison.id };
+      });
+    if (items.findIndex(item => item.value == this.idLivraison) == -1) {
+      // on met à jour le model sous-jacent
+      this.idLivraison = null;
+    }
+    return sortByText(items).concat({ text: "Aucune", value: null });
   }
 
   rules = {

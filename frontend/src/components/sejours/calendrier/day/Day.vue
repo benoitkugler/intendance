@@ -161,7 +161,7 @@ import {
   Groupe,
   IngredientQuantite
 } from "../../../../logic/types";
-import { New, NullId, deepcopy } from "../../../../logic/types2";
+import { New, deepcopy } from "../../../../logic/types2";
 import { Horaires } from "../../../../logic/enums";
 import { HorairesColors } from "../../../utils/utils";
 import { DragKind, getDragData, setDragData } from "../../../utils/utils_drag";

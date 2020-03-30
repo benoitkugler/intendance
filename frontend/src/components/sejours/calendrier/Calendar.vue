@@ -43,8 +43,7 @@ import {
   DetailsSejour,
   New,
   DetailsRepas,
-  PreferencesAgenda,
-  NullId
+  PreferencesAgenda
 } from "../../../logic/types2";
 import { fmtHoraire, Horaires } from "../../../logic/enums";
 import { Formatter } from "../../../logic/formatter";

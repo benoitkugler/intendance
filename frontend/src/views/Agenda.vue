@@ -27,6 +27,10 @@
         </v-col>
         <v-col v-else>
           <v-toolbar dense class="calendar-toolbar mb-1">
+            <tooltip-btn
+              mdi-icon="information-outline"
+              :tooltip="tooltip"
+            ></tooltip-btn>
             <v-toolbar-title>
               Organisation du séjour <b>{{ sejour.nom }}</b>
               <span v-if="viewMode == 'day'">
@@ -100,7 +104,6 @@ import Vue from "vue";
 import { C } from "../logic/controller";
 import {
   PreferencesAgenda,
-  NullId,
   EditMode,
   New,
   DetailsRepas,
@@ -161,6 +164,14 @@ export default class Agenda extends Vue {
   get activeDay(): Date | null {
     if (this.activeJourOffset == null || C.state.idSejour == null) return null;
     return C.offsetToDate(C.state.idSejour, this.activeJourOffset);
+  }
+
+  get tooltip() {
+    let nbRepas = 0;
+    C.iterateAllRepas(
+      (sej, _) => (nbRepas += Number(sej.id == C.state.idSejour))
+    );
+    return `<b>${nbRepas}</b> repas`;
   }
 
   async mounted() {

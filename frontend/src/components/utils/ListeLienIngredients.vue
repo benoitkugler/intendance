@@ -132,8 +132,7 @@ export default class ListeLienIngredients extends ListeLienIngredientsProps {
   }
 
   editIngredientDone(edited: LienIngredient) {
-    const ings = this.ingredients;
-    if (ings == null) return;
+    const ings = this.ingredients || [];
     const index = ings.findIndex(
       ing => ing.id_ingredient == edited.id_ingredient
     );

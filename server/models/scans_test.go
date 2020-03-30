@@ -204,6 +204,33 @@ func queriesLienIngredient(tx *sql.Tx, item LienIngredient) (LienIngredient, err
 	return item, err
 }
 
+func queriesLivraison(tx *sql.Tx, item Livraison) (Livraison, error) {
+	item, err := item.Insert(tx)
+
+	if err != nil {
+		return item, err
+	}
+	rows, err := tx.Query("SELECT * FROM livraisons")
+	if err != nil {
+		return item, err
+	}
+	items, err := ScanLivraisons(rows)
+	if err != nil {
+		return item, err
+	}
+
+	_ = items.Ids()
+
+	item, err = item.Update(tx)
+	if err != nil {
+		return item, err
+	}
+	row := tx.QueryRow("SELECT * FROM livraisons WHERE id = $1", item.Id)
+
+	_, err = ScanLivraison(row)
+	return item, err
+}
+
 func queriesMenu(tx *sql.Tx, item Menu) (Menu, error) {
 	item, err := item.Insert(tx)
 

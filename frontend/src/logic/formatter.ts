@@ -5,7 +5,8 @@ import {
   RepasComplet,
   Time,
   Conditionnement,
-  MenuComplet
+  MenuComplet,
+  Produit
 } from "./types";
 import { fmtUnite } from "./enums";
 
@@ -75,5 +76,15 @@ export class Formatter {
 
   static formatConditionnement(c: Conditionnement) {
     return Formatter.formatQuantite(c.quantite) + " " + fmtUnite(c.unite);
+  }
+
+  formatFournisseur(produit: Produit) {
+    const fournisseur = this.controller.getFournisseur(produit);
+    const livraison = this.controller.getLivraison(produit);
+    let fourstring = fournisseur.nom;
+    if (livraison != null) {
+      fourstring += ` <i>(${livraison.nom})</i>`;
+    }
+    return fourstring;
   }
 }

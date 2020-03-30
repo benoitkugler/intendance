@@ -233,8 +233,6 @@ func ScanFournisseur(r *sql.Row) (Fournisseur, error) {
 		&s.Id,
 		&s.Nom,
 		&s.Lieu,
-		&s.DelaiCommande,
-		&s.JoursLivraison,
 	); err != nil {
 		return Fournisseur{}, err
 	}
@@ -260,8 +258,6 @@ func ScanFournisseurs(rs *sql.Rows) (Fournisseurs, error) {
 			&s.Id,
 			&s.Nom,
 			&s.Lieu,
-			&s.DelaiCommande,
-			&s.JoursLivraison,
 		); err != nil {
 			return nil, err
 		}
@@ -276,24 +272,24 @@ func ScanFournisseurs(rs *sql.Rows) (Fournisseurs, error) {
 // Insert Fournisseur in the database and returns the item with id filled.
 func (item Fournisseur) Insert(tx *sql.Tx) (out Fournisseur, err error) {
 	r := tx.QueryRow(`INSERT INTO fournisseurs (
-			nom,lieu,delai_commande,jours_livraison
+			nom,lieu
 			) VALUES (
-			$1,$2,$3,$4
+			$1,$2
 			) RETURNING 
-			id,nom,lieu,delai_commande,jours_livraison;
-			`, item.Nom, item.Lieu, item.DelaiCommande, item.JoursLivraison)
+			id,nom,lieu;
+			`, item.Nom, item.Lieu)
 	return ScanFournisseur(r)
 }
 
 // Update Fournisseur in the database and returns the new version.
 func (item Fournisseur) Update(tx *sql.Tx) (out Fournisseur, err error) {
 	r := tx.QueryRow(`UPDATE fournisseurs SET (
-			nom,lieu,delai_commande,jours_livraison
+			nom,lieu
 			) = (
-			$2,$3,$4,$5
+			$2,$3
 			) WHERE id = $1 RETURNING 
-			id,nom,lieu,delai_commande,jours_livraison;
-			`, item.Id, item.Nom, item.Lieu, item.DelaiCommande, item.JoursLivraison)
+			id,nom,lieu;
+			`, item.Id, item.Nom, item.Lieu)
 	return ScanFournisseur(r)
 }
 
@@ -606,6 +602,87 @@ func (item LienIngredient) Delete(tx *sql.Tx) error {
 	return err
 }
 
+func ScanLivraison(r *sql.Row) (Livraison, error) {
+	var s Livraison
+	if err := r.Scan(
+		&s.Id,
+		&s.IdFournisseur,
+		&s.Nom,
+		&s.JoursLivraison,
+		&s.DelaiCommande,
+		&s.Anticipation,
+	); err != nil {
+		return Livraison{}, err
+	}
+	return s, nil
+}
+
+type Livraisons map[int64]Livraison
+
+func (m Livraisons) Ids() Ids {
+	out := make(Ids, 0, len(m))
+	for i := range m {
+		out = append(out, i)
+	}
+	return out
+}
+
+func ScanLivraisons(rs *sql.Rows) (Livraisons, error) {
+	structs := make(Livraisons, 16)
+	var err error
+	for rs.Next() {
+		var s Livraison
+		if err = rs.Scan(
+			&s.Id,
+			&s.IdFournisseur,
+			&s.Nom,
+			&s.JoursLivraison,
+			&s.DelaiCommande,
+			&s.Anticipation,
+		); err != nil {
+			return nil, err
+		}
+		structs[s.Id] = s
+	}
+	if err = rs.Err(); err != nil {
+		return nil, err
+	}
+	return structs, nil
+}
+
+// Insert Livraison in the database and returns the item with id filled.
+func (item Livraison) Insert(tx *sql.Tx) (out Livraison, err error) {
+	r := tx.QueryRow(`INSERT INTO livraisons (
+			id_fournisseur,nom,jours_livraison,delai_commande,anticipation
+			) VALUES (
+			$1,$2,$3,$4,$5
+			) RETURNING 
+			id,id_fournisseur,nom,jours_livraison,delai_commande,anticipation;
+			`, item.IdFournisseur, item.Nom, item.JoursLivraison, item.DelaiCommande, item.Anticipation)
+	return ScanLivraison(r)
+}
+
+// Update Livraison in the database and returns the new version.
+func (item Livraison) Update(tx *sql.Tx) (out Livraison, err error) {
+	r := tx.QueryRow(`UPDATE livraisons SET (
+			id_fournisseur,nom,jours_livraison,delai_commande,anticipation
+			) = (
+			$2,$3,$4,$5,$6
+			) WHERE id = $1 RETURNING 
+			id,id_fournisseur,nom,jours_livraison,delai_commande,anticipation;
+			`, item.Id, item.IdFournisseur, item.Nom, item.JoursLivraison, item.DelaiCommande, item.Anticipation)
+	return ScanLivraison(r)
+}
+
+// Delete Livraison in the database and the return the id.
+// Only the field 'Id' is used.
+func (item Livraison) Delete(tx *sql.Tx) (int64, error) {
+	var deleted_id int64
+	r := tx.QueryRow("DELETE FROM livraisons WHERE id = $1 RETURNING id;", item.Id)
+	err := r.Scan(&deleted_id)
+	return deleted_id, err
+}
+
 func ScanMenu(r *sql.Row) (Menu, error) {
 	var s Menu
 	if err := r.Scan(
@@ -826,6 +903,7 @@ func ScanProduit(r *sql.Row) (Produit, error) {
 	if err := r.Scan(
 		&s.Id,
 		&s.IdFournisseur,
+		&s.IdLivraison,
 		&s.Nom,
 		&s.Conditionnement,
 		&s.Prix,
@@ -855,6 +933,7 @@ func ScanProduits(rs *sql.Rows) (Produits, error) {
 		if err = rs.Scan(
 			&s.Id,
 			&s.IdFournisseur,
+			&s.IdLivraison,
 			&s.Nom,
 			&s.Conditionnement,
 			&s.Prix,
@@ -874,24 +953,24 @@ func ScanProduits(rs *sql.Rows) (Produits, error) {
 // Insert Produit in the database and returns the item with id filled.
 func (item Produit) Insert(tx *sql.Tx) (out Produit, err error) {
 	r := tx.QueryRow(`INSERT INTO produits (
-			id_fournisseur,nom,conditionnement,prix,reference_fournisseur,colisage
+			id_fournisseur,id_livraison,nom,conditionnement,prix,reference_fournisseur,colisage
 			) VALUES (
-			$1,$2,$3,$4,$5,$6
+			$1,$2,$3,$4,$5,$6,$7
 			) RETURNING 
-			id,id_fournisseur,nom,conditionnement,prix,reference_fournisseur,colisage;
-			`, item.IdFournisseur, item.Nom, item.Conditionnement, item.Prix, item.ReferenceFournisseur, item.Colisage)
+			id,id_fournisseur,id_livraison,nom,conditionnement,prix,reference_fournisseur,colisage;
+			`, item.IdFournisseur, item.IdLivraison, item.Nom, item.Conditionnement, item.Prix, item.ReferenceFournisseur, item.Colisage)
 	return ScanProduit(r)
 }
 
 // Update Produit in the database and returns the new version.
 func (item Produit) Update(tx *sql.Tx) (out Produit, err error) {
 	r := tx.QueryRow(`UPDATE produits SET (
-			id_fournisseur,nom,conditionnement,prix,reference_fournisseur,colisage
+			id_fournisseur,id_livraison,nom,conditionnement,prix,reference_fournisseur,colisage
 			) = (
-			$2,$3,$4,$5,$6,$7
+			$2,$3,$4,$5,$6,$7,$8
 			) WHERE id = $1 RETURNING 
-			id,id_fournisseur,nom,conditionnement,prix,reference_fournisseur,colisage;
-			`, item.Id, item.IdFournisseur, item.Nom, item.Conditionnement, item.Prix, item.ReferenceFournisseur, item.Colisage)
+			id,id_fournisseur,id_livraison,nom,conditionnement,prix,reference_fournisseur,colisage;
+			`, item.Id, item.IdFournisseur, item.IdLivraison, item.Nom, item.Conditionnement, item.Prix, item.ReferenceFournisseur, item.Colisage)
 	return ScanProduit(r)
 }
 

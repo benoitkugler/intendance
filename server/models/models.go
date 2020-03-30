@@ -119,11 +119,9 @@ type RepasGroupe struct {
 
 // sql:UNIQUE(nom)
 type Fournisseur struct {
-	Id             int64          `json:"id"`
-	Nom            string         `json:"nom"`
-	Lieu           string         `json:"lieu"`
-	DelaiCommande  int64          `json:"delai_commande"`
-	JoursLivraison JoursLivraison `json:"jours_livraison"`
+	Id   int64  `json:"id"`
+	Nom  string `json:"nom"`
+	Lieu string `json:"lieu"`
 }
 
 // Enregistre les fournisseurs associés à chaque utilisateur
@@ -141,9 +139,12 @@ type SejourFournisseur struct {
 	IdFournisseur int64 `json:"id_fournisseur"`
 }
 
+// sql:CHECK(prix >= 0)
 type Produit struct {
-	Id              int64           `json:"id"`
-	IdFournisseur   int64           `json:"id_fournisseur"`
+	Id            int64         `json:"id"`
+	IdFournisseur int64         `json:"id_fournisseur"`
+	IdLivraison   sql.NullInt64 `json:"id_livraison"`
+
 	Nom             string          `json:"nom"`
 	Conditionnement Conditionnement `json:"conditionnement"`
 	Prix            float64         `json:"prix"`
@@ -151,6 +152,24 @@ type Produit struct {
 	ReferenceFournisseur string `json:"reference_fournisseur"`
 	// zero signifie pas de contrainte
 	Colisage int64 `json:"colisage"`
+}
+
+// Livraison enregistre les contraintes d'un fournisseur
+// quant à la livraison d'une gamme de produit.
+// Comme un fournisseur peut avoir plusieurs contraintes
+// (suivant les produits), cette table est séparée.
+//
+// sql:CHECK(anticipation >= 0)
+// sql:CHECK(delai_commande >= 0)
+// sql:UNIQUE(id_fournisseur, nom)
+type Livraison struct {
+	Id            int64         `json:"id"`
+	IdFournisseur sql.NullInt64 `json:"id_fournisseur"` // une contrainte de livraion peut être "universelle"
+
+	Nom            string         `json:"nom"`
+	JoursLivraison JoursLivraison `json:"jours_livraison"` // jours possibles de livraison
+	DelaiCommande  int64          `json:"delai_commande"`  // nombre de jours à anticiper par rapport au jour de livraison
+	Anticipation   int64          `json:"anticipation"`    // nombre de jours entre la livraison et l'utilisation (défaut : 1)
 }
 
 // sql:UNIQUE(id_ingredient, id_produit)

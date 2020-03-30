@@ -45,8 +45,11 @@
                 <td>
                   <v-tooltip left>
                     <template v-slot:activator="{ on }">
-                      <a v-on="on" @click="showOrigines(item)">
-                        {{ formatProduit(item.produit) }}
+                      <a
+                        v-on="on"
+                        @click="showOrigines(item)"
+                        v-html="formatProduit(item.produit)"
+                      >
                       </a>
                     </template>
                     {{ tooltipOrigin(item) }}
@@ -140,8 +143,8 @@ export default class PreviewCommande extends PreviewCommandeProps {
   }
 
   formatProduit(produit: Produit) {
-    const fournisseur = C.getFournisseur(produit);
-    return `${fournisseur.nom} - ${produit.nom}`;
+    const fourstring = C.formatter.formatFournisseur(produit);
+    return `${fourstring} - ${produit.nom}`;
   }
 
   tooltipOrigin(item: CommandeItem) {

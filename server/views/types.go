@@ -97,6 +97,7 @@ type InSejourFournisseurs struct {
 type OutFournisseurs struct {
 	Token        string              `json:"token"`
 	Fournisseurs models.Fournisseurs `json:"fournisseurs"`
+	Livraisons   models.Livraisons   `json:"livraisons"`
 }
 
 type InLieIngredientProduit struct {

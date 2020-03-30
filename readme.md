@@ -51,27 +51,19 @@ Exemples :
 
 Le logiciel est disponible sous la forme d'une **application web** accessible par mail/password.
 
-- Table **utilisateurs** : id, password, mail (optionnel : nom_prenom)
-
-- Table **utilisateurs_fournisseurs**: id_utilisateur, id_fournisseur
-
-- Table **produits_par_defaut** : id_utilisateur, id_ingredient, id_produit
+- Table **utilisateurs** : id, password, mail, prenom_nom
+- Table **utilisateur_fournisseurs** : id_utilisateur, id_fournisseur
+- Table **defaut_produits** : id_utilisateur, id_ingredient, id_fournisseur, id_produit
 
 ### Partie "abstraite" :
 
-- Table **ingredients** : id, nom, unite, (optionnel : categorie, callories)
-
-- Table **ingredients_produits** : id_ingredient, id_produit, id_ajouteur
-
-* Table **recettes** : id, id_utilisateur, nom, mode_emploi
-
-- Table **recettes_ingredients** : id_recette, id_ingredient, quantite, (optionnel: cuisson)
-
-* Table **menus** : id, id_utilisateur
-
-* Table **menus_recettes** : id_menu, id_recette
-
-- Table **menus_ingredients** : id_menu, id_ingredient, quantite
+- Table **ingredients** : id, nom, unite, categorie, callories, conditionnement
+- Table **ingredient_produits** : id_ingredient, id_produit, id_utilisateur
+- Table **recettes** : id, id_utilisateur, nom, mode_emploi
+- Table **recette_ingredients** : id_recette, id_ingredient, quantite, cuisson
+- Table **menus** : id, id_utilisateur, commentaire
+- Table **menu_ingredients** : id_menu, id_ingredient, quantite, cuisson
+- Table **menu_recettes** : id_menu, id_recette
 
 Les ingrédients sont _partagés_ : n'importe quel intendant peut utiliser un ingrédient déjà défini, et ajouter un produit lié. En revanche, les recettes et menus ne sont modifiables que par son _propriétaire_ (mais copiables libremement). En cas de modification par le propriétaire, les intendants utilisant la ressource sont notifiés par mail et peuvent choisir d'accepter la modification ou de s'approprier la ressource en la copiant.
 Les recettes et menus peuvent n'être liés à aucun propriétaire, et sont alors éditable par tout le monde.
@@ -81,25 +73,24 @@ Les recettes et menus peuvent n'être liés à aucun propriétaire, et sont alor
 Le concept de journée nécessite d'être lié à la donnée du nombre de personnes pour chaque menu. Cela ne colle pas bien avec un schéma SQL classique. De plus, une journée n'a pas vraiment d'intérêt à être partagée : la modification sur une journée entrainerait celle sur une autre, ce qui est serait plutôt déroutant.
 On propose donc de ne pas utiliser de table "journée", mais de construire (dynamiquement) les journées à partir de la table _repas_ (voir ci dessous). En revanche, le concept de journée sera bien présent pour l'utilisateur, pour organiser son emploi du temps, ou pour copier des journées déjà existantes.
 
-- Table **sejours** : id, id_utilisateur, date_debut
-
+- Table **sejours** : id, id_utilisateur, date_debut, nom
+- Table **sejour_fournisseurs** : id_sejour, id_fournisseur
 - Table **groupes** : id, id_sejour, nom, nb_personnes, couleur
-
-- Table **repass** : id, id_sejour, id_menu, offset_personnes,jour_offset, horaire (matin, midi, goûter, soir, etc...)
-
+- Table **repass** : id, id_sejour, offset_personnes, jour_offset, horaire, anticipation
 - Table **repas_groupes** : id_repas, id_groupe
+- Table **repas_ingredients** : id_repas, id_ingredient, quantite, cuisson
+- Table **repas_recettes** : id_repas, id_recette
 
 Les séjours sont _privés_, mais les journées formées peuvent être copiées.
 
 ### Partie "concrète" :
 
-- Table **fournisseurs** : id, nom, delai_commande, jours_livraison
-
-- Table **produits** : id, nom, conditionnement (quantité + unité), colisage (quantité minimal), prix (pour le conditionnement), id_fournisseur, reference_fournisseur
-
-- Table **commandes**: id, id_utilisateur, date_emission, tag (permet de classer les commandes)
-
-- Table **commandes_produits**: id_commande, id_produit, quantite
+- Table **fournisseurs** : id, nom, lieu
+- Table **commandes** : id, id_utilisateur, date_emission, tag
+- Table **commande_produits** : id_commande, id_produit, quantite
+- Table **lien_ingredients** : id_ingredient, quantite, cuisson
+- Table **livraisons** : id, id_fournisseur, nom, jours_livraison, delai_commande, anticipation
+- Table **produits** : id, id_fournisseur, id_livraison, nom, conditionnement, prix, reference_fournisseur, colisage
 
 ## Intelligence apportée par le logiciel
 

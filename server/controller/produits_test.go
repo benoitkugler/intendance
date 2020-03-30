@@ -31,11 +31,11 @@ func TestGetFournisseurs(t *testing.T) {
 	defer db.Close()
 	s := Server{db: db}
 	ct := RequeteContext{idProprietaire: 2}
-	out, err := s.LoadFournisseurs(ct)
+	four, livr, err := s.LoadFournisseurs(ct)
 	if err != nil {
 		t.Fatal(err)
 	}
-	fmt.Println(out)
+	fmt.Println(four, livr)
 }
 
 func TestDelete(t *testing.T) {

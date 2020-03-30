@@ -1,3 +1,9 @@
+// database/sql.NullInt64
+export interface NullInt64 {
+	Int64: number,
+	Valid: boolean,
+}
+
 // github.com/benoitkugler/intendance/server/models.Conditionnement
 export interface Conditionnement {
 	quantite: number,
@@ -8,6 +14,7 @@ export interface Conditionnement {
 export interface Produit {
 	id: number,
 	id_fournisseur: number,
+	id_livraison: NullInt64,
 	nom: string,
 	conditionnement: Conditionnement,
 	prix: number,
@@ -136,25 +143,37 @@ export interface OutDeleteGroupe {
 	nb_repas: number,
 }
 
-// github.com/benoitkugler/intendance/server/models.JoursLivraison
-export type JoursLivraison = boolean[]
-
 // github.com/benoitkugler/intendance/server/models.Fournisseur
 export interface Fournisseur {
 	id: number,
 	nom: string,
 	lieu: string,
-	delai_commande: number,
-	jours_livraison: JoursLivraison,
 }
 
 // github.com/benoitkugler/intendance/server/models.Fournisseurs
 export type Fournisseurs = { [key: number]: Fournisseur } | null
 
+// github.com/benoitkugler/intendance/server/models.JoursLivraison
+export type JoursLivraison = boolean[]
+
+// github.com/benoitkugler/intendance/server/models.Livraison
+export interface Livraison {
+	id: number,
+	id_fournisseur: NullInt64,
+	nom: string,
+	jours_livraison: JoursLivraison,
+	delai_commande: number,
+	anticipation: number,
+}
+
+// github.com/benoitkugler/intendance/server/models.Livraisons
+export type Livraisons = { [key: number]: Livraison } | null
+
 // github.com/benoitkugler/intendance/server/views.OutFournisseurs
 export interface OutFournisseurs {
 	token: string,
 	fournisseurs: Fournisseurs,
+	livraisons: Livraisons,
 }
 
 // github.com/benoitkugler/intendance/server/models.Groupe
@@ -213,12 +232,6 @@ export interface OutLoggin {
 	erreur: string,
 	token: string,
 	utilisateur: Utilisateur,
-}
-
-// database/sql.NullInt64
-export interface NullInt64 {
-	Int64: number,
-	Valid: boolean,
 }
 
 // github.com/benoitkugler/intendance/server/models.Menu

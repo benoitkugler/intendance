@@ -29,7 +29,8 @@ import {
   MenuComplet,
   Utilisateur,
   Produit,
-  InSetDefautProduit
+  InSetDefautProduit,
+  Livraisons
 } from "./types";
 import axios, { AxiosResponse } from "axios";
 
@@ -51,6 +52,7 @@ export class Data {
   menus: { [key: number]: MenuComplet } = {};
   utilisateurs: { [key: number]: Utilisateur } = {};
   fournisseurs: Fournisseurs = {};
+  livraisons: Livraisons = {};
 
   private controller: Controller;
 
@@ -69,6 +71,7 @@ export class Data {
       );
       this.controller.token = response.data.token;
       this.fournisseurs = response.data.fournisseurs || {};
+      this.livraisons = response.data.livraisons || {};
     } catch (error) {
       this.controller.notifications.setAxiosError(error);
     }

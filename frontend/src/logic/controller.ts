@@ -6,7 +6,8 @@ import {
   Groupe,
   RepasGroupe,
   Produit,
-  MenuComplet
+  MenuComplet,
+  Livraison
 } from "./types";
 import { Notifications } from "./notifications";
 import { Calculs } from "./calculs";
@@ -98,6 +99,13 @@ export class Controller {
 
   getFournisseur(produit: Produit) {
     return (this.data.fournisseurs || {})[produit.id_fournisseur];
+  }
+
+  getLivraison(produit: Produit): Livraison | null {
+    if (!produit.id_livraison.Valid) {
+      return null;
+    }
+    return (this.data.livraisons || {})[produit.id_livraison.Int64];
   }
 
   searchMenu(search: string) {

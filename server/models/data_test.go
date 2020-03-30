@@ -51,30 +51,11 @@ func randDefautProduit() DefautProduit {
 	}
 }
 
-func randbool() bool {
-	i := rand.Int31n(2)
-	return i == 1
-}
-
-func randArray7bool() [7]bool {
-	var out [7]bool
-	for i := range out {
-		out[i] = randbool()
-	}
-	return out
-}
-
-func randJoursLivraison() JoursLivraison {
-	return JoursLivraison(randArray7bool())
-}
-
 func randFournisseur() Fournisseur {
 	return Fournisseur{
-		Id:             randint64(),
-		Nom:            randstring(),
-		Lieu:           randstring(),
-		DelaiCommande:  randint64(),
-		JoursLivraison: randJoursLivraison(),
+		Id:   randint64(),
+		Nom:  randstring(),
+		Lieu: randstring(),
 	}
 }
 
@@ -138,10 +119,38 @@ func randLienIngredient() LienIngredient {
 	}
 }
 
+func randbool() bool {
+	i := rand.Int31n(2)
+	return i == 1
+}
+
 func randsqlNullInt64() sql.NullInt64 {
 	return sql.NullInt64{
 		Int64: randint64(),
 		Valid: randbool(),
+	}
+}
+
+func randArray7bool() [7]bool {
+	var out [7]bool
+	for i := range out {
+		out[i] = randbool()
+	}
+	return out
+}
+
+func randJoursLivraison() JoursLivraison {
+	return JoursLivraison(randArray7bool())
+}
+
+func randLivraison() Livraison {
+	return Livraison{
+		Id:             randint64(),
+		IdFournisseur:  randsqlNullInt64(),
+		Nom:            randstring(),
+		JoursLivraison: randJoursLivraison(),
+		DelaiCommande:  randint64(),
+		Anticipation:   randint64(),
 	}
 }
 
@@ -171,6 +180,7 @@ func randProduit() Produit {
 	return Produit{
 		Id:                   randint64(),
 		IdFournisseur:        randint64(),
+		IdLivraison:          randsqlNullInt64(),
 		Nom:                  randstring(),
 		Conditionnement:      randConditionnement(),
 		Prix:                 randfloat64(),

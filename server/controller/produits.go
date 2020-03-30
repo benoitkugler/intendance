@@ -38,7 +38,7 @@ func (ct RequeteContext) checkFournisseurs(produit models.Produit) error {
 // vérifie que tous les ingrédients liés au produit
 // appartiennent à l'utilisateur courant
 func (ct RequeteContext) checkProprioAllIngredient(produit models.Produit) error {
-	rows, err := ct.tx.Query("SELECT id_ajouteur FROM ingredient_produits WHERE id_produit = $1", produit.Id)
+	rows, err := ct.tx.Query("SELECT id_utilisateur FROM ingredient_produits WHERE id_produit = $1", produit.Id)
 	if err != nil {
 		return ErrorSQL(err)
 	}
@@ -71,13 +71,50 @@ func (ct RequeteContext) checkCommandes(produit models.Produit) error {
 	return nil
 }
 
-// LoadFournisseurs renvoie les fournisseurs associés à l'utilisateur courant
-func (s Server) LoadFournisseurs(ct RequeteContext) (models.Fournisseurs, error) {
+// vérifie que la livraison éventuelle est lié au fournisseur du produit
+// cette contrainte n'est pas assuré par le modèle SQL
+func (ct RequeteContext) checkLivraison(produit models.Produit) error {
+	if !produit.IdLivraison.Valid { // rien à vérifier
+		return nil
+	}
+	row := ct.tx.QueryRow("SELECT * FROM livraisons WHERE id = $1", produit.IdLivraison.Int64)
+	livraison, err := models.ScanLivraison(row)
+	if err != nil {
+		return ErrorSQL(err)
+	}
+	if !livraison.IdFournisseur.Valid { // la contrainte est universelle -> OK
+		return nil
+	}
+	if livraison.IdFournisseur.Int64 != produit.IdFournisseur {
+		return fmt.Errorf("La contrainte de livraison %s est liée à un fournisseur différent de celui du produit %s.",
+			livraison.Nom, produit.Nom)
+	}
+	return nil
+}
+
+// LoadFournisseurs renvoie les fournisseurs associés à l'utilisateur courant,
+// ainsi que les contraints de livraisons pertinentes.
+func (s Server) LoadFournisseurs(ct RequeteContext) (models.Fournisseurs, models.Livraisons, error) {
 	if err := ct.beginTx(s); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	defer ct.rollbackTx(nil) // pas de modifications
-	return ct.loadFournisseurs()
+	fournisseurs, err := ct.loadFournisseurs()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// on sélectionne les livraisons liées aux fournisseurs et les livraisons universelles
+	rows, err := ct.tx.Query("SELECT * FROM livraisons WHERE id_fournisseur = ANY($1) OR id_fournisseur IS null",
+		fournisseurs.Ids().AsSQL())
+	if err != nil {
+		return nil, nil, ErrorSQL(err)
+	}
+	livraisons, err := models.ScanLivraisons(rows)
+	if err != nil {
+		return nil, nil, ErrorSQL(err)
+	}
+	return fournisseurs, livraisons, nil
 }
 
 func (s Server) UpdateSejourFournisseurs(ct RequeteContext, idSejour int64, idsFournisseurs []int64) error {
@@ -201,6 +238,10 @@ func (s Server) UpdateProduit(ct RequeteContext, produit models.Produit) (out mo
 	}
 
 	if err := ct.checkFournisseurs(produit); err != nil {
+		return out, err
+	}
+
+	if err := ct.checkLivraison(produit); err != nil {
 		return out, err
 	}
 

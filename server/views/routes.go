@@ -537,11 +537,11 @@ func GetFournisseurs(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	out, err := Server.LoadFournisseurs(ct)
+	fourn, livr, err := Server.LoadFournisseurs(ct)
 	if err != nil {
 		return err
 	}
-	return c.JSON(200, OutFournisseurs{Token: ct.Token, Fournisseurs: out})
+	return c.JSON(200, OutFournisseurs{Token: ct.Token, Fournisseurs: fourn, Livraisons: livr})
 }
 
 func UpdateSejourFournisseurs(c echo.Context) error {

@@ -37,7 +37,7 @@
                       @click="setDefault(produit)"
                     ></tooltip-btn>
                   </td>
-                  <td>{{ formatFournisseur(produit) }}</td>
+                  <td v-html="formatFournisseur(produit)"></td>
                   <td>{{ produit.nom }}</td>
                   <td class="text-center">{{ produit.prix }} €</td>
                   <td class="text-center">
@@ -76,7 +76,7 @@ import TooltipBtn from "../utils/TooltipBtn.vue";
 import { Ingredient, IngredientProduits, Produit } from "../../logic/types";
 import { C } from "../../logic/controller";
 import { Watch } from "vue-property-decorator";
-import { New } from "../../logic/types2";
+import { New, NullId } from "../../logic/types2";
 import { Formatter } from "../../logic/formatter";
 import { UniteFields } from "../../logic/enums";
 
@@ -104,6 +104,7 @@ export default class AssociationIngredient extends AssociationIngredientProps {
     }
     return {
       id_fournisseur: -1,
+      id_livraison: NullId(),
       nom: "",
       conditionnement: cond,
       prix: 0,
@@ -126,8 +127,7 @@ export default class AssociationIngredient extends AssociationIngredientProps {
   }
 
   formatFournisseur(produit: Produit) {
-    const f = C.getFournisseur(produit);
-    return f.nom;
+    return C.formatter.formatFournisseur(produit);
   }
 
   isDefault(produit: Produit) {
