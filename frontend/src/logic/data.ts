@@ -31,7 +31,9 @@ import {
   Produit,
   InSetDefautProduit,
   Livraisons,
-  SejourRepas
+  SejourRepas,
+  Fournisseur,
+  OutFournisseur
 } from "./types";
 import axios, { AxiosResponse } from "axios";
 
@@ -440,6 +442,59 @@ export class Data {
         }
       );
       this.sejours = response.data.sejours;
+      this.controller.token = response.data.token;
+    } catch (error) {
+      this.controller.notifications.setAxiosError(error);
+    }
+  };
+
+  // Fournisseurs
+  private createOrUpdateFournisseur = async (
+    fournisseur: New<Fournisseur>,
+    method: "put" | "post"
+  ) => {
+    this.controller.notifications.startSpin();
+    const f = method == "put" ? axios.put : axios.post;
+    try {
+      const response: AxiosResponse<OutFournisseur> = await f(
+        ServerURL + "/fournisseurs",
+        fournisseur,
+        {
+          auth: this.controller.auth()
+        }
+      );
+      Vue.set(
+        this.fournisseurs || {},
+        response.data.fournisseur.id,
+        response.data.fournisseur
+      ); // VRC
+      this.controller.token = response.data.token;
+
+      return response.data.fournisseur;
+    } catch (error) {
+      this.controller.notifications.setAxiosError(error);
+    }
+  };
+
+  createFournisseur = async (fournisseur: New<Fournisseur>) => {
+    return this.createOrUpdateFournisseur(fournisseur, "put");
+  };
+
+  updateFournisseur = async (fournisseur: Fournisseur) => {
+    return this.createOrUpdateFournisseur(fournisseur, "post");
+  };
+
+  deleteFournisseur = async (idFournisseur: number) => {
+    this.controller.notifications.startSpin();
+    try {
+      const response: AxiosResponse<OutFournisseurs> = await axios.delete(
+        ServerURL + "/fournisseurs",
+        {
+          params: { id: idFournisseur },
+          auth: this.controller.auth()
+        }
+      );
+      this.fournisseurs = response.data.fournisseurs || {};
       this.controller.token = response.data.token;
     } catch (error) {
       this.controller.notifications.setAxiosError(error);

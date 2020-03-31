@@ -42,14 +42,14 @@
             </v-list-item-content>
             <v-list-item-action v-if="showButtons(active, menu)">
               <v-row no-gutters>
-                <v-col
-                  ><tooltip-btn
+                <v-col>
+                  <tooltip-btn
                     mdi-icon="pencil"
                     tooltip="Modifier ce menu"
                     color="secondary"
                     @click.stop="$emit('edit', menu)"
-                  ></tooltip-btn
-                ></v-col>
+                  ></tooltip-btn>
+                </v-col>
                 <v-col
                   ><tooltip-btn
                     mdi-icon="close"

@@ -153,6 +153,12 @@ export interface Fournisseur {
 	lieu: string,
 }
 
+// github.com/benoitkugler/intendance/server/views.OutFournisseur
+export interface OutFournisseur {
+	token: string,
+	fournisseur: Fournisseur,
+}
+
 // github.com/benoitkugler/intendance/server/models.Fournisseurs
 export type Fournisseurs = { [key: number]: Fournisseur } | null
 

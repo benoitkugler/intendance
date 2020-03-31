@@ -544,6 +544,57 @@ func GetFournisseurs(c echo.Context) error {
 	return c.JSON(200, OutFournisseurs{Token: ct.Token, Fournisseurs: fourn, Livraisons: livr})
 }
 
+func CreateFournisseur(c echo.Context) error {
+	ct, err := Server.Authentifie(c.Request())
+	if err != nil {
+		return err
+	}
+	var fournisseur models.Fournisseur
+	if err = c.Bind(&fournisseur); err != nil {
+		return err
+	}
+	fournisseur, err = Server.CreateFournisseur(ct, fournisseur)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, OutFournisseur{Token: ct.Token, Fournisseur: fournisseur})
+}
+
+func UpdateFournisseur(c echo.Context) error {
+	ct, err := Server.Authentifie(c.Request())
+	if err != nil {
+		return err
+	}
+	var fournisseur models.Fournisseur
+	if err = c.Bind(&fournisseur); err != nil {
+		return err
+	}
+	fournisseur, err = Server.UpdateFournisseur(ct, fournisseur)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, OutFournisseur{Token: ct.Token, Fournisseur: fournisseur})
+}
+
+func DeleteFournisseur(c echo.Context) error {
+	ct, err := Server.Authentifie(c.Request())
+	if err != nil {
+		return err
+	}
+	id, err := getId(c)
+	if err != nil {
+		return err
+	}
+	if err = Server.DeleteFournisseur(ct, id); err != nil {
+		return err
+	}
+	f, l, err := Server.LoadFournisseurs(ct)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, OutFournisseurs{Token: ct.Token, Fournisseurs: f, Livraisons: l})
+}
+
 func UpdateSejourFournisseurs(c echo.Context) error {
 	ct, err := Server.Authentifie(c.Request())
 	if err != nil {

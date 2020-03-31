@@ -135,7 +135,6 @@ export default class Calendar extends Props {
         return v == 0 ? a.id - b.id : v; // tri déterministe
       });
     }
-    console.log("computing events", out);
     return out;
   }
 }

@@ -68,6 +68,22 @@ export const routes: RouteType[] = [
       tooltip: "Banque de données des menus, recettes et ingrédients.",
       icon: "mdi-food-variant"
     }
+  },
+  {
+    path: "/fournisseurs",
+    name: "fournisseurs",
+    // route level code-splitting
+    // this generates a separate chunk (fournisseurs.[hash].js) for this route
+    // which is lazy-loaded when the route is visited.
+    component: () =>
+      import(
+        /* webpackChunkName: "fournisseurs" */ "../views/Fournisseurs.vue"
+      ),
+    meta: {
+      title: "Fournisseurs et produits",
+      tooltip: "Banque de données des fournisseurs et leur produits.",
+      icon: "mdi-cart"
+    }
   }
 ];
 

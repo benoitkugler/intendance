@@ -7,34 +7,6 @@ import (
 	"github.com/benoitkugler/intendance/server/models"
 )
 
-func (ct RequeteContext) loadFournisseurs() (models.Fournisseurs, error) {
-	rows, err := ct.tx.Query(`SELECT fournisseurs.* FROM fournisseurs 
-		JOIN utilisateur_fournisseurs ON utilisateur_fournisseurs.id_fournisseur = fournisseurs.id 
-		WHERE utilisateur_fournisseurs.id_utilisateur = $1`, ct.idProprietaire)
-	if err != nil {
-		return nil, ErrorSQL(err)
-	}
-	out, err := models.ScanFournisseurs(rows)
-	if err != nil {
-		return nil, ErrorSQL(err)
-	}
-	return out, nil
-}
-
-// vérifie que le fournisseur du produit fait partie
-// des fournisseurs associés à l'utilisateur courant
-func (ct RequeteContext) checkFournisseurs(produit models.Produit) error {
-	fourns, err := ct.loadFournisseurs()
-	if err != nil {
-		return err
-	}
-	idsFournisseurs := fourns.Ids().AsSet()
-	if !idsFournisseurs.Has(produit.IdFournisseur) {
-		return fmt.Errorf("Le fournisseur du produit %s ne fait pas partie de vos fournisseurs.", produit.Nom)
-	}
-	return nil
-}
-
 // vérifie que tous les ingrédients liés au produit
 // appartiennent à l'utilisateur courant
 func (ct RequeteContext) checkProprioAllIngredient(produit models.Produit) error {
@@ -90,55 +62,6 @@ func (ct RequeteContext) checkLivraison(produit models.Produit) error {
 			livraison.Nom, produit.Nom)
 	}
 	return nil
-}
-
-// LoadFournisseurs renvoie les fournisseurs associés à l'utilisateur courant,
-// ainsi que les contraints de livraisons pertinentes.
-func (s Server) LoadFournisseurs(ct RequeteContext) (models.Fournisseurs, models.Livraisons, error) {
-	if err := ct.beginTx(s); err != nil {
-		return nil, nil, err
-	}
-	defer ct.rollbackTx(nil) // pas de modifications
-	fournisseurs, err := ct.loadFournisseurs()
-	if err != nil {
-		return nil, nil, err
-	}
-
-	// on sélectionne les livraisons liées aux fournisseurs et les livraisons universelles
-	rows, err := ct.tx.Query("SELECT * FROM livraisons WHERE id_fournisseur = ANY($1) OR id_fournisseur IS null",
-		fournisseurs.Ids().AsSQL())
-	if err != nil {
-		return nil, nil, ErrorSQL(err)
-	}
-	livraisons, err := models.ScanLivraisons(rows)
-	if err != nil {
-		return nil, nil, ErrorSQL(err)
-	}
-	return fournisseurs, livraisons, nil
-}
-
-func (s Server) UpdateSejourFournisseurs(ct RequeteContext, idSejour int64, idsFournisseurs []int64) error {
-	if err := ct.beginTx(s); err != nil {
-		return err
-	}
-	if err := ct.proprioSejour(models.Sejour{Id: idSejour}, false); err != nil {
-		return err
-	}
-
-	// reset les fournisseurs du séjour ...
-	_, err := ct.tx.Exec("DELETE FROM sejour_fournisseurs WHERE id_sejour = $1", idSejour)
-	if err != nil {
-		return ct.rollbackTx(err)
-	}
-	sf := make([]models.SejourFournisseur, len(idsFournisseurs))
-	for i, id := range idsFournisseurs {
-		sf[i] = models.SejourFournisseur{IdSejour: idSejour, IdFournisseur: id}
-	}
-	// ... et rajoute les nouveaux
-	if err := models.InsertManySejourFournisseurs(ct.tx, sf); err != nil {
-		return ct.rollbackTx(err)
-	}
-	return ct.commitTx()
 }
 
 func (s Server) GetIngredientProduits(ct RequeteContext, idIngredient int64) (IngredientProduits, error) {

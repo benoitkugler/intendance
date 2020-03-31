@@ -94,6 +94,11 @@ type InSejourFournisseurs struct {
 	IdsFournisseurs []int64 `json:"ids_fournisseurs"`
 }
 
+type OutFournisseur struct {
+	Token       string             `json:"token"`
+	Fournisseur models.Fournisseur `json:"fournisseur"`
+}
+
 type OutFournisseurs struct {
 	Token        string              `json:"token"`
 	Fournisseurs models.Fournisseurs `json:"fournisseurs"`
