@@ -121,8 +121,7 @@ export default class Calendar extends Props {
     const sejour = this.sejour;
     if (sejour == null) return {};
     let out: { [key: string]: RepasComplet[] } = {};
-    C.iterateAllRepas((_, repas) => {
-      if (repas.id_sejour != sejour.id) return;
+    (sejour.repass || []).forEach(repas => {
       const d = toDateVuetify(C.offsetToDate(sejour.id, repas.jour_offset));
       const l = out[d] || [];
       l.push(repas);
@@ -136,6 +135,7 @@ export default class Calendar extends Props {
         return v == 0 ? a.id - b.id : v; // tri déterministe
       });
     }
+    console.log("computing events", out);
     return out;
   }
 }

@@ -5,19 +5,17 @@ import (
 )
 
 type OptionsAssistantCreateRepass struct {
-	Duree          int  `json:"duree"`
-	WithCinquieme  bool `json:"with_cinquieme"`
-	WithGouter     bool `json:"with_gouter"`
-	DeleteExisting bool `json:"delete_existing"`
+	Duree          int        `json:"duree"`
+	WithGouter     bool       `json:"with_gouter"`
+	Cinquieme      models.Ids `json:"cinquieme"` // ids groupes
+	DeleteExisting bool       `json:"delete_existing"`
 }
 
+// le cas du cinquième est à  part
 func (o OptionsAssistantCreateRepass) resoudHoraires() []models.Horaire {
 	horaires := []models.Horaire{models.PetitDejeuner, models.Midi, models.Diner}
 	if o.WithGouter {
 		horaires = append(horaires, models.Gouter)
-	}
-	if o.WithCinquieme {
-		horaires = append(horaires, models.Cinquieme)
 	}
 	return horaires
 }
@@ -66,6 +64,21 @@ func (s Server) InitiateRepas(ct RequeteContext, params InAssistantCreateRepass)
 		if err != nil {
 			return ct.rollbackTx(err)
 		}
+
+		// lien repas-recettes
+		_, err = s.db.Exec(`DELETE FROM repas_recettes WHERE id_repas = 
+		ANY(SELECT id_repas FROM sejours WHERE id = $1)`, params.IdSejour)
+		if err != nil {
+			return ct.rollbackTx(err)
+		}
+
+		// lien repas-ingredients
+		_, err = s.db.Exec(`DELETE FROM repas_ingredients WHERE id_repas = 
+		ANY(SELECT id_repas FROM sejours WHERE id = $1)`, params.IdSejour)
+		if err != nil {
+			return ct.rollbackTx(err)
+		}
+
 		// repas
 		_, err = s.db.Exec(`DELETE FROM repass WHERE id_sejour = $1`, params.IdSejour)
 		if err != nil {
@@ -111,6 +124,14 @@ func (s Server) InitiateRepas(ct RequeteContext, params InAssistantCreateRepass)
 				if err != nil {
 					return ct.rollbackTx(err)
 				}
+			}
+		}
+
+		// cas du cinquième
+		if groupes5 := params.Options.Cinquieme; len(groupes5) > 0 {
+			err = creeRepasComplet(ct, params, models.Cinquieme, jourOffset, groupes5.AsSet())
+			if err != nil {
+				return ct.rollbackTx(err)
 			}
 		}
 	}

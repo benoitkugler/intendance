@@ -11,7 +11,7 @@
       ></tooltip-btn>
     </v-card-title>
     <v-card-text>
-      <div class="px-2">
+      <div class="px-2 overflow-y-auto" style="max-height: 74vh;">
         <v-checkbox
           label="Tout le séjour"
           v-model="selectAll"
@@ -80,7 +80,7 @@ export default class FormCalcul extends FormCalculProps {
     if (this.sejour == null) return [];
     const s = new Set((this.sejour.repass || []).map(rep => rep.jour_offset));
     const offsets = [...s];
-    return offsets.sort();
+    return offsets.sort((a, b) => a - b);
   }
 
   offsetToDate(offset: number) {

@@ -167,10 +167,8 @@ export default class Agenda extends Vue {
   }
 
   get tooltip() {
-    let nbRepas = 0;
-    C.iterateAllRepas(
-      (sej, _) => (nbRepas += Number(sej.id == C.state.idSejour))
-    );
+    const sej = C.state.getSejour();
+    let nbRepas = sej ? (sej.repass || []).length : 0;
     return `<b>${nbRepas}</b> repas`;
   }
 

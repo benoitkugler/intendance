@@ -45,7 +45,7 @@ func TestAssistant(t *testing.T) {
 		},
 		Options: OptionsAssistantCreateRepass{
 			Duree:          5,
-			WithCinquieme:  true,
+			Cinquieme:      models.Ids{groupe1.Id, groupe2.Id},
 			DeleteExisting: true,
 		},
 	})

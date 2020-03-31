@@ -1,4 +1,4 @@
-import { Horaires } from "@/logic/enums";
+import { Horaires, HoraireFields } from "@/logic/enums";
 import levenshtein from "js-levenshtein";
 import { RepasComplet, MenuComplet } from "@/logic/types";
 const MAX_DIST_LEVENSHTEIN = 5;
@@ -7,8 +7,15 @@ const N = Horaires.length;
 
 export const HorairesColors: { [key: string]: string } = {};
 Horaires.forEach((h, i) => {
-  HorairesColors[h.value] = `rgb(100,${200 * (1 - i / N)}, ${(255 * i) / N}`;
+  HorairesColors[h.value] = `rgb(${200 * (1 - i / N)},${(100 * i) / N},50)`;
 });
+export const HorairesIcons = {
+  [HoraireFields.PetitDejeuner]: "food-croissant",
+  [HoraireFields.Midi]: "pasta",
+  [HoraireFields.Gouter]: "cupcake",
+  [HoraireFields.Diner]: "bowl-mix",
+  [HoraireFields.Cinquieme]: "glass-mug-variant"
+};
 
 export function sortByText<T extends { text: string }>(l: T[]) {
   return l.sort((a, b) => Number(a.text < b.text));

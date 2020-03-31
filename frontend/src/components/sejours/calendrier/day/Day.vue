@@ -32,6 +32,12 @@
                   @dragover="onDragoverHoraireHeader($event)"
                   @drop="onDropHoraireHeader($event, horaire.value)"
                 >
+                  <v-icon
+                    small
+                    :color="getHoraireColor(horaire.value)"
+                    class="mr-2"
+                    >mdi-{{ getHoraireIcon(horaire.value) }}</v-icon
+                  >
                   {{ horaire.text }}
                   <v-spacer></v-spacer>
                   <tooltip-btn
@@ -92,7 +98,7 @@
                           @remove="idRecette => removeRecette(repas, idRecette)"
                         ></case-recettes>
                       </v-col>
-                      <v-col>
+                      <v-col class="align-self-center">
                         <liste-lien-ingredients
                           chips
                           v-model="repas.ingredients"
@@ -163,7 +169,7 @@ import {
 } from "../../../../logic/types";
 import { New, deepcopy } from "../../../../logic/types2";
 import { Horaires } from "../../../../logic/enums";
-import { HorairesColors } from "../../../utils/utils";
+import { HorairesColors, HorairesIcons } from "../../../utils/utils";
 import { DragKind, getDragData, setDragData } from "../../../utils/utils_drag";
 import ChoixIngredients from "./ChoixIngredients.vue";
 import ListeLienIngredients from "../../../utils/ListeLienIngredients.vue";
@@ -206,6 +212,9 @@ export default class Day extends DayProps {
 
   getHoraireColor(h: string) {
     return HorairesColors[h];
+  }
+  getHoraireIcon(h: string) {
+    return HorairesIcons[h];
   }
 
   formatNbOffset = formatNbOffset;

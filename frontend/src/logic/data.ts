@@ -30,7 +30,8 @@ import {
   Utilisateur,
   Produit,
   InSetDefautProduit,
-  Livraisons
+  Livraisons,
+  SejourRepas
 } from "./types";
 import axios, { AxiosResponse } from "axios";
 
@@ -400,11 +401,6 @@ export class Data {
           auth: this.controller.auth()
         }
       );
-      Vue.set(
-        this.sejours.sejours || {},
-        response.data.sejour.id,
-        response.data.sejour
-      ); // VRC
       this.controller.token = response.data.token;
       return response.data.sejour;
     } catch (error) {
@@ -413,11 +409,24 @@ export class Data {
   };
 
   createSejour = async (sejour: New<Sejour>) => {
-    return this.createOrUpdateSejour(sejour, "put");
+    const sej = await this.createOrUpdateSejour(sejour, "put");
+    if (sej === undefined) return;
+    const newSejour: SejourRepas = { ...sej, repass: [], fournisseurs: [] };
+    Vue.set(this.sejours.sejours || {}, newSejour.id, newSejour); // VRC
+    return newSejour;
   };
 
   updateSejour = async (sejour: Sejour) => {
-    return this.createOrUpdateSejour(sejour, "post");
+    const sej = await this.createOrUpdateSejour(sejour, "post");
+    if (sej === undefined) return;
+    const oldSejour = (this.sejours.sejours || {})[sej.id];
+    const updatedSejour: SejourRepas = {
+      ...sej,
+      repass: oldSejour.repass,
+      fournisseurs: oldSejour.fournisseurs
+    };
+    (this.sejours.sejours || {})[sej.id] = updatedSejour;
+    return updatedSejour;
   };
 
   deleteSejour = async (sejour: Sejour) => {

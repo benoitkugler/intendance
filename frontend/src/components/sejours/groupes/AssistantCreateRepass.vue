@@ -52,12 +52,16 @@
               ></v-col>
             </v-row>
             <v-row>
-              <v-col
-                ><v-switch
+              <v-col>
+                <v-select
+                  hide-hint
+                  :items="groupes"
+                  v-model="options.cinquieme"
                   label="Inclure un cinquième"
-                  v-model="options.with_cinquieme"
-                ></v-switch
-              ></v-col>
+                  chips
+                  multiple
+                ></v-select>
+              </v-col>
             </v-row>
           </v-col>
           <v-col>
@@ -106,7 +110,7 @@ const AssitantCreateRepassProps = Vue.extend({
 export default class AssitantCreateRepass extends AssitantCreateRepassProps {
   options: OptionsAssistantCreateRepass = {
     duree: 7,
-    with_cinquieme: true,
+    cinquieme: [],
     with_gouter: true,
     delete_existing: false
   };

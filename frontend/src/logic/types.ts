@@ -28,11 +28,14 @@ export interface InAjouteIngredientProduit {
 	produit: Produit,
 }
 
+// github.com/benoitkugler/intendance/server/models.Ids
+export type Ids = number[] | null
+
 // github.com/benoitkugler/intendance/server/controller.OptionsAssistantCreateRepass
 export interface OptionsAssistantCreateRepass {
 	duree: number,
-	with_cinquieme: boolean,
 	with_gouter: boolean,
+	cinquieme: Ids,
 	delete_existing: boolean,
 }
 
@@ -240,9 +243,6 @@ export interface Menu {
 	id_utilisateur: NullInt64,
 	commentaire: string,
 }
-
-// github.com/benoitkugler/intendance/server/models.Ids
-export type Ids = number[] | null
 
 // github.com/benoitkugler/intendance/server/models.LienIngredient
 export interface LienIngredient {

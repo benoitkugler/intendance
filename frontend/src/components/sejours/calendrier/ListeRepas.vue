@@ -12,10 +12,10 @@
         @drop.stop="onDrop($event, repas)"
         :class="repas.anticipation == 0 ? '' : colorAnticipation"
       >
-        <v-list-item-icon class="ml-0 mr-1 y-0 align-self-center"
-          ><v-chip label small :color="getColorRepas(repas)" class="px-1">
-            {{ getHoraireInitiale(repas) }}
-          </v-chip>
+        <v-list-item-icon class="ml-0 mr-1 y-0 align-self-center">
+          <v-icon :color="getColorRepas(repas)"
+            >mdi-{{ getHoraireIcon(repas) }}</v-icon
+          >
         </v-list-item-icon>
         <v-list-item-content>
           <v-list-item-title>
@@ -36,7 +36,7 @@ import Component from "vue-class-component";
 import { RepasComplet, Menu, MenuComplet } from "../../../logic/types";
 import { deepcopy, toNullableId } from "../../../logic/types2";
 import { C } from "../../../logic/controller";
-import { HorairesColors } from "../../utils/utils";
+import { HorairesColors, HorairesIcons } from "../../utils/utils";
 import { DragKind, getDragData, setDragData } from "../../utils/utils_drag";
 import { fmtHoraire } from "../../../logic/enums";
 import {
@@ -60,16 +60,15 @@ export default class ListeRepas extends ListeRepasProps {
 
   repasSubTitle(repas: RepasComplet) {
     const nbPersonnes = C.getRepasNbPersonnes(repas);
-    return `${nbPersonnes} pers.`;
+    return `${nbPersonnes} personne(s)`;
   }
 
   getColorRepas(repas: RepasComplet) {
     return HorairesColors[repas.horaire];
   }
 
-  getHoraireInitiale(repas: RepasComplet) {
-    const horaire = fmtHoraire(repas.horaire);
-    return horaire.substr(0, 2);
+  getHoraireIcon(repas: RepasComplet) {
+    return HorairesIcons[repas.horaire];
   }
 
   onDragstart(event: DragEvent, repas: RepasComplet) {
