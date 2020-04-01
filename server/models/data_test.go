@@ -251,6 +251,7 @@ func randSejour() Sejour {
 
 func randSejourFournisseur() SejourFournisseur {
 	return SejourFournisseur{
+		IdUtilisateur: randint64(),
 		IdSejour:      randint64(),
 		IdFournisseur: randint64(),
 	}

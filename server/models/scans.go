@@ -1567,6 +1567,7 @@ func (item Sejour) Delete(tx DB) (int64, error) {
 func ScanSejourFournisseur(r *sql.Row) (SejourFournisseur, error) {
 	var s SejourFournisseur
 	if err := r.Scan(
+		&s.IdUtilisateur,
 		&s.IdSejour,
 		&s.IdFournisseur,
 	); err != nil {
@@ -1581,6 +1582,7 @@ func ScanSejourFournisseurs(rs *sql.Rows) ([]SejourFournisseur, error) {
 	for rs.Next() {
 		var s SejourFournisseur
 		if err = rs.Scan(
+			&s.IdUtilisateur,
 			&s.IdSejour,
 			&s.IdFournisseur,
 		); err != nil {
@@ -1601,14 +1603,14 @@ func InsertManySejourFournisseurs(tx DB, items []SejourFournisseur) error {
 	}
 
 	stmt, err := tx.Prepare(pq.CopyIn("sejour_fournisseurs",
-		"id_sejour", "id_fournisseur",
+		"id_utilisateur", "id_sejour", "id_fournisseur",
 	))
 	if err != nil {
 		return err
 	}
 
 	for _, item := range items {
-		_, err = stmt.Exec(item.IdSejour, item.IdFournisseur)
+		_, err = stmt.Exec(item.IdUtilisateur, item.IdSejour, item.IdFournisseur)
 		if err != nil {
 			return err
 		}
@@ -1625,10 +1627,10 @@ func InsertManySejourFournisseurs(tx DB, items []SejourFournisseur) error {
 }
 
 // Delete the link SejourFournisseur in the database.
-// Only the 'IdSejour' 'IdFournisseur' fields are used.
+// Only the 'IdUtilisateur' 'IdSejour' 'IdFournisseur' fields are used.
 func (item SejourFournisseur) Delete(tx DB) error {
 	_, err := tx.Exec(`DELETE FROM sejour_fournisseurs WHERE 
-		id_sejour = $1 AND id_fournisseur = $2;`, item.IdSejour, item.IdFournisseur)
+		id_utilisateur = $1 AND id_sejour = $2 AND id_fournisseur = $3;`, item.IdUtilisateur, item.IdSejour, item.IdFournisseur)
 	return err
 }
 

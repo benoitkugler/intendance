@@ -4,38 +4,31 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/benoitkugler/intendance/logs"
 	"github.com/benoitkugler/intendance/server/models"
 )
 
 func TestAssistant(t *testing.T) {
-	db, err := models.ConnectDB(logs.DB_DEV)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer db.Close()
+	s, ct := setupTest(t)
+	defer s.db.Close()
 
-	s := Server{db: db}
-	r := RequeteContext{idProprietaire: 2}
-
-	sej, err := s.CreateSejour(r)
+	sej, err := s.CreateSejour(ct)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	groupe1, err := s.CreateGroupe(r, sej.Id)
+	groupe1, err := s.CreateGroupe(ct, sej.Id)
 	if err != nil {
 		t.Fatal(err)
 	}
-	groupe2, err := s.CreateGroupe(r, sej.Id)
+	groupe2, err := s.CreateGroupe(ct, sej.Id)
 	if err != nil {
 		t.Fatal(err)
 	}
-	groupe3, err := s.CreateGroupe(r, sej.Id)
+	groupe3, err := s.CreateGroupe(ct, sej.Id)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = s.InitiateRepas(r, InAssistantCreateRepass{
+	err = s.InitiateRepas(ct, InAssistantCreateRepass{
 		IdSejour: sej.Id,
 		GroupesSorties: map[int][]int64{
 			0: {groupe1.Id, groupe2.Id},
@@ -52,7 +45,7 @@ func TestAssistant(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	a, err := s.LoadSejoursUtilisateur(RequeteContext{idProprietaire: 2})
+	a, err := s.LoadSejoursUtilisateur(ct)
 	if err != nil {
 		t.Fatal(err)
 	}

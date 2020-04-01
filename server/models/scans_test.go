@@ -509,7 +509,7 @@ func queriesSejourFournisseur(tx DB, item SejourFournisseur) (SejourFournisseur,
 	_ = len(items)
 
 	row := tx.QueryRow(`SELECT * FROM sejour_fournisseurs WHERE 
-			id_sejour = $1 AND id_fournisseur = $2;`, item.IdSejour, item.IdFournisseur)
+			id_utilisateur = $1 AND id_sejour = $2 AND id_fournisseur = $3;`, item.IdUtilisateur, item.IdSejour, item.IdFournisseur)
 	_, err = ScanSejourFournisseur(row)
 
 	return item, err

@@ -1,4 +1,4 @@
-// Définit les structures et types utilisés par le serveur.
+// Définit la structure de la base de données.
 package models
 
 import (
@@ -6,6 +6,7 @@ import (
 	"time"
 )
 
+// Le logiciel est disponible sous la forme d'une **application web** accessible par mail/password.
 // sql:UNIQUE(mail)
 type Utilisateur struct {
 	Id       int64  `json:"id"`
@@ -15,6 +16,9 @@ type Utilisateur struct {
 	PrenomNom string `json:"prenom_nom"`
 }
 
+// Les ingrédients sont _partagés_ : n'importe quel intendant peut utiliser un ingrédient déjà défini, et ajouter un produit lié. En revanche, les recettes et menus ne sont modifiables que par son _propriétaire_ (mais copiables libremement). En cas de modification par le propriétaire, les intendants utilisant la ressource sont notifiés par mail et peuvent choisir d'accepter la modification ou de s'approprier la ressource en la copiant.
+// Les recettes et menus peuvent n'être liés à aucun propriétaire, et sont alors éditable par tout le monde.
+//
 // sql:UNIQUE(nom)
 type Ingredient struct {
 	Id    int64  `json:"id"`
@@ -68,6 +72,8 @@ type MenuRecette struct {
 	IdRecette int64 `json:"id_recette"`
 }
 
+// Les séjours sont _privés_, mais les journées formées peuvent être copiées.
+// sql:UNIQUE(id, id_utilisateur)
 type Sejour struct {
 	Id            int64 `json:"id"`
 	IdUtilisateur int64 `json:"id_utilisateur"`
@@ -88,6 +94,9 @@ type Groupe struct {
 	Couleur     string `json:"couleur"`
 }
 
+// Le concept de journée nécessite d'être lié à la donnée du nombre de personnes pour chaque menu. Cela ne colle pas bien avec un schéma SQL classique. De plus, une journée n'a pas vraiment d'intérêt à être partagée : la modification sur une journée entrainerait celle sur une autre, ce qui est serait plutôt déroutant.
+// On propose donc de ne pas utiliser de table "journée", mais de construire (dynamiquement) les journées à partir de la table _repas_ (voir ci dessous). En revanche, le concept de journée sera bien présent pour l'utilisateur, pour organiser son emploi du temps, ou pour copier des journées déjà existantes.
+//
 // Repas représente un repas effectif, lié à un séjour.
 // Il est constitué de recettes et d'ingrédients (de la même manière qu'un menu)
 type Repas struct {
@@ -135,11 +144,16 @@ type UtilisateurFournisseur struct {
 }
 
 // Enregistre les fournisseurs associés à un séjour.
-// Le fournisseur doit faire partie des founisseurs du proprietaire du séjour
+// Note: Le champ `IdUtilisateur` permet d'assurer par une contrainte
+// que les fournisseurs soient associés à l'utilisateur du séjour.
+//
 // sql:UNIQUE(id_sejour,id_fournisseur)
+// sql:FOREIGN KEY (id_utilisateur, id_sejour) REFERENCES sejours (id_utilisateur, id)
+// sql:FOREIGN KEY (id_utilisateur, id_fournisseur) REFERENCES utilisateur_fournisseurs (id_utilisateur, id_fournisseur)
 type SejourFournisseur struct {
-	IdSejour      int64 `json:"id_sejour"`
-	IdFournisseur int64 `json:"id_fournisseur"`
+	IdUtilisateur int64 `json:"id_utilisateur,omitempty"`
+	IdSejour      int64 `json:"id_sejour,omitempty"`
+	IdFournisseur int64 `json:"id_fournisseur,omitempty"`
 }
 
 // sql:CHECK(prix >= 0)

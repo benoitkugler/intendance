@@ -230,7 +230,7 @@ func (s Server) UpdateSejourFournisseurs(ct RequeteContext, idSejour int64, idsF
 	}
 	sf := make([]models.SejourFournisseur, len(idsFournisseurs))
 	for i, id := range idsFournisseurs {
-		sf[i] = models.SejourFournisseur{IdSejour: idSejour, IdFournisseur: id}
+		sf[i] = models.SejourFournisseur{IdUtilisateur: ct.idProprietaire, IdSejour: idSejour, IdFournisseur: id}
 	}
 	// ... et rajoute les nouveaux
 	if err := models.InsertManySejourFournisseurs(ct.tx, sf); err != nil {

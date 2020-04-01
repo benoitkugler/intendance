@@ -262,8 +262,8 @@ func TestProduits(t *testing.T) {
 	}
 
 	err = InsertManyIngredientProduits(tx, []IngredientProduit{
-		{IdIngredient: ig.Id, IdProduit: pr1.Id, IdUtilisateur: 2},
-		{IdIngredient: ig.Id, IdProduit: pr2.Id, IdUtilisateur: 2},
+		{IdIngredient: ig.Id, IdProduit: pr1.Id, IdUtilisateur: 1},
+		{IdIngredient: ig.Id, IdProduit: pr2.Id, IdUtilisateur: 1},
 	})
 	if err != nil {
 		t.Fatal(err)
