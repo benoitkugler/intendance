@@ -3,7 +3,8 @@ import {
   Sejour,
   RepasComplet,
   NullInt64,
-  LienIngredient
+  LienIngredient,
+  Livraison
 } from "./types";
 
 export type New<T extends { id: number }> = Omit<T, "id"> &
@@ -39,4 +40,14 @@ export function deepcopy<T>(v: T): T {
 // compare object as JSON
 export function deepequal<T>(v1: T, v2: T): boolean {
   return JSON.stringify(v1) === JSON.stringify(v2);
+}
+
+export function defaultLivraison(): New<Livraison> {
+  return {
+    nom: "",
+    id_fournisseur: -1,
+    jours_livraison: [true, true, true, true, true, false, false],
+    delai_commande: 2,
+    anticipation: 1
+  };
 }

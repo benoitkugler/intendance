@@ -33,7 +33,9 @@ import {
   Livraisons,
   SejourRepas,
   Fournisseur,
-  OutFournisseur
+  OutFournisseur,
+  Livraison,
+  OutLivraison
 } from "./types";
 import axios, { AxiosResponse } from "axios";
 
@@ -449,14 +451,28 @@ export class Data {
   };
 
   // Fournisseurs
-  private createOrUpdateFournisseur = async (
-    fournisseur: New<Fournisseur>,
-    method: "put" | "post"
-  ) => {
+  createFournisseur = async (fournisseur: New<Fournisseur>) => {
     this.controller.notifications.startSpin();
-    const f = method == "put" ? axios.put : axios.post;
     try {
-      const response: AxiosResponse<OutFournisseur> = await f(
+      const response: AxiosResponse<OutFournisseurs> = await axios.put(
+        ServerURL + "/fournisseurs",
+        fournisseur,
+        {
+          auth: this.controller.auth()
+        }
+      );
+      this.controller.token = response.data.token;
+      this.fournisseurs = response.data.fournisseurs || {};
+      this.livraisons = response.data.livraisons || {};
+    } catch (error) {
+      this.controller.notifications.setAxiosError(error);
+    }
+  };
+
+  updateFournisseur = async (fournisseur: Fournisseur) => {
+    this.controller.notifications.startSpin();
+    try {
+      const response: AxiosResponse<OutFournisseur> = await axios.post(
         ServerURL + "/fournisseurs",
         fournisseur,
         {
@@ -469,19 +485,10 @@ export class Data {
         response.data.fournisseur
       ); // VRC
       this.controller.token = response.data.token;
-
       return response.data.fournisseur;
     } catch (error) {
       this.controller.notifications.setAxiosError(error);
     }
-  };
-
-  createFournisseur = async (fournisseur: New<Fournisseur>) => {
-    return this.createOrUpdateFournisseur(fournisseur, "put");
-  };
-
-  updateFournisseur = async (fournisseur: Fournisseur) => {
-    return this.createOrUpdateFournisseur(fournisseur, "post");
   };
 
   deleteFournisseur = async (idFournisseur: number) => {
@@ -495,6 +502,7 @@ export class Data {
         }
       );
       this.fournisseurs = response.data.fournisseurs || {};
+      this.livraisons = response.data.livraisons || {};
       this.controller.token = response.data.token;
     } catch (error) {
       this.controller.notifications.setAxiosError(error);
@@ -520,6 +528,60 @@ export class Data {
       );
       this.controller.token = response.data.token;
       this.sejours = response.data.sejours;
+    } catch (error) {
+      this.controller.notifications.setAxiosError(error);
+    }
+  };
+
+  // Livraisons
+  private createOrUpdateLivraison = async (
+    livraison: New<Livraison>,
+    method: "put" | "post"
+  ) => {
+    this.controller.notifications.startSpin();
+    const f = method == "put" ? axios.put : axios.post;
+    try {
+      const response: AxiosResponse<OutLivraison> = await f(
+        ServerURL + "/livraisons",
+        livraison,
+        {
+          auth: this.controller.auth()
+        }
+      );
+      Vue.set(
+        this.livraisons || {},
+        response.data.livraison.id,
+        response.data.livraison
+      ); // VRC
+      this.controller.token = response.data.token;
+
+      return response.data.livraison;
+    } catch (error) {
+      this.controller.notifications.setAxiosError(error);
+    }
+  };
+
+  createLivraison = async (livraison: New<Livraison>) => {
+    return this.createOrUpdateLivraison(livraison, "put");
+  };
+
+  updateLivraison = async (livraison: Livraison) => {
+    return this.createOrUpdateLivraison(livraison, "post");
+  };
+
+  deleteLivraison = async (idLivraison: number) => {
+    this.controller.notifications.startSpin();
+    try {
+      const response: AxiosResponse<OutFournisseurs> = await axios.delete(
+        ServerURL + "/livraisons",
+        {
+          params: { id: idLivraison },
+          auth: this.controller.auth()
+        }
+      );
+      this.livraisons = response.data.livraisons || {};
+      this.fournisseurs = response.data.fournisseurs || {};
+      this.controller.token = response.data.token;
     } catch (error) {
       this.controller.notifications.setAxiosError(error);
     }

@@ -553,11 +553,16 @@ func CreateFournisseur(c echo.Context) error {
 	if err = c.Bind(&fournisseur); err != nil {
 		return err
 	}
-	fournisseur, err = Server.CreateFournisseur(ct, fournisseur)
+	_, err = Server.CreateFournisseur(ct, fournisseur)
 	if err != nil {
 		return err
 	}
-	return c.JSON(200, OutFournisseur{Token: ct.Token, Fournisseur: fournisseur})
+
+	fourn, livr, err := Server.LoadFournisseurs(ct)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, OutFournisseurs{Token: ct.Token, Fournisseurs: fourn, Livraisons: livr})
 }
 
 func UpdateFournisseur(c echo.Context) error {
@@ -612,6 +617,57 @@ func UpdateSejourFournisseurs(c echo.Context) error {
 		return err
 	}
 	return c.JSON(200, OutSejours{Token: ct.Token, Sejours: out})
+}
+
+func CreateLivraison(c echo.Context) error {
+	ct, err := Server.Authentifie(c.Request())
+	if err != nil {
+		return err
+	}
+	var livraison models.Livraison
+	if err = c.Bind(&livraison); err != nil {
+		return err
+	}
+	livraison, err = Server.CreateLivraison(ct, livraison)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, OutLivraison{Token: ct.Token, Livraison: livraison})
+}
+
+func UpdateLivraison(c echo.Context) error {
+	ct, err := Server.Authentifie(c.Request())
+	if err != nil {
+		return err
+	}
+	var livraison models.Livraison
+	if err = c.Bind(&livraison); err != nil {
+		return err
+	}
+	livraison, err = Server.UpdateLivraison(ct, livraison)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, OutLivraison{Token: ct.Token, Livraison: livraison})
+}
+
+func DeleteLivraison(c echo.Context) error {
+	ct, err := Server.Authentifie(c.Request())
+	if err != nil {
+		return err
+	}
+	id, err := getId(c)
+	if err != nil {
+		return err
+	}
+	if err = Server.DeleteLivraison(ct, id); err != nil {
+		return err
+	}
+	f, l, err := Server.LoadFournisseurs(ct)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, OutFournisseurs{Token: ct.Token, Fournisseurs: f, Livraisons: l})
 }
 
 func GetIngredientProduits(c echo.Context) error {

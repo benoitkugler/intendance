@@ -6,18 +6,18 @@
         <v-row>
           <v-col>
             <v-select
-              :items="optionsFournisseurs"
+              :items="optionsLivraisons"
               label="Fournisseur"
               :rules="[rules.idRequired]"
-              v-model="innerProduit.id_fournisseur"
-            ></v-select>
-          </v-col>
-          <v-col>
-            <v-select
-              :items="optionsLivraisons"
-              label="Contrainte de livraison"
-              v-model="idLivraison"
-            ></v-select>
+              v-model="innerProduit.id_livraison"
+            >
+              <template v-slot:item="{ item }">
+                <span v-html="item.text"></span>
+              </template>
+              <template v-slot:selection="{ item }">
+                <span v-html="item.text"></span>
+              </template>
+            </v-select>
           </v-col>
           <v-col>
             <v-text-field
@@ -94,7 +94,6 @@ type VForm = Vue & { validate: () => boolean };
 })
 export default class DetailsProduit extends DetailsProduitProps {
   innerProduit: Produit = this.duplique();
-
   $refs!: {
     form: VForm;
   };
@@ -108,46 +107,17 @@ export default class DetailsProduit extends DetailsProduitProps {
     return deepcopy<Produit>(this.produit);
   }
 
-  // custom v-model pour NullInt64
-  get idLivraison() {
-    return this.innerProduit.id_livraison.Valid
-      ? this.innerProduit.id_livraison.Int64
-      : null;
-  }
-  set idLivraison(id: number | null) {
-    if (id == null) {
-      this.innerProduit.id_livraison = NullId();
-    } else {
-      this.innerProduit.id_livraison = toNullableId(id);
-    }
-  }
-
-  get optionsFournisseurs(): EnumItem<number>[] {
-    if (C.data == null) return [];
-    const items = Object.values(C.data.fournisseurs || {}).map(fourn => {
-      return { text: fourn.nom, value: fourn.id };
-    });
-    return sortByText(items);
-  }
-
   get optionsLivraisons() {
     if (C.data == null) return [];
-    const items: EnumItem<number | null>[] = Object.values(
+    const items: EnumItem<number>[] = Object.values(
       C.data.livraisons || {}
-    )
-      .filter(
-        livraison =>
-          !livraison.id_fournisseur.Valid ||
-          livraison.id_fournisseur.Int64 == this.innerProduit.id_fournisseur
-      )
-      .map(livraison => {
-        return { text: livraison.nom, value: livraison.id };
-      });
-    if (items.findIndex(item => item.value == this.idLivraison) == -1) {
-      // on met à jour le model sous-jacent
-      this.idLivraison = null;
-    }
-    return sortByText(items).concat({ text: "Aucune", value: null });
+    ).map(livraison => {
+      return {
+        text: C.formatter.formatLivraison(livraison),
+        value: livraison.id
+      };
+    });
+    return items;
   }
 
   rules = {

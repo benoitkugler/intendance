@@ -105,6 +105,11 @@ type OutFournisseurs struct {
 	Livraisons   models.Livraisons   `json:"livraisons"`
 }
 
+type OutLivraison struct {
+	Token     string           `json:"token"`
+	Livraison models.Livraison `json:"livraison"`
+}
+
 type InLieIngredientProduit struct {
 	IdIngredient int64 `json:"id_ingredient,omitempty"`
 	IdProduit    int64 `json:"id_produit,omitempty"`

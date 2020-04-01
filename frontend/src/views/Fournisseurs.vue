@@ -3,17 +3,7 @@
     <v-dialog max-width="500"> </v-dialog>
 
     <v-container>
-      <v-toolbar dense>
-        <v-toolbar-title>Fournisseurs et produits</v-toolbar-title>
-        <v-spacer></v-spacer>
-        <v-toolbar-items> </v-toolbar-items>
-      </v-toolbar>
-      <v-row justify="center">
-        <v-col class="col-6 align-self-center">
-          <liste-fournisseurs></liste-fournisseurs>
-        </v-col>
-        <v-col class="col-2 align-self-center"> </v-col>
-      </v-row>
+      <liste-fournisseurs></liste-fournisseurs>
     </v-container>
   </div>
 </template>

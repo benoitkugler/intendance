@@ -43,27 +43,6 @@ func (ct RequeteContext) checkCommandes(produit models.Produit) error {
 	return nil
 }
 
-// vérifie que la livraison éventuelle est lié au fournisseur du produit
-// cette contrainte n'est pas assuré par le modèle SQL
-func (ct RequeteContext) checkLivraison(produit models.Produit) error {
-	if !produit.IdLivraison.Valid { // rien à vérifier
-		return nil
-	}
-	row := ct.tx.QueryRow("SELECT * FROM livraisons WHERE id = $1", produit.IdLivraison.Int64)
-	livraison, err := models.ScanLivraison(row)
-	if err != nil {
-		return ErrorSQL(err)
-	}
-	if !livraison.IdFournisseur.Valid { // la contrainte est universelle -> OK
-		return nil
-	}
-	if livraison.IdFournisseur.Int64 != produit.IdFournisseur {
-		return fmt.Errorf("La contrainte de livraison %s est liée à un fournisseur différent de celui du produit %s.",
-			livraison.Nom, produit.Nom)
-	}
-	return nil
-}
-
 func (s Server) GetIngredientProduits(ct RequeteContext, idIngredient int64) (IngredientProduits, error) {
 	if err := ct.beginTx(s); err != nil {
 		return IngredientProduits{}, err
@@ -88,7 +67,7 @@ func (s Server) GetIngredientProduits(ct RequeteContext, idIngredient int64) (In
 		return out.Produits[i].Nom < out.Produits[j].Nom
 	})
 	sort.SliceStable(out.Produits, func(i, j int) bool {
-		return out.Produits[i].IdFournisseur < out.Produits[j].IdFournisseur
+		return out.Produits[i].IdLivraison < out.Produits[j].IdLivraison
 	})
 
 	rows, err := ct.tx.Query("SELECT id_produit FROM defaut_produits WHERE id_utilisateur = $1 AND id_ingredient = $2",
@@ -118,8 +97,8 @@ func (s Server) AjouteIngredientProduit(ct RequeteContext, idIngredient int64, p
 	if err := ct.beginTx(s); err != nil {
 		return err
 	}
-	row := ct.tx.QueryRow("SELECT * FROM ingredients WHERE id = $1", idIngredient)
-	ing, err := models.ScanIngredient(row)
+
+	ing, err := models.SelectIngredient(ct.tx, idIngredient)
 	if err != nil {
 		return ErrorSQL(err)
 	}
@@ -132,7 +111,7 @@ func (s Server) AjouteIngredientProduit(ct RequeteContext, idIngredient int64, p
 		return err
 	}
 
-	if err := ct.checkFournisseurs(produit); err != nil {
+	if _, err := ct.checkFournisseurs(produit); err != nil {
 		return err
 	}
 
@@ -160,11 +139,7 @@ func (s Server) UpdateProduit(ct RequeteContext, produit models.Produit) (out mo
 		return out, err
 	}
 
-	if err := ct.checkFournisseurs(produit); err != nil {
-		return out, err
-	}
-
-	if err := ct.checkLivraison(produit); err != nil {
+	if _, err := ct.checkFournisseurs(produit); err != nil {
 		return out, err
 	}
 
@@ -205,13 +180,12 @@ func (s Server) DeleteProduit(ct RequeteContext, idProduit int64) error {
 		return err
 	}
 
-	row := ct.tx.QueryRow("SELECT * FROM produits WHERE id = $1", idProduit)
-	produit, err := models.ScanProduit(row)
+	produit, err := models.SelectProduit(ct.tx, idProduit)
 	if err != nil {
 		return ErrorSQL(err)
 	}
 
-	if err := ct.checkFournisseurs(produit); err != nil {
+	if _, err := ct.checkFournisseurs(produit); err != nil {
 		return err
 	}
 
@@ -250,26 +224,29 @@ func (s Server) SetDefautProduit(ct RequeteContext, idIngredient int64, idProdui
 		return err
 	}
 
-	row := ct.tx.QueryRow("SELECT * FROM produits WHERE id = $1", idProduit)
-	produit, err := models.ScanProduit(row)
+	produit, err := models.SelectProduit(ct.tx, idProduit)
 	if err != nil {
 		return ErrorSQL(err)
 	}
 
-	if err := ct.checkFournisseurs(produit); err != nil {
+	livraison, err := ct.checkFournisseurs(produit)
+	if err != nil {
 		return err
 	}
 
 	// on enlève un éventuel produit par défaut du même fournisseur
-	// par la même occasion, on supprime la valeur par défaut (cas `off` == false )
-	_, err = ct.tx.Exec("DELETE FROM defaut_produits WHERE id_utilisateur = $1 AND id_ingredient = $2 AND id_fournisseur = $3",
-		ct.idProprietaire, idIngredient, produit.IdFournisseur)
+	// par la même occasion, on supprime la valeur par défaut (cas `on` == false )
+	_, err = ct.tx.Exec(`DELETE FROM defaut_produits 
+		WHERE defaut_produits.id_fournisseur = $1
+			AND defaut_produits.id_utilisateur = $2
+			AND defaut_produits.id_ingredient = $3`,
+		livraison.IdFournisseur, ct.idProprietaire, idIngredient)
 	if err != nil {
 		return ct.rollbackTx(err)
 	}
 	if on { // on ajoute le nouveau défaut
 		dp := models.DefautProduit{
-			IdFournisseur: produit.IdFournisseur, // déduit du produit
+			IdFournisseur: livraison.IdFournisseur, // déduit du produit
 			IdIngredient:  idIngredient,
 			IdProduit:     idProduit,
 			IdUtilisateur: ct.idProprietaire}

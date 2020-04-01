@@ -103,8 +103,7 @@ export default class AssociationIngredient extends AssociationIngredientProps {
       }
     }
     return {
-      id_fournisseur: -1,
-      id_livraison: NullId(),
+      id_livraison: -1,
       nom: "",
       conditionnement: cond,
       prix: 0,

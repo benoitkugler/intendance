@@ -189,12 +189,10 @@ func (s Server) ResoudIngredientsRepas(idRepas, nbPersonnes int64) ([]Ingredient
 // ResoudIngredientsJournees renvoies le total des ingrédients.
 // Si `journeesOffsets` vaut nil, tout le séjour est utilisé.
 func (s Server) ResoudIngredientsJournees(idSejour int64, journeesOffsets []int64) ([]DateIngredientQuantites, error) {
-	r := s.db.QueryRow("SELECT * FROM sejours WHERE id = $1", idSejour)
-	sejour, err := models.ScanSejour(r)
+	sejour, err := models.SelectSejour(s.db, idSejour)
 	if err != nil {
 		return nil, ErrorSQL(err)
 	}
-
 	rows, err := s.db.Query(`SELECT * FROM repass WHERE repass.id_sejour = $1`, idSejour)
 	if err != nil {
 		return nil, ErrorSQL(err)

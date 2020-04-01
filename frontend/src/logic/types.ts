@@ -1,9 +1,3 @@
-// database/sql.NullInt64
-export interface NullInt64 {
-	Int64: number,
-	Valid: boolean,
-}
-
 // github.com/benoitkugler/intendance/server/models.Conditionnement
 export interface Conditionnement {
 	quantite: number,
@@ -13,8 +7,7 @@ export interface Conditionnement {
 // github.com/benoitkugler/intendance/server/models.Produit
 export interface Produit {
 	id: number,
-	id_fournisseur: number,
-	id_livraison: NullInt64,
+	id_livraison: number,
 	nom: string,
 	conditionnement: Conditionnement,
 	prix: number,
@@ -168,7 +161,7 @@ export type JoursLivraison = boolean[]
 // github.com/benoitkugler/intendance/server/models.Livraison
 export interface Livraison {
 	id: number,
-	id_fournisseur: NullInt64,
+	id_fournisseur: number,
 	nom: string,
 	jours_livraison: JoursLivraison,
 	delai_commande: number,
@@ -230,6 +223,12 @@ export interface OutIngredients {
 	ingredients: Ingredients,
 }
 
+// github.com/benoitkugler/intendance/server/views.OutLivraison
+export interface OutLivraison {
+	token: string,
+	livraison: Livraison,
+}
+
 // github.com/benoitkugler/intendance/server/controller.Utilisateur
 export interface Utilisateur {
 	id: number,
@@ -241,6 +240,12 @@ export interface OutLoggin {
 	erreur: string,
 	token: string,
 	utilisateur: Utilisateur,
+}
+
+// database/sql.NullInt64
+export interface NullInt64 {
+	Int64: number,
+	Valid: boolean,
 }
 
 // github.com/benoitkugler/intendance/server/models.Menu

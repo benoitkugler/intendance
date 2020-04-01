@@ -105,7 +105,7 @@ func (s Server) EtablitCommande(ct RequeteContext, ingredients []DateIngredientQ
 	if err := ct.beginTx(s); err != nil {
 		return nil, err
 	}
-	defer ct.commitTx() // pas de modifications sur les données
+	defer ct.rollbackTx(nil) // pas de modifications sur les données
 
 	fourns, err := ct.loadFournisseurs()
 	if err != nil {

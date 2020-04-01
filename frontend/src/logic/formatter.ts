@@ -6,7 +6,8 @@ import {
   Time,
   Conditionnement,
   MenuComplet,
-  Produit
+  Produit,
+  Livraison
 } from "./types";
 import { fmtUnite } from "./enums";
 
@@ -79,10 +80,16 @@ export class Formatter {
   }
 
   formatFournisseur(produit: Produit) {
-    const fournisseur = this.controller.getFournisseur(produit);
     const livraison = this.controller.getLivraison(produit);
+    return this.formatLivraison(livraison);
+  }
+
+  formatLivraison(livraison: Livraison) {
+    const fournisseur = this.controller.getFournisseur(
+      livraison.id_fournisseur
+    );
     let fourstring = fournisseur.nom;
-    if (livraison != null) {
+    if (livraison.nom) {
       fourstring += ` <i>(${livraison.nom})</i>`;
     }
     return fourstring;

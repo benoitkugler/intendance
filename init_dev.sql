@@ -18,7 +18,7 @@ INSERT INTO livraisons (id_fournisseur, nom, jours_livraison, delai_commande, an
     VALUES (2, 'Fruits', '{f,f,f,f,f,t,t}', 1, 1);
 
 INSERT INTO livraisons (id_fournisseur, nom, jours_livraison, delai_commande, anticipation)
-    VALUES (NULL, 'Pain', '{t,t,t,t,t,t,t}', 1, 0);
+    VALUES (1, 'Pain', '{t,t,t,t,t,t,t}', 1, 0);
 
 INSERT INTO utilisateurs (PASSWORD, mail, prenom_nom)
     VALUES ('', 'test@intendance.fr', 'test');
@@ -40,13 +40,13 @@ INSERT INTO utilisateur_fournisseurs
 --
 
 INSERT INTO public.produits
-    VALUES (1, 2, 1, 'Orange (jus)', '{"unite": "L", "quantite": 2}', 5, '', 0);
+    VALUES (1, 2, 'Orange (jus)', '{"unite": "L", "quantite": 2}', 5, '', 0);
 
 INSERT INTO public.produits
-    VALUES (2, 1, 1, 'C', '{"unite": "Kg", "quantite": 2}', 0.45, '', 0);
+    VALUES (2, 1, 'C', '{"unite": "Kg", "quantite": 2}', 0.45, '', 0);
 
 INSERT INTO public.produits
-    VALUES (3, 3, 1, 'Tomate espagne', '{"unite": "Kg", "quantite": 1}', 5, '', 0);
+    VALUES (3, 3, 'Tomate espagne', '{"unite": "Kg", "quantite": 1}', 5, '', 0);
 
 --
 -- Data for Name: ingredients; Type: TABLE DATA; Schema: public; Owner: intendance

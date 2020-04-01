@@ -1,6 +1,5 @@
 import { Horaires, HoraireFields } from "@/logic/enums";
 import levenshtein from "js-levenshtein";
-import { RepasComplet, MenuComplet } from "@/logic/types";
 const MAX_DIST_LEVENSHTEIN = 5;
 
 const N = Horaires.length;
@@ -16,6 +15,16 @@ export const HorairesIcons = {
   [HoraireFields.Diner]: "bowl-mix",
   [HoraireFields.Cinquieme]: "glass-mug-variant"
 };
+
+export const Days = [
+  "Lundi",
+  "Mardi",
+  "Mercredi",
+  "Jeudi",
+  "Vendredi",
+  "Samedi",
+  "Dimanche"
+];
 
 export function sortByText<T extends { text: string }>(l: T[]) {
   return l.sort((a, b) => Number(a.text < b.text));

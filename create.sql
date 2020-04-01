@@ -71,7 +71,7 @@ CREATE TABLE lien_ingredients (
 
 CREATE TABLE livraisons (
 	id serial PRIMARY KEY,
-	id_fournisseur integer,
+	id_fournisseur integer NOT NULL,
 	nom varchar NOT NULL,
 	jours_livraison boolean[7] NOT NULL CHECK (array_length(jours_livraison, 1) = 7),
 	delai_commande integer NOT NULL,
@@ -102,8 +102,7 @@ CREATE TABLE menu_recettes (
 
 CREATE TABLE produits (
 	id serial PRIMARY KEY,
-	id_fournisseur integer NOT NULL,
-	id_livraison integer,
+	id_livraison integer NOT NULL,
 	nom varchar NOT NULL,
 	conditionnement jsonb NOT NULL,
 	prix real NOT NULL,
@@ -185,56 +184,56 @@ CREATE TABLE utilisateur_fournisseurs (
 	id_fournisseur integer NOT NULL
 );
 
-ALTER TABLE repas_recettes ADD FOREIGN KEY(id_recette) REFERENCES recettes;
-ALTER TABLE menus ADD FOREIGN KEY(id_utilisateur) REFERENCES utilisateurs;
-ALTER TABLE menu_recettes ADD FOREIGN KEY(id_recette) REFERENCES recettes;
-ALTER TABLE commande_produits ADD FOREIGN KEY(id_produit) REFERENCES produits;
-ALTER TABLE defaut_produits ADD FOREIGN KEY(id_utilisateur) REFERENCES utilisateurs;
-ALTER TABLE lien_ingredients ADD FOREIGN KEY(id_ingredient) REFERENCES ingredients;
-ALTER TABLE recette_ingredients ADD FOREIGN KEY(id_ingredient) REFERENCES ingredients;
 ALTER TABLE defaut_produits ADD FOREIGN KEY(id_fournisseur) REFERENCES fournisseurs;
-ALTER TABLE repas_ingredients ADD FOREIGN KEY(id_repas) REFERENCES repass;
-ALTER TABLE repas_recettes ADD FOREIGN KEY(id_repas) REFERENCES repass;
-ALTER TABLE utilisateur_fournisseurs ADD FOREIGN KEY(id_fournisseur) REFERENCES fournisseurs;
-ALTER TABLE livraisons ADD UNIQUE(id_fournisseur, nom);
-ALTER TABLE recettes ADD FOREIGN KEY(id_utilisateur) REFERENCES utilisateurs;
-ALTER TABLE menu_recettes ADD UNIQUE(id_menu, id_recette);
-ALTER TABLE fournisseurs ADD UNIQUE(nom);
-ALTER TABLE utilisateur_fournisseurs ADD UNIQUE(id_utilisateur,id_fournisseur);
-ALTER TABLE sejour_fournisseurs ADD FOREIGN KEY(id_sejour) REFERENCES sejours;
-ALTER TABLE ingredient_produits ADD UNIQUE(id_ingredient, id_produit);
-ALTER TABLE repas_groupes ADD FOREIGN KEY(id_repas) REFERENCES repass;
-ALTER TABLE utilisateurs ADD UNIQUE(mail);
-ALTER TABLE sejours ADD FOREIGN KEY(id_utilisateur) REFERENCES utilisateurs;
-ALTER TABLE repas_recettes ADD UNIQUE(id_repas, id_recette);
-ALTER TABLE repas_groupes ADD UNIQUE(id_repas, id_groupe);
-ALTER TABLE commande_produits ADD UNIQUE(id_commande, id_produit);
-ALTER TABLE livraisons ADD FOREIGN KEY(id_fournisseur) REFERENCES fournisseurs;
-ALTER TABLE repass ADD FOREIGN KEY(id_sejour) REFERENCES sejours;
-ALTER TABLE utilisateur_fournisseurs ADD FOREIGN KEY(id_utilisateur) REFERENCES utilisateurs;
-ALTER TABLE repas_ingredients ADD UNIQUE(id_repas, id_ingredient);
-ALTER TABLE livraisons ADD CHECK(anticipation >= 0);
-ALTER TABLE defaut_produits ADD UNIQUE(id_utilisateur, id_ingredient, id_fournisseur);
-ALTER TABLE sejour_fournisseurs ADD FOREIGN KEY(id_fournisseur) REFERENCES fournisseurs;
-ALTER TABLE ingredient_produits ADD FOREIGN KEY(id_utilisateur) REFERENCES utilisateurs;
-ALTER TABLE ingredient_produits ADD FOREIGN KEY(id_ingredient) REFERENCES ingredients;
-ALTER TABLE ingredient_produits ADD FOREIGN KEY(id_produit) REFERENCES produits;
-ALTER TABLE menu_recettes ADD FOREIGN KEY(id_menu) REFERENCES menus;
-ALTER TABLE produits ADD FOREIGN KEY(id_livraison) REFERENCES livraisons;
-ALTER TABLE recette_ingredients ADD UNIQUE(id_recette, id_ingredient);
-ALTER TABLE commande_produits ADD FOREIGN KEY(id_commande) REFERENCES commandes;
-ALTER TABLE groupes ADD FOREIGN KEY(id_sejour) REFERENCES sejours;
-ALTER TABLE recette_ingredients ADD FOREIGN KEY(id_recette) REFERENCES recettes;
 ALTER TABLE ingredients ADD UNIQUE(nom);
+ALTER TABLE repas_recettes ADD UNIQUE(id_repas, id_recette);
+ALTER TABLE utilisateur_fournisseurs ADD UNIQUE(id_utilisateur,id_fournisseur);
+ALTER TABLE commande_produits ADD FOREIGN KEY(id_produit) REFERENCES produits;
+ALTER TABLE commande_produits ADD UNIQUE(id_commande, id_produit);
+ALTER TABLE livraisons ADD CHECK(anticipation >= 0);
+ALTER TABLE recette_ingredients ADD UNIQUE(id_recette, id_ingredient);
+ALTER TABLE repas_groupes ADD UNIQUE(id_repas, id_groupe);
+ALTER TABLE defaut_produits ADD UNIQUE(id_utilisateur, id_ingredient, id_fournisseur);
+ALTER TABLE commandes ADD FOREIGN KEY(id_utilisateur) REFERENCES utilisateurs;
+ALTER TABLE defaut_produits ADD FOREIGN KEY(id_utilisateur) REFERENCES utilisateurs;
+ALTER TABLE menu_recettes ADD UNIQUE(id_menu, id_recette);
+ALTER TABLE livraisons ADD UNIQUE(id_fournisseur, nom);
+ALTER TABLE ingredient_produits ADD FOREIGN KEY(id_ingredient) REFERENCES ingredients;
+ALTER TABLE recettes ADD FOREIGN KEY(id_utilisateur) REFERENCES utilisateurs;
+ALTER TABLE groupes ADD FOREIGN KEY(id_sejour) REFERENCES sejours;
+ALTER TABLE ingredient_produits ADD FOREIGN KEY(id_utilisateur) REFERENCES utilisateurs;
+ALTER TABLE lien_ingredients ADD FOREIGN KEY(id_ingredient) REFERENCES ingredients;
+ALTER TABLE recette_ingredients ADD FOREIGN KEY(id_recette) REFERENCES recettes;
+ALTER TABLE menu_ingredients ADD FOREIGN KEY(id_ingredient) REFERENCES ingredients;
+ALTER TABLE sejour_fournisseurs ADD FOREIGN KEY(id_sejour) REFERENCES sejours;
+ALTER TABLE sejour_fournisseurs ADD FOREIGN KEY(id_fournisseur) REFERENCES fournisseurs;
+ALTER TABLE utilisateur_fournisseurs ADD FOREIGN KEY(id_utilisateur) REFERENCES utilisateurs;
+ALTER TABLE produits ADD UNIQUE(id_livraison, nom);
+ALTER TABLE livraisons ADD FOREIGN KEY(id_fournisseur) REFERENCES fournisseurs;
+ALTER TABLE menu_ingredients ADD FOREIGN KEY(id_menu) REFERENCES menus;
+ALTER TABLE repas_groupes ADD FOREIGN KEY(id_groupe) REFERENCES groupes;
+ALTER TABLE repas_recettes ADD FOREIGN KEY(id_recette) REFERENCES recettes;
+ALTER TABLE menu_ingredients ADD UNIQUE(id_menu, id_ingredient);
+ALTER TABLE defaut_produits ADD FOREIGN KEY(id_produit) REFERENCES produits;
+ALTER TABLE fournisseurs ADD UNIQUE(nom);
+ALTER TABLE produits ADD FOREIGN KEY(id_livraison) REFERENCES livraisons;
+ALTER TABLE menus ADD FOREIGN KEY(id_utilisateur) REFERENCES utilisateurs;
+ALTER TABLE recette_ingredients ADD FOREIGN KEY(id_ingredient) REFERENCES ingredients;
+ALTER TABLE repas_ingredients ADD FOREIGN KEY(id_repas) REFERENCES repass;
+ALTER TABLE commande_produits ADD FOREIGN KEY(id_commande) REFERENCES commandes;
+ALTER TABLE repas_ingredients ADD FOREIGN KEY(id_ingredient) REFERENCES ingredients;
+ALTER TABLE utilisateur_fournisseurs ADD FOREIGN KEY(id_fournisseur) REFERENCES fournisseurs;
+ALTER TABLE utilisateurs ADD UNIQUE(mail);
+ALTER TABLE repas_ingredients ADD UNIQUE(id_repas, id_ingredient);
+ALTER TABLE ingredient_produits ADD UNIQUE(id_ingredient, id_produit);
+ALTER TABLE defaut_produits ADD FOREIGN KEY(id_ingredient) REFERENCES ingredients;
+ALTER TABLE menu_recettes ADD FOREIGN KEY(id_menu) REFERENCES menus;
+ALTER TABLE repas_groupes ADD FOREIGN KEY(id_repas) REFERENCES repass;
+ALTER TABLE sejour_fournisseurs ADD UNIQUE(id_sejour,id_fournisseur);
+ALTER TABLE ingredient_produits ADD FOREIGN KEY(id_produit) REFERENCES produits;
+ALTER TABLE menu_recettes ADD FOREIGN KEY(id_recette) REFERENCES recettes;
+ALTER TABLE repass ADD FOREIGN KEY(id_sejour) REFERENCES sejours;
+ALTER TABLE repas_recettes ADD FOREIGN KEY(id_repas) REFERENCES repass;
+ALTER TABLE sejours ADD FOREIGN KEY(id_utilisateur) REFERENCES utilisateurs;
 ALTER TABLE produits ADD CHECK(prix >= 0);
 ALTER TABLE livraisons ADD CHECK(delai_commande >= 0);
-ALTER TABLE menu_ingredients ADD UNIQUE(id_menu, id_ingredient);
-ALTER TABLE sejour_fournisseurs ADD UNIQUE(id_sejour,id_fournisseur);
-ALTER TABLE commandes ADD FOREIGN KEY(id_utilisateur) REFERENCES utilisateurs;
-ALTER TABLE defaut_produits ADD FOREIGN KEY(id_ingredient) REFERENCES ingredients;
-ALTER TABLE menu_ingredients ADD FOREIGN KEY(id_menu) REFERENCES menus;
-ALTER TABLE produits ADD FOREIGN KEY(id_fournisseur) REFERENCES fournisseurs;
-ALTER TABLE repas_ingredients ADD FOREIGN KEY(id_ingredient) REFERENCES ingredients;
-ALTER TABLE defaut_produits ADD FOREIGN KEY(id_produit) REFERENCES produits;
-ALTER TABLE menu_ingredients ADD FOREIGN KEY(id_ingredient) REFERENCES ingredients;
-ALTER TABLE repas_groupes ADD FOREIGN KEY(id_groupe) REFERENCES groupes;

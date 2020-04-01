@@ -8,6 +8,14 @@ import (
 	"github.com/lib/pq"
 )
 
+// DB groups transaction like objects
+type DB interface {
+	Exec(query string, args ...interface{}) (sql.Result, error)
+	Query(query string, args ...interface{}) (*sql.Rows, error)
+	QueryRow(query string, args ...interface{}) *sql.Row
+	Prepare(query string) (*sql.Stmt, error)
+}
+
 func ScanCommande(r *sql.Row) (Commande, error) {
 	var s Commande
 	if err := r.Scan(
@@ -19,6 +27,12 @@ func ScanCommande(r *sql.Row) (Commande, error) {
 		return Commande{}, err
 	}
 	return s, nil
+}
+
+// SelectCommande returns the entry matching id.
+func SelectCommande(tx DB, id int64) (Commande, error) {
+	row := tx.QueryRow("SELECT * FROM commandes WHERE id = $1", id)
+	return ScanCommande(row)
 }
 
 type Commandes map[int64]Commande
@@ -53,7 +67,7 @@ func ScanCommandes(rs *sql.Rows) (Commandes, error) {
 }
 
 // Insert Commande in the database and returns the item with id filled.
-func (item Commande) Insert(tx *sql.Tx) (out Commande, err error) {
+func (item Commande) Insert(tx DB) (out Commande, err error) {
 	r := tx.QueryRow(`INSERT INTO commandes (
 			id_utilisateur,date_emission,tag
 			) VALUES (
@@ -65,7 +79,7 @@ func (item Commande) Insert(tx *sql.Tx) (out Commande, err error) {
 }
 
 // Update Commande in the database and returns the new version.
-func (item Commande) Update(tx *sql.Tx) (out Commande, err error) {
+func (item Commande) Update(tx DB) (out Commande, err error) {
 	r := tx.QueryRow(`UPDATE commandes SET (
 			id_utilisateur,date_emission,tag
 			) = (
@@ -78,7 +92,7 @@ func (item Commande) Update(tx *sql.Tx) (out Commande, err error) {
 
 // Delete Commande in the database and the return the id.
 // Only the field 'Id' is used.
-func (item Commande) Delete(tx *sql.Tx) (int64, error) {
+func (item Commande) Delete(tx DB) (int64, error) {
 	var deleted_id int64
 	r := tx.QueryRow("DELETE FROM commandes WHERE id = $1 RETURNING id;", item.Id)
 	err := r.Scan(&deleted_id)
@@ -118,7 +132,7 @@ func ScanCommandeProduits(rs *sql.Rows) ([]CommandeProduit, error) {
 }
 
 // Insert the links CommandeProduit in the database.
-func InsertManyCommandeProduits(tx *sql.Tx, items []CommandeProduit) error {
+func InsertManyCommandeProduits(tx DB, items []CommandeProduit) error {
 	if len(items) == 0 {
 		return nil
 	}
@@ -149,7 +163,7 @@ func InsertManyCommandeProduits(tx *sql.Tx, items []CommandeProduit) error {
 
 // Delete the link CommandeProduit in the database.
 // Only the 'IdCommande' 'IdProduit' fields are used.
-func (item CommandeProduit) Delete(tx *sql.Tx) error {
+func (item CommandeProduit) Delete(tx DB) error {
 	_, err := tx.Exec(`DELETE FROM commande_produits WHERE 
 		id_commande = $1 AND id_produit = $2;`, item.IdCommande, item.IdProduit)
 	return err
@@ -190,7 +204,7 @@ func ScanDefautProduits(rs *sql.Rows) ([]DefautProduit, error) {
 }
 
 // Insert the links DefautProduit in the database.
-func InsertManyDefautProduits(tx *sql.Tx, items []DefautProduit) error {
+func InsertManyDefautProduits(tx DB, items []DefautProduit) error {
 	if len(items) == 0 {
 		return nil
 	}
@@ -221,7 +235,7 @@ func InsertManyDefautProduits(tx *sql.Tx, items []DefautProduit) error {
 
 // Delete the link DefautProduit in the database.
 // Only the 'IdUtilisateur' 'IdIngredient' 'IdFournisseur' 'IdProduit' fields are used.
-func (item DefautProduit) Delete(tx *sql.Tx) error {
+func (item DefautProduit) Delete(tx DB) error {
 	_, err := tx.Exec(`DELETE FROM defaut_produits WHERE 
 		id_utilisateur = $1 AND id_ingredient = $2 AND id_fournisseur = $3 AND id_produit = $4;`, item.IdUtilisateur, item.IdIngredient, item.IdFournisseur, item.IdProduit)
 	return err
@@ -237,6 +251,12 @@ func ScanFournisseur(r *sql.Row) (Fournisseur, error) {
 		return Fournisseur{}, err
 	}
 	return s, nil
+}
+
+// SelectFournisseur returns the entry matching id.
+func SelectFournisseur(tx DB, id int64) (Fournisseur, error) {
+	row := tx.QueryRow("SELECT * FROM fournisseurs WHERE id = $1", id)
+	return ScanFournisseur(row)
 }
 
 type Fournisseurs map[int64]Fournisseur
@@ -270,7 +290,7 @@ func ScanFournisseurs(rs *sql.Rows) (Fournisseurs, error) {
 }
 
 // Insert Fournisseur in the database and returns the item with id filled.
-func (item Fournisseur) Insert(tx *sql.Tx) (out Fournisseur, err error) {
+func (item Fournisseur) Insert(tx DB) (out Fournisseur, err error) {
 	r := tx.QueryRow(`INSERT INTO fournisseurs (
 			nom,lieu
 			) VALUES (
@@ -282,7 +302,7 @@ func (item Fournisseur) Insert(tx *sql.Tx) (out Fournisseur, err error) {
 }
 
 // Update Fournisseur in the database and returns the new version.
-func (item Fournisseur) Update(tx *sql.Tx) (out Fournisseur, err error) {
+func (item Fournisseur) Update(tx DB) (out Fournisseur, err error) {
 	r := tx.QueryRow(`UPDATE fournisseurs SET (
 			nom,lieu
 			) = (
@@ -295,7 +315,7 @@ func (item Fournisseur) Update(tx *sql.Tx) (out Fournisseur, err error) {
 
 // Delete Fournisseur in the database and the return the id.
 // Only the field 'Id' is used.
-func (item Fournisseur) Delete(tx *sql.Tx) (int64, error) {
+func (item Fournisseur) Delete(tx DB) (int64, error) {
 	var deleted_id int64
 	r := tx.QueryRow("DELETE FROM fournisseurs WHERE id = $1 RETURNING id;", item.Id)
 	err := r.Scan(&deleted_id)
@@ -314,6 +334,12 @@ func ScanGroupe(r *sql.Row) (Groupe, error) {
 		return Groupe{}, err
 	}
 	return s, nil
+}
+
+// SelectGroupe returns the entry matching id.
+func SelectGroupe(tx DB, id int64) (Groupe, error) {
+	row := tx.QueryRow("SELECT * FROM groupes WHERE id = $1", id)
+	return ScanGroupe(row)
 }
 
 type Groupes map[int64]Groupe
@@ -349,7 +375,7 @@ func ScanGroupes(rs *sql.Rows) (Groupes, error) {
 }
 
 // Insert Groupe in the database and returns the item with id filled.
-func (item Groupe) Insert(tx *sql.Tx) (out Groupe, err error) {
+func (item Groupe) Insert(tx DB) (out Groupe, err error) {
 	r := tx.QueryRow(`INSERT INTO groupes (
 			id_sejour,nom,nb_personnes,couleur
 			) VALUES (
@@ -361,7 +387,7 @@ func (item Groupe) Insert(tx *sql.Tx) (out Groupe, err error) {
 }
 
 // Update Groupe in the database and returns the new version.
-func (item Groupe) Update(tx *sql.Tx) (out Groupe, err error) {
+func (item Groupe) Update(tx DB) (out Groupe, err error) {
 	r := tx.QueryRow(`UPDATE groupes SET (
 			id_sejour,nom,nb_personnes,couleur
 			) = (
@@ -374,7 +400,7 @@ func (item Groupe) Update(tx *sql.Tx) (out Groupe, err error) {
 
 // Delete Groupe in the database and the return the id.
 // Only the field 'Id' is used.
-func (item Groupe) Delete(tx *sql.Tx) (int64, error) {
+func (item Groupe) Delete(tx DB) (int64, error) {
 	var deleted_id int64
 	r := tx.QueryRow("DELETE FROM groupes WHERE id = $1 RETURNING id;", item.Id)
 	err := r.Scan(&deleted_id)
@@ -394,6 +420,12 @@ func ScanIngredient(r *sql.Row) (Ingredient, error) {
 		return Ingredient{}, err
 	}
 	return s, nil
+}
+
+// SelectIngredient returns the entry matching id.
+func SelectIngredient(tx DB, id int64) (Ingredient, error) {
+	row := tx.QueryRow("SELECT * FROM ingredients WHERE id = $1", id)
+	return ScanIngredient(row)
 }
 
 type Ingredients map[int64]Ingredient
@@ -430,7 +462,7 @@ func ScanIngredients(rs *sql.Rows) (Ingredients, error) {
 }
 
 // Insert Ingredient in the database and returns the item with id filled.
-func (item Ingredient) Insert(tx *sql.Tx) (out Ingredient, err error) {
+func (item Ingredient) Insert(tx DB) (out Ingredient, err error) {
 	r := tx.QueryRow(`INSERT INTO ingredients (
 			nom,unite,categorie,callories,conditionnement
 			) VALUES (
@@ -442,7 +474,7 @@ func (item Ingredient) Insert(tx *sql.Tx) (out Ingredient, err error) {
 }
 
 // Update Ingredient in the database and returns the new version.
-func (item Ingredient) Update(tx *sql.Tx) (out Ingredient, err error) {
+func (item Ingredient) Update(tx DB) (out Ingredient, err error) {
 	r := tx.QueryRow(`UPDATE ingredients SET (
 			nom,unite,categorie,callories,conditionnement
 			) = (
@@ -455,7 +487,7 @@ func (item Ingredient) Update(tx *sql.Tx) (out Ingredient, err error) {
 
 // Delete Ingredient in the database and the return the id.
 // Only the field 'Id' is used.
-func (item Ingredient) Delete(tx *sql.Tx) (int64, error) {
+func (item Ingredient) Delete(tx DB) (int64, error) {
 	var deleted_id int64
 	r := tx.QueryRow("DELETE FROM ingredients WHERE id = $1 RETURNING id;", item.Id)
 	err := r.Scan(&deleted_id)
@@ -495,7 +527,7 @@ func ScanIngredientProduits(rs *sql.Rows) ([]IngredientProduit, error) {
 }
 
 // Insert the links IngredientProduit in the database.
-func InsertManyIngredientProduits(tx *sql.Tx, items []IngredientProduit) error {
+func InsertManyIngredientProduits(tx DB, items []IngredientProduit) error {
 	if len(items) == 0 {
 		return nil
 	}
@@ -526,7 +558,7 @@ func InsertManyIngredientProduits(tx *sql.Tx, items []IngredientProduit) error {
 
 // Delete the link IngredientProduit in the database.
 // Only the 'IdIngredient' 'IdProduit' 'IdUtilisateur' fields are used.
-func (item IngredientProduit) Delete(tx *sql.Tx) error {
+func (item IngredientProduit) Delete(tx DB) error {
 	_, err := tx.Exec(`DELETE FROM ingredient_produits WHERE 
 		id_ingredient = $1 AND id_produit = $2 AND id_utilisateur = $3;`, item.IdIngredient, item.IdProduit, item.IdUtilisateur)
 	return err
@@ -565,7 +597,7 @@ func ScanLienIngredients(rs *sql.Rows) ([]LienIngredient, error) {
 }
 
 // Insert the links LienIngredient in the database.
-func InsertManyLienIngredients(tx *sql.Tx, items []LienIngredient) error {
+func InsertManyLienIngredients(tx DB, items []LienIngredient) error {
 	if len(items) == 0 {
 		return nil
 	}
@@ -596,7 +628,7 @@ func InsertManyLienIngredients(tx *sql.Tx, items []LienIngredient) error {
 
 // Delete the link LienIngredient in the database.
 // Only the 'IdIngredient' fields are used.
-func (item LienIngredient) Delete(tx *sql.Tx) error {
+func (item LienIngredient) Delete(tx DB) error {
 	_, err := tx.Exec(`DELETE FROM lien_ingredients WHERE 
 		id_ingredient = $1;`, item.IdIngredient)
 	return err
@@ -615,6 +647,12 @@ func ScanLivraison(r *sql.Row) (Livraison, error) {
 		return Livraison{}, err
 	}
 	return s, nil
+}
+
+// SelectLivraison returns the entry matching id.
+func SelectLivraison(tx DB, id int64) (Livraison, error) {
+	row := tx.QueryRow("SELECT * FROM livraisons WHERE id = $1", id)
+	return ScanLivraison(row)
 }
 
 type Livraisons map[int64]Livraison
@@ -651,7 +689,7 @@ func ScanLivraisons(rs *sql.Rows) (Livraisons, error) {
 }
 
 // Insert Livraison in the database and returns the item with id filled.
-func (item Livraison) Insert(tx *sql.Tx) (out Livraison, err error) {
+func (item Livraison) Insert(tx DB) (out Livraison, err error) {
 	r := tx.QueryRow(`INSERT INTO livraisons (
 			id_fournisseur,nom,jours_livraison,delai_commande,anticipation
 			) VALUES (
@@ -663,7 +701,7 @@ func (item Livraison) Insert(tx *sql.Tx) (out Livraison, err error) {
 }
 
 // Update Livraison in the database and returns the new version.
-func (item Livraison) Update(tx *sql.Tx) (out Livraison, err error) {
+func (item Livraison) Update(tx DB) (out Livraison, err error) {
 	r := tx.QueryRow(`UPDATE livraisons SET (
 			id_fournisseur,nom,jours_livraison,delai_commande,anticipation
 			) = (
@@ -676,7 +714,7 @@ func (item Livraison) Update(tx *sql.Tx) (out Livraison, err error) {
 
 // Delete Livraison in the database and the return the id.
 // Only the field 'Id' is used.
-func (item Livraison) Delete(tx *sql.Tx) (int64, error) {
+func (item Livraison) Delete(tx DB) (int64, error) {
 	var deleted_id int64
 	r := tx.QueryRow("DELETE FROM livraisons WHERE id = $1 RETURNING id;", item.Id)
 	err := r.Scan(&deleted_id)
@@ -693,6 +731,12 @@ func ScanMenu(r *sql.Row) (Menu, error) {
 		return Menu{}, err
 	}
 	return s, nil
+}
+
+// SelectMenu returns the entry matching id.
+func SelectMenu(tx DB, id int64) (Menu, error) {
+	row := tx.QueryRow("SELECT * FROM menus WHERE id = $1", id)
+	return ScanMenu(row)
 }
 
 type Menus map[int64]Menu
@@ -726,7 +770,7 @@ func ScanMenus(rs *sql.Rows) (Menus, error) {
 }
 
 // Insert Menu in the database and returns the item with id filled.
-func (item Menu) Insert(tx *sql.Tx) (out Menu, err error) {
+func (item Menu) Insert(tx DB) (out Menu, err error) {
 	r := tx.QueryRow(`INSERT INTO menus (
 			id_utilisateur,commentaire
 			) VALUES (
@@ -738,7 +782,7 @@ func (item Menu) Insert(tx *sql.Tx) (out Menu, err error) {
 }
 
 // Update Menu in the database and returns the new version.
-func (item Menu) Update(tx *sql.Tx) (out Menu, err error) {
+func (item Menu) Update(tx DB) (out Menu, err error) {
 	r := tx.QueryRow(`UPDATE menus SET (
 			id_utilisateur,commentaire
 			) = (
@@ -751,7 +795,7 @@ func (item Menu) Update(tx *sql.Tx) (out Menu, err error) {
 
 // Delete Menu in the database and the return the id.
 // Only the field 'Id' is used.
-func (item Menu) Delete(tx *sql.Tx) (int64, error) {
+func (item Menu) Delete(tx DB) (int64, error) {
 	var deleted_id int64
 	r := tx.QueryRow("DELETE FROM menus WHERE id = $1 RETURNING id;", item.Id)
 	err := r.Scan(&deleted_id)
@@ -793,7 +837,7 @@ func ScanMenuIngredients(rs *sql.Rows) ([]MenuIngredient, error) {
 }
 
 // Insert the links MenuIngredient in the database.
-func InsertManyMenuIngredients(tx *sql.Tx, items []MenuIngredient) error {
+func InsertManyMenuIngredients(tx DB, items []MenuIngredient) error {
 	if len(items) == 0 {
 		return nil
 	}
@@ -824,7 +868,7 @@ func InsertManyMenuIngredients(tx *sql.Tx, items []MenuIngredient) error {
 
 // Delete the link MenuIngredient in the database.
 // Only the 'IdMenu' 'IdIngredient' fields are used.
-func (item MenuIngredient) Delete(tx *sql.Tx) error {
+func (item MenuIngredient) Delete(tx DB) error {
 	_, err := tx.Exec(`DELETE FROM menu_ingredients WHERE 
 		id_menu = $1 AND id_ingredient = $2;`, item.IdMenu, item.IdIngredient)
 	return err
@@ -861,7 +905,7 @@ func ScanMenuRecettes(rs *sql.Rows) ([]MenuRecette, error) {
 }
 
 // Insert the links MenuRecette in the database.
-func InsertManyMenuRecettes(tx *sql.Tx, items []MenuRecette) error {
+func InsertManyMenuRecettes(tx DB, items []MenuRecette) error {
 	if len(items) == 0 {
 		return nil
 	}
@@ -892,7 +936,7 @@ func InsertManyMenuRecettes(tx *sql.Tx, items []MenuRecette) error {
 
 // Delete the link MenuRecette in the database.
 // Only the 'IdMenu' 'IdRecette' fields are used.
-func (item MenuRecette) Delete(tx *sql.Tx) error {
+func (item MenuRecette) Delete(tx DB) error {
 	_, err := tx.Exec(`DELETE FROM menu_recettes WHERE 
 		id_menu = $1 AND id_recette = $2;`, item.IdMenu, item.IdRecette)
 	return err
@@ -902,7 +946,6 @@ func ScanProduit(r *sql.Row) (Produit, error) {
 	var s Produit
 	if err := r.Scan(
 		&s.Id,
-		&s.IdFournisseur,
 		&s.IdLivraison,
 		&s.Nom,
 		&s.Conditionnement,
@@ -913,6 +956,12 @@ func ScanProduit(r *sql.Row) (Produit, error) {
 		return Produit{}, err
 	}
 	return s, nil
+}
+
+// SelectProduit returns the entry matching id.
+func SelectProduit(tx DB, id int64) (Produit, error) {
+	row := tx.QueryRow("SELECT * FROM produits WHERE id = $1", id)
+	return ScanProduit(row)
 }
 
 type Produits map[int64]Produit
@@ -932,7 +981,6 @@ func ScanProduits(rs *sql.Rows) (Produits, error) {
 		var s Produit
 		if err = rs.Scan(
 			&s.Id,
-			&s.IdFournisseur,
 			&s.IdLivraison,
 			&s.Nom,
 			&s.Conditionnement,
@@ -951,32 +999,32 @@ func ScanProduits(rs *sql.Rows) (Produits, error) {
 }
 
 // Insert Produit in the database and returns the item with id filled.
-func (item Produit) Insert(tx *sql.Tx) (out Produit, err error) {
+func (item Produit) Insert(tx DB) (out Produit, err error) {
 	r := tx.QueryRow(`INSERT INTO produits (
-			id_fournisseur,id_livraison,nom,conditionnement,prix,reference_fournisseur,colisage
+			id_livraison,nom,conditionnement,prix,reference_fournisseur,colisage
 			) VALUES (
-			$1,$2,$3,$4,$5,$6,$7
+			$1,$2,$3,$4,$5,$6
 			) RETURNING 
-			id,id_fournisseur,id_livraison,nom,conditionnement,prix,reference_fournisseur,colisage;
-			`, item.IdFournisseur, item.IdLivraison, item.Nom, item.Conditionnement, item.Prix, item.ReferenceFournisseur, item.Colisage)
+			id,id_livraison,nom,conditionnement,prix,reference_fournisseur,colisage;
+			`, item.IdLivraison, item.Nom, item.Conditionnement, item.Prix, item.ReferenceFournisseur, item.Colisage)
 	return ScanProduit(r)
 }
 
 // Update Produit in the database and returns the new version.
-func (item Produit) Update(tx *sql.Tx) (out Produit, err error) {
+func (item Produit) Update(tx DB) (out Produit, err error) {
 	r := tx.QueryRow(`UPDATE produits SET (
-			id_fournisseur,id_livraison,nom,conditionnement,prix,reference_fournisseur,colisage
+			id_livraison,nom,conditionnement,prix,reference_fournisseur,colisage
 			) = (
-			$2,$3,$4,$5,$6,$7,$8
+			$2,$3,$4,$5,$6,$7
 			) WHERE id = $1 RETURNING 
-			id,id_fournisseur,id_livraison,nom,conditionnement,prix,reference_fournisseur,colisage;
-			`, item.Id, item.IdFournisseur, item.IdLivraison, item.Nom, item.Conditionnement, item.Prix, item.ReferenceFournisseur, item.Colisage)
+			id,id_livraison,nom,conditionnement,prix,reference_fournisseur,colisage;
+			`, item.Id, item.IdLivraison, item.Nom, item.Conditionnement, item.Prix, item.ReferenceFournisseur, item.Colisage)
 	return ScanProduit(r)
 }
 
 // Delete Produit in the database and the return the id.
 // Only the field 'Id' is used.
-func (item Produit) Delete(tx *sql.Tx) (int64, error) {
+func (item Produit) Delete(tx DB) (int64, error) {
 	var deleted_id int64
 	r := tx.QueryRow("DELETE FROM produits WHERE id = $1 RETURNING id;", item.Id)
 	err := r.Scan(&deleted_id)
@@ -994,6 +1042,12 @@ func ScanRecette(r *sql.Row) (Recette, error) {
 		return Recette{}, err
 	}
 	return s, nil
+}
+
+// SelectRecette returns the entry matching id.
+func SelectRecette(tx DB, id int64) (Recette, error) {
+	row := tx.QueryRow("SELECT * FROM recettes WHERE id = $1", id)
+	return ScanRecette(row)
 }
 
 type Recettes map[int64]Recette
@@ -1028,7 +1082,7 @@ func ScanRecettes(rs *sql.Rows) (Recettes, error) {
 }
 
 // Insert Recette in the database and returns the item with id filled.
-func (item Recette) Insert(tx *sql.Tx) (out Recette, err error) {
+func (item Recette) Insert(tx DB) (out Recette, err error) {
 	r := tx.QueryRow(`INSERT INTO recettes (
 			id_utilisateur,nom,mode_emploi
 			) VALUES (
@@ -1040,7 +1094,7 @@ func (item Recette) Insert(tx *sql.Tx) (out Recette, err error) {
 }
 
 // Update Recette in the database and returns the new version.
-func (item Recette) Update(tx *sql.Tx) (out Recette, err error) {
+func (item Recette) Update(tx DB) (out Recette, err error) {
 	r := tx.QueryRow(`UPDATE recettes SET (
 			id_utilisateur,nom,mode_emploi
 			) = (
@@ -1053,7 +1107,7 @@ func (item Recette) Update(tx *sql.Tx) (out Recette, err error) {
 
 // Delete Recette in the database and the return the id.
 // Only the field 'Id' is used.
-func (item Recette) Delete(tx *sql.Tx) (int64, error) {
+func (item Recette) Delete(tx DB) (int64, error) {
 	var deleted_id int64
 	r := tx.QueryRow("DELETE FROM recettes WHERE id = $1 RETURNING id;", item.Id)
 	err := r.Scan(&deleted_id)
@@ -1095,7 +1149,7 @@ func ScanRecetteIngredients(rs *sql.Rows) ([]RecetteIngredient, error) {
 }
 
 // Insert the links RecetteIngredient in the database.
-func InsertManyRecetteIngredients(tx *sql.Tx, items []RecetteIngredient) error {
+func InsertManyRecetteIngredients(tx DB, items []RecetteIngredient) error {
 	if len(items) == 0 {
 		return nil
 	}
@@ -1126,7 +1180,7 @@ func InsertManyRecetteIngredients(tx *sql.Tx, items []RecetteIngredient) error {
 
 // Delete the link RecetteIngredient in the database.
 // Only the 'IdRecette' 'IdIngredient' fields are used.
-func (item RecetteIngredient) Delete(tx *sql.Tx) error {
+func (item RecetteIngredient) Delete(tx DB) error {
 	_, err := tx.Exec(`DELETE FROM recette_ingredients WHERE 
 		id_recette = $1 AND id_ingredient = $2;`, item.IdRecette, item.IdIngredient)
 	return err
@@ -1145,6 +1199,12 @@ func ScanRepas(r *sql.Row) (Repas, error) {
 		return Repas{}, err
 	}
 	return s, nil
+}
+
+// SelectRepas returns the entry matching id.
+func SelectRepas(tx DB, id int64) (Repas, error) {
+	row := tx.QueryRow("SELECT * FROM repass WHERE id = $1", id)
+	return ScanRepas(row)
 }
 
 type Repass map[int64]Repas
@@ -1181,7 +1241,7 @@ func ScanRepass(rs *sql.Rows) (Repass, error) {
 }
 
 // Insert Repas in the database and returns the item with id filled.
-func (item Repas) Insert(tx *sql.Tx) (out Repas, err error) {
+func (item Repas) Insert(tx DB) (out Repas, err error) {
 	r := tx.QueryRow(`INSERT INTO repass (
 			id_sejour,offset_personnes,jour_offset,horaire,anticipation
 			) VALUES (
@@ -1193,7 +1253,7 @@ func (item Repas) Insert(tx *sql.Tx) (out Repas, err error) {
 }
 
 // Update Repas in the database and returns the new version.
-func (item Repas) Update(tx *sql.Tx) (out Repas, err error) {
+func (item Repas) Update(tx DB) (out Repas, err error) {
 	r := tx.QueryRow(`UPDATE repass SET (
 			id_sejour,offset_personnes,jour_offset,horaire,anticipation
 			) = (
@@ -1206,7 +1266,7 @@ func (item Repas) Update(tx *sql.Tx) (out Repas, err error) {
 
 // Delete Repas in the database and the return the id.
 // Only the field 'Id' is used.
-func (item Repas) Delete(tx *sql.Tx) (int64, error) {
+func (item Repas) Delete(tx DB) (int64, error) {
 	var deleted_id int64
 	r := tx.QueryRow("DELETE FROM repass WHERE id = $1 RETURNING id;", item.Id)
 	err := r.Scan(&deleted_id)
@@ -1244,7 +1304,7 @@ func ScanRepasGroupes(rs *sql.Rows) ([]RepasGroupe, error) {
 }
 
 // Insert the links RepasGroupe in the database.
-func InsertManyRepasGroupes(tx *sql.Tx, items []RepasGroupe) error {
+func InsertManyRepasGroupes(tx DB, items []RepasGroupe) error {
 	if len(items) == 0 {
 		return nil
 	}
@@ -1275,7 +1335,7 @@ func InsertManyRepasGroupes(tx *sql.Tx, items []RepasGroupe) error {
 
 // Delete the link RepasGroupe in the database.
 // Only the 'IdRepas' 'IdGroupe' fields are used.
-func (item RepasGroupe) Delete(tx *sql.Tx) error {
+func (item RepasGroupe) Delete(tx DB) error {
 	_, err := tx.Exec(`DELETE FROM repas_groupes WHERE 
 		id_repas = $1 AND id_groupe = $2;`, item.IdRepas, item.IdGroupe)
 	return err
@@ -1316,7 +1376,7 @@ func ScanRepasIngredients(rs *sql.Rows) ([]RepasIngredient, error) {
 }
 
 // Insert the links RepasIngredient in the database.
-func InsertManyRepasIngredients(tx *sql.Tx, items []RepasIngredient) error {
+func InsertManyRepasIngredients(tx DB, items []RepasIngredient) error {
 	if len(items) == 0 {
 		return nil
 	}
@@ -1347,7 +1407,7 @@ func InsertManyRepasIngredients(tx *sql.Tx, items []RepasIngredient) error {
 
 // Delete the link RepasIngredient in the database.
 // Only the 'IdRepas' 'IdIngredient' fields are used.
-func (item RepasIngredient) Delete(tx *sql.Tx) error {
+func (item RepasIngredient) Delete(tx DB) error {
 	_, err := tx.Exec(`DELETE FROM repas_ingredients WHERE 
 		id_repas = $1 AND id_ingredient = $2;`, item.IdRepas, item.IdIngredient)
 	return err
@@ -1384,7 +1444,7 @@ func ScanRepasRecettes(rs *sql.Rows) ([]RepasRecette, error) {
 }
 
 // Insert the links RepasRecette in the database.
-func InsertManyRepasRecettes(tx *sql.Tx, items []RepasRecette) error {
+func InsertManyRepasRecettes(tx DB, items []RepasRecette) error {
 	if len(items) == 0 {
 		return nil
 	}
@@ -1415,7 +1475,7 @@ func InsertManyRepasRecettes(tx *sql.Tx, items []RepasRecette) error {
 
 // Delete the link RepasRecette in the database.
 // Only the 'IdRepas' 'IdRecette' fields are used.
-func (item RepasRecette) Delete(tx *sql.Tx) error {
+func (item RepasRecette) Delete(tx DB) error {
 	_, err := tx.Exec(`DELETE FROM repas_recettes WHERE 
 		id_repas = $1 AND id_recette = $2;`, item.IdRepas, item.IdRecette)
 	return err
@@ -1432,6 +1492,12 @@ func ScanSejour(r *sql.Row) (Sejour, error) {
 		return Sejour{}, err
 	}
 	return s, nil
+}
+
+// SelectSejour returns the entry matching id.
+func SelectSejour(tx DB, id int64) (Sejour, error) {
+	row := tx.QueryRow("SELECT * FROM sejours WHERE id = $1", id)
+	return ScanSejour(row)
 }
 
 type Sejours map[int64]Sejour
@@ -1466,7 +1532,7 @@ func ScanSejours(rs *sql.Rows) (Sejours, error) {
 }
 
 // Insert Sejour in the database and returns the item with id filled.
-func (item Sejour) Insert(tx *sql.Tx) (out Sejour, err error) {
+func (item Sejour) Insert(tx DB) (out Sejour, err error) {
 	r := tx.QueryRow(`INSERT INTO sejours (
 			id_utilisateur,date_debut,nom
 			) VALUES (
@@ -1478,7 +1544,7 @@ func (item Sejour) Insert(tx *sql.Tx) (out Sejour, err error) {
 }
 
 // Update Sejour in the database and returns the new version.
-func (item Sejour) Update(tx *sql.Tx) (out Sejour, err error) {
+func (item Sejour) Update(tx DB) (out Sejour, err error) {
 	r := tx.QueryRow(`UPDATE sejours SET (
 			id_utilisateur,date_debut,nom
 			) = (
@@ -1491,7 +1557,7 @@ func (item Sejour) Update(tx *sql.Tx) (out Sejour, err error) {
 
 // Delete Sejour in the database and the return the id.
 // Only the field 'Id' is used.
-func (item Sejour) Delete(tx *sql.Tx) (int64, error) {
+func (item Sejour) Delete(tx DB) (int64, error) {
 	var deleted_id int64
 	r := tx.QueryRow("DELETE FROM sejours WHERE id = $1 RETURNING id;", item.Id)
 	err := r.Scan(&deleted_id)
@@ -1529,7 +1595,7 @@ func ScanSejourFournisseurs(rs *sql.Rows) ([]SejourFournisseur, error) {
 }
 
 // Insert the links SejourFournisseur in the database.
-func InsertManySejourFournisseurs(tx *sql.Tx, items []SejourFournisseur) error {
+func InsertManySejourFournisseurs(tx DB, items []SejourFournisseur) error {
 	if len(items) == 0 {
 		return nil
 	}
@@ -1560,7 +1626,7 @@ func InsertManySejourFournisseurs(tx *sql.Tx, items []SejourFournisseur) error {
 
 // Delete the link SejourFournisseur in the database.
 // Only the 'IdSejour' 'IdFournisseur' fields are used.
-func (item SejourFournisseur) Delete(tx *sql.Tx) error {
+func (item SejourFournisseur) Delete(tx DB) error {
 	_, err := tx.Exec(`DELETE FROM sejour_fournisseurs WHERE 
 		id_sejour = $1 AND id_fournisseur = $2;`, item.IdSejour, item.IdFournisseur)
 	return err
@@ -1577,6 +1643,12 @@ func ScanUtilisateur(r *sql.Row) (Utilisateur, error) {
 		return Utilisateur{}, err
 	}
 	return s, nil
+}
+
+// SelectUtilisateur returns the entry matching id.
+func SelectUtilisateur(tx DB, id int64) (Utilisateur, error) {
+	row := tx.QueryRow("SELECT * FROM utilisateurs WHERE id = $1", id)
+	return ScanUtilisateur(row)
 }
 
 type Utilisateurs map[int64]Utilisateur
@@ -1611,7 +1683,7 @@ func ScanUtilisateurs(rs *sql.Rows) (Utilisateurs, error) {
 }
 
 // Insert Utilisateur in the database and returns the item with id filled.
-func (item Utilisateur) Insert(tx *sql.Tx) (out Utilisateur, err error) {
+func (item Utilisateur) Insert(tx DB) (out Utilisateur, err error) {
 	r := tx.QueryRow(`INSERT INTO utilisateurs (
 			password,mail,prenom_nom
 			) VALUES (
@@ -1623,7 +1695,7 @@ func (item Utilisateur) Insert(tx *sql.Tx) (out Utilisateur, err error) {
 }
 
 // Update Utilisateur in the database and returns the new version.
-func (item Utilisateur) Update(tx *sql.Tx) (out Utilisateur, err error) {
+func (item Utilisateur) Update(tx DB) (out Utilisateur, err error) {
 	r := tx.QueryRow(`UPDATE utilisateurs SET (
 			password,mail,prenom_nom
 			) = (
@@ -1636,7 +1708,7 @@ func (item Utilisateur) Update(tx *sql.Tx) (out Utilisateur, err error) {
 
 // Delete Utilisateur in the database and the return the id.
 // Only the field 'Id' is used.
-func (item Utilisateur) Delete(tx *sql.Tx) (int64, error) {
+func (item Utilisateur) Delete(tx DB) (int64, error) {
 	var deleted_id int64
 	r := tx.QueryRow("DELETE FROM utilisateurs WHERE id = $1 RETURNING id;", item.Id)
 	err := r.Scan(&deleted_id)
@@ -1674,7 +1746,7 @@ func ScanUtilisateurFournisseurs(rs *sql.Rows) ([]UtilisateurFournisseur, error)
 }
 
 // Insert the links UtilisateurFournisseur in the database.
-func InsertManyUtilisateurFournisseurs(tx *sql.Tx, items []UtilisateurFournisseur) error {
+func InsertManyUtilisateurFournisseurs(tx DB, items []UtilisateurFournisseur) error {
 	if len(items) == 0 {
 		return nil
 	}
@@ -1705,7 +1777,7 @@ func InsertManyUtilisateurFournisseurs(tx *sql.Tx, items []UtilisateurFournisseu
 
 // Delete the link UtilisateurFournisseur in the database.
 // Only the 'IdUtilisateur' 'IdFournisseur' fields are used.
-func (item UtilisateurFournisseur) Delete(tx *sql.Tx) error {
+func (item UtilisateurFournisseur) Delete(tx DB) error {
 	_, err := tx.Exec(`DELETE FROM utilisateur_fournisseurs WHERE 
 		id_utilisateur = $1 AND id_fournisseur = $2;`, item.IdUtilisateur, item.IdFournisseur)
 	return err

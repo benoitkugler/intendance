@@ -60,15 +60,14 @@ func TestSql(t *testing.T) {
 	}
 
 	i6bis := randLivraison()
-	i6bis.IdFournisseur = NullableId(i6.Id)
+	i6bis.IdFournisseur = i6.Id
 	i6bis, err = queriesLivraison(tx, i6bis)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	i7 := randProduit()
-	i7.IdFournisseur = i6.Id
-	i7.IdLivraison = NullableId(i6bis.Id)
+	i7.IdLivraison = i6bis.Id
 	i7, err = queriesProduit(tx, i7)
 	if err != nil {
 		t.Fatal(err)
@@ -231,18 +230,24 @@ func TestProduits(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	li := Livraison{IdFournisseur: fr.Id}
+	li, err = li.Insert(tx)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	ig := Ingredient{Nom: "Test"}
 	ig, err = ig.Insert(tx)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	pr1 := Produit{Nom: "Prod1", IdFournisseur: fr.Id}
+	pr1 := Produit{Nom: "Prod1", IdLivraison: li.Id}
 	pr1, err = pr1.Insert(tx)
 	if err != nil {
 		t.Fatal(err)
 	}
-	pr2 := Produit{Nom: "Prod2", IdFournisseur: fr.Id}
+	pr2 := Produit{Nom: "Prod2", IdLivraison: li.Id}
 	pr2, err = pr2.Insert(tx)
 	if err != nil {
 		t.Fatal(err)

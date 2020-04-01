@@ -97,15 +97,12 @@ export class Controller {
     });
   }
 
-  getFournisseur(produit: Produit) {
-    return (this.data.fournisseurs || {})[produit.id_fournisseur];
+  getFournisseur(idFournisseur: number) {
+    return (this.data.fournisseurs || {})[idFournisseur];
   }
 
-  getLivraison(produit: Produit): Livraison | null {
-    if (!produit.id_livraison.Valid) {
-      return null;
-    }
-    return (this.data.livraisons || {})[produit.id_livraison.Int64];
+  getLivraison(produit: Produit): Livraison {
+    return (this.data.livraisons || {})[produit.id_livraison];
   }
 
   searchMenu(search: string) {

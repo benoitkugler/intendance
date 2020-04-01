@@ -28,6 +28,10 @@ func (e errorSQL) parseDetails() string {
 		switch pqError.Constraint {
 		case "ingredients_nom_key":
 			return "Le nom demandé pour cet ingrédient est <b>déjà pris</b>."
+		case "produits_id_livraison_nom_key":
+			return "Un produit du <b>même nom</b> existe déjà chez ce fournisseur."
+		case "livraisons_id_fournisseur_nom_key":
+			return "Une contrainte de livraison du <b>même nom</b> existe déjà chez ce fournisseur."
 		}
 	}
 	return e.error.Error()

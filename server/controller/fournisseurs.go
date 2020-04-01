@@ -23,7 +23,7 @@ func (ct RequeteContext) loadFournisseurs() (models.Fournisseurs, error) {
 func (ct RequeteContext) hasFournisseur(idFournisseur int64) (bool, error) {
 	fourns, err := ct.loadFournisseurs()
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf("Impossible de vérifier les fournisseurs : %s", err)
 	}
 	idsFournisseurs := fourns.Ids().AsSet()
 	return idsFournisseurs.Has(idFournisseur), nil
@@ -31,13 +31,29 @@ func (ct RequeteContext) hasFournisseur(idFournisseur int64) (bool, error) {
 
 // vérifie que le fournisseur du produit fait partie
 // des fournisseurs associés à l'utilisateur courant
-func (ct RequeteContext) checkFournisseurs(produit models.Produit) error {
-	hasFournisseur, err := ct.hasFournisseur(produit.IdFournisseur)
+// renvoie la livraison associée
+func (ct RequeteContext) checkFournisseurs(produit models.Produit) (models.Livraison, error) {
+	livraison, err := models.SelectLivraison(ct.tx, produit.IdLivraison)
+	if err != nil {
+		return livraison, err
+	}
+	hasFournisseur, err := ct.hasFournisseur(livraison.IdFournisseur)
+	if err != nil {
+		return livraison, err
+	}
+	if !hasFournisseur {
+		return livraison, fmt.Errorf("Le fournisseur du produit %s ne fait pas partie de vos fournisseurs.", produit.Nom)
+	}
+	return livraison, nil
+}
+
+func (ct RequeteContext) checkLivraisonFournisseur(livraison models.Livraison) error {
+	ok, err := ct.hasFournisseur(livraison.IdFournisseur)
 	if err != nil {
 		return err
 	}
-	if !hasFournisseur {
-		return fmt.Errorf("Le fournisseur du produit %s ne fait pas partie de vos fournisseurs.", produit.Nom)
+	if !ok {
+		return fmt.Errorf("Le fournisseur (%d) ne fait pas partie de vos fournisseurs.", livraison.IdFournisseur)
 	}
 	return nil
 }
@@ -68,6 +84,7 @@ func (s Server) LoadFournisseurs(ct RequeteContext) (models.Fournisseurs, models
 }
 
 // CreateFournisseur crée un fournisseur et le lie à l'utilisateur courant
+// Une contrainte de livraison "standard" est automatiquement créée
 func (s Server) CreateFournisseur(ct RequeteContext, fournisseur models.Fournisseur) (out models.Fournisseur, err error) {
 	if err := ct.beginTx(s); err != nil {
 		return out, err
@@ -84,6 +101,20 @@ func (s Server) CreateFournisseur(ct RequeteContext, fournisseur models.Fourniss
 	if err != nil {
 		return out, ct.rollbackTx(err)
 	}
+
+	// ajout d'une contraint de livraison par défaut
+	livraison := models.Livraison{
+		IdFournisseur:  out.Id,
+		Nom:            "",
+		JoursLivraison: models.JoursLivraison{true, true, true, true, true, false, false},
+		DelaiCommande:  2,
+		Anticipation:   1,
+	}
+	livraison, err = livraison.Insert(ct.tx)
+	if err != nil {
+		return out, ct.rollbackTx(err)
+	}
+
 	return out, ct.commitTx()
 }
 
@@ -120,7 +151,9 @@ func (s Server) DeleteFournisseur(ct RequeteContext, idFournisseur int64) error 
 	}
 
 	rows, err := ct.tx.Query(`SELECT  * FROM commande_produits 
-		JOIN produits ON produits.id = commande_produits.id_produit WHERE produits.id_fournisseur = $1`, idFournisseur)
+		JOIN produits ON produits.id = commande_produits.id_produit 
+		JOIN livraisons ON produits.id_livraison = livraisons.id
+		WHERE livraisons.id_fournisseur = $1`, idFournisseur)
 	if err != nil {
 		return ErrorSQL(err)
 	}
@@ -140,17 +173,30 @@ func (s Server) DeleteFournisseur(ct RequeteContext, idFournisseur int64) error 
 	}
 
 	// ingredients
-	_, err = ct.tx.Exec(`DELETE FROM ingredient_produits USING produits 
-		WHERE ingredient_produits.id_produit = produits.id AND produits.id_fournisseur = $1`, idFournisseur)
+	_, err = ct.tx.Exec(`DELETE FROM ingredient_produits USING produits, livraisons
+		WHERE ingredient_produits.id_produit = produits.id 
+		AND produits.id_livraison = livraisons.id
+		AND livraisons.id_fournisseur = $1`, idFournisseur)
+	if err != nil {
+		return ct.rollbackTx(err)
+	}
+
+	// defaut
+	_, err = ct.tx.Exec(`DELETE FROM defaut_produits USING produits, livraisons
+		WHERE defaut_produits.id_produit = produits.id 
+		AND produits.id_livraison = livraisons.id
+		AND livraisons.id_fournisseur = $1`, idFournisseur)
 	if err != nil {
 		return ct.rollbackTx(err)
 	}
 
 	// produits
-	_, err = ct.tx.Exec("DELETE FROM produits WHERE id_fournisseur = $1", idFournisseur)
+	_, err = ct.tx.Exec(`DELETE FROM produits USING livraisons
+		WHERE produits.id_livraison = livraisons.id AND livraisons.id_fournisseur = $1`, idFournisseur)
 	if err != nil {
 		return ct.rollbackTx(err)
 	}
+
 	// livraisons
 	_, err = ct.tx.Exec("DELETE FROM livraisons WHERE id_fournisseur = $1", idFournisseur)
 	if err != nil {
@@ -188,6 +234,69 @@ func (s Server) UpdateSejourFournisseurs(ct RequeteContext, idSejour int64, idsF
 	}
 	// ... et rajoute les nouveaux
 	if err := models.InsertManySejourFournisseurs(ct.tx, sf); err != nil {
+		return ct.rollbackTx(err)
+	}
+	return ct.commitTx()
+}
+
+func (s Server) CreateLivraison(ct RequeteContext, livraison models.Livraison) (models.Livraison, error) {
+	if err := ct.beginTx(s); err != nil {
+		return models.Livraison{}, err
+	}
+
+	if err := ct.checkLivraisonFournisseur(livraison); err != nil {
+		return models.Livraison{}, err
+	}
+
+	livraison, err := livraison.Insert(ct.tx)
+	if err != nil {
+		return models.Livraison{}, ErrorSQL(err)
+	}
+	return livraison, ct.commitTx()
+}
+
+func (s Server) UpdateLivraison(ct RequeteContext, livraison models.Livraison) (models.Livraison, error) {
+	if err := ct.beginTx(s); err != nil {
+		return models.Livraison{}, err
+	}
+
+	if err := ct.checkLivraisonFournisseur(livraison); err != nil {
+		return models.Livraison{}, err
+	}
+
+	// on vérifie que les produits ayant cette contrainte sont tous du founisseur
+
+	livraison, err := livraison.Update(ct.tx)
+	if err != nil {
+		return models.Livraison{}, ErrorSQL(err)
+	}
+	return livraison, ct.commitTx()
+}
+
+// DeleteLivraison supprime la livraison
+func (s Server) DeleteLivraison(ct RequeteContext, idLivraison int64) error {
+	if err := ct.beginTx(s); err != nil {
+		return err
+	}
+
+	livraison, err := models.SelectLivraison(ct.tx, idLivraison)
+	if err != nil {
+		return ct.rollbackTx(err)
+	}
+
+	if err := ct.checkLivraisonFournisseur(livraison); err != nil {
+		ct.rollbackTx(nil)
+		return err
+	}
+
+	// on modifie les produits concernés
+	_, err = ct.tx.Exec("UPDATE produits SET id_livraison = null WHERE id_livraison = $1", idLivraison)
+	if err != nil {
+		return ct.rollbackTx(err)
+	}
+
+	_, err = livraison.Delete(ct.tx)
+	if err != nil {
 		return ct.rollbackTx(err)
 	}
 	return ct.commitTx()

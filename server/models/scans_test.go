@@ -2,9 +2,7 @@
 
 package models
 
-import "database/sql"
-
-func queriesCommande(tx *sql.Tx, item Commande) (Commande, error) {
+func queriesCommande(tx DB, item Commande) (Commande, error) {
 	item, err := item.Insert(tx)
 
 	if err != nil {
@@ -25,13 +23,12 @@ func queriesCommande(tx *sql.Tx, item Commande) (Commande, error) {
 	if err != nil {
 		return item, err
 	}
-	row := tx.QueryRow("SELECT * FROM commandes WHERE id = $1", item.Id)
+	_, err = SelectCommande(tx, item.Id)
 
-	_, err = ScanCommande(row)
 	return item, err
 }
 
-func queriesCommandeProduit(tx *sql.Tx, item CommandeProduit) (CommandeProduit, error) {
+func queriesCommandeProduit(tx DB, item CommandeProduit) (CommandeProduit, error) {
 	err := InsertManyCommandeProduits(tx, []CommandeProduit{item})
 	if err != nil {
 		return item, err
@@ -49,12 +46,12 @@ func queriesCommandeProduit(tx *sql.Tx, item CommandeProduit) (CommandeProduit, 
 
 	row := tx.QueryRow(`SELECT * FROM commande_produits WHERE 
 			id_commande = $1 AND id_produit = $2;`, item.IdCommande, item.IdProduit)
-
 	_, err = ScanCommandeProduit(row)
+
 	return item, err
 }
 
-func queriesDefautProduit(tx *sql.Tx, item DefautProduit) (DefautProduit, error) {
+func queriesDefautProduit(tx DB, item DefautProduit) (DefautProduit, error) {
 	err := InsertManyDefautProduits(tx, []DefautProduit{item})
 	if err != nil {
 		return item, err
@@ -72,12 +69,12 @@ func queriesDefautProduit(tx *sql.Tx, item DefautProduit) (DefautProduit, error)
 
 	row := tx.QueryRow(`SELECT * FROM defaut_produits WHERE 
 			id_utilisateur = $1 AND id_ingredient = $2 AND id_fournisseur = $3 AND id_produit = $4;`, item.IdUtilisateur, item.IdIngredient, item.IdFournisseur, item.IdProduit)
-
 	_, err = ScanDefautProduit(row)
+
 	return item, err
 }
 
-func queriesFournisseur(tx *sql.Tx, item Fournisseur) (Fournisseur, error) {
+func queriesFournisseur(tx DB, item Fournisseur) (Fournisseur, error) {
 	item, err := item.Insert(tx)
 
 	if err != nil {
@@ -98,13 +95,12 @@ func queriesFournisseur(tx *sql.Tx, item Fournisseur) (Fournisseur, error) {
 	if err != nil {
 		return item, err
 	}
-	row := tx.QueryRow("SELECT * FROM fournisseurs WHERE id = $1", item.Id)
+	_, err = SelectFournisseur(tx, item.Id)
 
-	_, err = ScanFournisseur(row)
 	return item, err
 }
 
-func queriesGroupe(tx *sql.Tx, item Groupe) (Groupe, error) {
+func queriesGroupe(tx DB, item Groupe) (Groupe, error) {
 	item, err := item.Insert(tx)
 
 	if err != nil {
@@ -125,13 +121,12 @@ func queriesGroupe(tx *sql.Tx, item Groupe) (Groupe, error) {
 	if err != nil {
 		return item, err
 	}
-	row := tx.QueryRow("SELECT * FROM groupes WHERE id = $1", item.Id)
+	_, err = SelectGroupe(tx, item.Id)
 
-	_, err = ScanGroupe(row)
 	return item, err
 }
 
-func queriesIngredient(tx *sql.Tx, item Ingredient) (Ingredient, error) {
+func queriesIngredient(tx DB, item Ingredient) (Ingredient, error) {
 	item, err := item.Insert(tx)
 
 	if err != nil {
@@ -152,13 +147,12 @@ func queriesIngredient(tx *sql.Tx, item Ingredient) (Ingredient, error) {
 	if err != nil {
 		return item, err
 	}
-	row := tx.QueryRow("SELECT * FROM ingredients WHERE id = $1", item.Id)
+	_, err = SelectIngredient(tx, item.Id)
 
-	_, err = ScanIngredient(row)
 	return item, err
 }
 
-func queriesIngredientProduit(tx *sql.Tx, item IngredientProduit) (IngredientProduit, error) {
+func queriesIngredientProduit(tx DB, item IngredientProduit) (IngredientProduit, error) {
 	err := InsertManyIngredientProduits(tx, []IngredientProduit{item})
 	if err != nil {
 		return item, err
@@ -176,12 +170,12 @@ func queriesIngredientProduit(tx *sql.Tx, item IngredientProduit) (IngredientPro
 
 	row := tx.QueryRow(`SELECT * FROM ingredient_produits WHERE 
 			id_ingredient = $1 AND id_produit = $2 AND id_utilisateur = $3;`, item.IdIngredient, item.IdProduit, item.IdUtilisateur)
-
 	_, err = ScanIngredientProduit(row)
+
 	return item, err
 }
 
-func queriesLienIngredient(tx *sql.Tx, item LienIngredient) (LienIngredient, error) {
+func queriesLienIngredient(tx DB, item LienIngredient) (LienIngredient, error) {
 	err := InsertManyLienIngredients(tx, []LienIngredient{item})
 	if err != nil {
 		return item, err
@@ -199,12 +193,12 @@ func queriesLienIngredient(tx *sql.Tx, item LienIngredient) (LienIngredient, err
 
 	row := tx.QueryRow(`SELECT * FROM lien_ingredients WHERE 
 			id_ingredient = $1;`, item.IdIngredient)
-
 	_, err = ScanLienIngredient(row)
+
 	return item, err
 }
 
-func queriesLivraison(tx *sql.Tx, item Livraison) (Livraison, error) {
+func queriesLivraison(tx DB, item Livraison) (Livraison, error) {
 	item, err := item.Insert(tx)
 
 	if err != nil {
@@ -225,13 +219,12 @@ func queriesLivraison(tx *sql.Tx, item Livraison) (Livraison, error) {
 	if err != nil {
 		return item, err
 	}
-	row := tx.QueryRow("SELECT * FROM livraisons WHERE id = $1", item.Id)
+	_, err = SelectLivraison(tx, item.Id)
 
-	_, err = ScanLivraison(row)
 	return item, err
 }
 
-func queriesMenu(tx *sql.Tx, item Menu) (Menu, error) {
+func queriesMenu(tx DB, item Menu) (Menu, error) {
 	item, err := item.Insert(tx)
 
 	if err != nil {
@@ -252,13 +245,12 @@ func queriesMenu(tx *sql.Tx, item Menu) (Menu, error) {
 	if err != nil {
 		return item, err
 	}
-	row := tx.QueryRow("SELECT * FROM menus WHERE id = $1", item.Id)
+	_, err = SelectMenu(tx, item.Id)
 
-	_, err = ScanMenu(row)
 	return item, err
 }
 
-func queriesMenuIngredient(tx *sql.Tx, item MenuIngredient) (MenuIngredient, error) {
+func queriesMenuIngredient(tx DB, item MenuIngredient) (MenuIngredient, error) {
 	err := InsertManyMenuIngredients(tx, []MenuIngredient{item})
 	if err != nil {
 		return item, err
@@ -276,12 +268,12 @@ func queriesMenuIngredient(tx *sql.Tx, item MenuIngredient) (MenuIngredient, err
 
 	row := tx.QueryRow(`SELECT * FROM menu_ingredients WHERE 
 			id_menu = $1 AND id_ingredient = $2;`, item.IdMenu, item.IdIngredient)
-
 	_, err = ScanMenuIngredient(row)
+
 	return item, err
 }
 
-func queriesMenuRecette(tx *sql.Tx, item MenuRecette) (MenuRecette, error) {
+func queriesMenuRecette(tx DB, item MenuRecette) (MenuRecette, error) {
 	err := InsertManyMenuRecettes(tx, []MenuRecette{item})
 	if err != nil {
 		return item, err
@@ -299,12 +291,12 @@ func queriesMenuRecette(tx *sql.Tx, item MenuRecette) (MenuRecette, error) {
 
 	row := tx.QueryRow(`SELECT * FROM menu_recettes WHERE 
 			id_menu = $1 AND id_recette = $2;`, item.IdMenu, item.IdRecette)
-
 	_, err = ScanMenuRecette(row)
+
 	return item, err
 }
 
-func queriesProduit(tx *sql.Tx, item Produit) (Produit, error) {
+func queriesProduit(tx DB, item Produit) (Produit, error) {
 	item, err := item.Insert(tx)
 
 	if err != nil {
@@ -325,13 +317,12 @@ func queriesProduit(tx *sql.Tx, item Produit) (Produit, error) {
 	if err != nil {
 		return item, err
 	}
-	row := tx.QueryRow("SELECT * FROM produits WHERE id = $1", item.Id)
+	_, err = SelectProduit(tx, item.Id)
 
-	_, err = ScanProduit(row)
 	return item, err
 }
 
-func queriesRecette(tx *sql.Tx, item Recette) (Recette, error) {
+func queriesRecette(tx DB, item Recette) (Recette, error) {
 	item, err := item.Insert(tx)
 
 	if err != nil {
@@ -352,13 +343,12 @@ func queriesRecette(tx *sql.Tx, item Recette) (Recette, error) {
 	if err != nil {
 		return item, err
 	}
-	row := tx.QueryRow("SELECT * FROM recettes WHERE id = $1", item.Id)
+	_, err = SelectRecette(tx, item.Id)
 
-	_, err = ScanRecette(row)
 	return item, err
 }
 
-func queriesRecetteIngredient(tx *sql.Tx, item RecetteIngredient) (RecetteIngredient, error) {
+func queriesRecetteIngredient(tx DB, item RecetteIngredient) (RecetteIngredient, error) {
 	err := InsertManyRecetteIngredients(tx, []RecetteIngredient{item})
 	if err != nil {
 		return item, err
@@ -376,12 +366,12 @@ func queriesRecetteIngredient(tx *sql.Tx, item RecetteIngredient) (RecetteIngred
 
 	row := tx.QueryRow(`SELECT * FROM recette_ingredients WHERE 
 			id_recette = $1 AND id_ingredient = $2;`, item.IdRecette, item.IdIngredient)
-
 	_, err = ScanRecetteIngredient(row)
+
 	return item, err
 }
 
-func queriesRepas(tx *sql.Tx, item Repas) (Repas, error) {
+func queriesRepas(tx DB, item Repas) (Repas, error) {
 	item, err := item.Insert(tx)
 
 	if err != nil {
@@ -402,13 +392,12 @@ func queriesRepas(tx *sql.Tx, item Repas) (Repas, error) {
 	if err != nil {
 		return item, err
 	}
-	row := tx.QueryRow("SELECT * FROM repass WHERE id = $1", item.Id)
+	_, err = SelectRepas(tx, item.Id)
 
-	_, err = ScanRepas(row)
 	return item, err
 }
 
-func queriesRepasGroupe(tx *sql.Tx, item RepasGroupe) (RepasGroupe, error) {
+func queriesRepasGroupe(tx DB, item RepasGroupe) (RepasGroupe, error) {
 	err := InsertManyRepasGroupes(tx, []RepasGroupe{item})
 	if err != nil {
 		return item, err
@@ -426,12 +415,12 @@ func queriesRepasGroupe(tx *sql.Tx, item RepasGroupe) (RepasGroupe, error) {
 
 	row := tx.QueryRow(`SELECT * FROM repas_groupes WHERE 
 			id_repas = $1 AND id_groupe = $2;`, item.IdRepas, item.IdGroupe)
-
 	_, err = ScanRepasGroupe(row)
+
 	return item, err
 }
 
-func queriesRepasIngredient(tx *sql.Tx, item RepasIngredient) (RepasIngredient, error) {
+func queriesRepasIngredient(tx DB, item RepasIngredient) (RepasIngredient, error) {
 	err := InsertManyRepasIngredients(tx, []RepasIngredient{item})
 	if err != nil {
 		return item, err
@@ -449,12 +438,12 @@ func queriesRepasIngredient(tx *sql.Tx, item RepasIngredient) (RepasIngredient, 
 
 	row := tx.QueryRow(`SELECT * FROM repas_ingredients WHERE 
 			id_repas = $1 AND id_ingredient = $2;`, item.IdRepas, item.IdIngredient)
-
 	_, err = ScanRepasIngredient(row)
+
 	return item, err
 }
 
-func queriesRepasRecette(tx *sql.Tx, item RepasRecette) (RepasRecette, error) {
+func queriesRepasRecette(tx DB, item RepasRecette) (RepasRecette, error) {
 	err := InsertManyRepasRecettes(tx, []RepasRecette{item})
 	if err != nil {
 		return item, err
@@ -472,12 +461,12 @@ func queriesRepasRecette(tx *sql.Tx, item RepasRecette) (RepasRecette, error) {
 
 	row := tx.QueryRow(`SELECT * FROM repas_recettes WHERE 
 			id_repas = $1 AND id_recette = $2;`, item.IdRepas, item.IdRecette)
-
 	_, err = ScanRepasRecette(row)
+
 	return item, err
 }
 
-func queriesSejour(tx *sql.Tx, item Sejour) (Sejour, error) {
+func queriesSejour(tx DB, item Sejour) (Sejour, error) {
 	item, err := item.Insert(tx)
 
 	if err != nil {
@@ -498,13 +487,12 @@ func queriesSejour(tx *sql.Tx, item Sejour) (Sejour, error) {
 	if err != nil {
 		return item, err
 	}
-	row := tx.QueryRow("SELECT * FROM sejours WHERE id = $1", item.Id)
+	_, err = SelectSejour(tx, item.Id)
 
-	_, err = ScanSejour(row)
 	return item, err
 }
 
-func queriesSejourFournisseur(tx *sql.Tx, item SejourFournisseur) (SejourFournisseur, error) {
+func queriesSejourFournisseur(tx DB, item SejourFournisseur) (SejourFournisseur, error) {
 	err := InsertManySejourFournisseurs(tx, []SejourFournisseur{item})
 	if err != nil {
 		return item, err
@@ -522,12 +510,12 @@ func queriesSejourFournisseur(tx *sql.Tx, item SejourFournisseur) (SejourFournis
 
 	row := tx.QueryRow(`SELECT * FROM sejour_fournisseurs WHERE 
 			id_sejour = $1 AND id_fournisseur = $2;`, item.IdSejour, item.IdFournisseur)
-
 	_, err = ScanSejourFournisseur(row)
+
 	return item, err
 }
 
-func queriesUtilisateur(tx *sql.Tx, item Utilisateur) (Utilisateur, error) {
+func queriesUtilisateur(tx DB, item Utilisateur) (Utilisateur, error) {
 	item, err := item.Insert(tx)
 
 	if err != nil {
@@ -548,13 +536,12 @@ func queriesUtilisateur(tx *sql.Tx, item Utilisateur) (Utilisateur, error) {
 	if err != nil {
 		return item, err
 	}
-	row := tx.QueryRow("SELECT * FROM utilisateurs WHERE id = $1", item.Id)
+	_, err = SelectUtilisateur(tx, item.Id)
 
-	_, err = ScanUtilisateur(row)
 	return item, err
 }
 
-func queriesUtilisateurFournisseur(tx *sql.Tx, item UtilisateurFournisseur) (UtilisateurFournisseur, error) {
+func queriesUtilisateurFournisseur(tx DB, item UtilisateurFournisseur) (UtilisateurFournisseur, error) {
 	err := InsertManyUtilisateurFournisseurs(tx, []UtilisateurFournisseur{item})
 	if err != nil {
 		return item, err
@@ -572,7 +559,7 @@ func queriesUtilisateurFournisseur(tx *sql.Tx, item UtilisateurFournisseur) (Uti
 
 	row := tx.QueryRow(`SELECT * FROM utilisateur_fournisseurs WHERE 
 			id_utilisateur = $1 AND id_fournisseur = $2;`, item.IdUtilisateur, item.IdFournisseur)
-
 	_, err = ScanUtilisateurFournisseur(row)
+
 	return item, err
 }
