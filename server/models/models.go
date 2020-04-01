@@ -128,7 +128,7 @@ type RepasGroupe struct {
 
 // Fournisseur définit un fournisseur.
 // Chaque fournisseur possède au moins une contrainte de livraison
-// (voir `Livraison`), mais peut en posséder plusieurs.
+// (voir `Livraison`), et peut en posséder plusieurs.
 // sql:UNIQUE(nom)
 type Fournisseur struct {
 	Id   int64  `json:"id"`
@@ -196,6 +196,8 @@ type IngredientProduit struct {
 }
 
 // sql:UNIQUE(id_utilisateur, id_ingredient, id_fournisseur)
+// sql:FOREIGN KEY (id_utilisateur, id_fournisseur) REFERENCES utilisateur_fournisseurs (id_utilisateur, id_fournisseur)
+// sql:FOREIGN KEY (id_ingredient, id_produit) REFERENCES ingredient_produits (id_ingredient, id_produit)
 type DefautProduit struct {
 	IdUtilisateur int64 `json:"id_utilisateur"`
 	IdIngredient  int64 `json:"id_ingredient"`

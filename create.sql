@@ -241,4 +241,6 @@ ALTER TABLE livraisons ADD CHECK(delai_commande >= 0);
 ALTER TABLE livraisons ADD UNIQUE(id_fournisseur, nom);
 ALTER TABLE ingredient_produits ADD UNIQUE(id_ingredient, id_produit);
 ALTER TABLE defaut_produits ADD UNIQUE(id_utilisateur, id_ingredient, id_fournisseur);
+ALTER TABLE defaut_produits ADD FOREIGN KEY (id_utilisateur, id_fournisseur) REFERENCES utilisateur_fournisseurs (id_utilisateur, id_fournisseur);
+ALTER TABLE defaut_produits ADD FOREIGN KEY (id_ingredient, id_produit) REFERENCES ingredient_produits (id_ingredient, id_produit);
 ALTER TABLE commande_produits ADD UNIQUE(id_commande, id_produit);
