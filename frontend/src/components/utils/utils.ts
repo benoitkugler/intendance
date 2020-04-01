@@ -16,14 +16,15 @@ export const HorairesIcons = {
   [HoraireFields.Cinquieme]: "glass-mug-variant"
 };
 
+// même convention de golang Time package
 export const Days = [
+  "Dimanche",
   "Lundi",
   "Mardi",
   "Mercredi",
   "Jeudi",
   "Vendredi",
-  "Samedi",
-  "Dimanche"
+  "Samedi"
 ];
 
 export function sortByText<T extends { text: string }>(l: T[]) {

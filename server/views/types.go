@@ -142,6 +142,7 @@ type InCommande struct {
 }
 
 type OutCommande struct {
-	Token    string                    `json:"token"`
-	Commande []controller.CommandeItem `json:"commande"`
+	Token      string                    `json:"token"`
+	Commande   []controller.CommandeItem `json:"commande"`
+	Ambiguites controller.Ambiguites     `json:"ambiguites"`
 }

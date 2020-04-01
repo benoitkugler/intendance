@@ -16,29 +16,28 @@ func TestCommande(t *testing.T) {
 		{
 			Date: time.Now(),
 			Ingredients: []IngredientQuantite{
-				{Ingredient: models.Ingredient{Id: 57}, Quantite: 44.5},
-				{Ingredient: models.Ingredient{Id: 17}, Quantite: 5},
+				{Ingredient: models.Ingredient{Id: 1, Nom: "seze"}, Quantite: 44.5},
+				{Ingredient: models.Ingredient{Id: 2, Nom: "zezezze"}, Quantite: 5},
 			},
 		},
 		{
 			Date: time.Now().Add(jourDuration),
 			Ingredients: []IngredientQuantite{
-				{Ingredient: models.Ingredient{Id: 57}, Quantite: 44.5},
-				{Ingredient: models.Ingredient{Id: 17}, Quantite: 2},
-				{Ingredient: models.Ingredient{Id: 55}, Quantite: 44.5},
+				{Ingredient: models.Ingredient{Id: 1, Nom: "seze"}, Quantite: 44.5},
+				{Ingredient: models.Ingredient{Id: 2, Nom: "zezezze"}, Quantite: 2},
+				{Ingredient: models.Ingredient{Id: 3, Nom: "aa"}, Quantite: 44.5},
 			},
 		},
 	}
 	contraintes := CommandeContraintes{
 		ContrainteProduits: map[int64]int64{
-			57: 66,
-			17: 66,
-			55: 71,
+			1: 2,
 		},
 	}
-	out, err := s.EtablitCommande(ct, ingredients, contraintes)
+	out, ambs, err := s.EtablitCommande(ct, ingredients, contraintes)
 	if err != nil {
 		t.Fatal(err)
 	}
 	fmt.Println(out)
+	fmt.Println(ambs)
 }

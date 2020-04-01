@@ -1,6 +1,8 @@
 package models
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type Unite string
 
@@ -21,7 +23,7 @@ type Categorie string
 
 type Callories struct{}
 
-// Lundi = 0, Mardi = 1 , etc...
+// Dimanche = 0, Lundi = 1, Mardi = 2 , etc...
 type JoursLivraison [7]bool
 
 type Conditionnement struct {

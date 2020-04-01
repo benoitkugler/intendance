@@ -20,6 +20,20 @@ func (ct RequeteContext) loadFournisseurs() (models.Fournisseurs, error) {
 	return out, nil
 }
 
+// renvoie les livraisons des fournisseurs donnés
+func (ct RequeteContext) loadLivraisons(fournisseurs models.Fournisseurs) (models.Livraisons, error) {
+	rows, err := ct.tx.Query("SELECT * FROM livraisons WHERE id_fournisseur = ANY($1)",
+		fournisseurs.Ids().AsSQL())
+	if err != nil {
+		return nil, ErrorSQL(err)
+	}
+	livraisons, err := models.ScanLivraisons(rows)
+	if err != nil {
+		return nil, ErrorSQL(err)
+	}
+	return livraisons, nil
+}
+
 func (ct RequeteContext) hasFournisseur(idFournisseur int64) (bool, error) {
 	fourns, err := ct.loadFournisseurs()
 	if err != nil {
@@ -70,15 +84,9 @@ func (s Server) LoadFournisseurs(ct RequeteContext) (models.Fournisseurs, models
 		return nil, nil, err
 	}
 
-	// on sélectionne les livraisons liées aux fournisseurs et les livraisons universelles
-	rows, err := ct.tx.Query("SELECT * FROM livraisons WHERE id_fournisseur = ANY($1) OR id_fournisseur IS null",
-		fournisseurs.Ids().AsSQL())
+	livraisons, err := ct.loadLivraisons(fournisseurs)
 	if err != nil {
-		return nil, nil, ErrorSQL(err)
-	}
-	livraisons, err := models.ScanLivraisons(rows)
-	if err != nil {
-		return nil, nil, ErrorSQL(err)
+		return nil, nil, err
 	}
 	return fournisseurs, livraisons, nil
 }
@@ -240,6 +248,11 @@ func (s Server) UpdateSejourFournisseurs(ct RequeteContext, idSejour int64, idsF
 }
 
 func (s Server) CreateLivraison(ct RequeteContext, livraison models.Livraison) (models.Livraison, error) {
+	contrainte := ContrainteLivraison{livraison}
+	if err := contrainte.Check(); err != nil {
+		return models.Livraison{}, err
+	}
+
 	if err := ct.beginTx(s); err != nil {
 		return models.Livraison{}, err
 	}
@@ -256,6 +269,11 @@ func (s Server) CreateLivraison(ct RequeteContext, livraison models.Livraison) (
 }
 
 func (s Server) UpdateLivraison(ct RequeteContext, livraison models.Livraison) (models.Livraison, error) {
+	contrainte := ContrainteLivraison{livraison}
+	if err := contrainte.Check(); err != nil {
+		return models.Livraison{}, err
+	}
+
 	if err := ct.beginTx(s); err != nil {
 		return models.Livraison{}, err
 	}

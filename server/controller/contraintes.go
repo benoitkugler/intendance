@@ -75,3 +75,16 @@ func (c ContrainteProduit) Check() error {
 	}
 	return nil
 }
+
+type ContrainteLivraison struct {
+	livraison models.Livraison
+}
+
+func (c ContrainteLivraison) Check() error {
+	for _, ouvert := range c.livraison.JoursLivraison {
+		if ouvert {
+			return nil
+		}
+	}
+	return fmt.Errorf("La contrainte de livraison %s ne livre sur aucun jour !", c.livraison.Nom)
+}

@@ -771,9 +771,9 @@ func EtablitCommande(c echo.Context) error {
 	if err = c.Bind(&params); err != nil {
 		return err
 	}
-	out, err := Server.EtablitCommande(ct, params.Ingredients, params.Contraintes)
+	out, ambs, err := Server.EtablitCommande(ct, params.Ingredients, params.Contraintes)
 	if err != nil {
 		return err
 	}
-	return c.JSON(200, OutCommande{Token: ct.Token, Commande: out})
+	return c.JSON(200, OutCommande{Token: ct.Token, Commande: out, Ambiguites: ambs})
 }
