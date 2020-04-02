@@ -59,10 +59,16 @@ export default class RecapIngredients extends RecapIngredientsProps {
   }
 
   async mounted() {
-    if (Object.keys(C.data.fournisseurs || {}).length > 0) return;
-    await C.data.loadFournisseurs();
+    let ps = [];
+    if (Object.keys(C.data.ingredients || {}).length == 0) {
+      ps.push(C.data.loadIngredients);
+    }
+    if (Object.keys(C.data.fournisseurs || {}).length == 0) {
+      ps.push(C.data.loadFournisseurs);
+    }
+    await Promise.all(ps);
     if (C.notifications.getError() == null) {
-      C.notifications.setMessage("Fournisseurs chargés.");
+      C.notifications.setMessage("Fournisseurs et ingrédients chargés.");
     }
   }
 

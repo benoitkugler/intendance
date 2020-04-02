@@ -23,7 +23,7 @@ type Categorie string
 
 type Callories struct{}
 
-// Dimanche = 0, Lundi = 1, Mardi = 2 , etc...
+// Lundi = 0, Mardi = 1 , etc...
 type JoursLivraison [7]bool
 
 type Conditionnement struct {

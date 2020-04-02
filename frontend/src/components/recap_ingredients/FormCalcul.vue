@@ -57,7 +57,7 @@ const FormCalculProps = Vue.extend({
   components: { TooltipBtn }
 })
 export default class FormCalcul extends FormCalculProps {
-  debounce = new Debounce(this.emitEvent, 700);
+  debounce = new Debounce(this.emitEvent, 500);
   critere: number[] = [];
 
   get selectAll() {

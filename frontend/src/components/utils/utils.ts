@@ -16,15 +16,14 @@ export const HorairesIcons = {
   [HoraireFields.Cinquieme]: "glass-mug-variant"
 };
 
-// même convention de golang Time package
 export const Days = [
-  "Dimanche",
   "Lundi",
   "Mardi",
   "Mercredi",
   "Jeudi",
   "Vendredi",
-  "Samedi"
+  "Samedi",
+  "Dimanche"
 ];
 
 export function sortByText<T extends { text: string }>(l: T[]) {
@@ -96,4 +95,14 @@ export class Debounce {
     // on sauvegarde le lancement du job
     this.timerId = setTimeout(this.job, this.delay);
   }
+}
+
+/** permute les éléments de la liste en mettant le premier à la fin */
+export function cycleDays<T>(l: T[]): T[] {
+  const out: T[] = [];
+  l.map((_, i) => {
+    const index = (i - 1 + 7) % 7; // recule de 1
+    out.push(l[index]);
+  });
+  return out;
 }

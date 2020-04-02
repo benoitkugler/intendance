@@ -30,10 +30,12 @@ func (p Produit) ColisageNeeded(quantite float64) int64 {
 // (incluant `date`).
 func (js JoursLivraison) BestJour(dateLivraison time.Time) time.Time {
 	wd := int(dateLivraison.Weekday())
+	// attention, convention différente : si wd = 0, on veut wd = 6; si wd = 1 on veut wd = 0
+	wd = (wd - 1 + 7) % 7
 	for i := 0; i < 7; i++ {
-		index := (wd - i) % 7 // on remonte le temps
-		if js[index] {        // jour ouvré
-			return dateLivraison.Add(-time.Duration(index) * jourDuration)
+		index := (wd - i + 7) % 7 // on remonte le temps
+		if js[index] {            // jour ouvré
+			return dateLivraison.Add(-time.Duration(i) * jourDuration)
 		}
 	}
 	// `js` n'est jamais ouvert : cela ne devrait pas arriver
@@ -42,14 +44,16 @@ func (js JoursLivraison) BestJour(dateLivraison time.Time) time.Time {
 
 // DateCommande calcule la date conseillée de commande la plus proche possible de `dateDemande`
 // en tenant compte des contraintes.
-func (l Livraison) DateCommande(dateDemande time.Time) time.Time {
+// Renvoie la quantités intermédiaire 'dateLivraison'
+func (l Livraison) DateCommande(dateDemande time.Time) (commande time.Time, livraison time.Time) {
 	// on soustrait l'anticipation
 	dateLivraison := dateDemande.Add(-time.Duration(l.Anticipation) * jourDuration)
 
 	// on remonte jusqu'au premier jour de livraison possible
-	dateLivraison = l.JoursLivraison.BestJour(dateLivraison)
+	livraison = l.JoursLivraison.BestJour(dateLivraison)
 
 	// on soustrait le délai
-	dateLivraison = dateLivraison.Add(-time.Duration(l.DelaiCommande) * jourDuration)
-	return dateLivraison
+	commande = livraison.Add(-time.Duration(l.DelaiCommande) * jourDuration)
+
+	return
 }

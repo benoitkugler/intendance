@@ -57,6 +57,7 @@ import TooltipBtn from "../../utils/TooltipBtn.vue";
 import { C } from "../../../logic/controller";
 import { RepasComplet, Sejour } from "../../../logic/types";
 import { DragKind, getDragData } from "../../utils/utils_drag";
+import { Formatter } from "../../../logic/formatter";
 
 const Props = Vue.extend({
   props: {
@@ -77,13 +78,7 @@ const Props = Vue.extend({
   }
 })
 export default class Week extends Props {
-  dayTitle(date: string) {
-    return new Date(date).toLocaleDateString("fr-FR", {
-      weekday: "short",
-      day: "numeric",
-      month: "short"
-    });
-  }
+  dayTitle = Formatter.formatDate;
 
   onDayDragover(event: DragEvent, date: string) {
     if (!event.dataTransfer || this.sejour == null) return;

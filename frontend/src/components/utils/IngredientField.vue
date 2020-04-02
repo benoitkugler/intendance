@@ -4,7 +4,9 @@
     label="Ajouter un ingrédient"
     :items="items"
     :filter="filter"
-    @change="id => $emit('change', id)"
+    v-model="id"
+    @change="$emit('change', id)"
+    @blur="$emit('change', id)"
   >
   </v-autocomplete>
 </template>
@@ -21,6 +23,8 @@ const IngredientFieldProps = Vue.extend({
 
 @Component({})
 export default class IngredientField extends IngredientFieldProps {
+  id: number = -1;
+
   searchFunctionCache: { [key: string]: (_: string) => boolean } = {};
 
   filter(ingredient: EnumItem<number>, search: string, _: string) {

@@ -14,7 +14,7 @@ import Vue from "vue";
 import Component from "vue-class-component";
 import { JoursLivraison } from "../../logic/types";
 import { EnumItem } from "../../logic/enums";
-import { Days } from "../utils/utils";
+import { Days, cycleDays } from "../utils/utils";
 
 const JoursLivraisonFieldProps = Vue.extend({
   props: {
@@ -25,7 +25,6 @@ const JoursLivraisonFieldProps = Vue.extend({
     event: "change"
   }
 });
-
 @Component({})
 export default class JoursLivraisonField extends JoursLivraisonFieldProps {
   items: EnumItem<number>[] = Days.map((s, i) => {

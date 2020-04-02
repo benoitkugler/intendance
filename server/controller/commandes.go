@@ -253,7 +253,9 @@ func (s Server) EtablitCommande(ct RequeteContext, ingredients []DateIngredientQ
 			return ambs[i].Nom < ambs[j].Nom
 		})
 		targetProduits[idIngredient] = targetProduit
-		ambiguites[idIngredient] = ambs
+		if len(ambs) > 0 {
+			ambiguites[idIngredient] = ambs
+		}
 	}
 
 	// puis on utilise les produits trouvés pour
@@ -268,7 +270,7 @@ func (s Server) EtablitCommande(ct RequeteContext, ingredients []DateIngredientQ
 			targetProduit := targetProduits[ing.Ingredient.Id]
 			livraison := livraisons[targetProduit.IdLivraison]
 
-			dateCommande := livraison.DateCommande(demande.Date)
+			dateCommande, _ := livraison.DateCommande(demande.Date)
 
 			// on ajoute au timed-produit l'ingrédient et sa quantité
 			// avec la date de demande

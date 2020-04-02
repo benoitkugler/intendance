@@ -61,14 +61,13 @@ export class Formatter {
   };
 
   static formatDate(dateString: Time) {
-    dateString = dateString || "";
-    if (dateString.length < 10 || dateString.substr(0, 10) == "0001-01-01") {
-      return null;
-    }
-    const year = dateString.substr(0, 4);
-    const month = Number(dateString.substr(5, 2));
-    const day = dateString.substr(8, 2);
-    return `${day} ${Months[month - 1]} ${year}`;
+    const date = new Date(dateString);
+    if (isNaN(date.valueOf())) return "";
+    return date.toLocaleDateString("fr-FR", {
+      weekday: "short",
+      day: "numeric",
+      month: "short"
+    });
   }
 
   static formatQuantite(v: number) {
@@ -94,4 +93,9 @@ export class Formatter {
     }
     return fourstring;
   }
+
+  formatProduit = (produit: Produit) => {
+    const fourstring = this.formatFournisseur(produit);
+    return `${fourstring} - ${produit.nom}`;
+  };
 }

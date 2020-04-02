@@ -27,7 +27,7 @@
               ></v-text-field>
               <horaire-field v-model="repas.horaire"></horaire-field>
               <v-text-field
-                label="Anticiper la commande"
+                label="Anticiper l'utilisation"
                 v-model.number="repas.anticipation"
                 type="number"
                 suffix="jour(s)"

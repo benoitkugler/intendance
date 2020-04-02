@@ -1,7 +1,9 @@
 package models
 
 import (
+	"fmt"
 	"testing"
+	"time"
 )
 
 type testColisage struct {
@@ -28,4 +30,12 @@ func TestColisage(t *testing.T) {
 			t.Errorf("expected %d, got %d", test.exp, got)
 		}
 	}
+}
+
+func TestDateLivraison(t *testing.T) {
+	l := Livraison{Anticipation: 1, DelaiCommande: 4, JoursLivraison: JoursLivraison{true, true, false, false, false, false, false}}
+	ti := time.Date(2020, time.March, 26, 0, 0, 0, 0, time.UTC)
+	cd, lv := l.DateCommande(ti)
+	fmt.Println("commande : ", cd)
+	fmt.Println("livraison : ", lv)
 }
