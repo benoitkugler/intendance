@@ -119,9 +119,8 @@ func (s Server) AjouteIngredientProduit(ct RequeteContext, idIngredient int64, p
 	if err != nil {
 		return ErrorSQL(err)
 	}
-	err = models.InsertManyIngredientProduits(ct.tx, []models.IngredientProduit{
-		{IdIngredient: idIngredient, IdProduit: produit.Id, IdUtilisateur: ct.idProprietaire},
-	})
+	err = models.InsertManyIngredientProduits(ct.tx,
+		models.IngredientProduit{IdIngredient: idIngredient, IdProduit: produit.Id, IdUtilisateur: ct.idProprietaire})
 	if err != nil {
 		return ct.rollbackTx(err)
 	}
@@ -249,8 +248,9 @@ func (s Server) SetDefautProduit(ct RequeteContext, idIngredient int64, idProdui
 			IdFournisseur: livraison.IdFournisseur, // déduit du produit
 			IdIngredient:  idIngredient,
 			IdProduit:     idProduit,
-			IdUtilisateur: ct.idProprietaire}
-		if err := models.InsertManyDefautProduits(ct.tx, []models.DefautProduit{dp}); err != nil {
+			IdUtilisateur: ct.idProprietaire,
+		}
+		if err := models.InsertManyDefautProduits(ct.tx, dp); err != nil {
 			return ct.rollbackTx(err)
 		}
 	}

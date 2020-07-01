@@ -70,7 +70,9 @@ func randGroupe() Groupe {
 }
 
 func randUnite() Unite {
-	return Unite(randstring())
+	choix := [...]Unite{Kilos, Litres, Piece}
+	i := rand.Intn(len(choix))
+	return choix[i]
 }
 
 func randCategorie() Categorie {
@@ -205,7 +207,9 @@ func randRecetteIngredient() RecetteIngredient {
 }
 
 func randHoraire() Horaire {
-	return Horaire(randstring())
+	choix := [...]Horaire{Cinquieme, Diner, Gouter, Midi, PetitDejeuner}
+	i := rand.Intn(len(choix))
+	return choix[i]
 }
 
 func randRepas() Repas {

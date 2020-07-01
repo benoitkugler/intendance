@@ -103,9 +103,8 @@ func (s Server) CreateFournisseur(ct RequeteContext, fournisseur models.Fourniss
 		return out, ct.rollbackTx(err)
 	}
 
-	err = models.InsertManyUtilisateurFournisseurs(ct.tx, []models.UtilisateurFournisseur{
-		{IdFournisseur: out.Id, IdUtilisateur: ct.idProprietaire},
-	})
+	err = models.InsertManyUtilisateurFournisseurs(ct.tx,
+		models.UtilisateurFournisseur{IdFournisseur: out.Id, IdUtilisateur: ct.idProprietaire})
 	if err != nil {
 		return out, ct.rollbackTx(err)
 	}
@@ -135,7 +134,7 @@ func (s Server) UpdateFournisseur(ct RequeteContext, fournisseur models.Fourniss
 		return models.Fournisseur{}, ct.rollbackTx(err)
 	}
 	if !hasF {
-		ct.rollbackTx(err)
+		_ = ct.rollbackTx(err)
 		return models.Fournisseur{}, fmt.Errorf("Le fournisseur %s ne fait pas partie de vos fournisseurs.", fournisseur.Nom)
 	}
 	fournisseur, err = fournisseur.Update(ct.tx)
@@ -154,7 +153,7 @@ func (s Server) DeleteFournisseur(ct RequeteContext, idFournisseur int64) error 
 		return ct.rollbackTx(err)
 	}
 	if !hasF {
-		ct.rollbackTx(nil)
+		_ = ct.rollbackTx(nil)
 		return fmt.Errorf("Le fournisseur (%d) ne fait pas partie de vos fournisseurs.", idFournisseur)
 	}
 
@@ -170,7 +169,7 @@ func (s Server) DeleteFournisseur(ct RequeteContext, idFournisseur int64) error 
 		return ErrorSQL(err)
 	}
 	if L := len(cps); L > 0 {
-		ct.rollbackTx(nil)
+		_ = ct.rollbackTx(nil)
 		return fmt.Errorf("%d produit(s) lié(s) au fournisseur sont déjà utilisés dans une commande.", L)
 	}
 
@@ -241,7 +240,7 @@ func (s Server) UpdateSejourFournisseurs(ct RequeteContext, idSejour int64, idsF
 		sf[i] = models.SejourFournisseur{IdUtilisateur: ct.idProprietaire, IdSejour: idSejour, IdFournisseur: id}
 	}
 	// ... et rajoute les nouveaux
-	if err := models.InsertManySejourFournisseurs(ct.tx, sf); err != nil {
+	if err := models.InsertManySejourFournisseurs(ct.tx, sf...); err != nil {
 		return ct.rollbackTx(err)
 	}
 	return ct.commitTx()
@@ -303,7 +302,7 @@ func (s Server) DeleteLivraison(ct RequeteContext, idLivraison int64) error {
 	}
 
 	if err := ct.checkLivraisonFournisseur(livraison); err != nil {
-		ct.rollbackTx(nil)
+		_ = ct.rollbackTx(nil)
 		return err
 	}
 

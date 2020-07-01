@@ -399,7 +399,7 @@ func (s Server) UpdateRecette(ct RequeteContext, in RecetteComplet) (RecetteComp
 	}
 
 	ings := in.Ingredients.AsRecetteIngredients(in.Recette.Id)
-	err = models.InsertManyRecetteIngredients(tx, ings)
+	err = models.InsertManyRecetteIngredients(tx, ings...)
 	if err != nil {
 		return in, ct.rollbackTx(err)
 	}
@@ -519,7 +519,7 @@ func (s Server) UpdateMenu(ct RequeteContext, in MenuComplet) (MenuComplet, erro
 		return in, ct.rollbackTx(err)
 	}
 	recettes := in.Recettes.AsMenuRecettes(in.Menu.Id)
-	err = models.InsertManyMenuRecettes(tx, recettes)
+	err = models.InsertManyMenuRecettes(tx, recettes...)
 	if err != nil {
 		return in, ct.rollbackTx(err)
 	}
@@ -529,7 +529,7 @@ func (s Server) UpdateMenu(ct RequeteContext, in MenuComplet) (MenuComplet, erro
 		return in, ct.rollbackTx(err)
 	}
 	ings := in.Ingredients.AsMenuIngredients(in.Menu.Id)
-	err = models.InsertManyMenuIngredients(tx, ings)
+	err = models.InsertManyMenuIngredients(tx, ings...)
 	if err != nil {
 		return in, ct.rollbackTx(err)
 	}
@@ -741,7 +741,7 @@ func (s Server) UpdateManyRepas(ct RequeteContext, repass []RepasComplet) error 
 	for rg := range cribleRepasGroupes {
 		batchRepasGroupes = append(batchRepasGroupes, rg)
 	}
-	if err = models.InsertManyRepasGroupes(ct.tx, batchRepasGroupes); err != nil {
+	if err = models.InsertManyRepasGroupes(ct.tx, batchRepasGroupes...); err != nil {
 		return ct.rollbackTx(err)
 	}
 
@@ -754,7 +754,7 @@ func (s Server) UpdateManyRepas(ct RequeteContext, repass []RepasComplet) error 
 	for rg := range cribleRepasRecettes {
 		batchRepasRecettes = append(batchRepasRecettes, rg)
 	}
-	if err = models.InsertManyRepasRecettes(ct.tx, batchRepasRecettes); err != nil {
+	if err = models.InsertManyRepasRecettes(ct.tx, batchRepasRecettes...); err != nil {
 		return ct.rollbackTx(err)
 	}
 
@@ -767,7 +767,7 @@ func (s Server) UpdateManyRepas(ct RequeteContext, repass []RepasComplet) error 
 	for rg := range cribleRepasIngredients {
 		batchRepasIngredients = append(batchRepasIngredients, rg)
 	}
-	if err = models.InsertManyRepasIngredients(ct.tx, batchRepasIngredients); err != nil {
+	if err = models.InsertManyRepasIngredients(ct.tx, batchRepasIngredients...); err != nil {
 		return ct.rollbackTx(err)
 	}
 

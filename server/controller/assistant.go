@@ -42,7 +42,7 @@ func creeRepasComplet(ct RequeteContext, params InAssistantCreateRepass,
 	for idGroupe := range idsGroupes {
 		rg = append(rg, models.RepasGroupe{IdGroupe: idGroupe, IdRepas: repas.Id})
 	}
-	if err = models.InsertManyRepasGroupes(ct.tx, rg); err != nil {
+	if err = models.InsertManyRepasGroupes(ct.tx, rg...); err != nil {
 		return ErrorSQL(err)
 	}
 	return nil

@@ -73,7 +73,6 @@ func (s Set) Add(key int64) {
 }
 
 // ------------------------------------------------------
-type LienIngredients []LienIngredient
 
 // AsRecetteIngredients lie les ingrédients au menu donné
 func (ls LienIngredients) AsRecetteIngredients(idRecette int64) []RecetteIngredient {

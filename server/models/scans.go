@@ -8,6 +8,10 @@ import (
 	"github.com/lib/pq"
 )
 
+type scanner interface {
+	Scan(...interface{}) error
+}
+
 // DB groups transaction like objects
 type DB interface {
 	Exec(query string, args ...interface{}) (sql.Result, error)
@@ -16,17 +20,27 @@ type DB interface {
 	Prepare(query string) (*sql.Stmt, error)
 }
 
-func ScanCommande(r *sql.Row) (Commande, error) {
+func scanOneCommande(row scanner) (Commande, error) {
 	var s Commande
-	if err := r.Scan(
+	err := row.Scan(
 		&s.Id,
 		&s.IdUtilisateur,
 		&s.DateEmission,
 		&s.Tag,
-	); err != nil {
-		return Commande{}, err
+	)
+	return s, err
+}
+
+func ScanCommande(row *sql.Row) (Commande, error) {
+	return scanOneCommande(row)
+}
+
+func SelectAllCommandes(tx DB) (Commandes, error) {
+	rows, err := tx.Query("SELECT * FROM commandes")
+	if err != nil {
+		return nil, err
 	}
-	return s, nil
+	return ScanCommandes(rows)
 }
 
 // SelectCommande returns the entry matching id.
@@ -46,16 +60,20 @@ func (m Commandes) Ids() Ids {
 }
 
 func ScanCommandes(rs *sql.Rows) (Commandes, error) {
+	var (
+		s   Commande
+		err error
+	)
+	defer func() {
+		errClose := rs.Close()
+		if err == nil {
+			err = errClose
+		}
+	}()
 	structs := make(Commandes, 16)
-	var err error
 	for rs.Next() {
-		var s Commande
-		if err = rs.Scan(
-			&s.Id,
-			&s.IdUtilisateur,
-			&s.DateEmission,
-			&s.Tag,
-		); err != nil {
+		s, err = scanOneCommande(rs)
+		if err != nil {
 			return nil, err
 		}
 		structs[s.Id] = s
@@ -68,59 +86,74 @@ func ScanCommandes(rs *sql.Rows) (Commandes, error) {
 
 // Insert Commande in the database and returns the item with id filled.
 func (item Commande) Insert(tx DB) (out Commande, err error) {
-	r := tx.QueryRow(`INSERT INTO commandes (
-			id_utilisateur,date_emission,tag
-			) VALUES (
-			$1,$2,$3
-			) RETURNING 
-			id,id_utilisateur,date_emission,tag;
-			`, item.IdUtilisateur, item.DateEmission, item.Tag)
-	return ScanCommande(r)
+	row := tx.QueryRow(`INSERT INTO commandes (
+		id_utilisateur,date_emission,tag
+		) VALUES (
+		$1,$2,$3
+		) RETURNING 
+		id,id_utilisateur,date_emission,tag;
+		`, item.IdUtilisateur, item.DateEmission, item.Tag)
+	return ScanCommande(row)
 }
 
 // Update Commande in the database and returns the new version.
 func (item Commande) Update(tx DB) (out Commande, err error) {
-	r := tx.QueryRow(`UPDATE commandes SET (
-			id_utilisateur,date_emission,tag
-			) = (
-			$2,$3,$4
-			) WHERE id = $1 RETURNING 
-			id,id_utilisateur,date_emission,tag;
-			`, item.Id, item.IdUtilisateur, item.DateEmission, item.Tag)
-	return ScanCommande(r)
+	row := tx.QueryRow(`UPDATE commandes SET (
+		id_utilisateur,date_emission,tag
+		) = (
+		$2,$3,$4
+		) WHERE id = $1 RETURNING 
+		id,id_utilisateur,date_emission,tag;
+		`, item.Id, item.IdUtilisateur, item.DateEmission, item.Tag)
+	return ScanCommande(row)
 }
 
-// Delete Commande in the database and the return the id.
+// Deletes Commande in the database and returns the item.
 // Only the field 'Id' is used.
-func (item Commande) Delete(tx DB) (int64, error) {
-	var deleted_id int64
-	r := tx.QueryRow("DELETE FROM commandes WHERE id = $1 RETURNING id;", item.Id)
-	err := r.Scan(&deleted_id)
-	return deleted_id, err
+func (item Commande) Delete(tx DB) (Commande, error) {
+	row := tx.QueryRow("DELETE FROM commandes WHERE id = $1 RETURNING *;", item.Id)
+	return ScanCommande(row)
 }
 
-func ScanCommandeProduit(r *sql.Row) (CommandeProduit, error) {
+func scanOneCommandeProduit(row scanner) (CommandeProduit, error) {
 	var s CommandeProduit
-	if err := r.Scan(
+	err := row.Scan(
 		&s.IdCommande,
 		&s.IdProduit,
 		&s.Quantite,
-	); err != nil {
-		return CommandeProduit{}, err
-	}
-	return s, nil
+	)
+	return s, err
 }
 
-func ScanCommandeProduits(rs *sql.Rows) ([]CommandeProduit, error) {
-	structs := make([]CommandeProduit, 0, 16)
-	var err error
+func ScanCommandeProduit(row *sql.Row) (CommandeProduit, error) {
+	return scanOneCommandeProduit(row)
+}
+
+func SelectAllCommandeProduits(tx DB) (CommandeProduits, error) {
+	rows, err := tx.Query("SELECT * FROM commande_produits")
+	if err != nil {
+		return nil, err
+	}
+	return ScanCommandeProduits(rows)
+}
+
+type CommandeProduits []CommandeProduit
+
+func ScanCommandeProduits(rs *sql.Rows) (CommandeProduits, error) {
+	var (
+		s   CommandeProduit
+		err error
+	)
+	defer func() {
+		errClose := rs.Close()
+		if err == nil {
+			err = errClose
+		}
+	}()
+	structs := make(CommandeProduits, 0, 16)
 	for rs.Next() {
-		var s CommandeProduit
-		if err = rs.Scan(
-			&s.IdCommande,
-			&s.IdProduit,
-			&s.Quantite,
-		); err != nil {
+		s, err = scanOneCommandeProduit(rs)
+		if err != nil {
 			return nil, err
 		}
 		structs = append(structs, s)
@@ -131,8 +164,44 @@ func ScanCommandeProduits(rs *sql.Rows) ([]CommandeProduit, error) {
 	return structs, nil
 }
 
+func SelectCommandeProduitByIdCommande(tx DB, idCommandes ...int64) (CommandeProduits, error) {
+	rows, err := tx.Query("SELECT * FROM commande_produits WHERE id_commande = ANY($1)", pq.Int64Array(idCommandes))
+	if err != nil {
+		return nil, err
+	}
+	return ScanCommandeProduits(rows)
+}
+
+func SelectCommandeProduitByIdProduit(tx DB, idProduits ...int64) (CommandeProduits, error) {
+	rows, err := tx.Query("SELECT * FROM commande_produits WHERE id_produit = ANY($1)", pq.Int64Array(idProduits))
+	if err != nil {
+		return nil, err
+	}
+	return ScanCommandeProduits(rows)
+}
+
+// ByIdCommande returns a map with 'IdCommande' as keys.
+// Collision may happen without uniqueness constraint.
+func (items CommandeProduits) ByIdCommande() map[int64]CommandeProduit {
+	out := make(map[int64]CommandeProduit, len(items))
+	for _, target := range items {
+		out[target.IdCommande] = target
+	}
+	return out
+}
+
+// ByIdProduit returns a map with 'IdProduit' as keys.
+// Collision may happen without uniqueness constraint.
+func (items CommandeProduits) ByIdProduit() map[int64]CommandeProduit {
+	out := make(map[int64]CommandeProduit, len(items))
+	for _, target := range items {
+		out[target.IdProduit] = target
+	}
+	return out
+}
+
 // Insert the links CommandeProduit in the database.
-func InsertManyCommandeProduits(tx DB, items []CommandeProduit) error {
+func InsertManyCommandeProduits(tx DB, items ...CommandeProduit) error {
 	if len(items) == 0 {
 		return nil
 	}
@@ -165,34 +234,50 @@ func InsertManyCommandeProduits(tx DB, items []CommandeProduit) error {
 // Only the 'IdCommande' 'IdProduit' fields are used.
 func (item CommandeProduit) Delete(tx DB) error {
 	_, err := tx.Exec(`DELETE FROM commande_produits WHERE 
-		id_commande = $1 AND id_produit = $2;`, item.IdCommande, item.IdProduit)
+	id_commande = $1 AND id_produit = $2;`, item.IdCommande, item.IdProduit)
 	return err
 }
 
-func ScanDefautProduit(r *sql.Row) (DefautProduit, error) {
+func scanOneDefautProduit(row scanner) (DefautProduit, error) {
 	var s DefautProduit
-	if err := r.Scan(
+	err := row.Scan(
 		&s.IdUtilisateur,
 		&s.IdIngredient,
 		&s.IdFournisseur,
 		&s.IdProduit,
-	); err != nil {
-		return DefautProduit{}, err
-	}
-	return s, nil
+	)
+	return s, err
 }
 
-func ScanDefautProduits(rs *sql.Rows) ([]DefautProduit, error) {
-	structs := make([]DefautProduit, 0, 16)
-	var err error
+func ScanDefautProduit(row *sql.Row) (DefautProduit, error) {
+	return scanOneDefautProduit(row)
+}
+
+func SelectAllDefautProduits(tx DB) (DefautProduits, error) {
+	rows, err := tx.Query("SELECT * FROM defaut_produits")
+	if err != nil {
+		return nil, err
+	}
+	return ScanDefautProduits(rows)
+}
+
+type DefautProduits []DefautProduit
+
+func ScanDefautProduits(rs *sql.Rows) (DefautProduits, error) {
+	var (
+		s   DefautProduit
+		err error
+	)
+	defer func() {
+		errClose := rs.Close()
+		if err == nil {
+			err = errClose
+		}
+	}()
+	structs := make(DefautProduits, 0, 16)
 	for rs.Next() {
-		var s DefautProduit
-		if err = rs.Scan(
-			&s.IdUtilisateur,
-			&s.IdIngredient,
-			&s.IdFournisseur,
-			&s.IdProduit,
-		); err != nil {
+		s, err = scanOneDefautProduit(rs)
+		if err != nil {
 			return nil, err
 		}
 		structs = append(structs, s)
@@ -203,8 +288,80 @@ func ScanDefautProduits(rs *sql.Rows) ([]DefautProduit, error) {
 	return structs, nil
 }
 
+func SelectDefautProduitByIdUtilisateur(tx DB, idUtilisateurs ...int64) (DefautProduits, error) {
+	rows, err := tx.Query("SELECT * FROM defaut_produits WHERE id_utilisateur = ANY($1)", pq.Int64Array(idUtilisateurs))
+	if err != nil {
+		return nil, err
+	}
+	return ScanDefautProduits(rows)
+}
+
+func SelectDefautProduitByIdIngredient(tx DB, idIngredients ...int64) (DefautProduits, error) {
+	rows, err := tx.Query("SELECT * FROM defaut_produits WHERE id_ingredient = ANY($1)", pq.Int64Array(idIngredients))
+	if err != nil {
+		return nil, err
+	}
+	return ScanDefautProduits(rows)
+}
+
+func SelectDefautProduitByIdFournisseur(tx DB, idFournisseurs ...int64) (DefautProduits, error) {
+	rows, err := tx.Query("SELECT * FROM defaut_produits WHERE id_fournisseur = ANY($1)", pq.Int64Array(idFournisseurs))
+	if err != nil {
+		return nil, err
+	}
+	return ScanDefautProduits(rows)
+}
+
+func SelectDefautProduitByIdProduit(tx DB, idProduits ...int64) (DefautProduits, error) {
+	rows, err := tx.Query("SELECT * FROM defaut_produits WHERE id_produit = ANY($1)", pq.Int64Array(idProduits))
+	if err != nil {
+		return nil, err
+	}
+	return ScanDefautProduits(rows)
+}
+
+// ByIdUtilisateur returns a map with 'IdUtilisateur' as keys.
+// Collision may happen without uniqueness constraint.
+func (items DefautProduits) ByIdUtilisateur() map[int64]DefautProduit {
+	out := make(map[int64]DefautProduit, len(items))
+	for _, target := range items {
+		out[target.IdUtilisateur] = target
+	}
+	return out
+}
+
+// ByIdIngredient returns a map with 'IdIngredient' as keys.
+// Collision may happen without uniqueness constraint.
+func (items DefautProduits) ByIdIngredient() map[int64]DefautProduit {
+	out := make(map[int64]DefautProduit, len(items))
+	for _, target := range items {
+		out[target.IdIngredient] = target
+	}
+	return out
+}
+
+// ByIdFournisseur returns a map with 'IdFournisseur' as keys.
+// Collision may happen without uniqueness constraint.
+func (items DefautProduits) ByIdFournisseur() map[int64]DefautProduit {
+	out := make(map[int64]DefautProduit, len(items))
+	for _, target := range items {
+		out[target.IdFournisseur] = target
+	}
+	return out
+}
+
+// ByIdProduit returns a map with 'IdProduit' as keys.
+// Collision may happen without uniqueness constraint.
+func (items DefautProduits) ByIdProduit() map[int64]DefautProduit {
+	out := make(map[int64]DefautProduit, len(items))
+	for _, target := range items {
+		out[target.IdProduit] = target
+	}
+	return out
+}
+
 // Insert the links DefautProduit in the database.
-func InsertManyDefautProduits(tx DB, items []DefautProduit) error {
+func InsertManyDefautProduits(tx DB, items ...DefautProduit) error {
 	if len(items) == 0 {
 		return nil
 	}
@@ -237,20 +394,30 @@ func InsertManyDefautProduits(tx DB, items []DefautProduit) error {
 // Only the 'IdUtilisateur' 'IdIngredient' 'IdFournisseur' 'IdProduit' fields are used.
 func (item DefautProduit) Delete(tx DB) error {
 	_, err := tx.Exec(`DELETE FROM defaut_produits WHERE 
-		id_utilisateur = $1 AND id_ingredient = $2 AND id_fournisseur = $3 AND id_produit = $4;`, item.IdUtilisateur, item.IdIngredient, item.IdFournisseur, item.IdProduit)
+	id_utilisateur = $1 AND id_ingredient = $2 AND id_fournisseur = $3 AND id_produit = $4;`, item.IdUtilisateur, item.IdIngredient, item.IdFournisseur, item.IdProduit)
 	return err
 }
 
-func ScanFournisseur(r *sql.Row) (Fournisseur, error) {
+func scanOneFournisseur(row scanner) (Fournisseur, error) {
 	var s Fournisseur
-	if err := r.Scan(
+	err := row.Scan(
 		&s.Id,
 		&s.Nom,
 		&s.Lieu,
-	); err != nil {
-		return Fournisseur{}, err
+	)
+	return s, err
+}
+
+func ScanFournisseur(row *sql.Row) (Fournisseur, error) {
+	return scanOneFournisseur(row)
+}
+
+func SelectAllFournisseurs(tx DB) (Fournisseurs, error) {
+	rows, err := tx.Query("SELECT * FROM fournisseurs")
+	if err != nil {
+		return nil, err
 	}
-	return s, nil
+	return ScanFournisseurs(rows)
 }
 
 // SelectFournisseur returns the entry matching id.
@@ -270,15 +437,20 @@ func (m Fournisseurs) Ids() Ids {
 }
 
 func ScanFournisseurs(rs *sql.Rows) (Fournisseurs, error) {
+	var (
+		s   Fournisseur
+		err error
+	)
+	defer func() {
+		errClose := rs.Close()
+		if err == nil {
+			err = errClose
+		}
+	}()
 	structs := make(Fournisseurs, 16)
-	var err error
 	for rs.Next() {
-		var s Fournisseur
-		if err = rs.Scan(
-			&s.Id,
-			&s.Nom,
-			&s.Lieu,
-		); err != nil {
+		s, err = scanOneFournisseur(rs)
+		if err != nil {
 			return nil, err
 		}
 		structs[s.Id] = s
@@ -291,49 +463,57 @@ func ScanFournisseurs(rs *sql.Rows) (Fournisseurs, error) {
 
 // Insert Fournisseur in the database and returns the item with id filled.
 func (item Fournisseur) Insert(tx DB) (out Fournisseur, err error) {
-	r := tx.QueryRow(`INSERT INTO fournisseurs (
-			nom,lieu
-			) VALUES (
-			$1,$2
-			) RETURNING 
-			id,nom,lieu;
-			`, item.Nom, item.Lieu)
-	return ScanFournisseur(r)
+	row := tx.QueryRow(`INSERT INTO fournisseurs (
+		nom,lieu
+		) VALUES (
+		$1,$2
+		) RETURNING 
+		id,nom,lieu;
+		`, item.Nom, item.Lieu)
+	return ScanFournisseur(row)
 }
 
 // Update Fournisseur in the database and returns the new version.
 func (item Fournisseur) Update(tx DB) (out Fournisseur, err error) {
-	r := tx.QueryRow(`UPDATE fournisseurs SET (
-			nom,lieu
-			) = (
-			$2,$3
-			) WHERE id = $1 RETURNING 
-			id,nom,lieu;
-			`, item.Id, item.Nom, item.Lieu)
-	return ScanFournisseur(r)
+	row := tx.QueryRow(`UPDATE fournisseurs SET (
+		nom,lieu
+		) = (
+		$2,$3
+		) WHERE id = $1 RETURNING 
+		id,nom,lieu;
+		`, item.Id, item.Nom, item.Lieu)
+	return ScanFournisseur(row)
 }
 
-// Delete Fournisseur in the database and the return the id.
+// Deletes Fournisseur in the database and returns the item.
 // Only the field 'Id' is used.
-func (item Fournisseur) Delete(tx DB) (int64, error) {
-	var deleted_id int64
-	r := tx.QueryRow("DELETE FROM fournisseurs WHERE id = $1 RETURNING id;", item.Id)
-	err := r.Scan(&deleted_id)
-	return deleted_id, err
+func (item Fournisseur) Delete(tx DB) (Fournisseur, error) {
+	row := tx.QueryRow("DELETE FROM fournisseurs WHERE id = $1 RETURNING *;", item.Id)
+	return ScanFournisseur(row)
 }
 
-func ScanGroupe(r *sql.Row) (Groupe, error) {
+func scanOneGroupe(row scanner) (Groupe, error) {
 	var s Groupe
-	if err := r.Scan(
+	err := row.Scan(
 		&s.Id,
 		&s.IdSejour,
 		&s.Nom,
 		&s.NbPersonnes,
 		&s.Couleur,
-	); err != nil {
-		return Groupe{}, err
+	)
+	return s, err
+}
+
+func ScanGroupe(row *sql.Row) (Groupe, error) {
+	return scanOneGroupe(row)
+}
+
+func SelectAllGroupes(tx DB) (Groupes, error) {
+	rows, err := tx.Query("SELECT * FROM groupes")
+	if err != nil {
+		return nil, err
 	}
-	return s, nil
+	return ScanGroupes(rows)
 }
 
 // SelectGroupe returns the entry matching id.
@@ -353,17 +533,20 @@ func (m Groupes) Ids() Ids {
 }
 
 func ScanGroupes(rs *sql.Rows) (Groupes, error) {
+	var (
+		s   Groupe
+		err error
+	)
+	defer func() {
+		errClose := rs.Close()
+		if err == nil {
+			err = errClose
+		}
+	}()
 	structs := make(Groupes, 16)
-	var err error
 	for rs.Next() {
-		var s Groupe
-		if err = rs.Scan(
-			&s.Id,
-			&s.IdSejour,
-			&s.Nom,
-			&s.NbPersonnes,
-			&s.Couleur,
-		); err != nil {
+		s, err = scanOneGroupe(rs)
+		if err != nil {
 			return nil, err
 		}
 		structs[s.Id] = s
@@ -376,50 +559,58 @@ func ScanGroupes(rs *sql.Rows) (Groupes, error) {
 
 // Insert Groupe in the database and returns the item with id filled.
 func (item Groupe) Insert(tx DB) (out Groupe, err error) {
-	r := tx.QueryRow(`INSERT INTO groupes (
-			id_sejour,nom,nb_personnes,couleur
-			) VALUES (
-			$1,$2,$3,$4
-			) RETURNING 
-			id,id_sejour,nom,nb_personnes,couleur;
-			`, item.IdSejour, item.Nom, item.NbPersonnes, item.Couleur)
-	return ScanGroupe(r)
+	row := tx.QueryRow(`INSERT INTO groupes (
+		id_sejour,nom,nb_personnes,couleur
+		) VALUES (
+		$1,$2,$3,$4
+		) RETURNING 
+		id,id_sejour,nom,nb_personnes,couleur;
+		`, item.IdSejour, item.Nom, item.NbPersonnes, item.Couleur)
+	return ScanGroupe(row)
 }
 
 // Update Groupe in the database and returns the new version.
 func (item Groupe) Update(tx DB) (out Groupe, err error) {
-	r := tx.QueryRow(`UPDATE groupes SET (
-			id_sejour,nom,nb_personnes,couleur
-			) = (
-			$2,$3,$4,$5
-			) WHERE id = $1 RETURNING 
-			id,id_sejour,nom,nb_personnes,couleur;
-			`, item.Id, item.IdSejour, item.Nom, item.NbPersonnes, item.Couleur)
-	return ScanGroupe(r)
+	row := tx.QueryRow(`UPDATE groupes SET (
+		id_sejour,nom,nb_personnes,couleur
+		) = (
+		$2,$3,$4,$5
+		) WHERE id = $1 RETURNING 
+		id,id_sejour,nom,nb_personnes,couleur;
+		`, item.Id, item.IdSejour, item.Nom, item.NbPersonnes, item.Couleur)
+	return ScanGroupe(row)
 }
 
-// Delete Groupe in the database and the return the id.
+// Deletes Groupe in the database and returns the item.
 // Only the field 'Id' is used.
-func (item Groupe) Delete(tx DB) (int64, error) {
-	var deleted_id int64
-	r := tx.QueryRow("DELETE FROM groupes WHERE id = $1 RETURNING id;", item.Id)
-	err := r.Scan(&deleted_id)
-	return deleted_id, err
+func (item Groupe) Delete(tx DB) (Groupe, error) {
+	row := tx.QueryRow("DELETE FROM groupes WHERE id = $1 RETURNING *;", item.Id)
+	return ScanGroupe(row)
 }
 
-func ScanIngredient(r *sql.Row) (Ingredient, error) {
+func scanOneIngredient(row scanner) (Ingredient, error) {
 	var s Ingredient
-	if err := r.Scan(
+	err := row.Scan(
 		&s.Id,
 		&s.Nom,
 		&s.Unite,
 		&s.Categorie,
 		&s.Callories,
 		&s.Conditionnement,
-	); err != nil {
-		return Ingredient{}, err
+	)
+	return s, err
+}
+
+func ScanIngredient(row *sql.Row) (Ingredient, error) {
+	return scanOneIngredient(row)
+}
+
+func SelectAllIngredients(tx DB) (Ingredients, error) {
+	rows, err := tx.Query("SELECT * FROM ingredients")
+	if err != nil {
+		return nil, err
 	}
-	return s, nil
+	return ScanIngredients(rows)
 }
 
 // SelectIngredient returns the entry matching id.
@@ -439,18 +630,20 @@ func (m Ingredients) Ids() Ids {
 }
 
 func ScanIngredients(rs *sql.Rows) (Ingredients, error) {
+	var (
+		s   Ingredient
+		err error
+	)
+	defer func() {
+		errClose := rs.Close()
+		if err == nil {
+			err = errClose
+		}
+	}()
 	structs := make(Ingredients, 16)
-	var err error
 	for rs.Next() {
-		var s Ingredient
-		if err = rs.Scan(
-			&s.Id,
-			&s.Nom,
-			&s.Unite,
-			&s.Categorie,
-			&s.Callories,
-			&s.Conditionnement,
-		); err != nil {
+		s, err = scanOneIngredient(rs)
+		if err != nil {
 			return nil, err
 		}
 		structs[s.Id] = s
@@ -463,59 +656,74 @@ func ScanIngredients(rs *sql.Rows) (Ingredients, error) {
 
 // Insert Ingredient in the database and returns the item with id filled.
 func (item Ingredient) Insert(tx DB) (out Ingredient, err error) {
-	r := tx.QueryRow(`INSERT INTO ingredients (
-			nom,unite,categorie,callories,conditionnement
-			) VALUES (
-			$1,$2,$3,$4,$5
-			) RETURNING 
-			id,nom,unite,categorie,callories,conditionnement;
-			`, item.Nom, item.Unite, item.Categorie, item.Callories, item.Conditionnement)
-	return ScanIngredient(r)
+	row := tx.QueryRow(`INSERT INTO ingredients (
+		nom,unite,categorie,callories,conditionnement
+		) VALUES (
+		$1,$2,$3,$4,$5
+		) RETURNING 
+		id,nom,unite,categorie,callories,conditionnement;
+		`, item.Nom, item.Unite, item.Categorie, item.Callories, item.Conditionnement)
+	return ScanIngredient(row)
 }
 
 // Update Ingredient in the database and returns the new version.
 func (item Ingredient) Update(tx DB) (out Ingredient, err error) {
-	r := tx.QueryRow(`UPDATE ingredients SET (
-			nom,unite,categorie,callories,conditionnement
-			) = (
-			$2,$3,$4,$5,$6
-			) WHERE id = $1 RETURNING 
-			id,nom,unite,categorie,callories,conditionnement;
-			`, item.Id, item.Nom, item.Unite, item.Categorie, item.Callories, item.Conditionnement)
-	return ScanIngredient(r)
+	row := tx.QueryRow(`UPDATE ingredients SET (
+		nom,unite,categorie,callories,conditionnement
+		) = (
+		$2,$3,$4,$5,$6
+		) WHERE id = $1 RETURNING 
+		id,nom,unite,categorie,callories,conditionnement;
+		`, item.Id, item.Nom, item.Unite, item.Categorie, item.Callories, item.Conditionnement)
+	return ScanIngredient(row)
 }
 
-// Delete Ingredient in the database and the return the id.
+// Deletes Ingredient in the database and returns the item.
 // Only the field 'Id' is used.
-func (item Ingredient) Delete(tx DB) (int64, error) {
-	var deleted_id int64
-	r := tx.QueryRow("DELETE FROM ingredients WHERE id = $1 RETURNING id;", item.Id)
-	err := r.Scan(&deleted_id)
-	return deleted_id, err
+func (item Ingredient) Delete(tx DB) (Ingredient, error) {
+	row := tx.QueryRow("DELETE FROM ingredients WHERE id = $1 RETURNING *;", item.Id)
+	return ScanIngredient(row)
 }
 
-func ScanIngredientProduit(r *sql.Row) (IngredientProduit, error) {
+func scanOneIngredientProduit(row scanner) (IngredientProduit, error) {
 	var s IngredientProduit
-	if err := r.Scan(
+	err := row.Scan(
 		&s.IdIngredient,
 		&s.IdProduit,
 		&s.IdUtilisateur,
-	); err != nil {
-		return IngredientProduit{}, err
-	}
-	return s, nil
+	)
+	return s, err
 }
 
-func ScanIngredientProduits(rs *sql.Rows) ([]IngredientProduit, error) {
-	structs := make([]IngredientProduit, 0, 16)
-	var err error
+func ScanIngredientProduit(row *sql.Row) (IngredientProduit, error) {
+	return scanOneIngredientProduit(row)
+}
+
+func SelectAllIngredientProduits(tx DB) (IngredientProduits, error) {
+	rows, err := tx.Query("SELECT * FROM ingredient_produits")
+	if err != nil {
+		return nil, err
+	}
+	return ScanIngredientProduits(rows)
+}
+
+type IngredientProduits []IngredientProduit
+
+func ScanIngredientProduits(rs *sql.Rows) (IngredientProduits, error) {
+	var (
+		s   IngredientProduit
+		err error
+	)
+	defer func() {
+		errClose := rs.Close()
+		if err == nil {
+			err = errClose
+		}
+	}()
+	structs := make(IngredientProduits, 0, 16)
 	for rs.Next() {
-		var s IngredientProduit
-		if err = rs.Scan(
-			&s.IdIngredient,
-			&s.IdProduit,
-			&s.IdUtilisateur,
-		); err != nil {
+		s, err = scanOneIngredientProduit(rs)
+		if err != nil {
 			return nil, err
 		}
 		structs = append(structs, s)
@@ -526,8 +734,62 @@ func ScanIngredientProduits(rs *sql.Rows) ([]IngredientProduit, error) {
 	return structs, nil
 }
 
+func SelectIngredientProduitByIdIngredient(tx DB, idIngredients ...int64) (IngredientProduits, error) {
+	rows, err := tx.Query("SELECT * FROM ingredient_produits WHERE id_ingredient = ANY($1)", pq.Int64Array(idIngredients))
+	if err != nil {
+		return nil, err
+	}
+	return ScanIngredientProduits(rows)
+}
+
+func SelectIngredientProduitByIdProduit(tx DB, idProduits ...int64) (IngredientProduits, error) {
+	rows, err := tx.Query("SELECT * FROM ingredient_produits WHERE id_produit = ANY($1)", pq.Int64Array(idProduits))
+	if err != nil {
+		return nil, err
+	}
+	return ScanIngredientProduits(rows)
+}
+
+func SelectIngredientProduitByIdUtilisateur(tx DB, idUtilisateurs ...int64) (IngredientProduits, error) {
+	rows, err := tx.Query("SELECT * FROM ingredient_produits WHERE id_utilisateur = ANY($1)", pq.Int64Array(idUtilisateurs))
+	if err != nil {
+		return nil, err
+	}
+	return ScanIngredientProduits(rows)
+}
+
+// ByIdIngredient returns a map with 'IdIngredient' as keys.
+// Collision may happen without uniqueness constraint.
+func (items IngredientProduits) ByIdIngredient() map[int64]IngredientProduit {
+	out := make(map[int64]IngredientProduit, len(items))
+	for _, target := range items {
+		out[target.IdIngredient] = target
+	}
+	return out
+}
+
+// ByIdProduit returns a map with 'IdProduit' as keys.
+// Collision may happen without uniqueness constraint.
+func (items IngredientProduits) ByIdProduit() map[int64]IngredientProduit {
+	out := make(map[int64]IngredientProduit, len(items))
+	for _, target := range items {
+		out[target.IdProduit] = target
+	}
+	return out
+}
+
+// ByIdUtilisateur returns a map with 'IdUtilisateur' as keys.
+// Collision may happen without uniqueness constraint.
+func (items IngredientProduits) ByIdUtilisateur() map[int64]IngredientProduit {
+	out := make(map[int64]IngredientProduit, len(items))
+	for _, target := range items {
+		out[target.IdUtilisateur] = target
+	}
+	return out
+}
+
 // Insert the links IngredientProduit in the database.
-func InsertManyIngredientProduits(tx DB, items []IngredientProduit) error {
+func InsertManyIngredientProduits(tx DB, items ...IngredientProduit) error {
 	if len(items) == 0 {
 		return nil
 	}
@@ -560,32 +822,49 @@ func InsertManyIngredientProduits(tx DB, items []IngredientProduit) error {
 // Only the 'IdIngredient' 'IdProduit' 'IdUtilisateur' fields are used.
 func (item IngredientProduit) Delete(tx DB) error {
 	_, err := tx.Exec(`DELETE FROM ingredient_produits WHERE 
-		id_ingredient = $1 AND id_produit = $2 AND id_utilisateur = $3;`, item.IdIngredient, item.IdProduit, item.IdUtilisateur)
+	id_ingredient = $1 AND id_produit = $2 AND id_utilisateur = $3;`, item.IdIngredient, item.IdProduit, item.IdUtilisateur)
 	return err
 }
 
-func ScanLienIngredient(r *sql.Row) (LienIngredient, error) {
+func scanOneLienIngredient(row scanner) (LienIngredient, error) {
 	var s LienIngredient
-	if err := r.Scan(
+	err := row.Scan(
 		&s.IdIngredient,
 		&s.Quantite,
 		&s.Cuisson,
-	); err != nil {
-		return LienIngredient{}, err
-	}
-	return s, nil
+	)
+	return s, err
 }
 
-func ScanLienIngredients(rs *sql.Rows) ([]LienIngredient, error) {
-	structs := make([]LienIngredient, 0, 16)
-	var err error
+func ScanLienIngredient(row *sql.Row) (LienIngredient, error) {
+	return scanOneLienIngredient(row)
+}
+
+func SelectAllLienIngredients(tx DB) (LienIngredients, error) {
+	rows, err := tx.Query("SELECT * FROM lien_ingredients")
+	if err != nil {
+		return nil, err
+	}
+	return ScanLienIngredients(rows)
+}
+
+type LienIngredients []LienIngredient
+
+func ScanLienIngredients(rs *sql.Rows) (LienIngredients, error) {
+	var (
+		s   LienIngredient
+		err error
+	)
+	defer func() {
+		errClose := rs.Close()
+		if err == nil {
+			err = errClose
+		}
+	}()
+	structs := make(LienIngredients, 0, 16)
 	for rs.Next() {
-		var s LienIngredient
-		if err = rs.Scan(
-			&s.IdIngredient,
-			&s.Quantite,
-			&s.Cuisson,
-		); err != nil {
+		s, err = scanOneLienIngredient(rs)
+		if err != nil {
 			return nil, err
 		}
 		structs = append(structs, s)
@@ -596,8 +875,26 @@ func ScanLienIngredients(rs *sql.Rows) ([]LienIngredient, error) {
 	return structs, nil
 }
 
+func SelectLienIngredientByIdIngredient(tx DB, idIngredients ...int64) (LienIngredients, error) {
+	rows, err := tx.Query("SELECT * FROM lien_ingredients WHERE id_ingredient = ANY($1)", pq.Int64Array(idIngredients))
+	if err != nil {
+		return nil, err
+	}
+	return ScanLienIngredients(rows)
+}
+
+// ByIdIngredient returns a map with 'IdIngredient' as keys.
+// Collision may happen without uniqueness constraint.
+func (items LienIngredients) ByIdIngredient() map[int64]LienIngredient {
+	out := make(map[int64]LienIngredient, len(items))
+	for _, target := range items {
+		out[target.IdIngredient] = target
+	}
+	return out
+}
+
 // Insert the links LienIngredient in the database.
-func InsertManyLienIngredients(tx DB, items []LienIngredient) error {
+func InsertManyLienIngredients(tx DB, items ...LienIngredient) error {
 	if len(items) == 0 {
 		return nil
 	}
@@ -630,23 +927,33 @@ func InsertManyLienIngredients(tx DB, items []LienIngredient) error {
 // Only the 'IdIngredient' fields are used.
 func (item LienIngredient) Delete(tx DB) error {
 	_, err := tx.Exec(`DELETE FROM lien_ingredients WHERE 
-		id_ingredient = $1;`, item.IdIngredient)
+	id_ingredient = $1;`, item.IdIngredient)
 	return err
 }
 
-func ScanLivraison(r *sql.Row) (Livraison, error) {
+func scanOneLivraison(row scanner) (Livraison, error) {
 	var s Livraison
-	if err := r.Scan(
+	err := row.Scan(
 		&s.Id,
 		&s.IdFournisseur,
 		&s.Nom,
 		&s.JoursLivraison,
 		&s.DelaiCommande,
 		&s.Anticipation,
-	); err != nil {
-		return Livraison{}, err
+	)
+	return s, err
+}
+
+func ScanLivraison(row *sql.Row) (Livraison, error) {
+	return scanOneLivraison(row)
+}
+
+func SelectAllLivraisons(tx DB) (Livraisons, error) {
+	rows, err := tx.Query("SELECT * FROM livraisons")
+	if err != nil {
+		return nil, err
 	}
-	return s, nil
+	return ScanLivraisons(rows)
 }
 
 // SelectLivraison returns the entry matching id.
@@ -666,18 +973,20 @@ func (m Livraisons) Ids() Ids {
 }
 
 func ScanLivraisons(rs *sql.Rows) (Livraisons, error) {
+	var (
+		s   Livraison
+		err error
+	)
+	defer func() {
+		errClose := rs.Close()
+		if err == nil {
+			err = errClose
+		}
+	}()
 	structs := make(Livraisons, 16)
-	var err error
 	for rs.Next() {
-		var s Livraison
-		if err = rs.Scan(
-			&s.Id,
-			&s.IdFournisseur,
-			&s.Nom,
-			&s.JoursLivraison,
-			&s.DelaiCommande,
-			&s.Anticipation,
-		); err != nil {
+		s, err = scanOneLivraison(rs)
+		if err != nil {
 			return nil, err
 		}
 		structs[s.Id] = s
@@ -690,47 +999,55 @@ func ScanLivraisons(rs *sql.Rows) (Livraisons, error) {
 
 // Insert Livraison in the database and returns the item with id filled.
 func (item Livraison) Insert(tx DB) (out Livraison, err error) {
-	r := tx.QueryRow(`INSERT INTO livraisons (
-			id_fournisseur,nom,jours_livraison,delai_commande,anticipation
-			) VALUES (
-			$1,$2,$3,$4,$5
-			) RETURNING 
-			id,id_fournisseur,nom,jours_livraison,delai_commande,anticipation;
-			`, item.IdFournisseur, item.Nom, item.JoursLivraison, item.DelaiCommande, item.Anticipation)
-	return ScanLivraison(r)
+	row := tx.QueryRow(`INSERT INTO livraisons (
+		id_fournisseur,nom,jours_livraison,delai_commande,anticipation
+		) VALUES (
+		$1,$2,$3,$4,$5
+		) RETURNING 
+		id,id_fournisseur,nom,jours_livraison,delai_commande,anticipation;
+		`, item.IdFournisseur, item.Nom, item.JoursLivraison, item.DelaiCommande, item.Anticipation)
+	return ScanLivraison(row)
 }
 
 // Update Livraison in the database and returns the new version.
 func (item Livraison) Update(tx DB) (out Livraison, err error) {
-	r := tx.QueryRow(`UPDATE livraisons SET (
-			id_fournisseur,nom,jours_livraison,delai_commande,anticipation
-			) = (
-			$2,$3,$4,$5,$6
-			) WHERE id = $1 RETURNING 
-			id,id_fournisseur,nom,jours_livraison,delai_commande,anticipation;
-			`, item.Id, item.IdFournisseur, item.Nom, item.JoursLivraison, item.DelaiCommande, item.Anticipation)
-	return ScanLivraison(r)
+	row := tx.QueryRow(`UPDATE livraisons SET (
+		id_fournisseur,nom,jours_livraison,delai_commande,anticipation
+		) = (
+		$2,$3,$4,$5,$6
+		) WHERE id = $1 RETURNING 
+		id,id_fournisseur,nom,jours_livraison,delai_commande,anticipation;
+		`, item.Id, item.IdFournisseur, item.Nom, item.JoursLivraison, item.DelaiCommande, item.Anticipation)
+	return ScanLivraison(row)
 }
 
-// Delete Livraison in the database and the return the id.
+// Deletes Livraison in the database and returns the item.
 // Only the field 'Id' is used.
-func (item Livraison) Delete(tx DB) (int64, error) {
-	var deleted_id int64
-	r := tx.QueryRow("DELETE FROM livraisons WHERE id = $1 RETURNING id;", item.Id)
-	err := r.Scan(&deleted_id)
-	return deleted_id, err
+func (item Livraison) Delete(tx DB) (Livraison, error) {
+	row := tx.QueryRow("DELETE FROM livraisons WHERE id = $1 RETURNING *;", item.Id)
+	return ScanLivraison(row)
 }
 
-func ScanMenu(r *sql.Row) (Menu, error) {
+func scanOneMenu(row scanner) (Menu, error) {
 	var s Menu
-	if err := r.Scan(
+	err := row.Scan(
 		&s.Id,
 		&s.IdUtilisateur,
 		&s.Commentaire,
-	); err != nil {
-		return Menu{}, err
+	)
+	return s, err
+}
+
+func ScanMenu(row *sql.Row) (Menu, error) {
+	return scanOneMenu(row)
+}
+
+func SelectAllMenus(tx DB) (Menus, error) {
+	rows, err := tx.Query("SELECT * FROM menus")
+	if err != nil {
+		return nil, err
 	}
-	return s, nil
+	return ScanMenus(rows)
 }
 
 // SelectMenu returns the entry matching id.
@@ -750,15 +1067,20 @@ func (m Menus) Ids() Ids {
 }
 
 func ScanMenus(rs *sql.Rows) (Menus, error) {
+	var (
+		s   Menu
+		err error
+	)
+	defer func() {
+		errClose := rs.Close()
+		if err == nil {
+			err = errClose
+		}
+	}()
 	structs := make(Menus, 16)
-	var err error
 	for rs.Next() {
-		var s Menu
-		if err = rs.Scan(
-			&s.Id,
-			&s.IdUtilisateur,
-			&s.Commentaire,
-		); err != nil {
+		s, err = scanOneMenu(rs)
+		if err != nil {
 			return nil, err
 		}
 		structs[s.Id] = s
@@ -771,61 +1093,75 @@ func ScanMenus(rs *sql.Rows) (Menus, error) {
 
 // Insert Menu in the database and returns the item with id filled.
 func (item Menu) Insert(tx DB) (out Menu, err error) {
-	r := tx.QueryRow(`INSERT INTO menus (
-			id_utilisateur,commentaire
-			) VALUES (
-			$1,$2
-			) RETURNING 
-			id,id_utilisateur,commentaire;
-			`, item.IdUtilisateur, item.Commentaire)
-	return ScanMenu(r)
+	row := tx.QueryRow(`INSERT INTO menus (
+		id_utilisateur,commentaire
+		) VALUES (
+		$1,$2
+		) RETURNING 
+		id,id_utilisateur,commentaire;
+		`, item.IdUtilisateur, item.Commentaire)
+	return ScanMenu(row)
 }
 
 // Update Menu in the database and returns the new version.
 func (item Menu) Update(tx DB) (out Menu, err error) {
-	r := tx.QueryRow(`UPDATE menus SET (
-			id_utilisateur,commentaire
-			) = (
-			$2,$3
-			) WHERE id = $1 RETURNING 
-			id,id_utilisateur,commentaire;
-			`, item.Id, item.IdUtilisateur, item.Commentaire)
-	return ScanMenu(r)
+	row := tx.QueryRow(`UPDATE menus SET (
+		id_utilisateur,commentaire
+		) = (
+		$2,$3
+		) WHERE id = $1 RETURNING 
+		id,id_utilisateur,commentaire;
+		`, item.Id, item.IdUtilisateur, item.Commentaire)
+	return ScanMenu(row)
 }
 
-// Delete Menu in the database and the return the id.
+// Deletes Menu in the database and returns the item.
 // Only the field 'Id' is used.
-func (item Menu) Delete(tx DB) (int64, error) {
-	var deleted_id int64
-	r := tx.QueryRow("DELETE FROM menus WHERE id = $1 RETURNING id;", item.Id)
-	err := r.Scan(&deleted_id)
-	return deleted_id, err
+func (item Menu) Delete(tx DB) (Menu, error) {
+	row := tx.QueryRow("DELETE FROM menus WHERE id = $1 RETURNING *;", item.Id)
+	return ScanMenu(row)
 }
 
-func ScanMenuIngredient(r *sql.Row) (MenuIngredient, error) {
+func scanOneMenuIngredient(row scanner) (MenuIngredient, error) {
 	var s MenuIngredient
-	if err := r.Scan(
+	err := row.Scan(
 		&s.IdMenu,
 		&s.IdIngredient,
 		&s.Quantite,
 		&s.Cuisson,
-	); err != nil {
-		return MenuIngredient{}, err
-	}
-	return s, nil
+	)
+	return s, err
 }
 
-func ScanMenuIngredients(rs *sql.Rows) ([]MenuIngredient, error) {
-	structs := make([]MenuIngredient, 0, 16)
-	var err error
+func ScanMenuIngredient(row *sql.Row) (MenuIngredient, error) {
+	return scanOneMenuIngredient(row)
+}
+
+func SelectAllMenuIngredients(tx DB) (MenuIngredients, error) {
+	rows, err := tx.Query("SELECT * FROM menu_ingredients")
+	if err != nil {
+		return nil, err
+	}
+	return ScanMenuIngredients(rows)
+}
+
+type MenuIngredients []MenuIngredient
+
+func ScanMenuIngredients(rs *sql.Rows) (MenuIngredients, error) {
+	var (
+		s   MenuIngredient
+		err error
+	)
+	defer func() {
+		errClose := rs.Close()
+		if err == nil {
+			err = errClose
+		}
+	}()
+	structs := make(MenuIngredients, 0, 16)
 	for rs.Next() {
-		var s MenuIngredient
-		if err = rs.Scan(
-			&s.IdMenu,
-			&s.IdIngredient,
-			&s.Quantite,
-			&s.Cuisson,
-		); err != nil {
+		s, err = scanOneMenuIngredient(rs)
+		if err != nil {
 			return nil, err
 		}
 		structs = append(structs, s)
@@ -836,8 +1172,44 @@ func ScanMenuIngredients(rs *sql.Rows) ([]MenuIngredient, error) {
 	return structs, nil
 }
 
+func SelectMenuIngredientByIdMenu(tx DB, idMenus ...int64) (MenuIngredients, error) {
+	rows, err := tx.Query("SELECT * FROM menu_ingredients WHERE id_menu = ANY($1)", pq.Int64Array(idMenus))
+	if err != nil {
+		return nil, err
+	}
+	return ScanMenuIngredients(rows)
+}
+
+func SelectMenuIngredientByIdIngredient(tx DB, idIngredients ...int64) (MenuIngredients, error) {
+	rows, err := tx.Query("SELECT * FROM menu_ingredients WHERE id_ingredient = ANY($1)", pq.Int64Array(idIngredients))
+	if err != nil {
+		return nil, err
+	}
+	return ScanMenuIngredients(rows)
+}
+
+// ByIdMenu returns a map with 'IdMenu' as keys.
+// Collision may happen without uniqueness constraint.
+func (items MenuIngredients) ByIdMenu() map[int64]MenuIngredient {
+	out := make(map[int64]MenuIngredient, len(items))
+	for _, target := range items {
+		out[target.IdMenu] = target
+	}
+	return out
+}
+
+// ByIdIngredient returns a map with 'IdIngredient' as keys.
+// Collision may happen without uniqueness constraint.
+func (items MenuIngredients) ByIdIngredient() map[int64]MenuIngredient {
+	out := make(map[int64]MenuIngredient, len(items))
+	for _, target := range items {
+		out[target.IdIngredient] = target
+	}
+	return out
+}
+
 // Insert the links MenuIngredient in the database.
-func InsertManyMenuIngredients(tx DB, items []MenuIngredient) error {
+func InsertManyMenuIngredients(tx DB, items ...MenuIngredient) error {
 	if len(items) == 0 {
 		return nil
 	}
@@ -870,30 +1242,48 @@ func InsertManyMenuIngredients(tx DB, items []MenuIngredient) error {
 // Only the 'IdMenu' 'IdIngredient' fields are used.
 func (item MenuIngredient) Delete(tx DB) error {
 	_, err := tx.Exec(`DELETE FROM menu_ingredients WHERE 
-		id_menu = $1 AND id_ingredient = $2;`, item.IdMenu, item.IdIngredient)
+	id_menu = $1 AND id_ingredient = $2;`, item.IdMenu, item.IdIngredient)
 	return err
 }
 
-func ScanMenuRecette(r *sql.Row) (MenuRecette, error) {
+func scanOneMenuRecette(row scanner) (MenuRecette, error) {
 	var s MenuRecette
-	if err := r.Scan(
+	err := row.Scan(
 		&s.IdMenu,
 		&s.IdRecette,
-	); err != nil {
-		return MenuRecette{}, err
-	}
-	return s, nil
+	)
+	return s, err
 }
 
-func ScanMenuRecettes(rs *sql.Rows) ([]MenuRecette, error) {
-	structs := make([]MenuRecette, 0, 16)
-	var err error
+func ScanMenuRecette(row *sql.Row) (MenuRecette, error) {
+	return scanOneMenuRecette(row)
+}
+
+func SelectAllMenuRecettes(tx DB) (MenuRecettes, error) {
+	rows, err := tx.Query("SELECT * FROM menu_recettes")
+	if err != nil {
+		return nil, err
+	}
+	return ScanMenuRecettes(rows)
+}
+
+type MenuRecettes []MenuRecette
+
+func ScanMenuRecettes(rs *sql.Rows) (MenuRecettes, error) {
+	var (
+		s   MenuRecette
+		err error
+	)
+	defer func() {
+		errClose := rs.Close()
+		if err == nil {
+			err = errClose
+		}
+	}()
+	structs := make(MenuRecettes, 0, 16)
 	for rs.Next() {
-		var s MenuRecette
-		if err = rs.Scan(
-			&s.IdMenu,
-			&s.IdRecette,
-		); err != nil {
+		s, err = scanOneMenuRecette(rs)
+		if err != nil {
 			return nil, err
 		}
 		structs = append(structs, s)
@@ -904,8 +1294,44 @@ func ScanMenuRecettes(rs *sql.Rows) ([]MenuRecette, error) {
 	return structs, nil
 }
 
+func SelectMenuRecetteByIdMenu(tx DB, idMenus ...int64) (MenuRecettes, error) {
+	rows, err := tx.Query("SELECT * FROM menu_recettes WHERE id_menu = ANY($1)", pq.Int64Array(idMenus))
+	if err != nil {
+		return nil, err
+	}
+	return ScanMenuRecettes(rows)
+}
+
+func SelectMenuRecetteByIdRecette(tx DB, idRecettes ...int64) (MenuRecettes, error) {
+	rows, err := tx.Query("SELECT * FROM menu_recettes WHERE id_recette = ANY($1)", pq.Int64Array(idRecettes))
+	if err != nil {
+		return nil, err
+	}
+	return ScanMenuRecettes(rows)
+}
+
+// ByIdMenu returns a map with 'IdMenu' as keys.
+// Collision may happen without uniqueness constraint.
+func (items MenuRecettes) ByIdMenu() map[int64]MenuRecette {
+	out := make(map[int64]MenuRecette, len(items))
+	for _, target := range items {
+		out[target.IdMenu] = target
+	}
+	return out
+}
+
+// ByIdRecette returns a map with 'IdRecette' as keys.
+// Collision may happen without uniqueness constraint.
+func (items MenuRecettes) ByIdRecette() map[int64]MenuRecette {
+	out := make(map[int64]MenuRecette, len(items))
+	for _, target := range items {
+		out[target.IdRecette] = target
+	}
+	return out
+}
+
 // Insert the links MenuRecette in the database.
-func InsertManyMenuRecettes(tx DB, items []MenuRecette) error {
+func InsertManyMenuRecettes(tx DB, items ...MenuRecette) error {
 	if len(items) == 0 {
 		return nil
 	}
@@ -938,13 +1364,13 @@ func InsertManyMenuRecettes(tx DB, items []MenuRecette) error {
 // Only the 'IdMenu' 'IdRecette' fields are used.
 func (item MenuRecette) Delete(tx DB) error {
 	_, err := tx.Exec(`DELETE FROM menu_recettes WHERE 
-		id_menu = $1 AND id_recette = $2;`, item.IdMenu, item.IdRecette)
+	id_menu = $1 AND id_recette = $2;`, item.IdMenu, item.IdRecette)
 	return err
 }
 
-func ScanProduit(r *sql.Row) (Produit, error) {
+func scanOneProduit(row scanner) (Produit, error) {
 	var s Produit
-	if err := r.Scan(
+	err := row.Scan(
 		&s.Id,
 		&s.IdLivraison,
 		&s.Nom,
@@ -952,10 +1378,20 @@ func ScanProduit(r *sql.Row) (Produit, error) {
 		&s.Prix,
 		&s.ReferenceFournisseur,
 		&s.Colisage,
-	); err != nil {
-		return Produit{}, err
+	)
+	return s, err
+}
+
+func ScanProduit(row *sql.Row) (Produit, error) {
+	return scanOneProduit(row)
+}
+
+func SelectAllProduits(tx DB) (Produits, error) {
+	rows, err := tx.Query("SELECT * FROM produits")
+	if err != nil {
+		return nil, err
 	}
-	return s, nil
+	return ScanProduits(rows)
 }
 
 // SelectProduit returns the entry matching id.
@@ -975,19 +1411,20 @@ func (m Produits) Ids() Ids {
 }
 
 func ScanProduits(rs *sql.Rows) (Produits, error) {
+	var (
+		s   Produit
+		err error
+	)
+	defer func() {
+		errClose := rs.Close()
+		if err == nil {
+			err = errClose
+		}
+	}()
 	structs := make(Produits, 16)
-	var err error
 	for rs.Next() {
-		var s Produit
-		if err = rs.Scan(
-			&s.Id,
-			&s.IdLivraison,
-			&s.Nom,
-			&s.Conditionnement,
-			&s.Prix,
-			&s.ReferenceFournisseur,
-			&s.Colisage,
-		); err != nil {
+		s, err = scanOneProduit(rs)
+		if err != nil {
 			return nil, err
 		}
 		structs[s.Id] = s
@@ -1000,48 +1437,56 @@ func ScanProduits(rs *sql.Rows) (Produits, error) {
 
 // Insert Produit in the database and returns the item with id filled.
 func (item Produit) Insert(tx DB) (out Produit, err error) {
-	r := tx.QueryRow(`INSERT INTO produits (
-			id_livraison,nom,conditionnement,prix,reference_fournisseur,colisage
-			) VALUES (
-			$1,$2,$3,$4,$5,$6
-			) RETURNING 
-			id,id_livraison,nom,conditionnement,prix,reference_fournisseur,colisage;
-			`, item.IdLivraison, item.Nom, item.Conditionnement, item.Prix, item.ReferenceFournisseur, item.Colisage)
-	return ScanProduit(r)
+	row := tx.QueryRow(`INSERT INTO produits (
+		id_livraison,nom,conditionnement,prix,reference_fournisseur,colisage
+		) VALUES (
+		$1,$2,$3,$4,$5,$6
+		) RETURNING 
+		id,id_livraison,nom,conditionnement,prix,reference_fournisseur,colisage;
+		`, item.IdLivraison, item.Nom, item.Conditionnement, item.Prix, item.ReferenceFournisseur, item.Colisage)
+	return ScanProduit(row)
 }
 
 // Update Produit in the database and returns the new version.
 func (item Produit) Update(tx DB) (out Produit, err error) {
-	r := tx.QueryRow(`UPDATE produits SET (
-			id_livraison,nom,conditionnement,prix,reference_fournisseur,colisage
-			) = (
-			$2,$3,$4,$5,$6,$7
-			) WHERE id = $1 RETURNING 
-			id,id_livraison,nom,conditionnement,prix,reference_fournisseur,colisage;
-			`, item.Id, item.IdLivraison, item.Nom, item.Conditionnement, item.Prix, item.ReferenceFournisseur, item.Colisage)
-	return ScanProduit(r)
+	row := tx.QueryRow(`UPDATE produits SET (
+		id_livraison,nom,conditionnement,prix,reference_fournisseur,colisage
+		) = (
+		$2,$3,$4,$5,$6,$7
+		) WHERE id = $1 RETURNING 
+		id,id_livraison,nom,conditionnement,prix,reference_fournisseur,colisage;
+		`, item.Id, item.IdLivraison, item.Nom, item.Conditionnement, item.Prix, item.ReferenceFournisseur, item.Colisage)
+	return ScanProduit(row)
 }
 
-// Delete Produit in the database and the return the id.
+// Deletes Produit in the database and returns the item.
 // Only the field 'Id' is used.
-func (item Produit) Delete(tx DB) (int64, error) {
-	var deleted_id int64
-	r := tx.QueryRow("DELETE FROM produits WHERE id = $1 RETURNING id;", item.Id)
-	err := r.Scan(&deleted_id)
-	return deleted_id, err
+func (item Produit) Delete(tx DB) (Produit, error) {
+	row := tx.QueryRow("DELETE FROM produits WHERE id = $1 RETURNING *;", item.Id)
+	return ScanProduit(row)
 }
 
-func ScanRecette(r *sql.Row) (Recette, error) {
+func scanOneRecette(row scanner) (Recette, error) {
 	var s Recette
-	if err := r.Scan(
+	err := row.Scan(
 		&s.Id,
 		&s.IdUtilisateur,
 		&s.Nom,
 		&s.ModeEmploi,
-	); err != nil {
-		return Recette{}, err
+	)
+	return s, err
+}
+
+func ScanRecette(row *sql.Row) (Recette, error) {
+	return scanOneRecette(row)
+}
+
+func SelectAllRecettes(tx DB) (Recettes, error) {
+	rows, err := tx.Query("SELECT * FROM recettes")
+	if err != nil {
+		return nil, err
 	}
-	return s, nil
+	return ScanRecettes(rows)
 }
 
 // SelectRecette returns the entry matching id.
@@ -1061,16 +1506,20 @@ func (m Recettes) Ids() Ids {
 }
 
 func ScanRecettes(rs *sql.Rows) (Recettes, error) {
+	var (
+		s   Recette
+		err error
+	)
+	defer func() {
+		errClose := rs.Close()
+		if err == nil {
+			err = errClose
+		}
+	}()
 	structs := make(Recettes, 16)
-	var err error
 	for rs.Next() {
-		var s Recette
-		if err = rs.Scan(
-			&s.Id,
-			&s.IdUtilisateur,
-			&s.Nom,
-			&s.ModeEmploi,
-		); err != nil {
+		s, err = scanOneRecette(rs)
+		if err != nil {
 			return nil, err
 		}
 		structs[s.Id] = s
@@ -1083,61 +1532,75 @@ func ScanRecettes(rs *sql.Rows) (Recettes, error) {
 
 // Insert Recette in the database and returns the item with id filled.
 func (item Recette) Insert(tx DB) (out Recette, err error) {
-	r := tx.QueryRow(`INSERT INTO recettes (
-			id_utilisateur,nom,mode_emploi
-			) VALUES (
-			$1,$2,$3
-			) RETURNING 
-			id,id_utilisateur,nom,mode_emploi;
-			`, item.IdUtilisateur, item.Nom, item.ModeEmploi)
-	return ScanRecette(r)
+	row := tx.QueryRow(`INSERT INTO recettes (
+		id_utilisateur,nom,mode_emploi
+		) VALUES (
+		$1,$2,$3
+		) RETURNING 
+		id,id_utilisateur,nom,mode_emploi;
+		`, item.IdUtilisateur, item.Nom, item.ModeEmploi)
+	return ScanRecette(row)
 }
 
 // Update Recette in the database and returns the new version.
 func (item Recette) Update(tx DB) (out Recette, err error) {
-	r := tx.QueryRow(`UPDATE recettes SET (
-			id_utilisateur,nom,mode_emploi
-			) = (
-			$2,$3,$4
-			) WHERE id = $1 RETURNING 
-			id,id_utilisateur,nom,mode_emploi;
-			`, item.Id, item.IdUtilisateur, item.Nom, item.ModeEmploi)
-	return ScanRecette(r)
+	row := tx.QueryRow(`UPDATE recettes SET (
+		id_utilisateur,nom,mode_emploi
+		) = (
+		$2,$3,$4
+		) WHERE id = $1 RETURNING 
+		id,id_utilisateur,nom,mode_emploi;
+		`, item.Id, item.IdUtilisateur, item.Nom, item.ModeEmploi)
+	return ScanRecette(row)
 }
 
-// Delete Recette in the database and the return the id.
+// Deletes Recette in the database and returns the item.
 // Only the field 'Id' is used.
-func (item Recette) Delete(tx DB) (int64, error) {
-	var deleted_id int64
-	r := tx.QueryRow("DELETE FROM recettes WHERE id = $1 RETURNING id;", item.Id)
-	err := r.Scan(&deleted_id)
-	return deleted_id, err
+func (item Recette) Delete(tx DB) (Recette, error) {
+	row := tx.QueryRow("DELETE FROM recettes WHERE id = $1 RETURNING *;", item.Id)
+	return ScanRecette(row)
 }
 
-func ScanRecetteIngredient(r *sql.Row) (RecetteIngredient, error) {
+func scanOneRecetteIngredient(row scanner) (RecetteIngredient, error) {
 	var s RecetteIngredient
-	if err := r.Scan(
+	err := row.Scan(
 		&s.IdRecette,
 		&s.IdIngredient,
 		&s.Quantite,
 		&s.Cuisson,
-	); err != nil {
-		return RecetteIngredient{}, err
-	}
-	return s, nil
+	)
+	return s, err
 }
 
-func ScanRecetteIngredients(rs *sql.Rows) ([]RecetteIngredient, error) {
-	structs := make([]RecetteIngredient, 0, 16)
-	var err error
+func ScanRecetteIngredient(row *sql.Row) (RecetteIngredient, error) {
+	return scanOneRecetteIngredient(row)
+}
+
+func SelectAllRecetteIngredients(tx DB) (RecetteIngredients, error) {
+	rows, err := tx.Query("SELECT * FROM recette_ingredients")
+	if err != nil {
+		return nil, err
+	}
+	return ScanRecetteIngredients(rows)
+}
+
+type RecetteIngredients []RecetteIngredient
+
+func ScanRecetteIngredients(rs *sql.Rows) (RecetteIngredients, error) {
+	var (
+		s   RecetteIngredient
+		err error
+	)
+	defer func() {
+		errClose := rs.Close()
+		if err == nil {
+			err = errClose
+		}
+	}()
+	structs := make(RecetteIngredients, 0, 16)
 	for rs.Next() {
-		var s RecetteIngredient
-		if err = rs.Scan(
-			&s.IdRecette,
-			&s.IdIngredient,
-			&s.Quantite,
-			&s.Cuisson,
-		); err != nil {
+		s, err = scanOneRecetteIngredient(rs)
+		if err != nil {
 			return nil, err
 		}
 		structs = append(structs, s)
@@ -1148,8 +1611,44 @@ func ScanRecetteIngredients(rs *sql.Rows) ([]RecetteIngredient, error) {
 	return structs, nil
 }
 
+func SelectRecetteIngredientByIdRecette(tx DB, idRecettes ...int64) (RecetteIngredients, error) {
+	rows, err := tx.Query("SELECT * FROM recette_ingredients WHERE id_recette = ANY($1)", pq.Int64Array(idRecettes))
+	if err != nil {
+		return nil, err
+	}
+	return ScanRecetteIngredients(rows)
+}
+
+func SelectRecetteIngredientByIdIngredient(tx DB, idIngredients ...int64) (RecetteIngredients, error) {
+	rows, err := tx.Query("SELECT * FROM recette_ingredients WHERE id_ingredient = ANY($1)", pq.Int64Array(idIngredients))
+	if err != nil {
+		return nil, err
+	}
+	return ScanRecetteIngredients(rows)
+}
+
+// ByIdRecette returns a map with 'IdRecette' as keys.
+// Collision may happen without uniqueness constraint.
+func (items RecetteIngredients) ByIdRecette() map[int64]RecetteIngredient {
+	out := make(map[int64]RecetteIngredient, len(items))
+	for _, target := range items {
+		out[target.IdRecette] = target
+	}
+	return out
+}
+
+// ByIdIngredient returns a map with 'IdIngredient' as keys.
+// Collision may happen without uniqueness constraint.
+func (items RecetteIngredients) ByIdIngredient() map[int64]RecetteIngredient {
+	out := make(map[int64]RecetteIngredient, len(items))
+	for _, target := range items {
+		out[target.IdIngredient] = target
+	}
+	return out
+}
+
 // Insert the links RecetteIngredient in the database.
-func InsertManyRecetteIngredients(tx DB, items []RecetteIngredient) error {
+func InsertManyRecetteIngredients(tx DB, items ...RecetteIngredient) error {
 	if len(items) == 0 {
 		return nil
 	}
@@ -1182,23 +1681,33 @@ func InsertManyRecetteIngredients(tx DB, items []RecetteIngredient) error {
 // Only the 'IdRecette' 'IdIngredient' fields are used.
 func (item RecetteIngredient) Delete(tx DB) error {
 	_, err := tx.Exec(`DELETE FROM recette_ingredients WHERE 
-		id_recette = $1 AND id_ingredient = $2;`, item.IdRecette, item.IdIngredient)
+	id_recette = $1 AND id_ingredient = $2;`, item.IdRecette, item.IdIngredient)
 	return err
 }
 
-func ScanRepas(r *sql.Row) (Repas, error) {
+func scanOneRepas(row scanner) (Repas, error) {
 	var s Repas
-	if err := r.Scan(
+	err := row.Scan(
 		&s.Id,
 		&s.IdSejour,
 		&s.OffsetPersonnes,
 		&s.JourOffset,
 		&s.Horaire,
 		&s.Anticipation,
-	); err != nil {
-		return Repas{}, err
+	)
+	return s, err
+}
+
+func ScanRepas(row *sql.Row) (Repas, error) {
+	return scanOneRepas(row)
+}
+
+func SelectAllRepass(tx DB) (Repass, error) {
+	rows, err := tx.Query("SELECT * FROM repass")
+	if err != nil {
+		return nil, err
 	}
-	return s, nil
+	return ScanRepass(rows)
 }
 
 // SelectRepas returns the entry matching id.
@@ -1218,18 +1727,20 @@ func (m Repass) Ids() Ids {
 }
 
 func ScanRepass(rs *sql.Rows) (Repass, error) {
+	var (
+		s   Repas
+		err error
+	)
+	defer func() {
+		errClose := rs.Close()
+		if err == nil {
+			err = errClose
+		}
+	}()
 	structs := make(Repass, 16)
-	var err error
 	for rs.Next() {
-		var s Repas
-		if err = rs.Scan(
-			&s.Id,
-			&s.IdSejour,
-			&s.OffsetPersonnes,
-			&s.JourOffset,
-			&s.Horaire,
-			&s.Anticipation,
-		); err != nil {
+		s, err = scanOneRepas(rs)
+		if err != nil {
 			return nil, err
 		}
 		structs[s.Id] = s
@@ -1242,57 +1753,73 @@ func ScanRepass(rs *sql.Rows) (Repass, error) {
 
 // Insert Repas in the database and returns the item with id filled.
 func (item Repas) Insert(tx DB) (out Repas, err error) {
-	r := tx.QueryRow(`INSERT INTO repass (
-			id_sejour,offset_personnes,jour_offset,horaire,anticipation
-			) VALUES (
-			$1,$2,$3,$4,$5
-			) RETURNING 
-			id,id_sejour,offset_personnes,jour_offset,horaire,anticipation;
-			`, item.IdSejour, item.OffsetPersonnes, item.JourOffset, item.Horaire, item.Anticipation)
-	return ScanRepas(r)
+	row := tx.QueryRow(`INSERT INTO repass (
+		id_sejour,offset_personnes,jour_offset,horaire,anticipation
+		) VALUES (
+		$1,$2,$3,$4,$5
+		) RETURNING 
+		id,id_sejour,offset_personnes,jour_offset,horaire,anticipation;
+		`, item.IdSejour, item.OffsetPersonnes, item.JourOffset, item.Horaire, item.Anticipation)
+	return ScanRepas(row)
 }
 
 // Update Repas in the database and returns the new version.
 func (item Repas) Update(tx DB) (out Repas, err error) {
-	r := tx.QueryRow(`UPDATE repass SET (
-			id_sejour,offset_personnes,jour_offset,horaire,anticipation
-			) = (
-			$2,$3,$4,$5,$6
-			) WHERE id = $1 RETURNING 
-			id,id_sejour,offset_personnes,jour_offset,horaire,anticipation;
-			`, item.Id, item.IdSejour, item.OffsetPersonnes, item.JourOffset, item.Horaire, item.Anticipation)
-	return ScanRepas(r)
+	row := tx.QueryRow(`UPDATE repass SET (
+		id_sejour,offset_personnes,jour_offset,horaire,anticipation
+		) = (
+		$2,$3,$4,$5,$6
+		) WHERE id = $1 RETURNING 
+		id,id_sejour,offset_personnes,jour_offset,horaire,anticipation;
+		`, item.Id, item.IdSejour, item.OffsetPersonnes, item.JourOffset, item.Horaire, item.Anticipation)
+	return ScanRepas(row)
 }
 
-// Delete Repas in the database and the return the id.
+// Deletes Repas in the database and returns the item.
 // Only the field 'Id' is used.
-func (item Repas) Delete(tx DB) (int64, error) {
-	var deleted_id int64
-	r := tx.QueryRow("DELETE FROM repass WHERE id = $1 RETURNING id;", item.Id)
-	err := r.Scan(&deleted_id)
-	return deleted_id, err
+func (item Repas) Delete(tx DB) (Repas, error) {
+	row := tx.QueryRow("DELETE FROM repass WHERE id = $1 RETURNING *;", item.Id)
+	return ScanRepas(row)
 }
 
-func ScanRepasGroupe(r *sql.Row) (RepasGroupe, error) {
+func scanOneRepasGroupe(row scanner) (RepasGroupe, error) {
 	var s RepasGroupe
-	if err := r.Scan(
+	err := row.Scan(
 		&s.IdRepas,
 		&s.IdGroupe,
-	); err != nil {
-		return RepasGroupe{}, err
-	}
-	return s, nil
+	)
+	return s, err
 }
 
-func ScanRepasGroupes(rs *sql.Rows) ([]RepasGroupe, error) {
-	structs := make([]RepasGroupe, 0, 16)
-	var err error
+func ScanRepasGroupe(row *sql.Row) (RepasGroupe, error) {
+	return scanOneRepasGroupe(row)
+}
+
+func SelectAllRepasGroupes(tx DB) (RepasGroupes, error) {
+	rows, err := tx.Query("SELECT * FROM repas_groupes")
+	if err != nil {
+		return nil, err
+	}
+	return ScanRepasGroupes(rows)
+}
+
+type RepasGroupes []RepasGroupe
+
+func ScanRepasGroupes(rs *sql.Rows) (RepasGroupes, error) {
+	var (
+		s   RepasGroupe
+		err error
+	)
+	defer func() {
+		errClose := rs.Close()
+		if err == nil {
+			err = errClose
+		}
+	}()
+	structs := make(RepasGroupes, 0, 16)
 	for rs.Next() {
-		var s RepasGroupe
-		if err = rs.Scan(
-			&s.IdRepas,
-			&s.IdGroupe,
-		); err != nil {
+		s, err = scanOneRepasGroupe(rs)
+		if err != nil {
 			return nil, err
 		}
 		structs = append(structs, s)
@@ -1303,8 +1830,44 @@ func ScanRepasGroupes(rs *sql.Rows) ([]RepasGroupe, error) {
 	return structs, nil
 }
 
+func SelectRepasGroupeByIdRepas(tx DB, idRepass ...int64) (RepasGroupes, error) {
+	rows, err := tx.Query("SELECT * FROM repas_groupes WHERE id_repas = ANY($1)", pq.Int64Array(idRepass))
+	if err != nil {
+		return nil, err
+	}
+	return ScanRepasGroupes(rows)
+}
+
+func SelectRepasGroupeByIdGroupe(tx DB, idGroupes ...int64) (RepasGroupes, error) {
+	rows, err := tx.Query("SELECT * FROM repas_groupes WHERE id_groupe = ANY($1)", pq.Int64Array(idGroupes))
+	if err != nil {
+		return nil, err
+	}
+	return ScanRepasGroupes(rows)
+}
+
+// ByIdRepas returns a map with 'IdRepas' as keys.
+// Collision may happen without uniqueness constraint.
+func (items RepasGroupes) ByIdRepas() map[int64]RepasGroupe {
+	out := make(map[int64]RepasGroupe, len(items))
+	for _, target := range items {
+		out[target.IdRepas] = target
+	}
+	return out
+}
+
+// ByIdGroupe returns a map with 'IdGroupe' as keys.
+// Collision may happen without uniqueness constraint.
+func (items RepasGroupes) ByIdGroupe() map[int64]RepasGroupe {
+	out := make(map[int64]RepasGroupe, len(items))
+	for _, target := range items {
+		out[target.IdGroupe] = target
+	}
+	return out
+}
+
 // Insert the links RepasGroupe in the database.
-func InsertManyRepasGroupes(tx DB, items []RepasGroupe) error {
+func InsertManyRepasGroupes(tx DB, items ...RepasGroupe) error {
 	if len(items) == 0 {
 		return nil
 	}
@@ -1337,34 +1900,50 @@ func InsertManyRepasGroupes(tx DB, items []RepasGroupe) error {
 // Only the 'IdRepas' 'IdGroupe' fields are used.
 func (item RepasGroupe) Delete(tx DB) error {
 	_, err := tx.Exec(`DELETE FROM repas_groupes WHERE 
-		id_repas = $1 AND id_groupe = $2;`, item.IdRepas, item.IdGroupe)
+	id_repas = $1 AND id_groupe = $2;`, item.IdRepas, item.IdGroupe)
 	return err
 }
 
-func ScanRepasIngredient(r *sql.Row) (RepasIngredient, error) {
+func scanOneRepasIngredient(row scanner) (RepasIngredient, error) {
 	var s RepasIngredient
-	if err := r.Scan(
+	err := row.Scan(
 		&s.IdRepas,
 		&s.IdIngredient,
 		&s.Quantite,
 		&s.Cuisson,
-	); err != nil {
-		return RepasIngredient{}, err
-	}
-	return s, nil
+	)
+	return s, err
 }
 
-func ScanRepasIngredients(rs *sql.Rows) ([]RepasIngredient, error) {
-	structs := make([]RepasIngredient, 0, 16)
-	var err error
+func ScanRepasIngredient(row *sql.Row) (RepasIngredient, error) {
+	return scanOneRepasIngredient(row)
+}
+
+func SelectAllRepasIngredients(tx DB) (RepasIngredients, error) {
+	rows, err := tx.Query("SELECT * FROM repas_ingredients")
+	if err != nil {
+		return nil, err
+	}
+	return ScanRepasIngredients(rows)
+}
+
+type RepasIngredients []RepasIngredient
+
+func ScanRepasIngredients(rs *sql.Rows) (RepasIngredients, error) {
+	var (
+		s   RepasIngredient
+		err error
+	)
+	defer func() {
+		errClose := rs.Close()
+		if err == nil {
+			err = errClose
+		}
+	}()
+	structs := make(RepasIngredients, 0, 16)
 	for rs.Next() {
-		var s RepasIngredient
-		if err = rs.Scan(
-			&s.IdRepas,
-			&s.IdIngredient,
-			&s.Quantite,
-			&s.Cuisson,
-		); err != nil {
+		s, err = scanOneRepasIngredient(rs)
+		if err != nil {
 			return nil, err
 		}
 		structs = append(structs, s)
@@ -1375,8 +1954,44 @@ func ScanRepasIngredients(rs *sql.Rows) ([]RepasIngredient, error) {
 	return structs, nil
 }
 
+func SelectRepasIngredientByIdRepas(tx DB, idRepass ...int64) (RepasIngredients, error) {
+	rows, err := tx.Query("SELECT * FROM repas_ingredients WHERE id_repas = ANY($1)", pq.Int64Array(idRepass))
+	if err != nil {
+		return nil, err
+	}
+	return ScanRepasIngredients(rows)
+}
+
+func SelectRepasIngredientByIdIngredient(tx DB, idIngredients ...int64) (RepasIngredients, error) {
+	rows, err := tx.Query("SELECT * FROM repas_ingredients WHERE id_ingredient = ANY($1)", pq.Int64Array(idIngredients))
+	if err != nil {
+		return nil, err
+	}
+	return ScanRepasIngredients(rows)
+}
+
+// ByIdRepas returns a map with 'IdRepas' as keys.
+// Collision may happen without uniqueness constraint.
+func (items RepasIngredients) ByIdRepas() map[int64]RepasIngredient {
+	out := make(map[int64]RepasIngredient, len(items))
+	for _, target := range items {
+		out[target.IdRepas] = target
+	}
+	return out
+}
+
+// ByIdIngredient returns a map with 'IdIngredient' as keys.
+// Collision may happen without uniqueness constraint.
+func (items RepasIngredients) ByIdIngredient() map[int64]RepasIngredient {
+	out := make(map[int64]RepasIngredient, len(items))
+	for _, target := range items {
+		out[target.IdIngredient] = target
+	}
+	return out
+}
+
 // Insert the links RepasIngredient in the database.
-func InsertManyRepasIngredients(tx DB, items []RepasIngredient) error {
+func InsertManyRepasIngredients(tx DB, items ...RepasIngredient) error {
 	if len(items) == 0 {
 		return nil
 	}
@@ -1409,30 +2024,48 @@ func InsertManyRepasIngredients(tx DB, items []RepasIngredient) error {
 // Only the 'IdRepas' 'IdIngredient' fields are used.
 func (item RepasIngredient) Delete(tx DB) error {
 	_, err := tx.Exec(`DELETE FROM repas_ingredients WHERE 
-		id_repas = $1 AND id_ingredient = $2;`, item.IdRepas, item.IdIngredient)
+	id_repas = $1 AND id_ingredient = $2;`, item.IdRepas, item.IdIngredient)
 	return err
 }
 
-func ScanRepasRecette(r *sql.Row) (RepasRecette, error) {
+func scanOneRepasRecette(row scanner) (RepasRecette, error) {
 	var s RepasRecette
-	if err := r.Scan(
+	err := row.Scan(
 		&s.IdRepas,
 		&s.IdRecette,
-	); err != nil {
-		return RepasRecette{}, err
-	}
-	return s, nil
+	)
+	return s, err
 }
 
-func ScanRepasRecettes(rs *sql.Rows) ([]RepasRecette, error) {
-	structs := make([]RepasRecette, 0, 16)
-	var err error
+func ScanRepasRecette(row *sql.Row) (RepasRecette, error) {
+	return scanOneRepasRecette(row)
+}
+
+func SelectAllRepasRecettes(tx DB) (RepasRecettes, error) {
+	rows, err := tx.Query("SELECT * FROM repas_recettes")
+	if err != nil {
+		return nil, err
+	}
+	return ScanRepasRecettes(rows)
+}
+
+type RepasRecettes []RepasRecette
+
+func ScanRepasRecettes(rs *sql.Rows) (RepasRecettes, error) {
+	var (
+		s   RepasRecette
+		err error
+	)
+	defer func() {
+		errClose := rs.Close()
+		if err == nil {
+			err = errClose
+		}
+	}()
+	structs := make(RepasRecettes, 0, 16)
 	for rs.Next() {
-		var s RepasRecette
-		if err = rs.Scan(
-			&s.IdRepas,
-			&s.IdRecette,
-		); err != nil {
+		s, err = scanOneRepasRecette(rs)
+		if err != nil {
 			return nil, err
 		}
 		structs = append(structs, s)
@@ -1443,8 +2076,44 @@ func ScanRepasRecettes(rs *sql.Rows) ([]RepasRecette, error) {
 	return structs, nil
 }
 
+func SelectRepasRecetteByIdRepas(tx DB, idRepass ...int64) (RepasRecettes, error) {
+	rows, err := tx.Query("SELECT * FROM repas_recettes WHERE id_repas = ANY($1)", pq.Int64Array(idRepass))
+	if err != nil {
+		return nil, err
+	}
+	return ScanRepasRecettes(rows)
+}
+
+func SelectRepasRecetteByIdRecette(tx DB, idRecettes ...int64) (RepasRecettes, error) {
+	rows, err := tx.Query("SELECT * FROM repas_recettes WHERE id_recette = ANY($1)", pq.Int64Array(idRecettes))
+	if err != nil {
+		return nil, err
+	}
+	return ScanRepasRecettes(rows)
+}
+
+// ByIdRepas returns a map with 'IdRepas' as keys.
+// Collision may happen without uniqueness constraint.
+func (items RepasRecettes) ByIdRepas() map[int64]RepasRecette {
+	out := make(map[int64]RepasRecette, len(items))
+	for _, target := range items {
+		out[target.IdRepas] = target
+	}
+	return out
+}
+
+// ByIdRecette returns a map with 'IdRecette' as keys.
+// Collision may happen without uniqueness constraint.
+func (items RepasRecettes) ByIdRecette() map[int64]RepasRecette {
+	out := make(map[int64]RepasRecette, len(items))
+	for _, target := range items {
+		out[target.IdRecette] = target
+	}
+	return out
+}
+
 // Insert the links RepasRecette in the database.
-func InsertManyRepasRecettes(tx DB, items []RepasRecette) error {
+func InsertManyRepasRecettes(tx DB, items ...RepasRecette) error {
 	if len(items) == 0 {
 		return nil
 	}
@@ -1477,21 +2146,31 @@ func InsertManyRepasRecettes(tx DB, items []RepasRecette) error {
 // Only the 'IdRepas' 'IdRecette' fields are used.
 func (item RepasRecette) Delete(tx DB) error {
 	_, err := tx.Exec(`DELETE FROM repas_recettes WHERE 
-		id_repas = $1 AND id_recette = $2;`, item.IdRepas, item.IdRecette)
+	id_repas = $1 AND id_recette = $2;`, item.IdRepas, item.IdRecette)
 	return err
 }
 
-func ScanSejour(r *sql.Row) (Sejour, error) {
+func scanOneSejour(row scanner) (Sejour, error) {
 	var s Sejour
-	if err := r.Scan(
+	err := row.Scan(
 		&s.Id,
 		&s.IdUtilisateur,
 		&s.DateDebut,
 		&s.Nom,
-	); err != nil {
-		return Sejour{}, err
+	)
+	return s, err
+}
+
+func ScanSejour(row *sql.Row) (Sejour, error) {
+	return scanOneSejour(row)
+}
+
+func SelectAllSejours(tx DB) (Sejours, error) {
+	rows, err := tx.Query("SELECT * FROM sejours")
+	if err != nil {
+		return nil, err
 	}
-	return s, nil
+	return ScanSejours(rows)
 }
 
 // SelectSejour returns the entry matching id.
@@ -1511,16 +2190,20 @@ func (m Sejours) Ids() Ids {
 }
 
 func ScanSejours(rs *sql.Rows) (Sejours, error) {
+	var (
+		s   Sejour
+		err error
+	)
+	defer func() {
+		errClose := rs.Close()
+		if err == nil {
+			err = errClose
+		}
+	}()
 	structs := make(Sejours, 16)
-	var err error
 	for rs.Next() {
-		var s Sejour
-		if err = rs.Scan(
-			&s.Id,
-			&s.IdUtilisateur,
-			&s.DateDebut,
-			&s.Nom,
-		); err != nil {
+		s, err = scanOneSejour(rs)
+		if err != nil {
 			return nil, err
 		}
 		structs[s.Id] = s
@@ -1533,59 +2216,74 @@ func ScanSejours(rs *sql.Rows) (Sejours, error) {
 
 // Insert Sejour in the database and returns the item with id filled.
 func (item Sejour) Insert(tx DB) (out Sejour, err error) {
-	r := tx.QueryRow(`INSERT INTO sejours (
-			id_utilisateur,date_debut,nom
-			) VALUES (
-			$1,$2,$3
-			) RETURNING 
-			id,id_utilisateur,date_debut,nom;
-			`, item.IdUtilisateur, item.DateDebut, item.Nom)
-	return ScanSejour(r)
+	row := tx.QueryRow(`INSERT INTO sejours (
+		id_utilisateur,date_debut,nom
+		) VALUES (
+		$1,$2,$3
+		) RETURNING 
+		id,id_utilisateur,date_debut,nom;
+		`, item.IdUtilisateur, item.DateDebut, item.Nom)
+	return ScanSejour(row)
 }
 
 // Update Sejour in the database and returns the new version.
 func (item Sejour) Update(tx DB) (out Sejour, err error) {
-	r := tx.QueryRow(`UPDATE sejours SET (
-			id_utilisateur,date_debut,nom
-			) = (
-			$2,$3,$4
-			) WHERE id = $1 RETURNING 
-			id,id_utilisateur,date_debut,nom;
-			`, item.Id, item.IdUtilisateur, item.DateDebut, item.Nom)
-	return ScanSejour(r)
+	row := tx.QueryRow(`UPDATE sejours SET (
+		id_utilisateur,date_debut,nom
+		) = (
+		$2,$3,$4
+		) WHERE id = $1 RETURNING 
+		id,id_utilisateur,date_debut,nom;
+		`, item.Id, item.IdUtilisateur, item.DateDebut, item.Nom)
+	return ScanSejour(row)
 }
 
-// Delete Sejour in the database and the return the id.
+// Deletes Sejour in the database and returns the item.
 // Only the field 'Id' is used.
-func (item Sejour) Delete(tx DB) (int64, error) {
-	var deleted_id int64
-	r := tx.QueryRow("DELETE FROM sejours WHERE id = $1 RETURNING id;", item.Id)
-	err := r.Scan(&deleted_id)
-	return deleted_id, err
+func (item Sejour) Delete(tx DB) (Sejour, error) {
+	row := tx.QueryRow("DELETE FROM sejours WHERE id = $1 RETURNING *;", item.Id)
+	return ScanSejour(row)
 }
 
-func ScanSejourFournisseur(r *sql.Row) (SejourFournisseur, error) {
+func scanOneSejourFournisseur(row scanner) (SejourFournisseur, error) {
 	var s SejourFournisseur
-	if err := r.Scan(
+	err := row.Scan(
 		&s.IdUtilisateur,
 		&s.IdSejour,
 		&s.IdFournisseur,
-	); err != nil {
-		return SejourFournisseur{}, err
-	}
-	return s, nil
+	)
+	return s, err
 }
 
-func ScanSejourFournisseurs(rs *sql.Rows) ([]SejourFournisseur, error) {
-	structs := make([]SejourFournisseur, 0, 16)
-	var err error
+func ScanSejourFournisseur(row *sql.Row) (SejourFournisseur, error) {
+	return scanOneSejourFournisseur(row)
+}
+
+func SelectAllSejourFournisseurs(tx DB) (SejourFournisseurs, error) {
+	rows, err := tx.Query("SELECT * FROM sejour_fournisseurs")
+	if err != nil {
+		return nil, err
+	}
+	return ScanSejourFournisseurs(rows)
+}
+
+type SejourFournisseurs []SejourFournisseur
+
+func ScanSejourFournisseurs(rs *sql.Rows) (SejourFournisseurs, error) {
+	var (
+		s   SejourFournisseur
+		err error
+	)
+	defer func() {
+		errClose := rs.Close()
+		if err == nil {
+			err = errClose
+		}
+	}()
+	structs := make(SejourFournisseurs, 0, 16)
 	for rs.Next() {
-		var s SejourFournisseur
-		if err = rs.Scan(
-			&s.IdUtilisateur,
-			&s.IdSejour,
-			&s.IdFournisseur,
-		); err != nil {
+		s, err = scanOneSejourFournisseur(rs)
+		if err != nil {
 			return nil, err
 		}
 		structs = append(structs, s)
@@ -1596,8 +2294,62 @@ func ScanSejourFournisseurs(rs *sql.Rows) ([]SejourFournisseur, error) {
 	return structs, nil
 }
 
+func SelectSejourFournisseurByIdUtilisateur(tx DB, idUtilisateurs ...int64) (SejourFournisseurs, error) {
+	rows, err := tx.Query("SELECT * FROM sejour_fournisseurs WHERE id_utilisateur = ANY($1)", pq.Int64Array(idUtilisateurs))
+	if err != nil {
+		return nil, err
+	}
+	return ScanSejourFournisseurs(rows)
+}
+
+func SelectSejourFournisseurByIdSejour(tx DB, idSejours ...int64) (SejourFournisseurs, error) {
+	rows, err := tx.Query("SELECT * FROM sejour_fournisseurs WHERE id_sejour = ANY($1)", pq.Int64Array(idSejours))
+	if err != nil {
+		return nil, err
+	}
+	return ScanSejourFournisseurs(rows)
+}
+
+func SelectSejourFournisseurByIdFournisseur(tx DB, idFournisseurs ...int64) (SejourFournisseurs, error) {
+	rows, err := tx.Query("SELECT * FROM sejour_fournisseurs WHERE id_fournisseur = ANY($1)", pq.Int64Array(idFournisseurs))
+	if err != nil {
+		return nil, err
+	}
+	return ScanSejourFournisseurs(rows)
+}
+
+// ByIdUtilisateur returns a map with 'IdUtilisateur' as keys.
+// Collision may happen without uniqueness constraint.
+func (items SejourFournisseurs) ByIdUtilisateur() map[int64]SejourFournisseur {
+	out := make(map[int64]SejourFournisseur, len(items))
+	for _, target := range items {
+		out[target.IdUtilisateur] = target
+	}
+	return out
+}
+
+// ByIdSejour returns a map with 'IdSejour' as keys.
+// Collision may happen without uniqueness constraint.
+func (items SejourFournisseurs) ByIdSejour() map[int64]SejourFournisseur {
+	out := make(map[int64]SejourFournisseur, len(items))
+	for _, target := range items {
+		out[target.IdSejour] = target
+	}
+	return out
+}
+
+// ByIdFournisseur returns a map with 'IdFournisseur' as keys.
+// Collision may happen without uniqueness constraint.
+func (items SejourFournisseurs) ByIdFournisseur() map[int64]SejourFournisseur {
+	out := make(map[int64]SejourFournisseur, len(items))
+	for _, target := range items {
+		out[target.IdFournisseur] = target
+	}
+	return out
+}
+
 // Insert the links SejourFournisseur in the database.
-func InsertManySejourFournisseurs(tx DB, items []SejourFournisseur) error {
+func InsertManySejourFournisseurs(tx DB, items ...SejourFournisseur) error {
 	if len(items) == 0 {
 		return nil
 	}
@@ -1630,21 +2382,31 @@ func InsertManySejourFournisseurs(tx DB, items []SejourFournisseur) error {
 // Only the 'IdUtilisateur' 'IdSejour' 'IdFournisseur' fields are used.
 func (item SejourFournisseur) Delete(tx DB) error {
 	_, err := tx.Exec(`DELETE FROM sejour_fournisseurs WHERE 
-		id_utilisateur = $1 AND id_sejour = $2 AND id_fournisseur = $3;`, item.IdUtilisateur, item.IdSejour, item.IdFournisseur)
+	id_utilisateur = $1 AND id_sejour = $2 AND id_fournisseur = $3;`, item.IdUtilisateur, item.IdSejour, item.IdFournisseur)
 	return err
 }
 
-func ScanUtilisateur(r *sql.Row) (Utilisateur, error) {
+func scanOneUtilisateur(row scanner) (Utilisateur, error) {
 	var s Utilisateur
-	if err := r.Scan(
+	err := row.Scan(
 		&s.Id,
 		&s.Password,
 		&s.Mail,
 		&s.PrenomNom,
-	); err != nil {
-		return Utilisateur{}, err
+	)
+	return s, err
+}
+
+func ScanUtilisateur(row *sql.Row) (Utilisateur, error) {
+	return scanOneUtilisateur(row)
+}
+
+func SelectAllUtilisateurs(tx DB) (Utilisateurs, error) {
+	rows, err := tx.Query("SELECT * FROM utilisateurs")
+	if err != nil {
+		return nil, err
 	}
-	return s, nil
+	return ScanUtilisateurs(rows)
 }
 
 // SelectUtilisateur returns the entry matching id.
@@ -1664,16 +2426,20 @@ func (m Utilisateurs) Ids() Ids {
 }
 
 func ScanUtilisateurs(rs *sql.Rows) (Utilisateurs, error) {
+	var (
+		s   Utilisateur
+		err error
+	)
+	defer func() {
+		errClose := rs.Close()
+		if err == nil {
+			err = errClose
+		}
+	}()
 	structs := make(Utilisateurs, 16)
-	var err error
 	for rs.Next() {
-		var s Utilisateur
-		if err = rs.Scan(
-			&s.Id,
-			&s.Password,
-			&s.Mail,
-			&s.PrenomNom,
-		); err != nil {
+		s, err = scanOneUtilisateur(rs)
+		if err != nil {
 			return nil, err
 		}
 		structs[s.Id] = s
@@ -1686,57 +2452,73 @@ func ScanUtilisateurs(rs *sql.Rows) (Utilisateurs, error) {
 
 // Insert Utilisateur in the database and returns the item with id filled.
 func (item Utilisateur) Insert(tx DB) (out Utilisateur, err error) {
-	r := tx.QueryRow(`INSERT INTO utilisateurs (
-			password,mail,prenom_nom
-			) VALUES (
-			$1,$2,$3
-			) RETURNING 
-			id,password,mail,prenom_nom;
-			`, item.Password, item.Mail, item.PrenomNom)
-	return ScanUtilisateur(r)
+	row := tx.QueryRow(`INSERT INTO utilisateurs (
+		password,mail,prenom_nom
+		) VALUES (
+		$1,$2,$3
+		) RETURNING 
+		id,password,mail,prenom_nom;
+		`, item.Password, item.Mail, item.PrenomNom)
+	return ScanUtilisateur(row)
 }
 
 // Update Utilisateur in the database and returns the new version.
 func (item Utilisateur) Update(tx DB) (out Utilisateur, err error) {
-	r := tx.QueryRow(`UPDATE utilisateurs SET (
-			password,mail,prenom_nom
-			) = (
-			$2,$3,$4
-			) WHERE id = $1 RETURNING 
-			id,password,mail,prenom_nom;
-			`, item.Id, item.Password, item.Mail, item.PrenomNom)
-	return ScanUtilisateur(r)
+	row := tx.QueryRow(`UPDATE utilisateurs SET (
+		password,mail,prenom_nom
+		) = (
+		$2,$3,$4
+		) WHERE id = $1 RETURNING 
+		id,password,mail,prenom_nom;
+		`, item.Id, item.Password, item.Mail, item.PrenomNom)
+	return ScanUtilisateur(row)
 }
 
-// Delete Utilisateur in the database and the return the id.
+// Deletes Utilisateur in the database and returns the item.
 // Only the field 'Id' is used.
-func (item Utilisateur) Delete(tx DB) (int64, error) {
-	var deleted_id int64
-	r := tx.QueryRow("DELETE FROM utilisateurs WHERE id = $1 RETURNING id;", item.Id)
-	err := r.Scan(&deleted_id)
-	return deleted_id, err
+func (item Utilisateur) Delete(tx DB) (Utilisateur, error) {
+	row := tx.QueryRow("DELETE FROM utilisateurs WHERE id = $1 RETURNING *;", item.Id)
+	return ScanUtilisateur(row)
 }
 
-func ScanUtilisateurFournisseur(r *sql.Row) (UtilisateurFournisseur, error) {
+func scanOneUtilisateurFournisseur(row scanner) (UtilisateurFournisseur, error) {
 	var s UtilisateurFournisseur
-	if err := r.Scan(
+	err := row.Scan(
 		&s.IdUtilisateur,
 		&s.IdFournisseur,
-	); err != nil {
-		return UtilisateurFournisseur{}, err
-	}
-	return s, nil
+	)
+	return s, err
 }
 
-func ScanUtilisateurFournisseurs(rs *sql.Rows) ([]UtilisateurFournisseur, error) {
-	structs := make([]UtilisateurFournisseur, 0, 16)
-	var err error
+func ScanUtilisateurFournisseur(row *sql.Row) (UtilisateurFournisseur, error) {
+	return scanOneUtilisateurFournisseur(row)
+}
+
+func SelectAllUtilisateurFournisseurs(tx DB) (UtilisateurFournisseurs, error) {
+	rows, err := tx.Query("SELECT * FROM utilisateur_fournisseurs")
+	if err != nil {
+		return nil, err
+	}
+	return ScanUtilisateurFournisseurs(rows)
+}
+
+type UtilisateurFournisseurs []UtilisateurFournisseur
+
+func ScanUtilisateurFournisseurs(rs *sql.Rows) (UtilisateurFournisseurs, error) {
+	var (
+		s   UtilisateurFournisseur
+		err error
+	)
+	defer func() {
+		errClose := rs.Close()
+		if err == nil {
+			err = errClose
+		}
+	}()
+	structs := make(UtilisateurFournisseurs, 0, 16)
 	for rs.Next() {
-		var s UtilisateurFournisseur
-		if err = rs.Scan(
-			&s.IdUtilisateur,
-			&s.IdFournisseur,
-		); err != nil {
+		s, err = scanOneUtilisateurFournisseur(rs)
+		if err != nil {
 			return nil, err
 		}
 		structs = append(structs, s)
@@ -1747,8 +2529,44 @@ func ScanUtilisateurFournisseurs(rs *sql.Rows) ([]UtilisateurFournisseur, error)
 	return structs, nil
 }
 
+func SelectUtilisateurFournisseurByIdUtilisateur(tx DB, idUtilisateurs ...int64) (UtilisateurFournisseurs, error) {
+	rows, err := tx.Query("SELECT * FROM utilisateur_fournisseurs WHERE id_utilisateur = ANY($1)", pq.Int64Array(idUtilisateurs))
+	if err != nil {
+		return nil, err
+	}
+	return ScanUtilisateurFournisseurs(rows)
+}
+
+func SelectUtilisateurFournisseurByIdFournisseur(tx DB, idFournisseurs ...int64) (UtilisateurFournisseurs, error) {
+	rows, err := tx.Query("SELECT * FROM utilisateur_fournisseurs WHERE id_fournisseur = ANY($1)", pq.Int64Array(idFournisseurs))
+	if err != nil {
+		return nil, err
+	}
+	return ScanUtilisateurFournisseurs(rows)
+}
+
+// ByIdUtilisateur returns a map with 'IdUtilisateur' as keys.
+// Collision may happen without uniqueness constraint.
+func (items UtilisateurFournisseurs) ByIdUtilisateur() map[int64]UtilisateurFournisseur {
+	out := make(map[int64]UtilisateurFournisseur, len(items))
+	for _, target := range items {
+		out[target.IdUtilisateur] = target
+	}
+	return out
+}
+
+// ByIdFournisseur returns a map with 'IdFournisseur' as keys.
+// Collision may happen without uniqueness constraint.
+func (items UtilisateurFournisseurs) ByIdFournisseur() map[int64]UtilisateurFournisseur {
+	out := make(map[int64]UtilisateurFournisseur, len(items))
+	for _, target := range items {
+		out[target.IdFournisseur] = target
+	}
+	return out
+}
+
 // Insert the links UtilisateurFournisseur in the database.
-func InsertManyUtilisateurFournisseurs(tx DB, items []UtilisateurFournisseur) error {
+func InsertManyUtilisateurFournisseurs(tx DB, items ...UtilisateurFournisseur) error {
 	if len(items) == 0 {
 		return nil
 	}
@@ -1781,6 +2599,6 @@ func InsertManyUtilisateurFournisseurs(tx DB, items []UtilisateurFournisseur) er
 // Only the 'IdUtilisateur' 'IdFournisseur' fields are used.
 func (item UtilisateurFournisseur) Delete(tx DB) error {
 	_, err := tx.Exec(`DELETE FROM utilisateur_fournisseurs WHERE 
-		id_utilisateur = $1 AND id_fournisseur = $2;`, item.IdUtilisateur, item.IdFournisseur)
+	id_utilisateur = $1 AND id_fournisseur = $2;`, item.IdUtilisateur, item.IdFournisseur)
 	return err
 }
