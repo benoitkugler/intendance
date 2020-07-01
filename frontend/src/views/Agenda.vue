@@ -203,6 +203,8 @@ export default class Agenda extends Vue {
   }
 
   private startAddRepas(jourOffset: number, horaire: Horaire) {
+    console.log(horaire);
+
     const sejour = this.sejour;
     if (sejour == null) return;
     this.editedRepas = {

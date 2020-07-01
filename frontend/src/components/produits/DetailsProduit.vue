@@ -35,12 +35,14 @@
               suffix="€"
               :rules="[rules.required]"
               v-model.number="innerProduit.prix"
+              hint="Prix d'un exemplaire"
             ></v-text-field>
           </v-col>
           <v-col>
             <v-text-field
               label="Référence fournisseur"
               v-model="innerProduit.reference_fournisseur"
+              hint="Optionnel"
             ></v-text-field>
           </v-col>
         </v-row>
@@ -55,6 +57,9 @@
               label="Colisage"
               type="number"
               v-model.number="innerProduit.colisage"
+              hint="Nombre minimum d'exemplaires livrables"
+              :min="1"
+              persistent-hint
             ></v-text-field>
           </v-col>
         </v-row>

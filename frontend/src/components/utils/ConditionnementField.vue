@@ -7,6 +7,7 @@
         type="number"
         v-model.number="conditionnement.quantite"
         @change="onChange"
+        hint="Conditionnement d'un exemplaire"
       ></v-text-field>
     </v-col>
     <v-col class="ml-3">

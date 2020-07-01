@@ -7,13 +7,11 @@
       <v-form>
         <v-row>
           <v-col>
-            <v-text-field
-              label="Quantité"
-              hint="Quantité désirée pour 1 personne."
-              type="number"
-              v-model.number="current.quantite"
+            <quantite-relative
+              v-model="current.quantite"
               ref="quantite"
-            ></v-text-field>
+              :unite="uniteHint"
+            ></quantite-relative>
           </v-col>
         </v-row>
         <v-row>
@@ -37,9 +35,11 @@
 <script lang="ts">
 import Vue from "vue";
 import Component from "vue-class-component";
-import { LienIngredient } from "../../logic/types";
+import { LienIngredient, UniteLabels } from "../../logic/types";
 import { Watch } from "vue-property-decorator";
 import { deepcopy } from "../../logic/types2";
+import QuantiteRelative from "./QuantiteRelative.vue";
+import { C } from "../../logic/controller";
 
 const DetailsIngredientProps = Vue.extend({
   props: {
@@ -47,7 +47,9 @@ const DetailsIngredientProps = Vue.extend({
   }
 });
 
-@Component({})
+@Component({
+  components: { QuantiteRelative }
+})
 export default class DetailsIngredient extends DetailsIngredientProps {
   current: LienIngredient = deepcopy(this.ingredient);
 
@@ -57,8 +59,12 @@ export default class DetailsIngredient extends DetailsIngredientProps {
   }
 
   $refs!: {
-    quantite: Vue;
+    quantite: QuantiteRelative;
   };
+
+  get uniteHint() {
+    return UniteLabels[C.getIngredient(this.ingredient.id_ingredient).unite];
+  }
 
   focus() {
     const input = this.$refs.quantite.$el.querySelector("input");

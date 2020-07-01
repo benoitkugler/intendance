@@ -13,6 +13,8 @@
         <v-text-field
           label="Lieu"
           v-model="innerFournisseur.lieu"
+          hint="Le lieu permet de sélectionner rapidement un groupe de fournisseurs."
+          persistent-hint
         ></v-text-field>
       </v-form>
     </v-card-text>

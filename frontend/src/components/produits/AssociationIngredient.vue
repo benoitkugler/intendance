@@ -112,7 +112,7 @@ export default class AssociationIngredient extends AssociationIngredientProps {
       conditionnement: cond,
       prix: 0,
       reference_fournisseur: "",
-      colisage: 0
+      colisage: 1
     };
   }
 
