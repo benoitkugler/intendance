@@ -26,8 +26,8 @@ import Vue from "vue";
 import Component from "vue-class-component";
 
 import UniteField from "./UniteField.vue";
-import { EnumItem } from "../../logic/enums";
 import { Conditionnement } from "../../logic/types";
+import { EnumItem } from "../../logic/types2";
 
 const ConditionnementFieldProps = Vue.extend({
   props: {

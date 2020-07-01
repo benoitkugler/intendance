@@ -16,11 +16,12 @@
 import Vue from "vue";
 import Component from "vue-class-component";
 import { HorairesColors } from "./utils";
-import { Horaires } from "../../logic/enums";
+import { enumIntToOptions } from "../../logic/types2";
+import { HoraireLabels, Horaire } from "../../logic/types";
 
 const HoraireFieldProps = Vue.extend({
   props: {
-    horaire: String,
+    horaire: Number as () => Horaire,
     label: {
       type: String,
       default: "Horaire"
@@ -37,9 +38,7 @@ const HoraireFieldProps = Vue.extend({
 });
 @Component({})
 export default class HoraireField extends HoraireFieldProps {
-  horaires = Horaires.map(h => {
-    return { ...h, color: HorairesColors[h.value] };
-  });
+  horaires = enumIntToOptions(HoraireLabels);
 }
 </script>
 

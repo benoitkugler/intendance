@@ -11,7 +11,8 @@
 <script lang="ts">
 import Vue from "vue";
 import Component from "vue-class-component";
-import { Unites } from "../../logic/enums";
+import { UniteLabels } from "../../logic/types";
+import { enumStringToOptions } from "../../logic/types2";
 
 const UniteFieldProps = Vue.extend({
   props: {
@@ -27,7 +28,7 @@ const UniteFieldProps = Vue.extend({
     unites: {
       type: Array,
       default: function() {
-        return Unites;
+        return enumStringToOptions(UniteLabels);
       }
     }
   },

@@ -70,7 +70,7 @@ func randGroupe() Groupe {
 }
 
 func randUnite() Unite {
-	choix := [...]Unite{Kilos, Litres, Piece}
+	choix := [...]Unite{Kilos, Litres, Piece, Zero}
 	i := rand.Intn(len(choix))
 	return choix[i]
 }

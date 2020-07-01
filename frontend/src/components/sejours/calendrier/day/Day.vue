@@ -165,10 +165,11 @@ import { C } from "../../../../logic/controller";
 import {
   RepasComplet,
   Groupe,
-  IngredientQuantite
+  IngredientQuantite,
+  Horaire,
+  HoraireLabels
 } from "../../../../logic/types";
-import { New, deepcopy } from "../../../../logic/types2";
-import { Horaires } from "../../../../logic/enums";
+import { New, deepcopy, enumIntToOptions } from "../../../../logic/types2";
 import { HorairesColors, HorairesIcons } from "../../../utils/utils";
 import { DragKind, getDragData, setDragData } from "../../../utils/utils_drag";
 import ChoixIngredients from "./ChoixIngredients.vue";
@@ -207,13 +208,13 @@ export default class Day extends DayProps {
   }
 
   get horaires() {
-    return Horaires;
+    return enumIntToOptions(HoraireLabels);
   }
 
-  getHoraireColor(h: string) {
+  getHoraireColor(h: Horaire) {
     return HorairesColors[h];
   }
-  getHoraireIcon(h: string) {
+  getHoraireIcon(h: Horaire) {
     return HorairesIcons[h];
   }
 
@@ -269,7 +270,7 @@ export default class Day extends DayProps {
   // on enlève le groupe du repas de départ
   // et on crée un nouveau repas à l'horaire choisi avec le groupe
   // en question
-  async onDropHoraireHeader(event: DragEvent, horaire: string) {
+  async onDropHoraireHeader(event: DragEvent, horaire: Horaire) {
     if (!event.dataTransfer || this.jourOffset == null) return;
     event.preventDefault();
     const data = getDragData(event.dataTransfer, DragKind.Groupe);

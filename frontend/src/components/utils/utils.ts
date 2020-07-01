@@ -1,19 +1,24 @@
-import { Horaires, HoraireFields } from "@/logic/enums";
 import levenshtein from "js-levenshtein";
+import { Horaire, HoraireLabels } from "@/logic/types";
 const MAX_DIST_LEVENSHTEIN = 5;
 
-const N = Horaires.length;
+const N = Object.keys(Horaire).length;
+const computeColor = (i: number) =>
+  `rgb(${200 * (1 - i / N)},${(100 * i) / N},50)`;
+export const HorairesColors: { [key in Horaire]: string } = {
+  [Horaire.PetitDejeuner]: computeColor(Horaire.PetitDejeuner),
+  [Horaire.Midi]: computeColor(Horaire.Midi),
+  [Horaire.Gouter]: computeColor(Horaire.Gouter),
+  [Horaire.Diner]: computeColor(Horaire.Diner),
+  [Horaire.Cinquieme]: computeColor(Horaire.Cinquieme)
+};
 
-export const HorairesColors: { [key: string]: string } = {};
-Horaires.forEach((h, i) => {
-  HorairesColors[h.value] = `rgb(${200 * (1 - i / N)},${(100 * i) / N},50)`;
-});
 export const HorairesIcons = {
-  [HoraireFields.PetitDejeuner]: "food-croissant",
-  [HoraireFields.Midi]: "pasta",
-  [HoraireFields.Gouter]: "cupcake",
-  [HoraireFields.Diner]: "bowl-mix",
-  [HoraireFields.Cinquieme]: "glass-mug-variant"
+  [Horaire.PetitDejeuner]: "food-croissant",
+  [Horaire.Midi]: "pasta",
+  [Horaire.Gouter]: "cupcake",
+  [Horaire.Diner]: "bowl-mix",
+  [Horaire.Cinquieme]: "glass-mug-variant"
 };
 
 export const Days = [

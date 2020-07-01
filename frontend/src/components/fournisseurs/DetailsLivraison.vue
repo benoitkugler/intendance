@@ -51,10 +51,15 @@
 import Vue from "vue";
 import Component from "vue-class-component";
 import { Livraison } from "../../logic/types";
-import { New, EditMode, deepcopy, defaultLivraison } from "../../logic/types2";
+import {
+  New,
+  EditMode,
+  deepcopy,
+  defaultLivraison,
+  EnumItem
+} from "../../logic/types2";
 import { Watch } from "vue-property-decorator";
 import { C } from "../../logic/controller";
-import { EnumItem } from "../../logic/enums";
 import JoursLivraisonField from "./JoursLivraisonField.vue";
 
 const DetailsLivraisonProps = Vue.extend({

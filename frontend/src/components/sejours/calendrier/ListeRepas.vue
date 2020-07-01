@@ -38,7 +38,6 @@ import { deepcopy, toNullableId } from "../../../logic/types2";
 import { C } from "../../../logic/controller";
 import { HorairesColors, HorairesIcons } from "../../utils/utils";
 import { DragKind, getDragData, setDragData } from "../../utils/utils_drag";
-import { fmtHoraire } from "../../../logic/enums";
 import {
   formatNbOffset,
   compareRecettesIngredient,

@@ -40,4 +40,4 @@ func (c Conditionnement) IsNull() bool {
 }
 
 // Horaire définie l'horaire d'un repas.
-type Horaire string
+type Horaire uint8

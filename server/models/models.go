@@ -7,7 +7,7 @@ import (
 )
 
 // Le logiciel est disponible sous la forme d'une **application web** accessible par mail/password.
-// sql:UNIQUE(mail)
+// sql: ADD UNIQUE(mail)
 type Utilisateur struct {
 	Id       int64  `json:"id"`
 	Password string `json:"password"`
@@ -19,7 +19,7 @@ type Utilisateur struct {
 // Les ingrédients sont _partagés_ : n'importe quel intendant peut utiliser un ingrédient déjà défini, et ajouter un produit lié. En revanche, les recettes et menus ne sont modifiables que par son _propriétaire_ (mais copiables libremement). En cas de modification par le propriétaire, les intendants utilisant la ressource sont notifiés par mail et peuvent choisir d'accepter la modification ou de s'approprier la ressource en la copiant.
 // Les recettes et menus peuvent n'être liés à aucun propriétaire, et sont alors éditable par tout le monde.
 //
-// sql:UNIQUE(nom)
+// sql: ADD UNIQUE(nom)
 type Ingredient struct {
 	Id    int64  `json:"id"`
 	Nom   string `json:"nom"`
@@ -45,7 +45,7 @@ type Recette struct {
 	ModeEmploi string `json:"mode_emploi"`
 }
 
-// sql:UNIQUE(id_recette, id_ingredient)
+// sql: ADD UNIQUE(id_recette, id_ingredient)
 type RecetteIngredient struct {
 	IdRecette int64 `json:"id_recette"`
 	LienIngredient
@@ -60,20 +60,20 @@ type Menu struct {
 	Commentaire string `json:"commentaire"`
 }
 
-// sql:UNIQUE(id_menu, id_ingredient)
+// sql: ADD UNIQUE(id_menu, id_ingredient)
 type MenuIngredient struct {
 	IdMenu int64 `json:"id_menu"`
 	LienIngredient
 }
 
-// sql:UNIQUE(id_menu, id_recette)
+// sql: ADD UNIQUE(id_menu, id_recette)
 type MenuRecette struct {
 	IdMenu    int64 `json:"id_menu"`
 	IdRecette int64 `json:"id_recette"`
 }
 
 // Les séjours sont _privés_, mais les journées formées peuvent être copiées.
-// sql:UNIQUE(id, id_utilisateur)
+// sql: ADD UNIQUE(id, id_utilisateur)
 type Sejour struct {
 	Id            int64 `json:"id"`
 	IdUtilisateur int64 `json:"id_utilisateur"`
@@ -108,19 +108,19 @@ type Repas struct {
 	Anticipation    int64   `json:"anticipation"` // commande les ingrédients en avance (en jours)
 }
 
-// sql:UNIQUE(id_repas, id_ingredient)
+// sql: ADD UNIQUE(id_repas, id_ingredient)
 type RepasIngredient struct {
 	IdRepas int64 `json:"id_repas"`
 	LienIngredient
 }
 
-// sql:UNIQUE(id_repas, id_recette)
+// sql: ADD UNIQUE(id_repas, id_recette)
 type RepasRecette struct {
 	IdRepas   int64 `json:"id_repas"`
 	IdRecette int64 `json:"id_recette"`
 }
 
-// sql:UNIQUE(id_repas, id_groupe)
+// sql: ADD UNIQUE(id_repas, id_groupe)
 type RepasGroupe struct {
 	IdRepas  int64 `json:"id_repas"`
 	IdGroupe int64 `json:"id_groupe"`
@@ -129,7 +129,7 @@ type RepasGroupe struct {
 // Fournisseur définit un fournisseur.
 // Chaque fournisseur possède au moins une contrainte de livraison
 // (voir `Livraison`), et peut en posséder plusieurs.
-// sql:UNIQUE(nom)
+// sql: ADD UNIQUE(nom)
 type Fournisseur struct {
 	Id   int64  `json:"id"`
 	Nom  string `json:"nom"`
@@ -137,7 +137,7 @@ type Fournisseur struct {
 }
 
 // Enregistre les fournisseurs associés à chaque utilisateur
-// sql:UNIQUE(id_utilisateur,id_fournisseur)
+// sql: ADD UNIQUE(id_utilisateur,id_fournisseur)
 type UtilisateurFournisseur struct {
 	IdUtilisateur int64 `json:"id_utilisateur"`
 	IdFournisseur int64 `json:"id_fournisseur"`
@@ -147,17 +147,17 @@ type UtilisateurFournisseur struct {
 // Note: Le champ `IdUtilisateur` permet d'assurer par une contrainte
 // que les fournisseurs soient associés à l'utilisateur du séjour.
 //
-// sql:UNIQUE(id_sejour,id_fournisseur)
-// sql:FOREIGN KEY (id_utilisateur, id_sejour) REFERENCES sejours (id_utilisateur, id)
-// sql:FOREIGN KEY (id_utilisateur, id_fournisseur) REFERENCES utilisateur_fournisseurs (id_utilisateur, id_fournisseur)
+// sql: ADD UNIQUE(id_sejour,id_fournisseur)
+// sql: ADD FOREIGN KEY (id_utilisateur, id_sejour) REFERENCES sejours (id_utilisateur, id)
+// sql: ADD FOREIGN KEY (id_utilisateur, id_fournisseur) REFERENCES utilisateur_fournisseurs (id_utilisateur, id_fournisseur)
 type SejourFournisseur struct {
 	IdUtilisateur int64 `json:"id_utilisateur,omitempty"`
 	IdSejour      int64 `json:"id_sejour,omitempty"`
 	IdFournisseur int64 `json:"id_fournisseur,omitempty"`
 }
 
-// sql:CHECK(prix >= 0)
-// sql:UNIQUE(id_livraison, nom)
+// sql: ADD CHECK(prix >= 0)
+// sql: ADD UNIQUE(id_livraison, nom)
 type Produit struct {
 	Id          int64 `json:"id"`
 	IdLivraison int64 `json:"id_livraison"`
@@ -174,9 +174,9 @@ type Produit struct {
 // Livraison enregistre les contraintes d'un fournisseur
 // quant à la livraison d'une gamme de produit.
 //
-// sql:CHECK(anticipation >= 0)
-// sql:CHECK(delai_commande >= 0)
-// sql:UNIQUE(id_fournisseur, nom)
+// sql: ADD CHECK(anticipation >= 0)
+// sql: ADD CHECK(delai_commande >= 0)
+// sql: ADD UNIQUE(id_fournisseur, nom)
 type Livraison struct {
 	Id            int64 `json:"id"`
 	IdFournisseur int64 `json:"id_fournisseur"`
@@ -187,7 +187,7 @@ type Livraison struct {
 	Anticipation   int64          `json:"anticipation"`    // nombre de jours entre la livraison et l'utilisation (défaut : 1)
 }
 
-// sql:UNIQUE(id_ingredient, id_produit)
+// sql: ADD UNIQUE(id_ingredient, id_produit)
 type IngredientProduit struct {
 	IdIngredient int64 `json:"id_ingredient"`
 	IdProduit    int64 `json:"id_produit"`
@@ -195,9 +195,9 @@ type IngredientProduit struct {
 	IdUtilisateur int64 `json:"id_utilisateur"` // ajouteur
 }
 
-// sql:UNIQUE(id_utilisateur, id_ingredient, id_fournisseur)
-// sql:FOREIGN KEY (id_utilisateur, id_fournisseur) REFERENCES utilisateur_fournisseurs (id_utilisateur, id_fournisseur)
-// sql:FOREIGN KEY (id_ingredient, id_produit) REFERENCES ingredient_produits (id_ingredient, id_produit)
+// sql: ADD UNIQUE(id_utilisateur, id_ingredient, id_fournisseur)
+// sql: ADD FOREIGN KEY (id_utilisateur, id_fournisseur) REFERENCES utilisateur_fournisseurs (id_utilisateur, id_fournisseur)
+// sql: ADD FOREIGN KEY (id_ingredient, id_produit) REFERENCES ingredient_produits (id_ingredient, id_produit)
 type DefautProduit struct {
 	IdUtilisateur int64 `json:"id_utilisateur"`
 	IdIngredient  int64 `json:"id_ingredient"`
@@ -212,7 +212,7 @@ type Commande struct {
 	Tag           string    `json:"tag"`
 }
 
-// sql:UNIQUE(id_commande, id_produit)
+// sql: ADD UNIQUE(id_commande, id_produit)
 type CommandeProduit struct {
 	IdCommande int64 `json:"id_commande"`
 	IdProduit  int64 `json:"id_produit"`

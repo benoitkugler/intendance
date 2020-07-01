@@ -83,9 +83,7 @@ import HoraireField from "../utils/HoraireField.vue";
 import TooltipBtn from "../utils/TooltipBtn.vue";
 import { C } from "../../logic/controller";
 import { Watch } from "vue-property-decorator";
-import { Horaires } from "../../logic/enums";
 import { Formatter } from "../../logic/formatter";
-import { fmtHoraire } from "../../logic/enums";
 import RecettesFields from "../utils/RecettesFields.vue";
 import ListeLienIngredients from "../utils/ListeLienIngredients.vue";
 
@@ -107,7 +105,6 @@ const Props = Vue.extend({
 })
 export default class FormRepas extends Props {
   repas: DetailsRepas = deepcopy(this.initialRepas);
-  horaires = Horaires;
 
   @Watch("initialRepas")
   onPropChange() {

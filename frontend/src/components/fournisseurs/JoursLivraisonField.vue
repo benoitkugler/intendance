@@ -13,8 +13,8 @@
 import Vue from "vue";
 import Component from "vue-class-component";
 import { JoursLivraison } from "../../logic/types";
-import { EnumItem } from "../../logic/enums";
 import { Days, cycleDays } from "../utils/utils";
+import { EnumItem } from "../../logic/types2";
 
 const JoursLivraisonFieldProps = Vue.extend({
   props: {

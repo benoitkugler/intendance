@@ -35,7 +35,8 @@ import {
   Fournisseur,
   OutFournisseur,
   Livraison,
-  OutLivraison
+  OutLivraison,
+  Horaire
 } from "./types";
 import axios, { AxiosResponse } from "axios";
 
@@ -748,7 +749,7 @@ export class Data {
   }
 
   // modifie le moment du repas
-  async deplaceRepas(repas: RepasComplet, jour: Date, horaire: string) {
+  async deplaceRepas(repas: RepasComplet, jour: Date, horaire: Horaire) {
     const sejour = this.getSejour(repas.id_sejour);
     if (!sejour) return;
     const offset = this.getOffset(sejour, jour);

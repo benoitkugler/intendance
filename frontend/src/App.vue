@@ -14,7 +14,7 @@
       :is-logged-in="isLoggedIn"
       @logout="logout"
     ></navigation-bar>
-    <v-content>
+    <v-main>
       <keep-alive v-if="isLoggedIn">
         <router-view></router-view>
       </keep-alive>
@@ -23,7 +23,7 @@
       <spinner-snackbar></spinner-snackbar>
       <error-dialog></error-dialog>
       <success-snackbar></success-snackbar>
-    </v-content>
+    </v-main>
   </v-app>
 </template>
 

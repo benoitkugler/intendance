@@ -117,7 +117,7 @@ import ToolbarSwitch from "../components/utils/ToolbarSwitch.vue";
 import FormPreferences from "../components/sejours/calendrier/FormPreferences.vue";
 import FormRepas from "../components/sejours/FormRepas.vue";
 
-import { RepasGroupe, RepasComplet } from "../logic/types";
+import { RepasGroupe, RepasComplet, Horaire } from "../logic/types";
 
 @Component({
   components: {
@@ -143,7 +143,7 @@ export default class Agenda extends Vue {
     id_sejour: -1,
     offset_personnes: 0,
     jour_offset: 0,
-    horaire: "",
+    horaire: Horaire.Midi,
     anticipation: 0,
     groupes: [],
     recettes: [],
@@ -194,15 +194,15 @@ export default class Agenda extends Vue {
   startAddRepasFromDate(date: string) {
     if (C.state.idSejour == null) return;
     const offset = C.dateToOffset(C.state.idSejour, new Date(date));
-    this.startAddRepas(offset, "");
+    this.startAddRepas(offset, Horaire.Midi);
   }
 
-  startAddRepasFromHoraire(horaire: string) {
+  startAddRepasFromHoraire(horaire: Horaire) {
     if (this.activeJourOffset == null) return;
     this.startAddRepas(this.activeJourOffset, horaire);
   }
 
-  private startAddRepas(jourOffset: number, horaire: string) {
+  private startAddRepas(jourOffset: number, horaire: Horaire) {
     const sejour = this.sejour;
     if (sejour == null) return;
     this.editedRepas = {

@@ -67,9 +67,13 @@ import { Watch } from "vue-property-decorator";
 import UniteField from "../utils/UniteField.vue";
 import ConditionnementField from "../utils/ConditionnementField.vue";
 
-import { Ingredient } from "../../logic/types";
-import { IngredientOptions, EditMode, deepcopy } from "../../logic/types2";
-import { Unites, UniteFields } from "../../logic/enums";
+import { Ingredient, Unite, UniteLabels } from "../../logic/types";
+import {
+  IngredientOptions,
+  EditMode,
+  deepcopy,
+  enumStringToOptions
+} from "../../logic/types2";
 import { DefautIngredient } from "./types";
 
 const EditIngredientProps = Vue.extend({
@@ -96,26 +100,27 @@ export default class EditIngredient extends EditIngredientProps {
   }
 
   get conditionnement() {
-    return this.current.conditionnement.unite != "";
+    return this.current.conditionnement.unite != Unite.Zero;
   }
   set conditionnement(b: boolean) {
     if (!b) {
-      this.current.conditionnement = { unite: "", quantite: 0 };
+      this.current.conditionnement = { unite: Unite.Zero, quantite: 0 };
     } else {
       this.current.conditionnement.unite =
         this.current.unite ||
         (this.initialIngredient && this.initialIngredient.ingredient.unite) ||
-        "L";
+        Unite.Litres;
     }
   }
 
   get allowedUnitesConditionnement() {
-    if (this.current.unite == UniteFields.Piece) {
+    const items = enumStringToOptions(UniteLabels);
+    if (this.current.unite == Unite.Piece) {
       // Pour le conditionnement, l'unité Pièce n'apporte aucune information
-      return Unites.filter(u => u.value != UniteFields.Piece);
+      return items.filter(u => u.value != Unite.Piece);
     }
     // le conditionnement doit être compatible avec l'unité.
-    return Unites.filter(u => u.value == this.current.unite);
+    return items.filter(u => u.value == this.current.unite);
   }
 
   @Watch("initialIngredient")

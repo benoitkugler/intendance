@@ -73,12 +73,16 @@ import Component from "vue-class-component";
 import DetailsProduit from "./DetailsProduit.vue";
 import TooltipBtn from "../utils/TooltipBtn.vue";
 
-import { Ingredient, IngredientProduits, Produit } from "../../logic/types";
+import {
+  Ingredient,
+  IngredientProduits,
+  Produit,
+  Unite
+} from "../../logic/types";
 import { C } from "../../logic/controller";
 import { Watch } from "vue-property-decorator";
 import { New, NullId } from "../../logic/types2";
 import { Formatter } from "../../logic/formatter";
-import { UniteFields } from "../../logic/enums";
 
 const AssociationIngredientProps = Vue.extend({
   props: {
@@ -94,10 +98,10 @@ export default class AssociationIngredient extends AssociationIngredientProps {
   formatConditionnement = Formatter.formatConditionnement;
 
   get newProduit(): New<Produit> {
-    let cond = { quantite: 0, unite: "" };
+    let cond = { quantite: 0, unite: Unite.Litres };
     if (this.ingredient != null) {
       cond = this.ingredient.conditionnement;
-      if (this.ingredient.unite != UniteFields.Piece) {
+      if (this.ingredient.unite != Unite.Piece) {
         // les unités doivent être indentiques
         cond.unite = this.ingredient.unite;
       }

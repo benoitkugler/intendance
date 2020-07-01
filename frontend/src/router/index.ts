@@ -1,6 +1,7 @@
 import Vue from "vue";
 import VueRouter, { RouteConfig } from "vue-router";
 import Sejours from "../views/Sejours.vue";
+import { RouteConfigSingleView } from "vue-router/types/router";
 
 Vue.use(VueRouter);
 
@@ -9,7 +10,7 @@ interface RouteMeta {
   tooltip: string;
   icon: string;
 }
-export interface RouteType extends RouteConfig {
+export interface RouteType extends RouteConfigSingleView {
   meta: RouteMeta;
 }
 

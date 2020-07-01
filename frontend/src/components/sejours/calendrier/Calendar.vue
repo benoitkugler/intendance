@@ -45,7 +45,6 @@ import {
   DetailsRepas,
   PreferencesAgenda
 } from "../../../logic/types2";
-import { fmtHoraire, Horaires } from "../../../logic/enums";
 import { Formatter } from "../../../logic/formatter";
 import { toDateVuetify } from "./utils";
 import { HorairesColors } from "../../utils/utils";
@@ -127,11 +126,10 @@ export default class Calendar extends Props {
       l.push(repas);
       out[d] = l;
     });
-    const horaires = Horaires.map(v => v.value);
     for (const date in out) {
       const element = out[date];
       out[date] = element.sort((a, b) => {
-        const v = horaires.indexOf(a.horaire) - horaires.indexOf(b.horaire);
+        const v = a.horaire - b.horaire;
         return v == 0 ? a.id - b.id : v; // tri déterministe
       });
     }

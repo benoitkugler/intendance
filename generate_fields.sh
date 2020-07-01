@@ -6,8 +6,6 @@
 
 ../structgen/structgen --source=server/views/types.go --mode=ts:frontend/src/logic/types.ts 
 
-go run macros/enums.go > frontend/src/logic/enums.ts
-
 goimports -w server/models/scans.go
 goimports -w server/models/scans_test.go
 goimports -w server/models/data_test.go

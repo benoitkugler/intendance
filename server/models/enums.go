@@ -1,14 +1,15 @@
 package models
 
 const (
-	PetitDejeuner Horaire = "matin"     // Petit déjeuner
-	Midi          Horaire = "midi"      // Midi
-	Gouter        Horaire = "gouter"    // Goûter
-	Diner         Horaire = "diner"     // Dîner
-	Cinquieme     Horaire = "cinquieme" // Cinquième
+	PetitDejeuner Horaire = iota // Petit déjeuner
+	Midi                         // Midi
+	Gouter                       // Goûter
+	Diner                        // Dîner
+	Cinquieme                    // Cinquième
 )
 
 const (
+	Zero   Unite = ""   // Unité invalide
 	Litres Unite = "L"  // Litres
 	Kilos  Unite = "Kg" // Kilos
 	Piece  Unite = "P"  // Pièce(s)

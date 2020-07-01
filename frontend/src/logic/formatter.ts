@@ -7,9 +7,9 @@ import {
   Conditionnement,
   MenuComplet,
   Produit,
-  Livraison
+  Livraison,
+  UniteLabels
 } from "./types";
-import { fmtUnite } from "./enums";
 
 const Months = [
   "Janvier",
@@ -75,7 +75,7 @@ export class Formatter {
   }
 
   static formatConditionnement(c: Conditionnement) {
-    return Formatter.formatQuantite(c.quantite) + " " + fmtUnite(c.unite);
+    return Formatter.formatQuantite(c.quantite) + " " + UniteLabels[c.unite];
   }
 
   formatFournisseur(produit: Produit) {

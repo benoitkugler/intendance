@@ -1,6 +1,5 @@
 import { C } from "../controller";
-import { HoraireFields } from "../enums";
-import { toNullableId } from "../types2";
+import { Horaire, Unite } from "../types";
 
 const IdUtilisateur = 2;
 
@@ -21,10 +20,10 @@ test("crud ingredient", async () => {
         .toString(36)
         .replace(/[^a-z]+/g, "")
         .substr(0, 5),
-    conditionnement: { unite: "L", quantite: 2 },
+    conditionnement: { unite: Unite.Litres, quantite: 2 },
     callories: {},
     categorie: "",
-    unite: "P"
+    unite: Unite.Piece
   });
   expect(C.notifications.getError()).toBeNull();
   expect(Object.keys(C.data.ingredients || {})).toHaveLength(l + 1);
@@ -38,10 +37,10 @@ test("crud ingredient", async () => {
         .toString(36)
         .replace(/[^a-z]+/g, "")
         .substr(0, 5),
-    conditionnement: { unite: "Kg", quantite: 4 },
+    conditionnement: { unite: Unite.Kilos, quantite: 4 },
     callories: {},
     categorie: "nouvelle cat&gori",
-    unite: "P"
+    unite: Unite.Piece
   });
   expect(C.notifications.getError()).toBeNull();
 
@@ -189,7 +188,7 @@ test("crud repas", async () => {
   const sejourId = Number(Object.keys(C.data.sejours.sejours || {})[0]);
 
   await C.data.createRepas({
-    horaire: HoraireFields.Cinquieme,
+    horaire: Horaire.Cinquieme,
     id_sejour: sejourId,
     jour_offset: 2,
     offset_personnes: 50,
@@ -201,7 +200,7 @@ test("crud repas", async () => {
   expect(C.notifications.getError()).toBeNull();
 
   const repas = ((C.data.sejours.sejours || {})[sejourId].repass || [])[0];
-  repas.horaire = HoraireFields.Midi;
+  repas.horaire = Horaire.Midi;
   await C.data.updateManyRepas([repas]);
   expect(C.notifications.getError()).toBeNull();
 

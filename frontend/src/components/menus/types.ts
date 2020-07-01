@@ -3,7 +3,8 @@ import {
   Recette,
   Ingredient,
   RecetteComplet,
-  MenuComplet
+  MenuComplet,
+  Unite
 } from "@/logic/types";
 
 import { IngredientOptions, New } from "@/logic/types2";
@@ -21,9 +22,9 @@ export interface StateMenus {
 
 export const DefautIngredient: New<Ingredient> = {
   nom: "",
-  unite: "",
+  unite: Unite.Litres,
   categorie: "",
-  conditionnement: { unite: "", quantite: 0 },
+  conditionnement: { unite: Unite.Litres, quantite: 0 },
   callories: {}
 };
 

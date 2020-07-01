@@ -51,3 +51,42 @@ export function defaultLivraison(): New<Livraison> {
     anticipation: 1
   };
 }
+
+export interface EnumItem<T = string> {
+  value: T;
+  text: string;
+}
+
+export function enumStringToOptions<T extends string>(
+  enums: { [key in T]: string }
+) {
+  const out: EnumItem<T>[] = [];
+
+  for (const value in enums) {
+    const text = enums[value];
+    out.push({ value, text });
+  }
+  return out.sort((a, b) => {
+    if (a.value == "") {
+      return -1;
+    }
+    return a.text.localeCompare(b.text);
+  });
+}
+
+export function enumIntToOptions<T extends number>(
+  enums: { [key in T]: string }
+) {
+  const out: EnumItem<T>[] = [];
+
+  for (const value in enums) {
+    const text = enums[value];
+    out.push({ value: Number(value) as T, text });
+  }
+  return out.sort((a, b) => {
+    if (a.value == 0) {
+      return -1;
+    }
+    return a.value - b.value;
+  });
+}
