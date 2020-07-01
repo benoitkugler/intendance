@@ -81,6 +81,7 @@ func routes(e *echo.Echo) {
 		"/agenda",
 		"/recap",
 		"/menus",
+		"/fournisseurs",
 	} {
 		e.GET(route, views.Accueil, NoCache)
 	}

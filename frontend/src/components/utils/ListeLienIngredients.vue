@@ -47,7 +47,7 @@
                 {{ getIngredient(ingredient).nom }}
               </v-list-item-title>
               <v-list-item-subtitle>
-                {{ ingredient.quantite }}
+                {{ ingredient.quantite.toFixed(3) }}
                 <i>{{ getIngredient(ingredient).unite }} / pers. </i> - Cuisson
                 :
                 {{ ingredient.cuisson }}
