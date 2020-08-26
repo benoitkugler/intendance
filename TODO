@@ -1,0 +1,6 @@
+Pour commencer, un mode export ingrédients résolus pourrrait suffire
+Mais, besoin de pouvoir trier les ingrédients par "fournisseur"
+pour faciliter la suite de la commande (extérieure à l'appli)
+Problème : un même ingrédient peut être dans 2 catégories (surgelé, frais, épicerie) 
+Donc il faut pouvoir préciser la catégorie plus tard.
+Une association simplifiée ingrédient -> catégorie ?
