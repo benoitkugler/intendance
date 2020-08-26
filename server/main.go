@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/benoitkugler/intendance/server/controller"
 	"github.com/benoitkugler/intendance/server/views"
@@ -68,6 +69,9 @@ func setup(e *echo.Echo, dev bool) string {
 		port, err := strconv.Atoi(os.Getenv("PORT"))
 		if err != nil {
 			log.Fatal("Didn't find 'PORT' env. variable.", err)
+		}
+		if strings.Count(host, ":") >= 2 { // ipV6 -> besoin de crochet
+			host = "[" + host + "]"
 		}
 		adress = fmt.Sprintf("%s:%d", host, port)
 	}
