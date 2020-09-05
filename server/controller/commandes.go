@@ -170,17 +170,17 @@ func (ts timedProduits) groupe() timedProduits {
 
 // EtablitCommande calcule pour chaque ingrédient le jour de commande du produit
 // et le nombre d'exemplaire.
-func (ct RequeteContext) EtablitCommande(ingredients []DateIngredientQuantites, contraintes CommandeContraintes) ([]CommandeItem, Ambiguites, error) {
+func (ct RequeteContext) EtablitCommande(ingredients []DateIngredientQuantites, contraintes CommandeContraintes) (OutCommande, error) {
 	// TODO: vérifier les associations ing -> produit,
 	// où au moins les contraintes d'unité, etc..
 
 	fourns, err := ct.loadFournisseurs()
 	if err != nil {
-		return nil, nil, err
+		return OutCommande{}, err
 	}
 	livraisons, err := ct.loadLivraisons(fourns)
 	if err != nil {
-		return nil, nil, err
+		return OutCommande{}, err
 	}
 
 	allIngredients := models.Ingredients{}
@@ -193,7 +193,7 @@ func (ct RequeteContext) EtablitCommande(ingredients []DateIngredientQuantites, 
 	// on récupére les données des produits
 	data, err := ct.resoudProduits(allIngredients.Ids(), livraisons)
 	if err != nil {
-		return nil, nil, err
+		return OutCommande{}, err
 	}
 
 	// on commence par associer à chaque ingrédient un produit
@@ -210,7 +210,7 @@ func (ct RequeteContext) EtablitCommande(ingredients []DateIngredientQuantites, 
 			var has bool
 			targetProduit, has = data.produits[targetIdProduit]
 			if !has { // le produit imposé n'est pas conforme
-				return nil, nil, fmt.Errorf("Le produit (%d) n'est pas associé à l'ingrédient <b>%s</b> !",
+				return OutCommande{}, fmt.Errorf("Le produit (%d) n'est pas associé à l'ingrédient <b>%s</b> !",
 					targetIdProduit, ingredient.Nom)
 			}
 		} else {
@@ -219,7 +219,7 @@ func (ct RequeteContext) EtablitCommande(ingredients []DateIngredientQuantites, 
 
 			switch {
 			case len(prods) == 0: // l'absence de produit est fatale
-				return nil, nil, fmt.Errorf("L'ingrédient %s n'est associé à aucun produit !", ingredient.Nom)
+				return OutCommande{}, fmt.Errorf("L'ingrédient %s n'est associé à aucun produit !", ingredient.Nom)
 			case len(prods) > 1: // on essaye de résoudre les ambiguités
 				defauts := data.defauts[idIngredient]
 				switch {
@@ -280,7 +280,7 @@ func (ct RequeteContext) EtablitCommande(ingredients []DateIngredientQuantites, 
 	for key, value := range accu {
 		total, err := aggregeIngredients(value)
 		if err != nil {
-			return nil, nil, err
+			return OutCommande{}, err
 		}
 		prod := data.produits[key.idProduit]
 		if prod.Conditionnement.Quantite <= 0 {
@@ -288,7 +288,7 @@ func (ct RequeteContext) EtablitCommande(ingredients []DateIngredientQuantites, 
 			for _, ing := range value {
 				chunks = append(chunks, "<b>"+ing.Ingredient.Nom+"</b>")
 			}
-			return nil, nil, fmt.Errorf(`Le conditionnement du produit <b>%s</b> est invalide : <i>%0.3f</i> <br/>
+			return OutCommande{}, fmt.Errorf(`Le conditionnement du produit <b>%s</b> est invalide : <i>%0.3f</i> <br/>
 			Ingrédients liés : %s
 			`, prod.Nom, prod.Conditionnement.Quantite, strings.Join(chunks, ", "))
 		}
@@ -300,5 +300,5 @@ func (ct RequeteContext) EtablitCommande(ingredients []DateIngredientQuantites, 
 		return out[i].Quantite > out[j].Quantite
 	})
 
-	return out, ambiguites, nil
+	return OutCommande{Commande: out, Ambiguites: ambiguites}, nil
 }

@@ -20,12 +20,6 @@ func (o OptionsAssistantCreateRepass) resoudHoraires() []models.Horaire {
 	return horaires
 }
 
-type InAssistantCreateRepass struct {
-	IdSejour       int64                        `json:"id_sejour"`
-	Options        OptionsAssistantCreateRepass `json:"options"`
-	GroupesSorties map[int][]int64              `json:"groupes_sorties"` // offset -> ids_groupes
-}
-
 // crée un repas et y ajoute les groupes donnés
 // ne commit pas; ne rollback pas
 func (tx Tx) creeRepasComplet(params InAssistantCreateRepass,

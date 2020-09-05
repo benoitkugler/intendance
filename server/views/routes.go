@@ -37,7 +37,7 @@ func Accueil(c echo.Context) error {
 
 // -------------------------------- Loggin --------------------------------
 func (s Server) Loggin(c echo.Context) error {
-	var params InLoggin
+	var params controller.InLoggin
 	if err := c.Bind(&params); err != nil {
 		return err
 	}
@@ -342,7 +342,7 @@ func (s Server) DeleteGroupe(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	var out OutDeleteGroupe
+	var out controller.OutDeleteGroupe
 	if out.NbRepas, err = ct.DeleteGroupe(id); err != nil {
 		return err
 	}
@@ -412,7 +412,7 @@ func (s Server) DeleteRepas(c echo.Context) error {
 
 func (s Server) AssistantCreateRepas(c echo.Context) error {
 	ct := s.Server.NewRequeteContext(c)
-	var params InAssistantCreateRepass
+	var params controller.InAssistantCreateRepass
 	if err := c.Bind(&params); err != nil {
 		return err
 	}
@@ -431,7 +431,7 @@ func (s Server) AssistantCreateRepas(c echo.Context) error {
 // --------------------------------------------------------------------------
 
 func (s Server) ResoudIngredients(c echo.Context) error {
-	var params InResoudIngredients
+	var params controller.InResoudIngredients
 	if err := c.Bind(&params); err != nil {
 		return err
 	}
@@ -461,11 +461,11 @@ func (s Server) ResoudIngredients(c echo.Context) error {
 
 func (s Server) GetFournisseurs(c echo.Context) error {
 	ct := s.Server.NewRequeteContext(c)
-	fourn, livr, err := ct.LoadFournisseurs()
+	out, err := ct.LoadFournisseurs()
 	if err != nil {
 		return err
 	}
-	return c.JSON(200, OutFournisseurs{Fournisseurs: fourn, Livraisons: livr})
+	return c.JSON(200, out)
 }
 
 func (s Server) CreateFournisseur(c echo.Context) error {
@@ -479,11 +479,11 @@ func (s Server) CreateFournisseur(c echo.Context) error {
 		return err
 	}
 
-	fourn, livr, err := ct.LoadFournisseurs()
+	out, err := ct.LoadFournisseurs()
 	if err != nil {
 		return err
 	}
-	return c.JSON(200, OutFournisseurs{Fournisseurs: fourn, Livraisons: livr})
+	return c.JSON(200, out)
 }
 
 func (s Server) UpdateFournisseur(c echo.Context) error {
@@ -509,16 +509,16 @@ func (s Server) DeleteFournisseur(c echo.Context) error {
 	if err = ct.DeleteFournisseur(id); err != nil {
 		return err
 	}
-	f, l, err := ct.LoadFournisseurs()
+	out, err := ct.LoadFournisseurs()
 	if err != nil {
 		return err
 	}
-	return c.JSON(200, OutFournisseurs{Fournisseurs: f, Livraisons: l})
+	return c.JSON(200, out)
 }
 
 func (s Server) UpdateSejourFournisseurs(c echo.Context) error {
 	ct := s.Server.NewRequeteContext(c)
-	var params InSejourFournisseurs
+	var params controller.InSejourFournisseurs
 	if err := c.Bind(&params); err != nil {
 		return err
 	}
@@ -568,11 +568,11 @@ func (s Server) DeleteLivraison(c echo.Context) error {
 	if err = ct.DeleteLivraison(id); err != nil {
 		return err
 	}
-	f, l, err := ct.LoadFournisseurs()
+	out, err := ct.LoadFournisseurs()
 	if err != nil {
 		return err
 	}
-	return c.JSON(200, OutFournisseurs{Fournisseurs: f, Livraisons: l})
+	return c.JSON(200, out)
 }
 
 func (s Server) GetIngredientProduits(c echo.Context) error {
@@ -591,7 +591,7 @@ func (s Server) GetIngredientProduits(c echo.Context) error {
 
 func (s Server) AjouteIngredientProduit(c echo.Context) error {
 	ct := s.Server.NewRequeteContext(c)
-	var params InAjouteIngredientProduit
+	var params controller.InAjouteIngredientProduit
 	if err := c.Bind(&params); err != nil {
 		return err
 	}
@@ -634,7 +634,7 @@ func (s Server) DeleteProduit(c echo.Context) error {
 
 func (s Server) SetDefautProduit(c echo.Context) error {
 	ct := s.Server.NewRequeteContext(c)
-	var def InSetDefautProduit
+	var def controller.InSetDefautProduit
 	if err := c.Bind(&def); err != nil {
 		return err
 	}
@@ -656,13 +656,13 @@ func (s Server) SetDefautProduit(c echo.Context) error {
 
 func (s Server) EtablitCommande(c echo.Context) error {
 	ct := s.Server.NewRequeteContext(c)
-	var params InCommande
+	var params controller.InCommande
 	if err := c.Bind(&params); err != nil {
 		return err
 	}
-	out, ambs, err := ct.EtablitCommande(params.Ingredients, params.Contraintes)
+	out, err := ct.EtablitCommande(params.Ingredients, params.Contraintes)
 	if err != nil {
 		return err
 	}
-	return c.JSON(200, OutCommande{Commande: out, Ambiguites: ambs})
+	return c.JSON(200, out)
 }

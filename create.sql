@@ -205,7 +205,7 @@ ALTER TABLE recette_ingredients ADD FOREIGN KEY(id_recette) REFERENCES recettes 
 ALTER TABLE recette_ingredients ADD FOREIGN KEY(id_ingredient) REFERENCES ingredients ;
 ALTER TABLE repass ADD FOREIGN KEY(id_sejour) REFERENCES sejours ;
 ALTER TABLE repas_groupes ADD FOREIGN KEY(id_repas) REFERENCES repass ON DELETE CASCADE;
-ALTER TABLE repas_groupes ADD FOREIGN KEY(id_groupe) REFERENCES groupes ;
+ALTER TABLE repas_groupes ADD FOREIGN KEY(id_groupe) REFERENCES groupes ON DELETE CASCADE;
 ALTER TABLE repas_ingredients ADD FOREIGN KEY(id_repas) REFERENCES repass ON DELETE CASCADE;
 ALTER TABLE repas_ingredients ADD FOREIGN KEY(id_ingredient) REFERENCES ingredients ;
 ALTER TABLE repas_recettes ADD FOREIGN KEY(id_repas) REFERENCES repass ON DELETE CASCADE;

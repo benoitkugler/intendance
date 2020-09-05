@@ -1,46 +1,31 @@
+import { AxiosResponse } from "axios";
+import { New } from "./types2";
+import Vue from "vue";
+import { API } from "./server";
 import {
-  Sejours,
-  Ingredients,
+  SejourRepas,
+  Groupes,
+  Ingredient,
   RecetteComplet,
   MenuComplet,
   Utilisateur,
   Fournisseurs,
   Livraisons,
-  OutFournisseurs,
-  OutUtilisateurs,
-  OutIngredients,
-  Ingredient,
-  OutIngredient,
-  OutIngredientProduits,
   InAjouteIngredientProduit,
   InSetDefautProduit,
-  OutRecettes,
-  OutRecette,
-  OutMenus,
-  OutMenu,
-  OutSejours,
   Sejour,
-  OutSejour,
-  SejourRepas,
   Fournisseur,
-  OutFournisseur,
+  OutFournisseurs,
   InSejourFournisseurs,
   Livraison,
-  OutLivraison,
   Groupe,
-  OutGroupe,
   OutDeleteGroupe,
   RepasComplet,
   Horaire,
   OptionsAssistantCreateRepass,
-  InAssistantCreateRepass,
-  Groupes
+  InAssistantCreateRepass
 } from "./types";
-import { Controller } from "./controller";
-import { AxiosResponse } from "axios";
-import { New } from "./types2";
-import Vue from "vue";
-import { API } from "./server";
+import { Notifications } from "./notifications";
 
 /* Ce composant est responsable de la comunication avec le serveur, via une classe API
  * Il stocke et met à jour les données client.
@@ -50,46 +35,65 @@ export class Data {
     sejours: { [key: number]: SejourRepas };
     groupes: NonNullable<Groupes>;
   } = { sejours: {}, groupes: {} };
-  ingredients: NonNullable<Ingredients> = {};
+  ingredients: { [key: number]: Ingredient } = {};
   recettes: { [key: number]: RecetteComplet } = {};
   menus: { [key: number]: MenuComplet } = {};
   utilisateurs: { [key: number]: Utilisateur } = {};
   fournisseurs: NonNullable<Fournisseurs> = {};
   livraisons: NonNullable<Livraisons> = {};
 
-  constructor(private api: API) {}
+  constructor(private api: API, private notifications: Notifications) {}
 
   async loadFournisseurs() {
+    this.notifications.startSpin();
     const out = await this.api.GetFournisseurs();
     if (out === undefined) return; // erreur
     this.fournisseurs = out.fournisseurs || {};
     this.livraisons = out.livraisons || {};
+    this.notifications.setMessage("Fournisseurs chargés.");
   }
 
-  // charge transitivement les données nécessaires aux menus
+  // charge en parallèle les données nécessaires aux menus
   async loadAllMenus() {
-    this.loadFournisseurs();
-    await Promise.all([this.loadIngredients(), this.loadUtilisateurs()]);
-    await this.loadRecettes(); // recettes dépend des ingrédients
-    await this.loadMenus(); // menus dépends des recettes, ingrédients et utilisateurs
+    this.notifications.startSpin();
+    const outs = await Promise.all([
+      this.api.GetIngredients(),
+      this.api.GetUtilisateurs(),
+      this.api.GetFournisseurs(),
+      this.api.GetRecettes(), // recettes dépend des ingrédients
+      this.api.GetMenus() // menus dépends des recettes, ingrédients et utilisateurs
+    ]);
+    if (outs.filter(out => out === undefined).length > 0) return;
+    this.ingredients = outs[0] || {};
+    this.utilisateurs = outs[1] || {};
+    this.fournisseurs = outs[2]?.fournisseurs || {};
+    this.livraisons = outs[2]?.livraisons || {};
+    this.recettes = outs[3] || {};
+    this.menus = outs[4] || {};
+    this.notifications.setMessage("Menus chargés.");
   }
 
   loadUtilisateurs = async () => {
+    this.notifications.startSpin();
     const out = await this.api.GetUtilisateurs();
     if (out === undefined) return;
     this.utilisateurs = out || {};
+    this.notifications.setMessage("Utilisateurs chargés.");
   };
 
   loadIngredients = async () => {
+    this.notifications.startSpin();
     const out = await this.api.GetIngredients();
     if (out === undefined) return;
     this.ingredients = out || {};
+    this.notifications.setMessage("Ingrédients chargés.");
   };
 
   private createOrUpdateIngredient = async (
     ing: Ingredient,
     method: "create" | "update"
   ) => {
+    this.notifications.startSpin();
     const f =
       method == "create"
         ? this.api.CreateIngredient
@@ -97,6 +101,7 @@ export class Data {
     const out = await f(ing);
     if (out === undefined) return;
     Vue.set(this.ingredients || {}, out.id, out); // VRC
+    this.notifications.setMessage("Ingrédient mis à jour.");
     return out;
   };
 
@@ -109,31 +114,50 @@ export class Data {
   };
 
   deleteIngredient = async (idIngredient: number, checkProduits: boolean) => {
+    this.notifications.startSpin();
     const out = await this.api.DeleteIngredient({
       id: String(idIngredient),
       check_produits: checkProduits ? "check" : ""
     });
     if (out === undefined) return;
     this.ingredients = out || {};
+    this.notifications.setMessage("Ingrédient bien supprimé.");
   };
 
   getIngredientProduits = async (idIngredient: number) => {
-    return this.api.GetIngredientProduits({ id: String(idIngredient) });
+    this.notifications.startSpin();
+    const out = await this.api.GetIngredientProduits({
+      id: String(idIngredient)
+    });
+    if (out == undefined) return;
+    this.notifications.setMessage("Produits chargés.");
+    return out;
   };
 
   // renvoie la liste des produits mise à jour
   ajouteIngredientProduit = async (ip: InAjouteIngredientProduit) => {
-    return this.api.AjouteIngredientProduit(ip);
+    this.notifications.startSpin();
+    const out = await this.api.AjouteIngredientProduit(ip);
+    if (out == undefined) return;
+    this.notifications.setMessage("Produit ajouté.");
+    return out;
   };
 
   // `getIngredientProduits` devrait être appelé ensuite
   deleteProduit = async (idProduit: number) => {
+    this.notifications.startSpin();
     await this.api.DeleteProduit({ id: String(idProduit) });
+    if (this.notifications.getError() != null) return;
+    this.notifications.setMessage("Produit supprimé.");
   };
 
   // renvoie la liste des produits mise à jour
   setDefautProduit = async (params: InSetDefautProduit) => {
-    return this.api.SetDefautProduit(params);
+    this.notifications.startSpin();
+    const out = await this.api.SetDefautProduit(params);
+    if (out === undefined) return;
+    this.notifications.setMessage("Produit choisi par défaut.");
+    return out;
   };
 
   // TODO: WIP

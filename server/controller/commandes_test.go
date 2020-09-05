@@ -58,10 +58,9 @@ func TestCommande(t *testing.T) {
 			ing2.Id: produit2.Id,
 		},
 	}
-	out, ambs, err := ct.EtablitCommande(ingredients, contraintes)
+	out, err := ct.EtablitCommande(ingredients, contraintes)
 	if err != nil {
 		t.Fatal(err)
 	}
 	fmt.Println(out)
-	fmt.Println(ambs)
 }

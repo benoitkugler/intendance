@@ -63,17 +63,17 @@ func (ct RequeteContext) checkLivraisonFournisseur(livraison models.Livraison) e
 
 // LoadFournisseurs renvoie les fournisseurs associés à l'utilisateur courant,
 // ainsi que les contraints de livraisons pertinentes.
-func (ct RequeteContext) LoadFournisseurs() (models.Fournisseurs, models.Livraisons, error) {
+func (ct RequeteContext) LoadFournisseurs() (OutFournisseurs, error) {
 	fournisseurs, err := ct.loadFournisseurs()
 	if err != nil {
-		return nil, nil, err
+		return OutFournisseurs{}, err
 	}
 
 	livraisons, err := ct.loadLivraisons(fournisseurs)
 	if err != nil {
-		return nil, nil, err
+		return OutFournisseurs{}, err
 	}
-	return fournisseurs, livraisons, nil
+	return OutFournisseurs{Fournisseurs: fournisseurs, Livraisons: livraisons}, nil
 }
 
 // CreateFournisseur crée un fournisseur et le lie à l'utilisateur courant

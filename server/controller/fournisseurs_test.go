@@ -12,11 +12,11 @@ import (
 func TestGetFournisseurs(t *testing.T) {
 	s, ct := setupTest(t)
 	defer s.DB.Close()
-	four, livr, err := ct.LoadFournisseurs()
+	out, err := ct.LoadFournisseurs()
 	if err != nil {
 		t.Fatal(err)
 	}
-	fmt.Println(four, livr)
+	fmt.Println(out)
 }
 
 func TestCRUDFournisseur(t *testing.T) {
