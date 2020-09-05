@@ -17,7 +17,7 @@ type UserMeta struct {
 	jwt.StandardClaims
 }
 
-func newToken(id int64) (string, error) {
+func (s Server) newToken(id int64) (string, error) {
 	// Set custom claims
 	claims := &UserMeta{
 		IdProprietaire: id,
@@ -30,18 +30,24 @@ func newToken(id int64) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	// Generate encoded token and send it as response.
-	return token.SignedString(logs.PASSPHRASE)
+	pass := logs.PASSPHRASE
+	if s.Dev {
+		pass = logs.PASSPHRASE_DEV
+	}
+	return token.SignedString(pass)
 }
 
 // GetDevToken choisit un utilisateur au hasard et renvoie
 // un token de connection
-func (s Server) GetDevToken() (string, error) {
+func (s Server) GetDevToken() (int64, string, error) {
 	users, err := models.SelectAllUtilisateurs(s.DB)
 	if err != nil {
-		return "", err
+		return 0, "", err
 	}
 	if len(users) == 0 {
-		return "", errors.New("Aucun utilisateur n'est présent dans la base de données.")
+		return 0, "", errors.New("Aucun utilisateur n'est présent dans la base de données.")
 	}
-	return newToken(users.Ids()[0])
+	id := users.Ids()[0]
+	token, err := s.newToken(id)
+	return id, token, err
 }

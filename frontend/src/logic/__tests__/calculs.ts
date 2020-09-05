@@ -2,7 +2,7 @@ import { C } from "../controller";
 import { RepasComplet } from "../types";
 
 test("resoud ingredients", async () => {
-  await C.data.loadSejours();
+  await C.api.GetSejours();
   expect(C.notifications.getError()).toBeNull();
 
   const repas: RepasComplet[] = [];

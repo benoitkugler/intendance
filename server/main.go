@@ -58,6 +58,11 @@ func setup(e *echo.Echo, dev bool, s controller.Server) string {
 	if dev {
 		adress = "localhost:1323"
 		autoriseCORS(e)
+		id, token, err := s.GetDevToken()
+		if err != nil {
+			log.Fatalf("Can't get token : %s", err)
+		}
+		fmt.Printf("Dev: user %d, token %s\n", id, token)
 	} else {
 		autoriseCORS(e) //FIXME:
 		if err := s.DB.Ping(); err != nil {

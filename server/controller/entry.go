@@ -26,7 +26,7 @@ func (s Server) Loggin(mail, password string) (out OutLoggin, err error) {
 		out.Erreur = "Le mot de passe est invalide."
 		return out, nil
 	}
-	token, err := newToken(u.Id)
+	token, err := s.newToken(u.Id)
 	out = OutLoggin{
 		Utilisateur: Utilisateur{Id: u.Id, PrenomNom: u.PrenomNom},
 		Token:       token,

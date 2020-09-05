@@ -1,86 +1,69 @@
 import {
+  Sejours,
+  Ingredients,
+  RecetteComplet,
+  MenuComplet,
+  Utilisateur,
+  Fournisseurs,
+  Livraisons,
+  OutFournisseurs,
   OutUtilisateurs,
   OutIngredients,
   Ingredient,
   OutIngredient,
+  OutIngredientProduits,
+  InAjouteIngredientProduit,
+  InSetDefautProduit,
   OutRecettes,
-  Recette,
   OutRecette,
   OutMenus,
-  Menu,
   OutMenu,
+  OutSejours,
   Sejour,
   OutSejour,
-  OutIngredientProduits,
-  OutSejours,
-  Sejours,
+  SejourRepas,
+  Fournisseur,
+  OutFournisseur,
+  InSejourFournisseurs,
+  Livraison,
+  OutLivraison,
   Groupe,
   OutGroupe,
   OutDeleteGroupe,
   RepasComplet,
+  Horaire,
   OptionsAssistantCreateRepass,
   InAssistantCreateRepass,
-  InAjouteIngredientProduit,
-  OutFournisseurs,
-  Fournisseurs,
-  Ingredients,
-  InSejourFournisseurs,
-  RecetteComplet,
-  MenuComplet,
-  Utilisateur,
-  Produit,
-  InSetDefautProduit,
-  Livraisons,
-  SejourRepas,
-  Fournisseur,
-  OutFournisseur,
-  Livraison,
-  OutLivraison,
-  Horaire
+  Groupes
 } from "./types";
-import axios, { AxiosResponse } from "axios";
-
 import { Controller } from "./controller";
-import Vue from "vue";
+import { AxiosResponse } from "axios";
 import { New } from "./types2";
+import Vue from "vue";
+import { API } from "./server";
 
-export const devMode = process.env.NODE_ENV != "production";
-const host = devMode ? "http://localhost:1323" : window.location.origin;
-export const ServerURL = host + "/api";
-
+/* Ce composant est responsable de la comunication avec le serveur, via une classe API
+ * Il stocke et met à jour les données client.
+ */
 export class Data {
-  sejours: Sejours = {
-    sejours: {},
-    groupes: {}
-  };
-  ingredients: Ingredients = {};
+  sejours: {
+    sejours: { [key: number]: SejourRepas };
+    groupes: NonNullable<Groupes>;
+  } = { sejours: {}, groupes: {} };
+  ingredients: NonNullable<Ingredients> = {};
   recettes: { [key: number]: RecetteComplet } = {};
   menus: { [key: number]: MenuComplet } = {};
   utilisateurs: { [key: number]: Utilisateur } = {};
-  fournisseurs: Fournisseurs = {};
-  livraisons: Livraisons = {};
+  fournisseurs: NonNullable<Fournisseurs> = {};
+  livraisons: NonNullable<Livraisons> = {};
 
-  private controller: Controller;
-
-  constructor(controller: Controller) {
-    this.controller = controller;
-  }
+  constructor(private api: API) {}
 
   async loadFournisseurs() {
-    this.controller.notifications.startSpin();
-    try {
-      const response: AxiosResponse<OutFournisseurs> = await axios.get(
-        ServerURL + "/fournisseurs",
-        {
-          auth: this.controller.auth()
-        }
-      );
-      this.controller.token = response.data.token;
-      this.fournisseurs = response.data.fournisseurs || {};
-      this.livraisons = response.data.livraisons || {};
-    } catch (error) {
-      this.controller.notifications.setAxiosError(error);
-    }
+    const out = await this.api.GetFournisseurs();
+    if (out === undefined) return; // erreur
+    this.fournisseurs = out.fournisseurs || {};
+    this.livraisons = out.livraisons || {};
   }
 
   // charge transitivement les données nécessaires aux menus
@@ -92,162 +75,68 @@ export class Data {
   }
 
   loadUtilisateurs = async () => {
-    this.controller.notifications.startSpin();
-    try {
-      const response: AxiosResponse<OutUtilisateurs> = await axios.get(
-        ServerURL + "/utilisateurs",
-        {
-          auth: this.controller.auth()
-        }
-      );
-      this.controller.token = response.data.token;
-      this.utilisateurs = response.data.utilisateurs || {};
-    } catch (error) {
-      this.controller.notifications.setAxiosError(error);
-    }
+    const out = await this.api.GetUtilisateurs();
+    if (out === undefined) return;
+    this.utilisateurs = out || {};
   };
 
   loadIngredients = async () => {
-    this.controller.notifications.startSpin();
-    try {
-      const response: AxiosResponse<OutIngredients> = await axios.get(
-        ServerURL + "/ingredients",
-        {
-          auth: this.controller.auth()
-        }
-      );
-      this.controller.token = response.data.token;
-      this.ingredients = response.data.ingredients || {};
-    } catch (error) {
-      this.controller.notifications.setAxiosError(error);
-    }
+    const out = await this.api.GetIngredients();
+    if (out === undefined) return;
+    this.ingredients = out || {};
   };
 
   private createOrUpdateIngredient = async (
-    ing: New<Ingredient>,
-    method: "put" | "post"
+    ing: Ingredient,
+    method: "create" | "update"
   ) => {
-    this.controller.notifications.startSpin();
-    const f = method == "put" ? axios.put : axios.post;
-    try {
-      const response: AxiosResponse<OutIngredient> = await f(
-        ServerURL + "/ingredients",
-        ing,
-        {
-          auth: this.controller.auth()
-        }
-      );
-      Vue.set(
-        this.ingredients || {},
-        response.data.ingredient.id,
-        response.data.ingredient
-      ); // VRC
-      this.controller.token = response.data.token;
-
-      return response.data.ingredient;
-    } catch (error) {
-      this.controller.notifications.setAxiosError(error);
-    }
+    const f =
+      method == "create"
+        ? this.api.CreateIngredient
+        : this.api.UpdateIngredient;
+    const out = await f(ing);
+    if (out === undefined) return;
+    Vue.set(this.ingredients || {}, out.id, out); // VRC
+    return out;
   };
 
   createIngredient = async (ing: New<Ingredient>) => {
-    return this.createOrUpdateIngredient(ing, "put");
+    return this.createOrUpdateIngredient({ id: 0, ...ing }, "create");
   };
 
   updateIngredient = async (ing: Ingredient) => {
-    return this.createOrUpdateIngredient(ing, "post");
+    return this.createOrUpdateIngredient(ing, "update");
   };
 
   deleteIngredient = async (idIngredient: number, checkProduits: boolean) => {
-    this.controller.notifications.startSpin();
-    try {
-      const response: AxiosResponse<OutIngredients> = await axios.delete(
-        ServerURL + "/ingredients",
-        {
-          params: {
-            id: idIngredient,
-            check_produits: checkProduits ? "check" : ""
-          },
-          auth: this.controller.auth()
-        }
-      );
-      this.ingredients = response.data.ingredients || {};
-      this.controller.token = response.data.token;
-    } catch (error) {
-      this.controller.notifications.setAxiosError(error);
-    }
+    const out = await this.api.DeleteIngredient({
+      id: String(idIngredient),
+      check_produits: checkProduits ? "check" : ""
+    });
+    if (out === undefined) return;
+    this.ingredients = out || {};
   };
 
   getIngredientProduits = async (idIngredient: number) => {
-    this.controller.notifications.startSpin();
-    try {
-      const response: AxiosResponse<OutIngredientProduits> = await axios.get(
-        ServerURL + "/ingredient-produit",
-        {
-          auth: this.controller.auth(),
-          params: {
-            id: idIngredient
-          }
-        }
-      );
-      this.controller.token = response.data.token;
-      this.controller.notifications.setMessage(null);
-      return response.data.produits;
-    } catch (error) {
-      this.controller.notifications.setAxiosError(error);
-    }
+    return this.api.GetIngredientProduits({ id: String(idIngredient) });
   };
 
   // renvoie la liste des produits mise à jour
   ajouteIngredientProduit = async (ip: InAjouteIngredientProduit) => {
-    this.controller.notifications.startSpin();
-    try {
-      const response: AxiosResponse<OutIngredientProduits> = await axios.post(
-        ServerURL + "/ingredient-produit",
-        ip,
-        {
-          auth: this.controller.auth()
-        }
-      );
-      this.controller.token = response.data.token;
-      this.controller.notifications.setMessage("Produit associé avec succès.");
-      return response.data.produits;
-    } catch (error) {
-      this.controller.notifications.setAxiosError(error);
-    }
+    return this.api.AjouteIngredientProduit(ip);
   };
 
   // `getIngredientProduits` devrait être appelé ensuite
   deleteProduit = async (idProduit: number) => {
-    this.controller.notifications.startSpin();
-    try {
-      await axios.delete(ServerURL + "/produits", {
-        params: { id: idProduit },
-        auth: this.controller.auth()
-      });
-    } catch (error) {
-      this.controller.notifications.setAxiosError(error);
-    }
+    await this.api.DeleteProduit({ id: String(idProduit) });
   };
 
   // renvoie la liste des produits mise à jour
   setDefautProduit = async (params: InSetDefautProduit) => {
-    this.controller.notifications.startSpin();
-    try {
-      const response: AxiosResponse<OutIngredientProduits> = await axios.post(
-        ServerURL + "/ingredient-produit-defaut",
-        params,
-        {
-          auth: this.controller.auth()
-        }
-      );
-      this.controller.token = response.data.token;
-      return response.data.produits;
-    } catch (error) {
-      this.controller.notifications.setAxiosError(error);
-    }
+    return this.api.SetDefautProduit(params);
   };
 
+  // TODO: WIP
   loadRecettes = async () => {
     this.controller.notifications.startSpin();
     try {
@@ -702,7 +591,7 @@ export class Data {
         code: null,
         kind: "Jour invalide",
         messageHtml: `La date ciblée (${jour.toLocaleDateString()}) est <i>antérieure</i> au début du séjour.<br/>
-                    Si vous souhaitez déplacer un repas sur cette journée, 
+                    Si vous souhaitez déplacer un repas sur cette journée,
                     veuillez d'abord <b>modifier la date de début</b> du séjour <b>${
                       sejour.nom
                     }</b>`

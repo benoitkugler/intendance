@@ -7,49 +7,49 @@ import {
   RepasGroupe,
   Produit,
   MenuComplet,
-  Livraison
+  Livraison,
+  Sejours,
+  Ingredients,
+  RecetteComplet,
+  Utilisateur,
+  Fournisseurs,
+  Livraisons
 } from "./types";
 import { Notifications } from "./notifications";
-import { Calculs } from "./calculs";
-import { Data, devMode } from "./data";
 import { IngredientOptions, New, DetailsRepas } from "./types2";
 import { Formatter } from "./formatter";
-import { Loggin as Logger } from "./loggin";
-import { State } from "./state";
 import { searchFunction } from "@/components/utils/utils";
+import { Calculs } from "./calculs";
+import { API, Meta } from "./server";
+import { Data } from "./data";
 
+/**  Object principal de stockage des données
+ * sur le client.
+ * Une instance de cet objet est créé au chargement,
+ * puis partagée entre les différents composants.
+ * Le système de réactivité de vuejs permet de propager
+ * facilement les changements effectués aux données.
+ */
 export class Controller {
   readonly data: Data;
-  readonly notifications: Notifications;
   readonly calculs: Calculs;
   readonly formatter: Formatter;
-  readonly logger: Logger;
-  readonly state: State;
 
-  token: string = "";
-  idUtilisateur: number | null = devMode ? 2 : null;
+  private readonly api: API;
 
-  constructor() {
-    this.data = new Data(this);
-    this.notifications = new Notifications();
+  readonly state: {
+    idUtilisateur: number;
+    idSejour: number | null;
+  };
+
+  constructor(meta: Meta, public readonly notifications: Notifications) {
     this.calculs = new Calculs(this);
     this.formatter = new Formatter(this);
-    this.logger = new Logger(this);
-    this.state = new State(this);
 
-    const o = this.logger.checkCookies();
-    if (o != null) {
-      this.token = o.token;
-      this.idUtilisateur = o.idUtilisateur;
-      this.state.isLoggedIn = true;
-    }
-  }
+    this.api = new API(this.notifications, meta.token);
+    this.state = { idUtilisateur: meta.idUtilisateur, idSejour: null };
 
-  auth() {
-    return {
-      username: String(this.idUtilisateur || ""),
-      password: this.token
-    };
+    this.data = new Data(this.api);
   }
 
   getAllIngredients(): IngredientOptions[] {
@@ -149,13 +149,18 @@ export class Controller {
       .reduce((a, b) => a + b, repas.offset_personnes);
     return nb >= 0 ? nb : 0;
   }
-}
 
-// Object principal de stockage des données
-// sur le client.
-// Une instance de cet objet est créé au chargement,
-// puis partagée entre les différents composants.
-// Le système de réactivité de vuejs permet de propager
-// facilement les changements effectués aux données.
-// Ce composant est responsable de la comunication avec le serveur.
-export const C = new Controller();
+  getSejour() {
+    if (this.state.idSejour == null) return null;
+    return (this.data.sejours.sejours || {})[this.state.idSejour] || null;
+  }
+
+  // renvoie les groupes du séjour courant
+  getGroupes() {
+    const idS = this.state.idSejour;
+    if (idS == null) return [];
+    return Object.values(this.data.sejours.groupes || {}).filter(
+      groupe => groupe.id_sejour == idS
+    );
+  }
+}
