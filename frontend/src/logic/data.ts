@@ -11,15 +11,15 @@ import {
   Utilisateur,
   Fournisseurs,
   Livraisons,
-  InAjouteIngredientProduit,
+  InAjdataeIngredientProduit,
   InSetDefautProduit,
   Sejour,
   Fournisseur,
-  OutFournisseurs,
+  dataFournisseurs,
   InSejourFournisseurs,
   Livraison,
   Groupe,
-  OutDeleteGroupe,
+  dataDeleteGroupe,
   RepasComplet,
   Horaire,
   OptionsAssistantCreateRepass,
@@ -46,46 +46,46 @@ export class Data {
 
   async loadFournisseurs() {
     this.notifications.startSpin();
-    const out = await this.api.GetFournisseurs();
-    if (out === undefined) return; // erreur
-    this.fournisseurs = out.fournisseurs || {};
-    this.livraisons = out.livraisons || {};
+    const data = await this.api.GetFournisseurs();
+    if (data === undefined) return; // erreur
+    this.fournisseurs = data.fournisseurs || {};
+    this.livraisons = data.livraisons || {};
     this.notifications.setMessage("Fournisseurs chargés.");
   }
 
   // charge en parallèle les données nécessaires aux menus
   async loadAllMenus() {
     this.notifications.startSpin();
-    const outs = await Promise.all([
+    const datas = await Promise.all([
       this.api.GetIngredients(),
       this.api.GetUtilisateurs(),
       this.api.GetFournisseurs(),
       this.api.GetRecettes(), // recettes dépend des ingrédients
       this.api.GetMenus() // menus dépends des recettes, ingrédients et utilisateurs
     ]);
-    if (outs.filter(out => out === undefined).length > 0) return;
-    this.ingredients = outs[0] || {};
-    this.utilisateurs = outs[1] || {};
-    this.fournisseurs = outs[2]?.fournisseurs || {};
-    this.livraisons = outs[2]?.livraisons || {};
-    this.recettes = outs[3] || {};
-    this.menus = outs[4] || {};
+    if (datas.filter(data => data === undefined).length > 0) return;
+    this.ingredients = datas[0] || {};
+    this.utilisateurs = datas[1] || {};
+    this.fournisseurs = datas[2]?.fournisseurs || {};
+    this.livraisons = datas[2]?.livraisons || {};
+    this.recettes = datas[3] || {};
+    this.menus = datas[4] || {};
     this.notifications.setMessage("Menus chargés.");
   }
 
   loadUtilisateurs = async () => {
     this.notifications.startSpin();
-    const out = await this.api.GetUtilisateurs();
-    if (out === undefined) return;
-    this.utilisateurs = out || {};
+    const data = await this.api.GetUtilisateurs();
+    if (data === undefined) return;
+    this.utilisateurs = data || {};
     this.notifications.setMessage("Utilisateurs chargés.");
   };
 
   loadIngredients = async () => {
     this.notifications.startSpin();
-    const out = await this.api.GetIngredients();
-    if (out === undefined) return;
-    this.ingredients = out || {};
+    const data = await this.api.GetIngredients();
+    if (data === undefined) return;
+    this.ingredients = data || {};
     this.notifications.setMessage("Ingrédients chargés.");
   };
 
@@ -98,11 +98,11 @@ export class Data {
       method == "create"
         ? this.api.CreateIngredient
         : this.api.UpdateIngredient;
-    const out = await f(ing);
-    if (out === undefined) return;
-    Vue.set(this.ingredients || {}, out.id, out); // VRC
+    const data = await f(ing);
+    if (data === undefined) return;
+    Vue.set(this.ingredients || {}, data.id, data); // VRC
     this.notifications.setMessage("Ingrédient mis à jour.");
-    return out;
+    return data;
   };
 
   createIngredient = async (ing: New<Ingredient>) => {
@@ -115,32 +115,32 @@ export class Data {
 
   deleteIngredient = async (idIngredient: number, checkProduits: boolean) => {
     this.notifications.startSpin();
-    const out = await this.api.DeleteIngredient({
+    const data = await this.api.DeleteIngredient({
       id: String(idIngredient),
       check_produits: checkProduits ? "check" : ""
     });
-    if (out === undefined) return;
-    this.ingredients = out || {};
+    if (data === undefined) return;
+    this.ingredients = data || {};
     this.notifications.setMessage("Ingrédient bien supprimé.");
   };
 
   getIngredientProduits = async (idIngredient: number) => {
     this.notifications.startSpin();
-    const out = await this.api.GetIngredientProduits({
+    const data = await this.api.GetIngredientProduits({
       id: String(idIngredient)
     });
-    if (out == undefined) return;
+    if (data == undefined) return;
     this.notifications.setMessage("Produits chargés.");
-    return out;
+    return data;
   };
 
   // renvoie la liste des produits mise à jour
-  ajouteIngredientProduit = async (ip: InAjouteIngredientProduit) => {
+  ajdataeIngredientProduit = async (ip: InAjdataeIngredientProduit) => {
     this.notifications.startSpin();
-    const out = await this.api.AjouteIngredientProduit(ip);
-    if (out == undefined) return;
-    this.notifications.setMessage("Produit ajouté.");
-    return out;
+    const data = await this.api.AjdataeIngredientProduit(ip);
+    if (data == undefined) return;
+    this.notifications.setMessage("Produit ajdataé.");
+    return data;
   };
 
   // `getIngredientProduits` devrait être appelé ensuite
@@ -154,17 +154,17 @@ export class Data {
   // renvoie la liste des produits mise à jour
   setDefautProduit = async (params: InSetDefautProduit) => {
     this.notifications.startSpin();
-    const out = await this.api.SetDefautProduit(params);
-    if (out === undefined) return;
+    const data = await this.api.SetDefautProduit(params);
+    if (data === undefined) return;
     this.notifications.setMessage("Produit choisi par défaut.");
-    return out;
+    return data;
   };
 
   // TODO: WIP
   loadRecettes = async () => {
     this.controller.notifications.startSpin();
     try {
-      const response: AxiosResponse<OutRecettes> = await axios.get(
+      const response: AxiosResponse<dataRecettes> = await axios.get(
         ServerURL + "/recettes",
         {
           auth: this.controller.auth()
@@ -184,7 +184,7 @@ export class Data {
     this.controller.notifications.startSpin();
     const f = method == "put" ? axios.put : axios.post;
     try {
-      const response: AxiosResponse<OutRecette> = await f(
+      const response: AxiosResponse<dataRecette> = await f(
         ServerURL + "/recettes",
         recette,
         {
@@ -211,7 +211,7 @@ export class Data {
   deleteRecette = async (idRecette: number) => {
     this.controller.notifications.startSpin();
     try {
-      const response: AxiosResponse<OutRecettes> = await axios.delete(
+      const response: AxiosResponse<dataRecettes> = await axios.delete(
         ServerURL + "/recettes",
         {
           params: { id: idRecette },
@@ -228,7 +228,7 @@ export class Data {
   loadMenus = async () => {
     this.controller.notifications.startSpin();
     try {
-      const response: AxiosResponse<OutMenus> = await axios.get(
+      const response: AxiosResponse<dataMenus> = await axios.get(
         ServerURL + "/menus",
         {
           auth: this.controller.auth()
@@ -248,7 +248,7 @@ export class Data {
     this.controller.notifications.startSpin();
     const f = method == "put" ? axios.put : axios.post;
     try {
-      const response: AxiosResponse<OutMenu> = await f(
+      const response: AxiosResponse<dataMenu> = await f(
         ServerURL + "/menus",
         menu,
         {
@@ -275,7 +275,7 @@ export class Data {
   deleteMenu = async (idMenu: number) => {
     this.controller.notifications.startSpin();
     try {
-      const response: AxiosResponse<OutMenus> = await axios.delete(
+      const response: AxiosResponse<dataMenus> = await axios.delete(
         ServerURL + "/menus",
         {
           params: { id: idMenu },
@@ -292,7 +292,7 @@ export class Data {
   loadSejours = async () => {
     this.controller.notifications.startSpin();
     try {
-      const response: AxiosResponse<OutSejours> = await axios.get(
+      const response: AxiosResponse<dataSejours> = await axios.get(
         ServerURL + "/sejours",
         {
           auth: this.controller.auth()
@@ -312,7 +312,7 @@ export class Data {
     this.controller.notifications.startSpin();
     const f = method == "put" ? axios.put : axios.post;
     try {
-      const response: AxiosResponse<OutSejour> = await f(
+      const response: AxiosResponse<dataSejour> = await f(
         ServerURL + "/sejours",
         sejour,
         {
@@ -350,7 +350,7 @@ export class Data {
   deleteSejour = async (sejour: Sejour) => {
     this.controller.notifications.startSpin();
     try {
-      const response: AxiosResponse<OutSejours> = await axios.delete(
+      const response: AxiosResponse<dataSejours> = await axios.delete(
         ServerURL + "/sejours",
         {
           params: { id: sejour.id },
@@ -368,7 +368,7 @@ export class Data {
   createFournisseur = async (fournisseur: New<Fournisseur>) => {
     this.controller.notifications.startSpin();
     try {
-      const response: AxiosResponse<OutFournisseurs> = await axios.put(
+      const response: AxiosResponse<dataFournisseurs> = await axios.put(
         ServerURL + "/fournisseurs",
         fournisseur,
         {
@@ -386,7 +386,7 @@ export class Data {
   updateFournisseur = async (fournisseur: Fournisseur) => {
     this.controller.notifications.startSpin();
     try {
-      const response: AxiosResponse<OutFournisseur> = await axios.post(
+      const response: AxiosResponse<dataFournisseur> = await axios.post(
         ServerURL + "/fournisseurs",
         fournisseur,
         {
@@ -408,7 +408,7 @@ export class Data {
   deleteFournisseur = async (idFournisseur: number) => {
     this.controller.notifications.startSpin();
     try {
-      const response: AxiosResponse<OutFournisseurs> = await axios.delete(
+      const response: AxiosResponse<dataFournisseurs> = await axios.delete(
         ServerURL + "/fournisseurs",
         {
           params: { id: idFournisseur },
@@ -433,7 +433,7 @@ export class Data {
       ids_fournisseurs: idsFournisseurs
     };
     try {
-      const response: AxiosResponse<OutSejours> = await axios.post(
+      const response: AxiosResponse<dataSejours> = await axios.post(
         ServerURL + "/sejours/fournisseurs",
         params,
         {
@@ -455,7 +455,7 @@ export class Data {
     this.controller.notifications.startSpin();
     const f = method == "put" ? axios.put : axios.post;
     try {
-      const response: AxiosResponse<OutLivraison> = await f(
+      const response: AxiosResponse<dataLivraison> = await f(
         ServerURL + "/livraisons",
         livraison,
         {
@@ -486,7 +486,7 @@ export class Data {
   deleteLivraison = async (idLivraison: number) => {
     this.controller.notifications.startSpin();
     try {
-      const response: AxiosResponse<OutFournisseurs> = await axios.delete(
+      const response: AxiosResponse<dataFournisseurs> = await axios.delete(
         ServerURL + "/livraisons",
         {
           params: { id: idLivraison },
@@ -508,7 +508,7 @@ export class Data {
     this.controller.notifications.startSpin();
     const f = method == "put" ? axios.put : axios.post;
     try {
-      const response: AxiosResponse<OutGroupe> = await f(
+      const response: AxiosResponse<dataGroupe> = await f(
         ServerURL + "/groupes",
         groupe,
         {
@@ -539,7 +539,7 @@ export class Data {
   deleteGroupe = async (groupe: Groupe) => {
     this.controller.notifications.startSpin();
     try {
-      const response: AxiosResponse<OutDeleteGroupe> = await axios.delete(
+      const response: AxiosResponse<dataDeleteGroupe> = await axios.delete(
         ServerURL + "/groupes",
         {
           params: { id: groupe.id },
@@ -557,7 +557,7 @@ export class Data {
   createRepas = async (repas: New<RepasComplet>) => {
     this.controller.notifications.startSpin();
     try {
-      const response: AxiosResponse<OutSejours> = await axios.put(
+      const response: AxiosResponse<dataSejours> = await axios.put(
         ServerURL + "/sejours/repas",
         repas,
         {
@@ -574,7 +574,7 @@ export class Data {
   updateManyRepas = async (repass: RepasComplet[]) => {
     this.controller.notifications.startSpin();
     try {
-      const response: AxiosResponse<OutSejours> = await axios.post(
+      const response: AxiosResponse<dataSejours> = await axios.post(
         ServerURL + "/sejours/repas",
         repass,
         {
@@ -591,7 +591,7 @@ export class Data {
   deleteRepas = async (repas: RepasComplet) => {
     this.controller.notifications.startSpin();
     try {
-      const response: AxiosResponse<OutSejours> = await axios.delete(
+      const response: AxiosResponse<dataSejours> = await axios.delete(
         ServerURL + "/sejours/repas",
         {
           params: { id: repas.id },
@@ -689,7 +689,7 @@ export class Data {
       groupes_sorties: groupesSorties
     };
     try {
-      const response: AxiosResponse<OutSejours> = await axios.put(
+      const response: AxiosResponse<dataSejours> = await axios.put(
         ServerURL + "/sejours/assistant",
         params,
         {

@@ -13,543 +13,888 @@ export abstract class AbstractAPI {
 
   abstract handleError(error: any): void;
 
+  abstract startRequest(): void;
+
   getHeaders() {
     return { Authorization: "Bearer " + this.authToken };
   }
 
+  protected async rawLoggin(params: types.InLoggin) {
+    const fullUrl = this.baseUrl + "/api/loggin";
+    const rep: AxiosResponse<types.OutLoggin> = await Axios.post(
+      fullUrl,
+      params,
+      { headers: this.getHeaders() }
+    );
+    return rep.data;
+  }
+
   async Loggin(params: types.InLoggin) {
+    this.startRequest();
     try {
-      const fullUrl = this.baseUrl + "/api/loggin";
-      const rep: AxiosResponse<types.OutLoggin> = await Axios.post(
-        fullUrl,
-        params,
-        { headers: this.getHeaders() }
-      );
-      return rep.data;
+      const out = await this.rawLoggin(params);
+      this.onSuccessLoggin(out);
     } catch (error) {
       this.handleError(error);
     }
+  }
+
+  protected abstract onSuccessLoggin(data: types.OutLoggin): void;
+
+  protected async rawGetUtilisateurs() {
+    const fullUrl = this.baseUrl + "/api/utilisateurs";
+    const rep: AxiosResponse<{
+      [key: number]: types.Utilisateur;
+    } | null> = await Axios.get(fullUrl);
+    return rep.data;
   }
 
   async GetUtilisateurs() {
+    this.startRequest();
     try {
-      const fullUrl = this.baseUrl + "/api/utilisateurs";
-      const rep: AxiosResponse<{
-        [key: number]: types.Utilisateur;
-      } | null> = await Axios.get(fullUrl);
-      return rep.data;
+      const out = await this.rawGetUtilisateurs();
+      this.onSuccessGetUtilisateurs(out);
     } catch (error) {
       this.handleError(error);
     }
+  }
+
+  protected abstract onSuccessGetUtilisateurs(
+    data: { [key: number]: types.Utilisateur } | null
+  ): void;
+
+  protected async rawGetIngredients() {
+    const fullUrl = this.baseUrl + "/api/ingredients";
+    const rep: AxiosResponse<types.Ingredients> = await Axios.get(fullUrl);
+    return rep.data;
   }
 
   async GetIngredients() {
+    this.startRequest();
     try {
-      const fullUrl = this.baseUrl + "/api/ingredients";
-      const rep: AxiosResponse<types.Ingredients> = await Axios.get(fullUrl);
-      return rep.data;
+      const out = await this.rawGetIngredients();
+      this.onSuccessGetIngredients(out);
     } catch (error) {
       this.handleError(error);
     }
+  }
+
+  protected abstract onSuccessGetIngredients(data: types.Ingredients): void;
+
+  protected async rawCreateIngredient(params: types.Ingredient) {
+    const fullUrl = this.baseUrl + "/api/ingredients";
+    const rep: AxiosResponse<types.Ingredient> = await Axios.put(
+      fullUrl,
+      params,
+      { headers: this.getHeaders() }
+    );
+    return rep.data;
   }
 
   async CreateIngredient(params: types.Ingredient) {
+    this.startRequest();
     try {
-      const fullUrl = this.baseUrl + "/api/ingredients";
-      const rep: AxiosResponse<types.Ingredient> = await Axios.put(
-        fullUrl,
-        params,
-        { headers: this.getHeaders() }
-      );
-      return rep.data;
+      const out = await this.rawCreateIngredient(params);
+      this.onSuccessCreateIngredient(out);
     } catch (error) {
       this.handleError(error);
     }
+  }
+
+  protected abstract onSuccessCreateIngredient(data: types.Ingredient): void;
+
+  protected async rawUpdateIngredient(params: types.Ingredient) {
+    const fullUrl = this.baseUrl + "/api/ingredients";
+    const rep: AxiosResponse<types.Ingredient> = await Axios.post(
+      fullUrl,
+      params,
+      { headers: this.getHeaders() }
+    );
+    return rep.data;
   }
 
   async UpdateIngredient(params: types.Ingredient) {
+    this.startRequest();
     try {
-      const fullUrl = this.baseUrl + "/api/ingredients";
-      const rep: AxiosResponse<types.Ingredient> = await Axios.post(
-        fullUrl,
-        params,
-        { headers: this.getHeaders() }
-      );
-      return rep.data;
+      const out = await this.rawUpdateIngredient(params);
+      this.onSuccessUpdateIngredient(out);
     } catch (error) {
       this.handleError(error);
     }
+  }
+
+  protected abstract onSuccessUpdateIngredient(data: types.Ingredient): void;
+
+  protected async rawDeleteIngredient(params: {
+    id: string;
+    check_produits: string;
+  }) {
+    const fullUrl = this.baseUrl + "/api/ingredients";
+    const rep: AxiosResponse<types.Ingredients> = await Axios.delete(fullUrl, {
+      params: params,
+      headers: this.getHeaders()
+    });
+    return rep.data;
   }
 
   async DeleteIngredient(params: { id: string; check_produits: string }) {
+    this.startRequest();
     try {
-      const fullUrl = this.baseUrl + "/api/ingredients";
-      const rep: AxiosResponse<types.Ingredients> = await Axios.delete(
-        fullUrl,
-        { params: params, headers: this.getHeaders() }
-      );
-      return rep.data;
+      const out = await this.rawDeleteIngredient(params);
+      this.onSuccessDeleteIngredient(out);
     } catch (error) {
       this.handleError(error);
     }
+  }
+
+  protected abstract onSuccessDeleteIngredient(data: types.Ingredients): void;
+
+  protected async rawGetRecettes() {
+    const fullUrl = this.baseUrl + "/api/recettes";
+    const rep: AxiosResponse<{
+      [key: number]: types.RecetteComplet;
+    } | null> = await Axios.get(fullUrl);
+    return rep.data;
   }
 
   async GetRecettes() {
+    this.startRequest();
     try {
-      const fullUrl = this.baseUrl + "/api/recettes";
-      const rep: AxiosResponse<{
-        [key: number]: types.RecetteComplet;
-      } | null> = await Axios.get(fullUrl);
-      return rep.data;
+      const out = await this.rawGetRecettes();
+      this.onSuccessGetRecettes(out);
     } catch (error) {
       this.handleError(error);
     }
+  }
+
+  protected abstract onSuccessGetRecettes(
+    data: { [key: number]: types.RecetteComplet } | null
+  ): void;
+
+  protected async rawCreateRecette(params: types.RecetteComplet) {
+    const fullUrl = this.baseUrl + "/api/recettes";
+    const rep: AxiosResponse<types.RecetteComplet> = await Axios.put(
+      fullUrl,
+      params,
+      { headers: this.getHeaders() }
+    );
+    return rep.data;
   }
 
   async CreateRecette(params: types.RecetteComplet) {
+    this.startRequest();
     try {
-      const fullUrl = this.baseUrl + "/api/recettes";
-      const rep: AxiosResponse<types.RecetteComplet> = await Axios.put(
-        fullUrl,
-        params,
-        { headers: this.getHeaders() }
-      );
-      return rep.data;
+      const out = await this.rawCreateRecette(params);
+      this.onSuccessCreateRecette(out);
     } catch (error) {
       this.handleError(error);
     }
+  }
+
+  protected abstract onSuccessCreateRecette(data: types.RecetteComplet): void;
+
+  protected async rawUpdateRecette(params: types.RecetteComplet) {
+    const fullUrl = this.baseUrl + "/api/recettes";
+    const rep: AxiosResponse<types.RecetteComplet> = await Axios.post(
+      fullUrl,
+      params,
+      { headers: this.getHeaders() }
+    );
+    return rep.data;
   }
 
   async UpdateRecette(params: types.RecetteComplet) {
+    this.startRequest();
     try {
-      const fullUrl = this.baseUrl + "/api/recettes";
-      const rep: AxiosResponse<types.RecetteComplet> = await Axios.post(
-        fullUrl,
-        params,
-        { headers: this.getHeaders() }
-      );
-      return rep.data;
+      const out = await this.rawUpdateRecette(params);
+      this.onSuccessUpdateRecette(out);
     } catch (error) {
       this.handleError(error);
     }
+  }
+
+  protected abstract onSuccessUpdateRecette(data: types.RecetteComplet): void;
+
+  protected async rawDeleteRecette(params: { id: string }) {
+    const fullUrl = this.baseUrl + "/api/recettes";
+    const rep: AxiosResponse<{
+      [key: number]: types.RecetteComplet;
+    } | null> = await Axios.delete(fullUrl, {
+      params: params,
+      headers: this.getHeaders()
+    });
+    return rep.data;
   }
 
   async DeleteRecette(params: { id: string }) {
+    this.startRequest();
     try {
-      const fullUrl = this.baseUrl + "/api/recettes";
-      const rep: AxiosResponse<{
-        [key: number]: types.RecetteComplet;
-      } | null> = await Axios.delete(fullUrl, {
-        params: params,
-        headers: this.getHeaders()
-      });
-      return rep.data;
+      const out = await this.rawDeleteRecette(params);
+      this.onSuccessDeleteRecette(out);
     } catch (error) {
       this.handleError(error);
     }
+  }
+
+  protected abstract onSuccessDeleteRecette(
+    data: { [key: number]: types.RecetteComplet } | null
+  ): void;
+
+  protected async rawGetMenus() {
+    const fullUrl = this.baseUrl + "/api/menus";
+    const rep: AxiosResponse<{
+      [key: number]: types.MenuComplet;
+    } | null> = await Axios.get(fullUrl);
+    return rep.data;
   }
 
   async GetMenus() {
+    this.startRequest();
     try {
-      const fullUrl = this.baseUrl + "/api/menus";
-      const rep: AxiosResponse<{
-        [key: number]: types.MenuComplet;
-      } | null> = await Axios.get(fullUrl);
-      return rep.data;
+      const out = await this.rawGetMenus();
+      this.onSuccessGetMenus(out);
     } catch (error) {
       this.handleError(error);
     }
+  }
+
+  protected abstract onSuccessGetMenus(
+    data: { [key: number]: types.MenuComplet } | null
+  ): void;
+
+  protected async rawCreateMenu(params: types.MenuComplet) {
+    const fullUrl = this.baseUrl + "/api/menus";
+    const rep: AxiosResponse<types.MenuComplet> = await Axios.put(
+      fullUrl,
+      params,
+      { headers: this.getHeaders() }
+    );
+    return rep.data;
   }
 
   async CreateMenu(params: types.MenuComplet) {
+    this.startRequest();
     try {
-      const fullUrl = this.baseUrl + "/api/menus";
-      const rep: AxiosResponse<types.MenuComplet> = await Axios.put(
-        fullUrl,
-        params,
-        { headers: this.getHeaders() }
-      );
-      return rep.data;
+      const out = await this.rawCreateMenu(params);
+      this.onSuccessCreateMenu(out);
     } catch (error) {
       this.handleError(error);
     }
+  }
+
+  protected abstract onSuccessCreateMenu(data: types.MenuComplet): void;
+
+  protected async rawUpdateMenu(params: types.MenuComplet) {
+    const fullUrl = this.baseUrl + "/api/menus";
+    const rep: AxiosResponse<types.MenuComplet> = await Axios.post(
+      fullUrl,
+      params,
+      { headers: this.getHeaders() }
+    );
+    return rep.data;
   }
 
   async UpdateMenu(params: types.MenuComplet) {
+    this.startRequest();
     try {
-      const fullUrl = this.baseUrl + "/api/menus";
-      const rep: AxiosResponse<types.MenuComplet> = await Axios.post(
-        fullUrl,
-        params,
-        { headers: this.getHeaders() }
-      );
-      return rep.data;
+      const out = await this.rawUpdateMenu(params);
+      this.onSuccessUpdateMenu(out);
     } catch (error) {
       this.handleError(error);
     }
+  }
+
+  protected abstract onSuccessUpdateMenu(data: types.MenuComplet): void;
+
+  protected async rawDeleteMenu(params: { id: string }) {
+    const fullUrl = this.baseUrl + "/api/menus";
+    const rep: AxiosResponse<{
+      [key: number]: types.MenuComplet;
+    } | null> = await Axios.delete(fullUrl, {
+      params: params,
+      headers: this.getHeaders()
+    });
+    return rep.data;
   }
 
   async DeleteMenu(params: { id: string }) {
+    this.startRequest();
     try {
-      const fullUrl = this.baseUrl + "/api/menus";
-      const rep: AxiosResponse<{
-        [key: number]: types.MenuComplet;
-      } | null> = await Axios.delete(fullUrl, {
-        params: params,
-        headers: this.getHeaders()
-      });
-      return rep.data;
+      const out = await this.rawDeleteMenu(params);
+      this.onSuccessDeleteMenu(out);
     } catch (error) {
       this.handleError(error);
     }
+  }
+
+  protected abstract onSuccessDeleteMenu(
+    data: { [key: number]: types.MenuComplet } | null
+  ): void;
+
+  protected async rawGetSejours() {
+    const fullUrl = this.baseUrl + "/api/sejours";
+    const rep: AxiosResponse<types.Sejours> = await Axios.get(fullUrl);
+    return rep.data;
   }
 
   async GetSejours() {
+    this.startRequest();
     try {
-      const fullUrl = this.baseUrl + "/api/sejours";
-      const rep: AxiosResponse<types.Sejours> = await Axios.get(fullUrl);
-      return rep.data;
+      const out = await this.rawGetSejours();
+      this.onSuccessGetSejours(out);
     } catch (error) {
       this.handleError(error);
     }
+  }
+
+  protected abstract onSuccessGetSejours(data: types.Sejours): void;
+
+  protected async rawCreateSejour(params: types.Sejour) {
+    const fullUrl = this.baseUrl + "/api/sejours";
+    const rep: AxiosResponse<types.Sejour> = await Axios.put(fullUrl, params, {
+      headers: this.getHeaders()
+    });
+    return rep.data;
   }
 
   async CreateSejour(params: types.Sejour) {
+    this.startRequest();
     try {
-      const fullUrl = this.baseUrl + "/api/sejours";
-      const rep: AxiosResponse<types.Sejour> = await Axios.put(
-        fullUrl,
-        params,
-        { headers: this.getHeaders() }
-      );
-      return rep.data;
+      const out = await this.rawCreateSejour(params);
+      this.onSuccessCreateSejour(out);
     } catch (error) {
       this.handleError(error);
     }
+  }
+
+  protected abstract onSuccessCreateSejour(data: types.Sejour): void;
+
+  protected async rawUpdateSejour(params: types.Sejour) {
+    const fullUrl = this.baseUrl + "/api/sejours";
+    const rep: AxiosResponse<types.Sejour> = await Axios.post(fullUrl, params, {
+      headers: this.getHeaders()
+    });
+    return rep.data;
   }
 
   async UpdateSejour(params: types.Sejour) {
+    this.startRequest();
     try {
-      const fullUrl = this.baseUrl + "/api/sejours";
-      const rep: AxiosResponse<types.Sejour> = await Axios.post(
-        fullUrl,
-        params,
-        { headers: this.getHeaders() }
-      );
-      return rep.data;
+      const out = await this.rawUpdateSejour(params);
+      this.onSuccessUpdateSejour(out);
     } catch (error) {
       this.handleError(error);
     }
+  }
+
+  protected abstract onSuccessUpdateSejour(data: types.Sejour): void;
+
+  protected async rawDeleteSejour(params: { id: string }) {
+    const fullUrl = this.baseUrl + "/api/sejours";
+    const rep: AxiosResponse<types.Sejours> = await Axios.delete(fullUrl, {
+      params: params,
+      headers: this.getHeaders()
+    });
+    return rep.data;
   }
 
   async DeleteSejour(params: { id: string }) {
+    this.startRequest();
     try {
-      const fullUrl = this.baseUrl + "/api/sejours";
-      const rep: AxiosResponse<types.Sejours> = await Axios.delete(fullUrl, {
-        params: params,
-        headers: this.getHeaders()
-      });
-      return rep.data;
+      const out = await this.rawDeleteSejour(params);
+      this.onSuccessDeleteSejour(out);
     } catch (error) {
       this.handleError(error);
     }
+  }
+
+  protected abstract onSuccessDeleteSejour(data: types.Sejours): void;
+
+  protected async rawCreateGroupe(params: types.Groupe) {
+    const fullUrl = this.baseUrl + "/api/groupes";
+    const rep: AxiosResponse<types.Groupe> = await Axios.put(fullUrl, params, {
+      headers: this.getHeaders()
+    });
+    return rep.data;
   }
 
   async CreateGroupe(params: types.Groupe) {
+    this.startRequest();
     try {
-      const fullUrl = this.baseUrl + "/api/groupes";
-      const rep: AxiosResponse<types.Groupe> = await Axios.put(
-        fullUrl,
-        params,
-        { headers: this.getHeaders() }
-      );
-      return rep.data;
+      const out = await this.rawCreateGroupe(params);
+      this.onSuccessCreateGroupe(out);
     } catch (error) {
       this.handleError(error);
     }
+  }
+
+  protected abstract onSuccessCreateGroupe(data: types.Groupe): void;
+
+  protected async rawUpdateGroupe(params: types.Groupe) {
+    const fullUrl = this.baseUrl + "/api/groupes";
+    const rep: AxiosResponse<types.Groupe> = await Axios.post(fullUrl, params, {
+      headers: this.getHeaders()
+    });
+    return rep.data;
   }
 
   async UpdateGroupe(params: types.Groupe) {
+    this.startRequest();
     try {
-      const fullUrl = this.baseUrl + "/api/groupes";
-      const rep: AxiosResponse<types.Groupe> = await Axios.post(
-        fullUrl,
-        params,
-        { headers: this.getHeaders() }
-      );
-      return rep.data;
+      const out = await this.rawUpdateGroupe(params);
+      this.onSuccessUpdateGroupe(out);
     } catch (error) {
       this.handleError(error);
     }
+  }
+
+  protected abstract onSuccessUpdateGroupe(data: types.Groupe): void;
+
+  protected async rawDeleteGroupe(params: { id: string }) {
+    const fullUrl = this.baseUrl + "/api/groupes";
+    const rep: AxiosResponse<types.OutDeleteGroupe> = await Axios.delete(
+      fullUrl,
+      { params: params, headers: this.getHeaders() }
+    );
+    return rep.data;
   }
 
   async DeleteGroupe(params: { id: string }) {
+    this.startRequest();
     try {
-      const fullUrl = this.baseUrl + "/api/groupes";
-      const rep: AxiosResponse<types.OutDeleteGroupe> = await Axios.delete(
-        fullUrl,
-        { params: params, headers: this.getHeaders() }
-      );
-      return rep.data;
+      const out = await this.rawDeleteGroupe(params);
+      this.onSuccessDeleteGroupe(out);
     } catch (error) {
       this.handleError(error);
     }
+  }
+
+  protected abstract onSuccessDeleteGroupe(data: types.OutDeleteGroupe): void;
+
+  protected async rawUpdateSejourFournisseurs(
+    params: types.InSejourFournisseurs
+  ) {
+    const fullUrl = this.baseUrl + "/api/sejours/fournisseurs";
+    const rep: AxiosResponse<types.Sejours> = await Axios.post(
+      fullUrl,
+      params,
+      { headers: this.getHeaders() }
+    );
+    return rep.data;
   }
 
   async UpdateSejourFournisseurs(params: types.InSejourFournisseurs) {
+    this.startRequest();
     try {
-      const fullUrl = this.baseUrl + "/api/sejours/fournisseurs";
-      const rep: AxiosResponse<types.Sejours> = await Axios.post(
-        fullUrl,
-        params,
-        { headers: this.getHeaders() }
-      );
-      return rep.data;
+      const out = await this.rawUpdateSejourFournisseurs(params);
+      this.onSuccessUpdateSejourFournisseurs(out);
     } catch (error) {
       this.handleError(error);
     }
+  }
+
+  protected abstract onSuccessUpdateSejourFournisseurs(
+    data: types.Sejours
+  ): void;
+
+  protected async rawCreateRepas(params: types.RepasComplet) {
+    const fullUrl = this.baseUrl + "/api/sejours/repas";
+    const rep: AxiosResponse<types.Sejours> = await Axios.put(fullUrl, params, {
+      headers: this.getHeaders()
+    });
+    return rep.data;
   }
 
   async CreateRepas(params: types.RepasComplet) {
+    this.startRequest();
     try {
-      const fullUrl = this.baseUrl + "/api/sejours/repas";
-      const rep: AxiosResponse<types.Sejours> = await Axios.put(
-        fullUrl,
-        params,
-        { headers: this.getHeaders() }
-      );
-      return rep.data;
+      const out = await this.rawCreateRepas(params);
+      this.onSuccessCreateRepas(out);
     } catch (error) {
       this.handleError(error);
     }
+  }
+
+  protected abstract onSuccessCreateRepas(data: types.Sejours): void;
+
+  protected async rawUpdateRepas(params: types.RepasComplet[] | null) {
+    const fullUrl = this.baseUrl + "/api/sejours/repas";
+    const rep: AxiosResponse<types.Sejours> = await Axios.post(
+      fullUrl,
+      params,
+      { headers: this.getHeaders() }
+    );
+    return rep.data;
   }
 
   async UpdateRepas(params: types.RepasComplet[] | null) {
+    this.startRequest();
     try {
-      const fullUrl = this.baseUrl + "/api/sejours/repas";
-      const rep: AxiosResponse<types.Sejours> = await Axios.post(
-        fullUrl,
-        params,
-        { headers: this.getHeaders() }
-      );
-      return rep.data;
+      const out = await this.rawUpdateRepas(params);
+      this.onSuccessUpdateRepas(out);
     } catch (error) {
       this.handleError(error);
     }
+  }
+
+  protected abstract onSuccessUpdateRepas(data: types.Sejours): void;
+
+  protected async rawDeleteRepas(params: { id: string }) {
+    const fullUrl = this.baseUrl + "/api/sejours/repas";
+    const rep: AxiosResponse<types.Sejours> = await Axios.delete(fullUrl, {
+      params: params,
+      headers: this.getHeaders()
+    });
+    return rep.data;
   }
 
   async DeleteRepas(params: { id: string }) {
+    this.startRequest();
     try {
-      const fullUrl = this.baseUrl + "/api/sejours/repas";
-      const rep: AxiosResponse<types.Sejours> = await Axios.delete(fullUrl, {
-        params: params,
-        headers: this.getHeaders()
-      });
-      return rep.data;
+      const out = await this.rawDeleteRepas(params);
+      this.onSuccessDeleteRepas(out);
     } catch (error) {
       this.handleError(error);
     }
+  }
+
+  protected abstract onSuccessDeleteRepas(data: types.Sejours): void;
+
+  protected async rawAssistantCreateRepas(
+    params: types.InAssistantCreateRepass
+  ) {
+    const fullUrl = this.baseUrl + "/api/sejours/assistant";
+    const rep: AxiosResponse<types.Sejours> = await Axios.put(fullUrl, params, {
+      headers: this.getHeaders()
+    });
+    return rep.data;
   }
 
   async AssistantCreateRepas(params: types.InAssistantCreateRepass) {
+    this.startRequest();
     try {
-      const fullUrl = this.baseUrl + "/api/sejours/assistant";
-      const rep: AxiosResponse<types.Sejours> = await Axios.put(
-        fullUrl,
-        params,
-        { headers: this.getHeaders() }
-      );
-      return rep.data;
+      const out = await this.rawAssistantCreateRepas(params);
+      this.onSuccessAssistantCreateRepas(out);
     } catch (error) {
       this.handleError(error);
     }
+  }
+
+  protected abstract onSuccessAssistantCreateRepas(data: types.Sejours): void;
+
+  protected async rawResoudIngredients(params: types.InResoudIngredients) {
+    const fullUrl = this.baseUrl + "/api/resolution";
+    const rep: AxiosResponse<
+      types.DateIngredientQuantites[] | null
+    > = await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+    return rep.data;
   }
 
   async ResoudIngredients(params: types.InResoudIngredients) {
+    this.startRequest();
     try {
-      const fullUrl = this.baseUrl + "/api/resolution";
-      const rep: AxiosResponse<
-        types.DateIngredientQuantites[] | null
-      > = await Axios.post(fullUrl, params, { headers: this.getHeaders() });
-      return rep.data;
+      const out = await this.rawResoudIngredients(params);
+      this.onSuccessResoudIngredients(out);
     } catch (error) {
       this.handleError(error);
     }
+  }
+
+  protected abstract onSuccessResoudIngredients(
+    data: types.DateIngredientQuantites[] | null
+  ): void;
+
+  protected async rawGetFournisseurs() {
+    const fullUrl = this.baseUrl + "/api/fournisseurs";
+    const rep: AxiosResponse<types.OutFournisseurs> = await Axios.get(fullUrl);
+    return rep.data;
   }
 
   async GetFournisseurs() {
+    this.startRequest();
     try {
-      const fullUrl = this.baseUrl + "/api/fournisseurs";
-      const rep: AxiosResponse<types.OutFournisseurs> = await Axios.get(
-        fullUrl
-      );
-      return rep.data;
+      const out = await this.rawGetFournisseurs();
+      this.onSuccessGetFournisseurs(out);
     } catch (error) {
       this.handleError(error);
     }
+  }
+
+  protected abstract onSuccessGetFournisseurs(
+    data: types.OutFournisseurs
+  ): void;
+
+  protected async rawCreateFournisseur(params: types.Fournisseur) {
+    const fullUrl = this.baseUrl + "/api/fournisseurs";
+    const rep: AxiosResponse<types.OutFournisseurs> = await Axios.put(
+      fullUrl,
+      params,
+      { headers: this.getHeaders() }
+    );
+    return rep.data;
   }
 
   async CreateFournisseur(params: types.Fournisseur) {
+    this.startRequest();
     try {
-      const fullUrl = this.baseUrl + "/api/fournisseurs";
-      const rep: AxiosResponse<types.OutFournisseurs> = await Axios.put(
-        fullUrl,
-        params,
-        { headers: this.getHeaders() }
-      );
-      return rep.data;
+      const out = await this.rawCreateFournisseur(params);
+      this.onSuccessCreateFournisseur(out);
     } catch (error) {
       this.handleError(error);
     }
+  }
+
+  protected abstract onSuccessCreateFournisseur(
+    data: types.OutFournisseurs
+  ): void;
+
+  protected async rawUpdateFournisseur(params: types.Fournisseur) {
+    const fullUrl = this.baseUrl + "/api/fournisseurs";
+    const rep: AxiosResponse<types.Fournisseur> = await Axios.post(
+      fullUrl,
+      params,
+      { headers: this.getHeaders() }
+    );
+    return rep.data;
   }
 
   async UpdateFournisseur(params: types.Fournisseur) {
+    this.startRequest();
     try {
-      const fullUrl = this.baseUrl + "/api/fournisseurs";
-      const rep: AxiosResponse<types.Fournisseur> = await Axios.post(
-        fullUrl,
-        params,
-        { headers: this.getHeaders() }
-      );
-      return rep.data;
+      const out = await this.rawUpdateFournisseur(params);
+      this.onSuccessUpdateFournisseur(out);
     } catch (error) {
       this.handleError(error);
     }
+  }
+
+  protected abstract onSuccessUpdateFournisseur(data: types.Fournisseur): void;
+
+  protected async rawDeleteFournisseur(params: { id: string }) {
+    const fullUrl = this.baseUrl + "/api/fournisseurs";
+    const rep: AxiosResponse<types.OutFournisseurs> = await Axios.delete(
+      fullUrl,
+      { params: params, headers: this.getHeaders() }
+    );
+    return rep.data;
   }
 
   async DeleteFournisseur(params: { id: string }) {
+    this.startRequest();
     try {
-      const fullUrl = this.baseUrl + "/api/fournisseurs";
-      const rep: AxiosResponse<types.OutFournisseurs> = await Axios.delete(
-        fullUrl,
-        { params: params, headers: this.getHeaders() }
-      );
-      return rep.data;
+      const out = await this.rawDeleteFournisseur(params);
+      this.onSuccessDeleteFournisseur(out);
     } catch (error) {
       this.handleError(error);
     }
+  }
+
+  protected abstract onSuccessDeleteFournisseur(
+    data: types.OutFournisseurs
+  ): void;
+
+  protected async rawCreateLivraison(params: types.Livraison) {
+    const fullUrl = this.baseUrl + "/api/livraisons";
+    const rep: AxiosResponse<types.Livraison> = await Axios.put(
+      fullUrl,
+      params,
+      { headers: this.getHeaders() }
+    );
+    return rep.data;
   }
 
   async CreateLivraison(params: types.Livraison) {
+    this.startRequest();
     try {
-      const fullUrl = this.baseUrl + "/api/livraisons";
-      const rep: AxiosResponse<types.Livraison> = await Axios.put(
-        fullUrl,
-        params,
-        { headers: this.getHeaders() }
-      );
-      return rep.data;
+      const out = await this.rawCreateLivraison(params);
+      this.onSuccessCreateLivraison(out);
     } catch (error) {
       this.handleError(error);
     }
+  }
+
+  protected abstract onSuccessCreateLivraison(data: types.Livraison): void;
+
+  protected async rawUpdateLivraison(params: types.Livraison) {
+    const fullUrl = this.baseUrl + "/api/livraisons";
+    const rep: AxiosResponse<types.Livraison> = await Axios.post(
+      fullUrl,
+      params,
+      { headers: this.getHeaders() }
+    );
+    return rep.data;
   }
 
   async UpdateLivraison(params: types.Livraison) {
+    this.startRequest();
     try {
-      const fullUrl = this.baseUrl + "/api/livraisons";
-      const rep: AxiosResponse<types.Livraison> = await Axios.post(
-        fullUrl,
-        params,
-        { headers: this.getHeaders() }
-      );
-      return rep.data;
+      const out = await this.rawUpdateLivraison(params);
+      this.onSuccessUpdateLivraison(out);
     } catch (error) {
       this.handleError(error);
     }
+  }
+
+  protected abstract onSuccessUpdateLivraison(data: types.Livraison): void;
+
+  protected async rawDeleteLivraison(params: { id: string }) {
+    const fullUrl = this.baseUrl + "/api/livraisons";
+    const rep: AxiosResponse<types.OutFournisseurs> = await Axios.delete(
+      fullUrl,
+      { params: params, headers: this.getHeaders() }
+    );
+    return rep.data;
   }
 
   async DeleteLivraison(params: { id: string }) {
+    this.startRequest();
     try {
-      const fullUrl = this.baseUrl + "/api/livraisons";
-      const rep: AxiosResponse<types.OutFournisseurs> = await Axios.delete(
-        fullUrl,
-        { params: params, headers: this.getHeaders() }
-      );
-      return rep.data;
+      const out = await this.rawDeleteLivraison(params);
+      this.onSuccessDeleteLivraison(out);
     } catch (error) {
       this.handleError(error);
     }
+  }
+
+  protected abstract onSuccessDeleteLivraison(
+    data: types.OutFournisseurs
+  ): void;
+
+  protected async rawGetIngredientProduits(params: { id: string }) {
+    const fullUrl = this.baseUrl + "/api/ingredient-produit";
+    const rep: AxiosResponse<types.IngredientProduits> = await Axios.get(
+      fullUrl,
+      { params: params, headers: this.getHeaders() }
+    );
+    return rep.data;
   }
 
   async GetIngredientProduits(params: { id: string }) {
+    this.startRequest();
     try {
-      const fullUrl = this.baseUrl + "/api/ingredient-produit";
-      const rep: AxiosResponse<types.IngredientProduits> = await Axios.get(
-        fullUrl,
-        { params: params, headers: this.getHeaders() }
-      );
-      return rep.data;
+      const out = await this.rawGetIngredientProduits(params);
+      this.onSuccessGetIngredientProduits(out);
     } catch (error) {
       this.handleError(error);
     }
+  }
+
+  protected abstract onSuccessGetIngredientProduits(
+    data: types.IngredientProduits
+  ): void;
+
+  protected async rawAjouteIngredientProduit(
+    params: types.InAjouteIngredientProduit
+  ) {
+    const fullUrl = this.baseUrl + "/api/ingredient-produit";
+    const rep: AxiosResponse<types.IngredientProduits> = await Axios.post(
+      fullUrl,
+      params,
+      { headers: this.getHeaders() }
+    );
+    return rep.data;
   }
 
   async AjouteIngredientProduit(params: types.InAjouteIngredientProduit) {
+    this.startRequest();
     try {
-      const fullUrl = this.baseUrl + "/api/ingredient-produit";
-      const rep: AxiosResponse<types.IngredientProduits> = await Axios.post(
-        fullUrl,
-        params,
-        { headers: this.getHeaders() }
-      );
-      return rep.data;
+      const out = await this.rawAjouteIngredientProduit(params);
+      this.onSuccessAjouteIngredientProduit(out);
     } catch (error) {
       this.handleError(error);
     }
+  }
+
+  protected abstract onSuccessAjouteIngredientProduit(
+    data: types.IngredientProduits
+  ): void;
+
+  protected async rawSetDefautProduit(params: types.InSetDefautProduit) {
+    const fullUrl = this.baseUrl + "/api/ingredient-produit-defaut";
+    const rep: AxiosResponse<types.IngredientProduits> = await Axios.post(
+      fullUrl,
+      params,
+      { headers: this.getHeaders() }
+    );
+    return rep.data;
   }
 
   async SetDefautProduit(params: types.InSetDefautProduit) {
+    this.startRequest();
     try {
-      const fullUrl = this.baseUrl + "/api/ingredient-produit-defaut";
-      const rep: AxiosResponse<types.IngredientProduits> = await Axios.post(
-        fullUrl,
-        params,
-        { headers: this.getHeaders() }
-      );
-      return rep.data;
+      const out = await this.rawSetDefautProduit(params);
+      this.onSuccessSetDefautProduit(out);
     } catch (error) {
       this.handleError(error);
     }
+  }
+
+  protected abstract onSuccessSetDefautProduit(
+    data: types.IngredientProduits
+  ): void;
+
+  protected async rawUpdateProduit(params: types.Produit) {
+    const fullUrl = this.baseUrl + "/api/produits";
+    const rep: AxiosResponse<types.Produit> = await Axios.post(
+      fullUrl,
+      params,
+      { headers: this.getHeaders() }
+    );
+    return rep.data;
   }
 
   async UpdateProduit(params: types.Produit) {
+    this.startRequest();
     try {
-      const fullUrl = this.baseUrl + "/api/produits";
-      const rep: AxiosResponse<types.Produit> = await Axios.post(
-        fullUrl,
-        params,
-        { headers: this.getHeaders() }
-      );
-      return rep.data;
+      const out = await this.rawUpdateProduit(params);
+      this.onSuccessUpdateProduit(out);
     } catch (error) {
       this.handleError(error);
     }
+  }
+
+  protected abstract onSuccessUpdateProduit(data: types.Produit): void;
+
+  protected async rawDeleteProduit(params: { id: string }) {
+    const fullUrl = this.baseUrl + "/api/produits";
+    const rep: AxiosResponse<any> = await Axios.delete(fullUrl, {
+      params: params,
+      headers: this.getHeaders()
+    });
+    return rep.data;
   }
 
   async DeleteProduit(params: { id: string }) {
+    this.startRequest();
     try {
-      const fullUrl = this.baseUrl + "/api/produits";
-      const rep: AxiosResponse<any> = await Axios.delete(fullUrl, {
-        params: params,
-        headers: this.getHeaders()
-      });
-      return rep.data;
+      const out = await this.rawDeleteProduit(params);
+      this.onSuccessDeleteProduit(out);
     } catch (error) {
       this.handleError(error);
     }
   }
 
+  protected abstract onSuccessDeleteProduit(data: any): void;
+
+  protected async rawEtablitCommande(params: types.InCommande) {
+    const fullUrl = this.baseUrl + "/api/commande";
+    const rep: AxiosResponse<types.OutCommande> = await Axios.post(
+      fullUrl,
+      params,
+      { headers: this.getHeaders() }
+    );
+    return rep.data;
+  }
+
   async EtablitCommande(params: types.InCommande) {
+    this.startRequest();
     try {
-      const fullUrl = this.baseUrl + "/api/commande";
-      const rep: AxiosResponse<types.OutCommande> = await Axios.post(
-        fullUrl,
-        params,
-        { headers: this.getHeaders() }
-      );
-      return rep.data;
+      const out = await this.rawEtablitCommande(params);
+      this.onSuccessEtablitCommande(out);
     } catch (error) {
       this.handleError(error);
     }
   }
+
+  protected abstract onSuccessEtablitCommande(data: types.OutCommande): void;
 }
