@@ -7,31 +7,20 @@ import (
 )
 
 func (ct RequeteContext) loadFournisseurs() (models.Fournisseurs, error) {
-	rows, err := ct.tx.Query(`SELECT fournisseurs.* FROM fournisseurs 
+	rows, err := ct.DB.Query(`SELECT fournisseurs.* FROM fournisseurs 
 		JOIN utilisateur_fournisseurs ON utilisateur_fournisseurs.id_fournisseur = fournisseurs.id 
-		WHERE utilisateur_fournisseurs.id_utilisateur = $1`, ct.idProprietaire)
+		WHERE utilisateur_fournisseurs.id_utilisateur = $1`, ct.IdProprietaire)
 	if err != nil {
 		return nil, ErrorSQL(err)
 	}
 	out, err := models.ScanFournisseurs(rows)
-	if err != nil {
-		return nil, ErrorSQL(err)
-	}
-	return out, nil
+	return out, ErrorSQL(err)
 }
 
 // renvoie les livraisons des fournisseurs donnés
 func (ct RequeteContext) loadLivraisons(fournisseurs models.Fournisseurs) (models.Livraisons, error) {
-	rows, err := ct.tx.Query("SELECT * FROM livraisons WHERE id_fournisseur = ANY($1)",
-		fournisseurs.Ids().AsSQL())
-	if err != nil {
-		return nil, ErrorSQL(err)
-	}
-	livraisons, err := models.ScanLivraisons(rows)
-	if err != nil {
-		return nil, ErrorSQL(err)
-	}
-	return livraisons, nil
+	livraisons, err := models.SelectLivraisonsByIdFournisseurs(ct.DB, fournisseurs.Ids()...)
+	return livraisons, ErrorSQL(err)
 }
 
 func (ct RequeteContext) hasFournisseur(idFournisseur int64) (bool, error) {
@@ -47,9 +36,9 @@ func (ct RequeteContext) hasFournisseur(idFournisseur int64) (bool, error) {
 // des fournisseurs associés à l'utilisateur courant
 // renvoie la livraison associée
 func (ct RequeteContext) checkFournisseurs(produit models.Produit) (models.Livraison, error) {
-	livraison, err := models.SelectLivraison(ct.tx, produit.IdLivraison)
+	livraison, err := models.SelectLivraison(ct.DB, produit.IdLivraison)
 	if err != nil {
-		return livraison, err
+		return livraison, ErrorSQL(fmt.Errorf("can't find livraison : %s", err))
 	}
 	hasFournisseur, err := ct.hasFournisseur(livraison.IdFournisseur)
 	if err != nil {
@@ -74,11 +63,7 @@ func (ct RequeteContext) checkLivraisonFournisseur(livraison models.Livraison) e
 
 // LoadFournisseurs renvoie les fournisseurs associés à l'utilisateur courant,
 // ainsi que les contraints de livraisons pertinentes.
-func (s Server) LoadFournisseurs(ct RequeteContext) (models.Fournisseurs, models.Livraisons, error) {
-	if err := ct.beginTx(s); err != nil {
-		return nil, nil, err
-	}
-	defer ct.rollbackTx(nil) // pas de modifications
+func (ct RequeteContext) LoadFournisseurs() (models.Fournisseurs, models.Livraisons, error) {
 	fournisseurs, err := ct.loadFournisseurs()
 	if err != nil {
 		return nil, nil, err
@@ -93,20 +78,21 @@ func (s Server) LoadFournisseurs(ct RequeteContext) (models.Fournisseurs, models
 
 // CreateFournisseur crée un fournisseur et le lie à l'utilisateur courant
 // Une contrainte de livraison "standard" est automatiquement créée
-func (s Server) CreateFournisseur(ct RequeteContext, fournisseur models.Fournisseur) (out models.Fournisseur, err error) {
-	if err := ct.beginTx(s); err != nil {
+func (ct RequeteContext) CreateFournisseur(fournisseur models.Fournisseur) (out models.Fournisseur, err error) {
+	tx, err := ct.beginTx()
+	if err != nil {
 		return out, err
 	}
 
-	out, err = fournisseur.Insert(ct.tx)
+	out, err = fournisseur.Insert(tx)
 	if err != nil {
-		return out, ct.rollbackTx(err)
+		return out, tx.rollback(err)
 	}
 
-	err = models.InsertManyUtilisateurFournisseurs(ct.tx,
-		models.UtilisateurFournisseur{IdFournisseur: out.Id, IdUtilisateur: ct.idProprietaire})
+	err = models.InsertManyUtilisateurFournisseurs(tx.Tx,
+		models.UtilisateurFournisseur{IdFournisseur: out.Id, IdUtilisateur: ct.IdProprietaire})
 	if err != nil {
-		return out, ct.rollbackTx(err)
+		return out, tx.rollback(err)
 	}
 
 	// ajout d'une contraint de livraison par défaut
@@ -117,142 +103,129 @@ func (s Server) CreateFournisseur(ct RequeteContext, fournisseur models.Fourniss
 		DelaiCommande:  2,
 		Anticipation:   1,
 	}
-	livraison, err = livraison.Insert(ct.tx)
+	livraison, err = livraison.Insert(tx)
 	if err != nil {
-		return out, ct.rollbackTx(err)
+		return out, tx.rollback(err)
 	}
 
-	return out, ct.commitTx()
+	return out, tx.Commit()
 }
 
-func (s Server) UpdateFournisseur(ct RequeteContext, fournisseur models.Fournisseur) (models.Fournisseur, error) {
-	if err := ct.beginTx(s); err != nil {
-		return models.Fournisseur{}, err
-	}
+func (ct RequeteContext) UpdateFournisseur(fournisseur models.Fournisseur) (models.Fournisseur, error) {
 	hasF, err := ct.hasFournisseur(fournisseur.Id)
 	if err != nil {
-		return models.Fournisseur{}, ct.rollbackTx(err)
+		return models.Fournisseur{}, err
 	}
 	if !hasF {
-		_ = ct.rollbackTx(err)
 		return models.Fournisseur{}, fmt.Errorf("Le fournisseur %s ne fait pas partie de vos fournisseurs.", fournisseur.Nom)
 	}
-	fournisseur, err = fournisseur.Update(ct.tx)
-	if err != nil {
-		return models.Fournisseur{}, ErrorSQL(err)
-	}
-	return fournisseur, ct.commitTx()
+	fournisseur, err = fournisseur.Update(ct.DB)
+	return fournisseur, ErrorSQL(err)
 }
 
-func (s Server) DeleteFournisseur(ct RequeteContext, idFournisseur int64) error {
-	if err := ct.beginTx(s); err != nil {
-		return err
-	}
+func (ct RequeteContext) DeleteFournisseur(idFournisseur int64) error {
 	hasF, err := ct.hasFournisseur(idFournisseur)
 	if err != nil {
-		return ct.rollbackTx(err)
+		return err
 	}
 	if !hasF {
-		_ = ct.rollbackTx(nil)
 		return fmt.Errorf("Le fournisseur (%d) ne fait pas partie de vos fournisseurs.", idFournisseur)
 	}
+	tx, err := ct.beginTx()
+	if err != nil {
+		return err
+	}
 
-	rows, err := ct.tx.Query(`SELECT  * FROM commande_produits 
+	rows, err := tx.Query(`SELECT  * FROM commande_produits 
 		JOIN produits ON produits.id = commande_produits.id_produit 
 		JOIN livraisons ON produits.id_livraison = livraisons.id
 		WHERE livraisons.id_fournisseur = $1`, idFournisseur)
 	if err != nil {
-		return ErrorSQL(err)
+		return tx.rollback(err)
 	}
 	cps, err := models.ScanCommandeProduits(rows)
 	if err != nil {
-		return ErrorSQL(err)
+		return tx.rollback(err)
 	}
 	if L := len(cps); L > 0 {
-		_ = ct.rollbackTx(nil)
+		_ = tx.rollback(nil)
 		return fmt.Errorf("%d produit(s) lié(s) au fournisseur sont déjà utilisés dans une commande.", L)
 	}
 
 	// sejours
-	_, err = ct.tx.Exec("DELETE FROM sejour_fournisseurs WHERE id_fournisseur = $1", idFournisseur)
+	err = models.DeleteSejourFournisseursByIdFournisseurs(tx, idFournisseur)
 	if err != nil {
-		return ct.rollbackTx(err)
+		return tx.rollback(err)
 	}
 
 	// ingredients
-	_, err = ct.tx.Exec(`DELETE FROM ingredient_produits USING produits, livraisons
+	_, err = tx.Exec(`DELETE FROM ingredient_produits USING produits, livraisons
 		WHERE ingredient_produits.id_produit = produits.id 
 		AND produits.id_livraison = livraisons.id
 		AND livraisons.id_fournisseur = $1`, idFournisseur)
 	if err != nil {
-		return ct.rollbackTx(err)
+		return tx.rollback(err)
 	}
 
 	// defaut
-	_, err = ct.tx.Exec(`DELETE FROM defaut_produits USING produits, livraisons
+	_, err = tx.Exec(`DELETE FROM defaut_produits USING produits, livraisons
 		WHERE defaut_produits.id_produit = produits.id 
 		AND produits.id_livraison = livraisons.id
 		AND livraisons.id_fournisseur = $1`, idFournisseur)
 	if err != nil {
-		return ct.rollbackTx(err)
+		return tx.rollback(err)
 	}
 
 	// produits
-	_, err = ct.tx.Exec(`DELETE FROM produits USING livraisons
+	_, err = tx.Exec(`DELETE FROM produits USING livraisons
 		WHERE produits.id_livraison = livraisons.id AND livraisons.id_fournisseur = $1`, idFournisseur)
 	if err != nil {
-		return ct.rollbackTx(err)
+		return tx.rollback(err)
 	}
 
-	// livraisons
-	_, err = ct.tx.Exec("DELETE FROM livraisons WHERE id_fournisseur = $1", idFournisseur)
-	if err != nil {
-		return ct.rollbackTx(err)
-	}
+	// livraisons par cascade
+
 	// utilisateurs
-	_, err = ct.tx.Exec("DELETE FROM utilisateur_fournisseurs WHERE id_fournisseur = $1", idFournisseur)
+	err = models.DeleteUtilisateurFournisseursByIdFournisseurs(tx, idFournisseur)
 	if err != nil {
-		return ct.rollbackTx(err)
+		return tx.rollback(err)
 	}
 
-	_, err = models.Fournisseur{Id: idFournisseur}.Delete(ct.tx)
+	_, err = models.DeleteFournisseurById(tx, idFournisseur)
 	if err != nil {
-		return ct.rollbackTx(err)
+		return tx.rollback(err)
 	}
-	return ct.commitTx()
+	return tx.Commit()
 }
 
-func (s Server) UpdateSejourFournisseurs(ct RequeteContext, idSejour int64, idsFournisseurs []int64) error {
-	if err := ct.beginTx(s); err != nil {
+func (ct RequeteContext) UpdateSejourFournisseurs(idSejour int64, idsFournisseurs []int64) error {
+	if err := ct.proprioSejour(models.Sejour{Id: idSejour}, false); err != nil {
 		return err
 	}
-	if err := ct.proprioSejour(models.Sejour{Id: idSejour}, false); err != nil {
+	tx, err := ct.beginTx()
+	if err != nil {
 		return err
 	}
 
 	// reset les fournisseurs du séjour ...
-	_, err := ct.tx.Exec("DELETE FROM sejour_fournisseurs WHERE id_sejour = $1", idSejour)
+	err = models.DeleteSejourFournisseursByIdSejours(tx, idSejour)
 	if err != nil {
-		return ct.rollbackTx(err)
+		return tx.rollback(err)
 	}
 	sf := make([]models.SejourFournisseur, len(idsFournisseurs))
 	for i, id := range idsFournisseurs {
-		sf[i] = models.SejourFournisseur{IdUtilisateur: ct.idProprietaire, IdSejour: idSejour, IdFournisseur: id}
+		sf[i] = models.SejourFournisseur{IdUtilisateur: ct.IdProprietaire, IdSejour: idSejour, IdFournisseur: id}
 	}
 	// ... et rajoute les nouveaux
-	if err := models.InsertManySejourFournisseurs(ct.tx, sf...); err != nil {
-		return ct.rollbackTx(err)
+	if err := models.InsertManySejourFournisseurs(tx.Tx, sf...); err != nil {
+		return tx.rollback(err)
 	}
-	return ct.commitTx()
+	return tx.Commit()
 }
 
-func (s Server) CreateLivraison(ct RequeteContext, livraison models.Livraison) (models.Livraison, error) {
+func (ct RequeteContext) CreateLivraison(livraison models.Livraison) (models.Livraison, error) {
 	contrainte := ContrainteLivraison{livraison}
 	if err := contrainte.Check(); err != nil {
-		return models.Livraison{}, err
-	}
-
-	if err := ct.beginTx(s); err != nil {
 		return models.Livraison{}, err
 	}
 
@@ -260,61 +233,50 @@ func (s Server) CreateLivraison(ct RequeteContext, livraison models.Livraison) (
 		return models.Livraison{}, err
 	}
 
-	livraison, err := livraison.Insert(ct.tx)
-	if err != nil {
-		return models.Livraison{}, ErrorSQL(err)
-	}
-	return livraison, ct.commitTx()
+	livraison, err := livraison.Insert(ct.DB)
+	return livraison, ErrorSQL(err)
 }
 
-func (s Server) UpdateLivraison(ct RequeteContext, livraison models.Livraison) (models.Livraison, error) {
+func (ct RequeteContext) UpdateLivraison(livraison models.Livraison) (models.Livraison, error) {
 	contrainte := ContrainteLivraison{livraison}
 	if err := contrainte.Check(); err != nil {
-		return models.Livraison{}, err
-	}
-
-	if err := ct.beginTx(s); err != nil {
-		return models.Livraison{}, err
-	}
-
-	if err := ct.checkLivraisonFournisseur(livraison); err != nil {
 		return models.Livraison{}, err
 	}
 
 	// on vérifie que les produits ayant cette contrainte sont tous du founisseur
-
-	livraison, err := livraison.Update(ct.tx)
-	if err != nil {
-		return models.Livraison{}, ErrorSQL(err)
+	if err := ct.checkLivraisonFournisseur(livraison); err != nil {
+		return models.Livraison{}, err
 	}
-	return livraison, ct.commitTx()
+
+	livraison, err := livraison.Update(ct.DB)
+	return livraison, ErrorSQL(err)
 }
 
 // DeleteLivraison supprime la livraison
-func (s Server) DeleteLivraison(ct RequeteContext, idLivraison int64) error {
-	if err := ct.beginTx(s); err != nil {
-		return err
-	}
-
-	livraison, err := models.SelectLivraison(ct.tx, idLivraison)
+func (ct RequeteContext) DeleteLivraison(idLivraison int64) error {
+	livraison, err := models.SelectLivraison(ct.DB, idLivraison)
 	if err != nil {
-		return ct.rollbackTx(err)
+		return ErrorSQL(err)
 	}
 
 	if err := ct.checkLivraisonFournisseur(livraison); err != nil {
-		_ = ct.rollbackTx(nil)
+		return err
+	}
+
+	tx, err := ct.beginTx()
+	if err != nil {
 		return err
 	}
 
 	// on modifie les produits concernés
-	_, err = ct.tx.Exec("UPDATE produits SET id_livraison = null WHERE id_livraison = $1", idLivraison)
+	_, err = tx.Exec("UPDATE produits SET id_livraison = null WHERE id_livraison = $1", idLivraison)
 	if err != nil {
-		return ct.rollbackTx(err)
+		return tx.rollback(err)
 	}
 
-	_, err = livraison.Delete(ct.tx)
+	_, err = models.DeleteLivraisonById(tx, livraison.Id)
 	if err != nil {
-		return ct.rollbackTx(err)
+		return tx.rollback(err)
 	}
-	return ct.commitTx()
+	return tx.Commit()
 }

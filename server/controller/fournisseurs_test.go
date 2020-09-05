@@ -11,8 +11,8 @@ import (
 
 func TestGetFournisseurs(t *testing.T) {
 	s, ct := setupTest(t)
-	defer s.db.Close()
-	four, livr, err := s.LoadFournisseurs(ct)
+	defer s.DB.Close()
+	four, livr, err := ct.LoadFournisseurs()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -22,17 +22,17 @@ func TestGetFournisseurs(t *testing.T) {
 func TestCRUDFournisseur(t *testing.T) {
 	rand.Seed(time.Now().Unix())
 	s, ct := setupTest(t)
-	defer s.db.Close()
-	m, err := s.CreateFournisseur(ct, models.Fournisseur{Nom: fmt.Sprintf("GERLAND %d", rand.Int()), Lieu: "Lyon"})
+	defer s.DB.Close()
+	m, err := ct.CreateFournisseur(models.Fournisseur{Nom: fmt.Sprintf("GERLAND %d", rand.Int()), Lieu: "Lyon"})
 	if err != nil {
 		t.Fatal(err)
 	}
 	m.Nom = fmt.Sprintf("Intermarché %d", rand.Int())
-	m, err = s.UpdateFournisseur(ct, m)
+	m, err = ct.UpdateFournisseur(m)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = s.DeleteFournisseur(ct, m.Id)
+	err = ct.DeleteFournisseur(m.Id)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -15,8 +15,8 @@ func TestResoudRepas(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer db.Close()
-	s := Server{db: db}
-	row := s.db.QueryRow("SELECT * FROM repass LIMIT 1")
+	s := Server{DB: db}
+	row := s.DB.QueryRow("SELECT * FROM repass LIMIT 1")
 	repas, err := models.ScanRepas(row)
 	if err != nil {
 		t.Fatal(err)
@@ -48,8 +48,8 @@ func TestResoudSejour(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer db.Close()
-	s := Server{db: db}
-	row := s.db.QueryRow("SELECT * FROM repass LIMIT 1")
+	s := Server{DB: db}
+	row := s.DB.QueryRow("SELECT * FROM repass LIMIT 1")
 	repas, err := models.ScanRepas(row)
 	if err != nil {
 		t.Fatal(err)

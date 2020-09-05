@@ -26,11 +26,11 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	views.Server = controller.NewServer(db, *dev)
+	server := views.Server{Server: controller.Server{DB: db, Dev: *dev}}
 
 	e := echo.New()
 
-	adress := setup(e, *dev)
+	adress := setup(e, *dev, server.Server)
 
 	// erreurs explicites, même en production
 	e.HTTPErrorHandler = func(err error, c echo.Context) {
@@ -39,7 +39,7 @@ func main() {
 	}
 
 	e.Group("/static", middleware.Gzip()).Static("/*", "server/static")
-	routes(e)
+	routes(e, server)
 
 	e.Logger.Fatal(e.Start(adress))
 }
@@ -53,14 +53,14 @@ func autoriseCORS(e *echo.Echo) {
 	fmt.Println("CORS activé.")
 }
 
-func setup(e *echo.Echo, dev bool) string {
+func setup(e *echo.Echo, dev bool, s controller.Server) string {
 	var adress string
 	if dev {
 		adress = "localhost:1323"
 		autoriseCORS(e)
 	} else {
 		autoriseCORS(e) //FIXME:
-		if err := views.Server.PingDB(); err != nil {
+		if err := s.DB.Ping(); err != nil {
 			log.Fatalf("DB not responding : %s", err)
 		}
 		fmt.Println("DB OK.")
@@ -78,7 +78,7 @@ func setup(e *echo.Echo, dev bool) string {
 	return adress
 }
 
-func routes(e *echo.Echo) {
+func routes(e *echo.Echo, s views.Server) {
 	for _, route := range []string{
 		"/",
 		"/sejours",
@@ -90,60 +90,62 @@ func routes(e *echo.Echo) {
 		e.GET(route, views.Accueil, NoCache)
 	}
 
-	e.POST("/api/loggin", views.Loggin)
+	e.POST("/api/loggin", s.Loggin)
 
-	e.GET("/api/utilisateurs", views.GetUtilisateurs)
+	tokenMid := middleware.JWT(logs.PASSPHRASE)
 
-	e.GET("/api/ingredients", views.GetIngredients)
-	e.PUT("/api/ingredients", views.CreateIngredient)
-	e.POST("/api/ingredients", views.UpdateIngredient)
-	e.DELETE("/api/ingredients", views.DeleteIngredient)
+	e.GET("/api/utilisateurs", s.GetUtilisateurs, tokenMid)
 
-	e.GET("/api/recettes", views.GetRecettes)
-	e.PUT("/api/recettes", views.CreateRecette)
-	e.POST("/api/recettes", views.UpdateRecette)
-	e.DELETE("/api/recettes", views.DeleteRecette)
+	e.GET("/api/ingredients", s.GetIngredients, tokenMid)
+	e.PUT("/api/ingredients", s.CreateIngredient, tokenMid)
+	e.POST("/api/ingredients", s.UpdateIngredient, tokenMid)
+	e.DELETE("/api/ingredients", s.DeleteIngredient, tokenMid)
 
-	e.GET("/api/menus", views.GetMenus)
-	e.PUT("/api/menus", views.CreateMenu)
-	e.POST("/api/menus", views.UpdateMenu)
-	e.DELETE("/api/menus", views.DeleteMenu)
+	e.GET("/api/recettes", s.GetRecettes, tokenMid)
+	e.PUT("/api/recettes", s.CreateRecette, tokenMid)
+	e.POST("/api/recettes", s.UpdateRecette, tokenMid)
+	e.DELETE("/api/recettes", s.DeleteRecette, tokenMid)
 
-	e.GET("/api/sejours", views.GetSejours)
-	e.PUT("/api/sejours", views.CreateSejour)
-	e.POST("/api/sejours", views.UpdateSejour)
-	e.DELETE("/api/sejours", views.DeleteSejour)
+	e.GET("/api/menus", s.GetMenus, tokenMid)
+	e.PUT("/api/menus", s.CreateMenu, tokenMid)
+	e.POST("/api/menus", s.UpdateMenu, tokenMid)
+	e.DELETE("/api/menus", s.DeleteMenu, tokenMid)
 
-	e.PUT("/api/groupes", views.CreateGroupe)
-	e.POST("/api/groupes", views.UpdateGroupe)
-	e.DELETE("/api/groupes", views.DeleteGroupe)
+	e.GET("/api/sejours", s.GetSejours, tokenMid)
+	e.PUT("/api/sejours", s.CreateSejour, tokenMid)
+	e.POST("/api/sejours", s.UpdateSejour, tokenMid)
+	e.DELETE("/api/sejours", s.DeleteSejour, tokenMid)
 
-	e.POST("/api/sejours/fournisseurs", views.UpdateSejourFournisseurs)
+	e.PUT("/api/groupes", s.CreateGroupe, tokenMid)
+	e.POST("/api/groupes", s.UpdateGroupe, tokenMid)
+	e.DELETE("/api/groupes", s.DeleteGroupe, tokenMid)
 
-	e.PUT("/api/sejours/repas", views.CreateRepas)
-	e.POST("/api/sejours/repas", views.UpdateRepas)
-	e.DELETE("/api/sejours/repas", views.DeleteRepas)
+	e.POST("/api/sejours/fournisseurs", s.UpdateSejourFournisseurs, tokenMid)
 
-	e.PUT("/api/sejours/assistant", views.AssistantCreateRepas)
+	e.PUT("/api/sejours/repas", s.CreateRepas, tokenMid)
+	e.POST("/api/sejours/repas", s.UpdateRepas, tokenMid)
+	e.DELETE("/api/sejours/repas", s.DeleteRepas, tokenMid)
 
-	e.POST("/api/resolution", views.ResoudIngredients)
+	e.PUT("/api/sejours/assistant", s.AssistantCreateRepas, tokenMid)
 
-	e.GET("/api/fournisseurs", views.GetFournisseurs)
-	e.PUT("/api/fournisseurs", views.CreateFournisseur)
-	e.POST("/api/fournisseurs", views.UpdateFournisseur)
-	e.DELETE("/api/fournisseurs", views.DeleteFournisseur)
+	e.POST("/api/resolution", s.ResoudIngredients, tokenMid)
 
-	e.PUT("/api/livraisons", views.CreateLivraison)
-	e.POST("/api/livraisons", views.UpdateLivraison)
-	e.DELETE("/api/livraisons", views.DeleteLivraison)
+	e.GET("/api/fournisseurs", s.GetFournisseurs, tokenMid)
+	e.PUT("/api/fournisseurs", s.CreateFournisseur, tokenMid)
+	e.POST("/api/fournisseurs", s.UpdateFournisseur, tokenMid)
+	e.DELETE("/api/fournisseurs", s.DeleteFournisseur, tokenMid)
 
-	e.GET("/api/ingredient-produit", views.GetIngredientProduits)
-	e.POST("/api/ingredient-produit", views.AjouteIngredientProduit)
-	e.POST("/api/ingredient-produit-defaut", views.SetDefautProduit)
-	e.POST("/api/produits", views.UpdateProduit)
-	e.DELETE("/api/produits", views.DeleteProduit)
+	e.PUT("/api/livraisons", s.CreateLivraison, tokenMid)
+	e.POST("/api/livraisons", s.UpdateLivraison, tokenMid)
+	e.DELETE("/api/livraisons", s.DeleteLivraison, tokenMid)
 
-	e.POST("/api/commande", views.EtablitCommande)
+	e.GET("/api/ingredient-produit", s.GetIngredientProduits, tokenMid)
+	e.POST("/api/ingredient-produit", s.AjouteIngredientProduit, tokenMid)
+	e.POST("/api/ingredient-produit-defaut", s.SetDefautProduit, tokenMid)
+	e.POST("/api/produits", s.UpdateProduit, tokenMid)
+	e.DELETE("/api/produits", s.DeleteProduit, tokenMid)
+
+	e.POST("/api/commande", s.EtablitCommande, tokenMid)
 }
 
 // Empêche le navigateur de mettre en cache

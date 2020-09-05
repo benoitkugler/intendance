@@ -9,59 +9,10 @@ import (
 	"github.com/lib/pq"
 )
 
-// Server est le controller principal, partagé par toutes les requêtes.
-type Server struct {
-	db      *sql.DB
-	devMode bool // contourne l'authentification
-}
-
-func NewServer(db *sql.DB, devMode bool) Server {
-	return Server{db: db, devMode: devMode}
-}
-
-func (s Server) PingDB() error {
-	return s.db.Ping()
-}
-
-// RequeteContext est créé pour chaque requête.
-type RequeteContext struct {
-	idProprietaire int64
-	tx             *sql.Tx // a créer
-	Token          string  // à remplir pendant la phase d'authentification
-}
-
-// rollbackTx the current transaction, caused by `err`, and
-// handles the possible error from tx.Rollback()
-func (ct RequeteContext) rollbackTx(origin error) error {
-	if err := ct.tx.Rollback(); err != nil {
-		origin = fmt.Errorf("Rollback impossible. Erreur originale : %s", origin)
-	}
-	if _, ok := origin.(errorSQL); ok { // pas besoin de wrapper
-		return origin
-	}
-	return ErrorSQL(origin)
-}
-
-func (ct *RequeteContext) beginTx(s Server) (err error) {
-	ct.tx, err = s.db.Begin()
-	if err != nil {
-		return ErrorSQL(err)
-	}
-	return nil
-}
-
-// commitTx the transaction and try to rollback on error
-func (r RequeteContext) commitTx() error {
-	if err := r.tx.Commit(); err != nil {
-		return r.rollbackTx(err)
-	}
-	return nil
-}
-
 // ---------------------------- Identification ----------------------------
 
 func (s Server) Loggin(mail, password string) (out OutLoggin, err error) {
-	r := s.db.QueryRow("SELECT * FROM utilisateurs WHERE mail = $1", mail)
+	r := s.DB.QueryRow("SELECT * FROM utilisateurs WHERE mail = $1", mail)
 	u, err := models.ScanUtilisateur(r)
 	if err == sql.ErrNoRows {
 		out.Erreur = fmt.Sprintf(`L'adresse mail <i>%s</i> ne figure pas dans nos <b>utilisateurs</b>. <br/>
@@ -75,7 +26,7 @@ func (s Server) Loggin(mail, password string) (out OutLoggin, err error) {
 		out.Erreur = "Le mot de passe est invalide."
 		return out, nil
 	}
-	token, err := creeToken(u.Id)
+	token, err := newToken(u.Id)
 	out = OutLoggin{
 		Utilisateur: Utilisateur{Id: u.Id, PrenomNom: u.PrenomNom},
 		Token:       token,
@@ -83,10 +34,10 @@ func (s Server) Loggin(mail, password string) (out OutLoggin, err error) {
 	return out, err
 }
 
-func (s Server) LoadSejoursUtilisateur(ct RequeteContext) (out Sejours, err error) {
-	rows, err := s.db.Query(`SELECT groupes.* FROM groupes 
+func (ct RequeteContext) LoadSejoursUtilisateur() (out Sejours, err error) {
+	rows, err := ct.DB.Query(`SELECT groupes.* FROM groupes 
 	JOIN sejours ON sejours.id = groupes.id_sejour
-	WHERE sejours.id_utilisateur = $1`, ct.idProprietaire)
+	WHERE sejours.id_utilisateur = $1`, ct.IdProprietaire)
 	if err != nil {
 		err = ErrorSQL(err)
 		return
@@ -97,65 +48,38 @@ func (s Server) LoadSejoursUtilisateur(ct RequeteContext) (out Sejours, err erro
 		return
 	}
 
-	rows, err = s.db.Query("SELECT * FROM sejours WHERE id_utilisateur = $1", ct.idProprietaire)
-	if err != nil {
-		err = ErrorSQL(err)
-		return
-	}
-	sejours, err := models.ScanSejours(rows)
+	sejours, err := models.SelectSejoursByIdUtilisateurs(ct.DB, ct.IdProprietaire)
 	if err != nil {
 		err = ErrorSQL(err)
 		return
 	}
 
 	// on charge les fournisseurs des séjours
-	rows, err = s.db.Query("SELECT * FROM sejour_fournisseurs WHERE id_sejour = ANY($1)", sejours.Ids().AsSQL())
-	if err != nil {
-		err = ErrorSQL(err)
-		return
-	}
-	sejoursFournisseurs, err := models.ScanSejourFournisseurs(rows)
+	sejoursFournisseurs, err := models.SelectSejourFournisseursByIdSejours(ct.DB, sejours.Ids()...)
 	if err != nil {
 		err = ErrorSQL(err)
 		return
 	}
 
 	// on résoud les repas
-	rows, err = s.db.Query(`SELECT * FROM repass WHERE id_sejour = ANY($1)`, sejours.Ids().AsSQL())
-	if err != nil {
-		err = ErrorSQL(err)
-		return
-	}
-	repas, err := models.ScanRepass(rows)
+	repas, err := models.SelectRepassByIdSejours(ct.DB, sejours.Ids()...)
 	if err != nil {
 		err = ErrorSQL(err)
 		return
 	}
 
 	// on charge les groupes, recettes et ingrédients pour chaque repas
-	rows, err = s.db.Query(`SELECT * FROM repas_groupes WHERE id_repas = ANY($1)`, repas.Ids().AsSQL())
+	idsRepas := repas.Ids()
+	repasGroupes, err := models.SelectRepasGroupesByIdRepass(ct.DB, idsRepas...)
 	if err != nil {
 		err = ErrorSQL(err)
 		return
 	}
-	repasGroupes, err := models.ScanRepasGroupes(rows)
-	if err != nil {
-		err = ErrorSQL(err)
-		return
-	}
-	rows, err = s.db.Query(`SELECT * FROM repas_recettes WHERE id_repas = ANY($1)`, repas.Ids().AsSQL())
+	repasRecettes, err := models.SelectRepasRecettesByIdRepass(ct.DB, idsRepas...)
 	if err != nil {
 		return out, ErrorSQL(err)
 	}
-	repasRecettes, err := models.ScanRepasRecettes(rows)
-	if err != nil {
-		return out, ErrorSQL(err)
-	}
-	rows, err = s.db.Query(`SELECT * FROM repas_ingredients WHERE id_repas = ANY($1)`, repas.Ids().AsSQL())
-	if err != nil {
-		return out, ErrorSQL(err)
-	}
-	repasIngredients, err := models.ScanRepasIngredients(rows)
+	repasIngredients, err := models.SelectRepasIngredientsByIdRepass(ct.DB, idsRepas...)
 	if err != nil {
 		return out, ErrorSQL(err)
 	}
@@ -198,11 +122,7 @@ func (s Server) LoadSejoursUtilisateur(ct RequeteContext) (out Sejours, err erro
 
 // LoadUtilisateurs renvois les données publiques des utilisateurs enregistrés.
 func (s Server) LoadUtilisateurs() (map[int64]Utilisateur, error) {
-	rows, err := s.db.Query("SELECT * FROM utilisateurs")
-	if err != nil {
-		return nil, ErrorSQL(err)
-	}
-	users, err := models.ScanUtilisateurs(rows)
+	users, err := models.SelectAllUtilisateurs(s.DB)
 	if err != nil {
 		return nil, ErrorSQL(err)
 	}
@@ -218,44 +138,33 @@ func (s Server) LoadUtilisateurs() (map[int64]Utilisateur, error) {
 // ------------------------------------------------------------------------
 
 func (s Server) LoadIngredients() (models.Ingredients, error) {
-	rows, err := s.db.Query("SELECT * FROM ingredients")
-	if err != nil {
-		return nil, ErrorSQL(err)
-	}
-	out, err := models.ScanIngredients(rows)
+	out, err := models.SelectAllIngredients(s.DB)
 	if err != nil {
 		return nil, ErrorSQL(err)
 	}
 	return out, nil
 }
 
-func (s Server) CreateIngredient(ct RequeteContext) (out models.Ingredient, err error) {
-	if err = ct.beginTx(s); err != nil {
-		return
-	}
+func (ct RequeteContext) CreateIngredient() (out models.Ingredient, err error) {
 	out.Nom = fmt.Sprintf("I%d", time.Now().UnixNano())
-	out, err = out.Insert(ct.tx)
-	if err != nil {
-		err = ErrorSQL(err)
-		return
-	}
-	err = ct.commitTx()
-	return
+	out, err = out.Insert(ct.DB)
+	return out, ErrorSQL(err)
 }
 
-func (s Server) UpdateIngredient(ct RequeteContext, ig models.Ingredient) (models.Ingredient, error) {
+func (ct RequeteContext) UpdateIngredient(ig models.Ingredient) (models.Ingredient, error) {
 	// contrainte interne à l'ingrédient
 	contrainte := ContrainteIngredient{ingredient: ig}
 	if err := contrainte.Check(); err != nil {
 		return ig, err
 	}
 
-	if err := ct.beginTx(s); err != nil {
+	tx, err := ct.beginTx()
+	if err != nil {
 		return ig, err
 	}
 
 	// vérification de la compatilibité des unités et des contionnements
-	produits, err := ig.GetProduits(ct.tx, nil)
+	produits, err := ig.GetProduits(tx.Tx, nil)
 	if err != nil {
 		return ig, ErrorSQL(err)
 	}
@@ -267,18 +176,18 @@ func (s Server) UpdateIngredient(ct RequeteContext, ig models.Ingredient) (model
 	}
 
 	// modification
-	ig, err = ig.Update(ct.tx)
+	ig, err = ig.Update(tx.Tx)
 	if err != nil {
 		return ig, ErrorSQL(err)
 	}
-	return ig, ct.commitTx()
+	return ig, tx.Commit()
 }
 
-func (s Server) DeleteIngredient(ct RequeteContext, id int64, checkProduits bool) error {
-	if err := ct.beginTx(s); err != nil {
+func (ct RequeteContext) DeleteIngredient(id int64, checkProduits bool) error {
+	tx, err := ct.beginTx()
+	if err != nil {
 		return err
 	}
-	tx := ct.tx
 
 	var check ErrorIngredientUsed
 	rows, err := tx.Query(`SELECT recettes.* FROM recettes 
@@ -315,7 +224,7 @@ func (s Server) DeleteIngredient(ct RequeteContext, id int64, checkProduits bool
 			return check
 		}
 
-		_, err = tx.Exec(`DELETE FROM ingredient_produits WHERE id_ingredient = $1`, id)
+		err = models.DeleteIngredientProduitsByIdIngredients(tx, id)
 		if err != nil {
 			return ErrorSQL(err)
 		}
@@ -325,30 +234,21 @@ func (s Server) DeleteIngredient(ct RequeteContext, id int64, checkProduits bool
 		}
 	}
 	// tout bon, on peut supprimer
-	if _, err = ing.Delete(tx); err != nil {
-		return ct.rollbackTx(err)
+	if _, err = models.DeleteIngredientById(tx, ing.Id); err != nil {
+		return tx.rollback(err)
 	}
-	return ct.commitTx()
+	return tx.Commit()
 }
 
 // ------------------------------------------------------------------------
 // ------------------------ Recettes --------------------------------------
 // ------------------------------------------------------------------------
 func (s Server) LoadRecettes() (out map[int64]*RecetteComplet, err error) {
-	rows, err := s.db.Query("SELECT * FROM recettes")
+	recettes, err := models.SelectAllRecettes(s.DB)
 	if err != nil {
 		return out, ErrorSQL(err)
 	}
-	recettes, err := models.ScanRecettes(rows)
-	if err != nil {
-		return out, ErrorSQL(err)
-	}
-	rows, err = s.db.Query(`SELECT * FROM recette_ingredients`)
-	if err != nil {
-		err = ErrorSQL(err)
-		return
-	}
-	ris, err := models.ScanRecetteIngredients(rows)
+	ris, err := models.SelectAllRecetteIngredients(s.DB)
 	if err != nil {
 		err = ErrorSQL(err)
 		return
@@ -363,82 +263,75 @@ func (s Server) LoadRecettes() (out map[int64]*RecetteComplet, err error) {
 	return resolvedRecettes, nil
 }
 
-func (s Server) CreateRecette(ct RequeteContext) (out models.Recette, err error) {
-	if err = ct.beginTx(s); err != nil {
-		return
-	}
-	tx := ct.tx
+func (ct RequeteContext) CreateRecette() (out models.Recette, err error) {
 	out.Nom = fmt.Sprintf("R%d", time.Now().UnixNano())
-	out.IdUtilisateur = models.NullableId(ct.idProprietaire)
-	out, err = out.Insert(tx)
-	if err != nil {
-		err = ErrorSQL(err)
-		return
-	}
-	err = ct.commitTx()
-	return
+	out.IdUtilisateur = models.NullableId(ct.IdProprietaire)
+	out, err = out.Insert(ct.DB)
+	return out, ErrorSQL(err)
 }
 
-func (s Server) UpdateRecette(ct RequeteContext, in RecetteComplet) (RecetteComplet, error) {
-	if err := ct.beginTx(s); err != nil {
-		return in, err
-	}
+func (ct RequeteContext) UpdateRecette(in RecetteComplet) (RecetteComplet, error) {
 	if err := ct.proprioRecette(in.Recette, true); err != nil {
 		return in, err
 	}
-	tx := ct.tx
+
+	tx, err := ct.beginTx()
+	if err != nil {
+		return in, err
+	}
 	//TODO: notification aux utilisateurs avec possibilité de copie
-	var err error
 	in.Recette, err = in.Recette.Update(tx)
 	if err != nil {
-		return in, ErrorSQL(err)
+		return in, tx.rollback(err)
 	}
-	_, err = tx.Exec("DELETE FROM recette_ingredients WHERE id_recette = $1", in.Recette.Id)
+
+	err = models.DeleteRecetteIngredientsByIdRecettes(tx, in.Recette.Id)
 	if err != nil {
-		return in, ct.rollbackTx(err)
+		return in, tx.rollback(err)
 	}
 
 	ings := in.Ingredients.AsRecetteIngredients(in.Recette.Id)
-	err = models.InsertManyRecetteIngredients(tx, ings...)
+	err = models.InsertManyRecetteIngredients(tx.Tx, ings...)
 	if err != nil {
-		return in, ct.rollbackTx(err)
+		return in, tx.rollback(err)
 	}
-	return in, ct.commitTx()
+	return in, tx.Commit()
 }
 
-func (s Server) DeleteRecette(ct RequeteContext, id int64) error {
-	if err := ct.beginTx(s); err != nil {
-		return err
-	}
+func (ct RequeteContext) DeleteRecette(id int64) error {
 	if err := ct.proprioRecette(models.Recette{Id: id}, false); err != nil {
 		return err
 	}
-	rows, err := ct.tx.Query(`SELECT menus.id FROM menus 
+	tx, err := ct.beginTx()
+	if err != nil {
+		return err
+	}
+	rows, err := tx.Tx.Query(`SELECT menus.id FROM menus 
 	JOIN menu_recettes ON menu_recettes.id_menu = menus.id
 	WHERE menu_recettes.id_recette = $1`, id)
 	if err != nil {
-		return ErrorSQL(err)
+		return tx.rollback(err)
 	}
-	ids, err := models.ScanInts(rows)
+	ids, err := models.ScanIds(rows)
 	if err != nil {
-		return ErrorSQL(err)
+		return tx.rollback(err)
 	}
 	//TODO: notification aux utilisateurs avec possibilité de copie
 	// nécessite de rassembler les données nécessaires à la re-création
-
 	if L := len(ids); L > 0 {
+		_ = tx.rollback(err)
 		return fmt.Errorf(`Cette recette est présente dans <b>%d menu(s)</b>.
 		Si vous souhaitez vraiment la supprimer, il faudra d'abord l'en retirer.`, L)
 	}
-	_, err = ct.tx.Exec("DELETE FROM recette_ingredients WHERE id_recette = $1", id)
+	err = models.DeleteRecetteIngredientsByIdRecettes(tx, id)
 	if err != nil {
-		return ErrorSQL(err)
+		return tx.rollback(err)
 	}
-	_, err = models.Recette{Id: id}.Delete(ct.tx)
+	_, err = models.DeleteRecetteById(tx.Tx, id)
 	if err != nil {
-		return ct.rollbackTx(err)
+		return tx.rollback(err)
 	}
-	return ct.commitTx()
+	return tx.Commit()
 }
 
 // ------------------------------------------------------------------------
@@ -446,11 +339,7 @@ func (s Server) DeleteRecette(ct RequeteContext, id int64) error {
 // ------------------------------------------------------------------------
 
 func (s Server) LoadMenus() (out map[int64]*MenuComplet, err error) {
-	rows, err := s.db.Query("SELECT * FROM menus")
-	if err != nil {
-		return nil, ErrorSQL(err)
-	}
-	menus, err := models.ScanMenus(rows)
+	menus, err := models.SelectAllMenus(s.DB)
 	if err != nil {
 		return nil, ErrorSQL(err)
 	}
@@ -458,11 +347,7 @@ func (s Server) LoadMenus() (out map[int64]*MenuComplet, err error) {
 	for k, v := range menus { // base
 		out[k] = &MenuComplet{Menu: v}
 	}
-	rows, err = s.db.Query(`SELECT * FROM menu_recettes`)
-	if err != nil {
-		return nil, ErrorSQL(err)
-	}
-	mrs, err := models.ScanMenuRecettes(rows)
+	mrs, err := models.SelectAllMenuRecettes(s.DB)
 	if err != nil {
 		return nil, ErrorSQL(err)
 	}
@@ -470,11 +355,7 @@ func (s Server) LoadMenus() (out map[int64]*MenuComplet, err error) {
 		out[l.IdMenu].Recettes = append(out[l.IdMenu].Recettes, l.IdRecette)
 	}
 
-	rows, err = s.db.Query(`SELECT * FROM menu_ingredients`)
-	if err != nil {
-		return nil, ErrorSQL(err)
-	}
-	mis, err := models.ScanMenuIngredients(rows)
+	mis, err := models.SelectAllMenuIngredients(s.DB)
 	if err != nil {
 		return nil, ErrorSQL(err)
 	}
@@ -484,229 +365,183 @@ func (s Server) LoadMenus() (out map[int64]*MenuComplet, err error) {
 	return out, nil
 }
 
-func (s Server) CreateMenu(ct RequeteContext) (out models.Menu, err error) {
-	if err = ct.beginTx(s); err != nil {
-		return
-	}
-	tx := ct.tx
-	out.IdUtilisateur = models.NullableId(ct.idProprietaire)
-	out, err = out.Insert(tx)
-	if err != nil {
-		err = ErrorSQL(err)
-		return
-	}
-	err = ct.commitTx()
-	return
+func (ct RequeteContext) CreateMenu() (out models.Menu, err error) {
+	out.IdUtilisateur = models.NullableId(ct.IdProprietaire)
+	out, err = out.Insert(ct.DB)
+	return out, ErrorSQL(err)
 }
 
-func (s Server) UpdateMenu(ct RequeteContext, in MenuComplet) (MenuComplet, error) {
-	if err := ct.beginTx(s); err != nil {
-		return in, err
-	}
+func (ct RequeteContext) UpdateMenu(in MenuComplet) (MenuComplet, error) {
 	if err := ct.proprioMenu(in.Menu, true); err != nil {
 		return in, err
 	}
-	tx := ct.tx
+	tx, err := ct.beginTx()
+	if err != nil {
+		return in, err
+	}
 	//TODO: notification aux utilisateurs avec possibilité de copie
-	var err error
 	in.Menu, err = in.Menu.Update(tx)
 	if err != nil {
-		return in, ErrorSQL(err)
+		return in, tx.rollback(err)
 	}
 
-	_, err = tx.Exec("DELETE FROM menu_recettes WHERE id_menu = $1", in.Id)
+	err = models.DeleteMenuRecettesByIdMenus(tx, in.Id)
 	if err != nil {
-		return in, ct.rollbackTx(err)
+		return in, tx.rollback(err)
 	}
 	recettes := in.Recettes.AsMenuRecettes(in.Menu.Id)
-	err = models.InsertManyMenuRecettes(tx, recettes...)
+	err = models.InsertManyMenuRecettes(tx.Tx, recettes...)
 	if err != nil {
-		return in, ct.rollbackTx(err)
+		return in, tx.rollback(err)
 	}
 
-	_, err = tx.Exec("DELETE FROM menu_ingredients WHERE id_menu = $1", in.Id)
+	err = models.DeleteMenuIngredientsByIdMenus(tx, in.Id)
 	if err != nil {
-		return in, ct.rollbackTx(err)
+		return in, tx.rollback(err)
 	}
 	ings := in.Ingredients.AsMenuIngredients(in.Menu.Id)
-	err = models.InsertManyMenuIngredients(tx, ings...)
+	err = models.InsertManyMenuIngredients(tx.Tx, ings...)
 	if err != nil {
-		return in, ct.rollbackTx(err)
+		return in, tx.rollback(err)
 	}
-	return in, ct.commitTx()
+	return in, tx.Commit()
 }
 
-func (s Server) DeleteMenu(ct RequeteContext, id int64) error {
-	if err := ct.beginTx(s); err != nil {
-		return err
-	}
+func (ct RequeteContext) DeleteMenu(id int64) error {
 	if err := ct.proprioMenu(models.Menu{Id: id}, false); err != nil {
 		return err
 	}
-
+	tx, err := ct.beginTx()
+	if err != nil {
+		return err
+	}
 	// supression des liens
-	_, err := ct.tx.Exec("DELETE FROM menu_recettes WHERE id_menu = $1", id)
+	err = models.DeleteMenuRecettesByIdMenus(tx, id)
 	if err != nil {
-		return ErrorSQL(err)
+		return tx.rollback(err)
 	}
-	_, err = ct.tx.Exec("DELETE FROM menu_ingredients WHERE id_menu = $1", id)
+	err = models.DeleteMenuIngredientsByIdMenus(tx, id)
 	if err != nil {
-		return ct.rollbackTx(err)
+		return tx.rollback(err)
 	}
-	_, err = models.Menu{Id: id}.Delete(ct.tx)
+	_, err = models.DeleteMenuById(tx.Tx, id)
 	if err != nil {
-		return ct.rollbackTx(err)
+		return tx.rollback(err)
 	}
-	return ct.commitTx()
+	return tx.Commit()
 }
 
 // ------------------------------------------------------------------------
 // ----------------------- Séjour et repas --------------------------------
 // ------------------------------------------------------------------------
 
-func (s Server) CreateSejour(ct RequeteContext) (out models.Sejour, err error) {
-	if err = ct.beginTx(s); err != nil {
-		return
-	}
-	tx := ct.tx
-	out.IdUtilisateur = ct.idProprietaire
-	out, err = out.Insert(tx)
-	if err != nil {
-		err = ErrorSQL(err)
-		return
-	}
-	err = ct.commitTx()
-	return
+func (ct RequeteContext) CreateSejour() (out models.Sejour, err error) {
+	out.IdUtilisateur = ct.IdProprietaire
+	out, err = out.Insert(ct.DB)
+	return out, ErrorSQL(err)
 }
 
-func (s Server) UpdateSejour(ct RequeteContext, in models.Sejour) (models.Sejour, error) {
-	if err := ct.beginTx(s); err != nil {
-		return in, err
-	}
+func (ct RequeteContext) UpdateSejour(in models.Sejour) (models.Sejour, error) {
 	if err := ct.proprioSejour(in, true); err != nil {
 		return in, err
 	}
-	tx := ct.tx
-	in, err := in.Update(tx)
-	if err != nil {
-		return in, ErrorSQL(err)
-	}
-	return in, ct.commitTx()
+	in, err := in.Update(ct.DB)
+	return in, ErrorSQL(err)
 }
 
-func (s Server) DeleteSejour(ct RequeteContext, id int64) error {
-	if err := ct.beginTx(s); err != nil {
+func (ct RequeteContext) DeleteSejour(id int64) error {
+	if err := ct.proprioSejour(models.Sejour{Id: id}, false); err != nil {
 		return err
 	}
-	if err := ct.proprioSejour(models.Sejour{Id: id}, false); err != nil {
+	tx, err := ct.beginTx()
+	if err != nil {
 		return err
 	}
 
 	// table de lien
-	_, err := ct.tx.Exec(`DELETE FROM repas_groupes 
+	_, err = tx.Exec(`DELETE FROM repas_groupes 
 	USING repass WHERE repass.id = repas_groupes.id_repas 
 	AND repass.id_sejour = $1`, id)
 	if err != nil {
-		return ErrorSQL(err)
+		return tx.rollback(err)
 	}
-	_, err = ct.tx.Exec("DELETE FROM repass WHERE id_sejour = $1", id)
+	_, err = models.DeleteRepassByIdSejours(tx, id)
 	if err != nil {
-		return ErrorSQL(err)
+		return tx.rollback(err)
 	}
-	_, err = ct.tx.Exec("DELETE FROM groupes WHERE id_sejour = $1", id)
+	_, err = models.DeleteGroupesByIdSejours(tx, id)
 	if err != nil {
-		return ErrorSQL(err)
+		return tx.rollback(err)
 	}
-	_, err = models.Sejour{Id: id}.Delete(ct.tx)
+	_, err = models.DeleteSejourById(tx.Tx, id)
 	if err != nil {
-		return ct.rollbackTx(err)
+		return tx.rollback(err)
 	}
-	return ct.commitTx()
+	return tx.Commit()
 }
 
 // Groupes
 
-func (s Server) CreateGroupe(ct RequeteContext, idSejour int64) (out models.Groupe, err error) {
-	if err = ct.beginTx(s); err != nil {
-		return
-	}
-	tx := ct.tx
+func (ct RequeteContext) CreateGroupe(idSejour int64) (out models.Groupe, err error) {
 	if err = ct.proprioSejour(models.Sejour{Id: idSejour}, false); err != nil {
 		return
 	}
+
 	out.IdSejour = idSejour
 	out.Nom = fmt.Sprintf("G%d", time.Now().UnixNano())
-	out, err = out.Insert(tx)
-	if err != nil {
-		err = ErrorSQL(err)
-		return
-	}
-	err = ct.commitTx()
-	return
+	out, err = out.Insert(ct.DB)
+	return out, ErrorSQL(err)
 }
 
-func (s Server) UpdateGroupe(ct RequeteContext, in models.Groupe) (models.Groupe, error) {
-	if err := ct.beginTx(s); err != nil {
-		return in, err
-	}
+func (ct RequeteContext) UpdateGroupe(in models.Groupe) (models.Groupe, error) {
 	if err := ct.proprioGroupe(in.Id); err != nil {
 		return in, err
 	}
-	tx := ct.tx
-	in, err := in.Update(tx)
-	if err != nil {
-		return in, ErrorSQL(err)
-	}
-	return in, ct.commitTx()
+	in, err := in.Update(ct.DB)
+	return in, ErrorSQL(err)
 }
 
 // DeleteGroupe supprime le groupe et renvoie le nombre de repas touchés.
-func (s Server) DeleteGroupe(ct RequeteContext, id int64) (int, error) {
-	if err := ct.beginTx(s); err != nil {
+func (ct RequeteContext) DeleteGroupe(id int64) (int, error) {
+	if err := ct.proprioGroupe(id); err != nil {
 		return 0, err
 	}
-	if err := ct.proprioGroupe(id); err != nil {
+	tx, err := ct.beginTx()
+	if err != nil {
 		return 0, err
 	}
 
 	// on enlève le groupe des repas
-	res, err := ct.tx.Exec("DELETE FROM repas_groupes WHERE id_groupe = $1", id)
+	res, err := tx.Exec("DELETE FROM repas_groupes WHERE id_groupe = $1", id)
 	if err != nil {
-		return 0, ErrorSQL(err)
+		return 0, tx.rollback(err)
 	}
 	nbDelete, err := res.RowsAffected()
 	if err != nil {
-		return 0, ct.rollbackTx(err)
+		return 0, tx.rollback(err)
 	}
-	_, err = models.Groupe{Id: id}.Delete(ct.tx)
+	_, err = models.DeleteGroupeById(tx.Tx, id)
 	if err != nil {
-		return 0, ct.rollbackTx(err)
+		return 0, tx.rollback(err)
 	}
-	return int(nbDelete), ct.commitTx()
+	return int(nbDelete), tx.Commit()
 }
 
 // Repas
 
-func (s Server) CreateRepas(ct RequeteContext, idSejour int64) (out models.Repas, err error) {
-	if err = ct.beginTx(s); err != nil {
-		return
-	}
+func (ct RequeteContext) CreateRepas(idSejour int64) (out models.Repas, err error) {
 	if err = ct.proprioSejour(models.Sejour{Id: idSejour}, false); err != nil {
 		return
 	}
-	tx := ct.tx
+
 	out.IdSejour = idSejour
-	out, err = out.Insert(tx)
-	if err != nil {
-		err = ErrorSQL(err)
-		return
-	}
-	err = ct.commitTx()
-	return
+	out, err = out.Insert(ct.DB)
+	return out, ErrorSQL(err)
 }
 
-func (s Server) UpdateManyRepas(ct RequeteContext, repass []RepasComplet) error {
-	if err := ct.beginTx(s); err != nil {
+func (ct RequeteContext) UpdateManyRepas(repass []RepasComplet) error {
+	tx, err := ct.beginTx()
+	if err != nil {
 		return err
 	}
 	var repasIds pq.Int64Array
@@ -715,10 +550,10 @@ func (s Server) UpdateManyRepas(ct RequeteContext, repass []RepasComplet) error 
 	cribleRepasIngredients := map[models.RepasIngredient]bool{} // pour respecter l'unicité
 	for _, repas := range repass {
 		if err := ct.proprioRepas(repas.Id); err != nil {
-			return ct.rollbackTx(err)
+			return tx.rollback(err)
 		}
-		if _, err := repas.Repas.Update(ct.tx); err != nil {
-			return ct.rollbackTx(err)
+		if _, err := repas.Repas.Update(tx.Tx); err != nil {
+			return tx.rollback(err)
 		}
 		repasIds = append(repasIds, repas.Id)
 		for _, rg := range repas.Groupes {
@@ -733,72 +568,61 @@ func (s Server) UpdateManyRepas(ct RequeteContext, repass []RepasComplet) error 
 	}
 
 	// mise à jour des groupes
-	_, err := ct.tx.Exec("DELETE FROM repas_groupes WHERE id_repas = ANY($1)", repasIds)
+	err = models.DeleteRepasGroupesByIdRepass(tx, repasIds...)
 	if err != nil {
-		return ct.rollbackTx(err)
+		return tx.rollback(err)
 	}
 	batchRepasGroupes := make([]models.RepasGroupe, 0, len(cribleRepasGroupes))
 	for rg := range cribleRepasGroupes {
 		batchRepasGroupes = append(batchRepasGroupes, rg)
 	}
-	if err = models.InsertManyRepasGroupes(ct.tx, batchRepasGroupes...); err != nil {
-		return ct.rollbackTx(err)
+	if err = models.InsertManyRepasGroupes(tx.Tx, batchRepasGroupes...); err != nil {
+		return tx.rollback(err)
 	}
 
 	// mise à jour des recettes
-	_, err = ct.tx.Exec("DELETE FROM repas_recettes WHERE id_repas = ANY($1)", repasIds)
+	err = models.DeleteRepasRecettesByIdRepass(tx, repasIds...)
 	if err != nil {
-		return ct.rollbackTx(err)
+		return tx.rollback(err)
 	}
 	batchRepasRecettes := make([]models.RepasRecette, 0, len(cribleRepasRecettes))
 	for rg := range cribleRepasRecettes {
 		batchRepasRecettes = append(batchRepasRecettes, rg)
 	}
-	if err = models.InsertManyRepasRecettes(ct.tx, batchRepasRecettes...); err != nil {
-		return ct.rollbackTx(err)
+	if err = models.InsertManyRepasRecettes(tx.Tx, batchRepasRecettes...); err != nil {
+		return tx.rollback(err)
 	}
 
 	// mise à jour des ingredients
-	_, err = ct.tx.Exec("DELETE FROM repas_ingredients WHERE id_repas = ANY($1)", repasIds)
+	err = models.DeleteRepasIngredientsByIdRepass(tx, repasIds...)
 	if err != nil {
-		return ct.rollbackTx(err)
+		return tx.rollback(err)
 	}
 	batchRepasIngredients := make([]models.RepasIngredient, 0, len(cribleRepasIngredients))
 	for rg := range cribleRepasIngredients {
 		batchRepasIngredients = append(batchRepasIngredients, rg)
 	}
-	if err = models.InsertManyRepasIngredients(ct.tx, batchRepasIngredients...); err != nil {
-		return ct.rollbackTx(err)
+	if err = models.InsertManyRepasIngredients(tx.Tx, batchRepasIngredients...); err != nil {
+		return tx.rollback(err)
 	}
 
-	return ct.commitTx()
+	return tx.Commit()
 }
 
-func (s Server) DeleteRepas(ct RequeteContext, id int64) error {
-	if err := ct.beginTx(s); err != nil {
-		return err
-	}
+func (ct RequeteContext) DeleteRepas(id int64) error {
 	if err := ct.proprioRepas(id); err != nil {
 		return err
 	}
-	// suppression des liens avec les groupes ...
-	_, err := ct.tx.Exec("DELETE FROM repas_groupes WHERE id_repas = $1", id)
+	tx, err := ct.beginTx()
 	if err != nil {
-		return ct.rollbackTx(err)
+		return err
 	}
-	// ... et recettes ...
-	_, err = ct.tx.Exec("DELETE FROM repas_recettes WHERE id_repas = $1", id)
+
+	// suppression des liens par contrainte
+
+	_, err = models.DeleteRepasById(tx.Tx, id)
 	if err != nil {
-		return ErrorSQL(err)
+		return tx.rollback(err)
 	}
-	// ... et ingrédients
-	_, err = ct.tx.Exec("DELETE FROM repas_ingredients WHERE id_repas = $1", id)
-	if err != nil {
-		return ct.rollbackTx(err)
-	}
-	_, err = models.Repas{Id: id}.Delete(ct.tx)
-	if err != nil {
-		return ct.rollbackTx(err)
-	}
-	return ct.commitTx()
+	return tx.Commit()
 }

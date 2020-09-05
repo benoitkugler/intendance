@@ -55,8 +55,19 @@ export interface InAssistantCreateRepass {
   groupes_sorties: { [key: number]: number[] | null } | null;
 }
 
-// ISO date string
-export type Time = string;
+class DateTag {
+  private _: "D" = "D";
+}
+
+class TimeTag {
+  private _: "T" = "T";
+}
+
+// AAAA-MM-YY date format
+export type Date_ = string & DateTag;
+
+// ISO date-time string
+export type Time = string & TimeTag;
 
 // github.com/benoitkugler/intendance/server/models.Categorie
 export type Categorie = string;

@@ -48,7 +48,7 @@ func (s Server) loadDataRepas(rowsRepas *sql.Rows) (out dataRepas, err error) {
 		idRepass = append(idRepass, idRepas)
 	}
 
-	rows, err := s.db.Query(`SELECT * FROM repas_groupes WHERE id_repas = ANY($1)`, idRepass)
+	rows, err := s.DB.Query(`SELECT * FROM repas_groupes WHERE id_repas = ANY($1)`, idRepass)
 	if err != nil {
 		return out, err
 	}
@@ -61,7 +61,7 @@ func (s Server) loadDataRepas(rowsRepas *sql.Rows) (out dataRepas, err error) {
 		addToCribles(out.repasGroupes, rg.IdRepas, rg.IdGroupe)
 	}
 
-	rows, err = s.db.Query(`SELECT groupes.* FROM groupes 
+	rows, err = s.DB.Query(`SELECT groupes.* FROM groupes 
 		JOIN repas_groupes ON repas_groupes.id_groupe = groupes.id
 		WHERE repas_groupes.id_repas = ANY($1)`, idRepass)
 	if err != nil {
@@ -72,7 +72,7 @@ func (s Server) loadDataRepas(rowsRepas *sql.Rows) (out dataRepas, err error) {
 		return out, err
 	}
 
-	rows, err = s.db.Query(`SELECT repas_ingredients.* FROM repas_ingredients
+	rows, err = s.DB.Query(`SELECT repas_ingredients.* FROM repas_ingredients
 	JOIN repass ON repass.id = repas_ingredients.id_repas 
 	WHERE repass.id = ANY($1)`, idRepass)
 	if err != nil {
@@ -83,7 +83,7 @@ func (s Server) loadDataRepas(rowsRepas *sql.Rows) (out dataRepas, err error) {
 		return out, err
 	}
 
-	rows, err = s.db.Query(`SELECT repas_recettes.* FROM repas_recettes
+	rows, err = s.DB.Query(`SELECT repas_recettes.* FROM repas_recettes
 	JOIN repass ON repass.id = repas_recettes.id_repas 
 	WHERE repass.id = ANY($1)`, idRepass)
 	if err != nil {
@@ -99,7 +99,7 @@ func (s Server) loadDataRepas(rowsRepas *sql.Rows) (out dataRepas, err error) {
 		addToCribles(out.repasRecettes, repasRecette.IdRepas, repasRecette.IdRecette)
 	}
 
-	rows, err = s.db.Query(`SELECT recette_ingredients.* FROM recette_ingredients 
+	rows, err = s.DB.Query(`SELECT recette_ingredients.* FROM recette_ingredients 
 	JOIN repas_recettes ON repas_recettes.id_recette = recette_ingredients.id_recette
 	JOIN repass ON repass.id = repas_recettes.id_repas 
 	WHERE repass.id = ANY($1)`, idRepass)
@@ -118,7 +118,7 @@ func (s Server) loadDataRepas(rowsRepas *sql.Rows) (out dataRepas, err error) {
 	for _, ing := range out.recetteIngredients {
 		idsIngredients.Add(ing.IdIngredient)
 	}
-	rows, err = s.db.Query("SELECT * FROM ingredients WHERE id = ANY($1)", pq.Int64Array(idsIngredients.Keys()))
+	rows, err = s.DB.Query("SELECT * FROM ingredients WHERE id = ANY($1)", pq.Int64Array(idsIngredients.Keys()))
 	if err != nil {
 		return out, err
 	}
@@ -171,7 +171,7 @@ func (d dataRepas) formatQuantites(quantites quantites) []IngredientQuantite {
 }
 
 func (s Server) ResoudIngredientsRepas(idRepas, nbPersonnes int64) ([]IngredientQuantite, error) {
-	rows, err := s.db.Query(`SELECT * FROM repass WHERE id = $1`, idRepas)
+	rows, err := s.DB.Query(`SELECT * FROM repass WHERE id = $1`, idRepas)
 	if err != nil {
 		return nil, ErrorSQL(err)
 	}
@@ -189,11 +189,11 @@ func (s Server) ResoudIngredientsRepas(idRepas, nbPersonnes int64) ([]Ingredient
 // ResoudIngredientsJournees renvoies le total des ingrédients.
 // Si `journeesOffsets` vaut nil, tout le séjour est utilisé.
 func (s Server) ResoudIngredientsJournees(idSejour int64, journeesOffsets []int64) ([]DateIngredientQuantites, error) {
-	sejour, err := models.SelectSejour(s.db, idSejour)
+	sejour, err := models.SelectSejour(s.DB, idSejour)
 	if err != nil {
 		return nil, ErrorSQL(err)
 	}
-	rows, err := s.db.Query(`SELECT * FROM repass WHERE repass.id_sejour = $1`, idSejour)
+	rows, err := s.DB.Query(`SELECT * FROM repass WHERE repass.id_sejour = $1`, idSejour)
 	if err != nil {
 		return nil, ErrorSQL(err)
 	}

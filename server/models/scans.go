@@ -108,11 +108,19 @@ func (item Commande) Update(tx DB) (out Commande, err error) {
 	return ScanCommande(row)
 }
 
-// Deletes Commande in the database and returns the item.
-// Only the field 'Id' is used.
-func (item Commande) Delete(tx DB) (Commande, error) {
-	row := tx.QueryRow("DELETE FROM commandes WHERE id = $1 RETURNING *;", item.Id)
+// Deletes the Commande and returns the item
+func DeleteCommandeById(tx DB, id int64) (Commande, error) {
+	row := tx.QueryRow("DELETE FROM commandes WHERE id = $1 RETURNING *;", id)
 	return ScanCommande(row)
+}
+
+// Deletes the Commande in the database and returns the ids.
+func DeleteCommandesByIds(tx DB, ids ...int64) (Ids, error) {
+	rows, err := tx.Query("DELETE FROM commandes WHERE id = ANY($1) RETURNING id", pq.Int64Array(ids))
+	if err != nil {
+		return nil, err
+	}
+	return ScanIds(rows)
 }
 
 func scanOneCommandeProduit(row scanner) (CommandeProduit, error) {
@@ -164,44 +172,8 @@ func ScanCommandeProduits(rs *sql.Rows) (CommandeProduits, error) {
 	return structs, nil
 }
 
-func SelectCommandeProduitByIdCommande(tx DB, idCommandes ...int64) (CommandeProduits, error) {
-	rows, err := tx.Query("SELECT * FROM commande_produits WHERE id_commande = ANY($1)", pq.Int64Array(idCommandes))
-	if err != nil {
-		return nil, err
-	}
-	return ScanCommandeProduits(rows)
-}
-
-func SelectCommandeProduitByIdProduit(tx DB, idProduits ...int64) (CommandeProduits, error) {
-	rows, err := tx.Query("SELECT * FROM commande_produits WHERE id_produit = ANY($1)", pq.Int64Array(idProduits))
-	if err != nil {
-		return nil, err
-	}
-	return ScanCommandeProduits(rows)
-}
-
-// ByIdCommande returns a map with 'IdCommande' as keys.
-// Collision may happen without uniqueness constraint.
-func (items CommandeProduits) ByIdCommande() map[int64]CommandeProduit {
-	out := make(map[int64]CommandeProduit, len(items))
-	for _, target := range items {
-		out[target.IdCommande] = target
-	}
-	return out
-}
-
-// ByIdProduit returns a map with 'IdProduit' as keys.
-// Collision may happen without uniqueness constraint.
-func (items CommandeProduits) ByIdProduit() map[int64]CommandeProduit {
-	out := make(map[int64]CommandeProduit, len(items))
-	for _, target := range items {
-		out[target.IdProduit] = target
-	}
-	return out
-}
-
 // Insert the links CommandeProduit in the database.
-func InsertManyCommandeProduits(tx DB, items ...CommandeProduit) error {
+func InsertManyCommandeProduits(tx *sql.Tx, items ...CommandeProduit) error {
 	if len(items) == 0 {
 		return nil
 	}
@@ -288,80 +260,8 @@ func ScanDefautProduits(rs *sql.Rows) (DefautProduits, error) {
 	return structs, nil
 }
 
-func SelectDefautProduitByIdUtilisateur(tx DB, idUtilisateurs ...int64) (DefautProduits, error) {
-	rows, err := tx.Query("SELECT * FROM defaut_produits WHERE id_utilisateur = ANY($1)", pq.Int64Array(idUtilisateurs))
-	if err != nil {
-		return nil, err
-	}
-	return ScanDefautProduits(rows)
-}
-
-func SelectDefautProduitByIdIngredient(tx DB, idIngredients ...int64) (DefautProduits, error) {
-	rows, err := tx.Query("SELECT * FROM defaut_produits WHERE id_ingredient = ANY($1)", pq.Int64Array(idIngredients))
-	if err != nil {
-		return nil, err
-	}
-	return ScanDefautProduits(rows)
-}
-
-func SelectDefautProduitByIdFournisseur(tx DB, idFournisseurs ...int64) (DefautProduits, error) {
-	rows, err := tx.Query("SELECT * FROM defaut_produits WHERE id_fournisseur = ANY($1)", pq.Int64Array(idFournisseurs))
-	if err != nil {
-		return nil, err
-	}
-	return ScanDefautProduits(rows)
-}
-
-func SelectDefautProduitByIdProduit(tx DB, idProduits ...int64) (DefautProduits, error) {
-	rows, err := tx.Query("SELECT * FROM defaut_produits WHERE id_produit = ANY($1)", pq.Int64Array(idProduits))
-	if err != nil {
-		return nil, err
-	}
-	return ScanDefautProduits(rows)
-}
-
-// ByIdUtilisateur returns a map with 'IdUtilisateur' as keys.
-// Collision may happen without uniqueness constraint.
-func (items DefautProduits) ByIdUtilisateur() map[int64]DefautProduit {
-	out := make(map[int64]DefautProduit, len(items))
-	for _, target := range items {
-		out[target.IdUtilisateur] = target
-	}
-	return out
-}
-
-// ByIdIngredient returns a map with 'IdIngredient' as keys.
-// Collision may happen without uniqueness constraint.
-func (items DefautProduits) ByIdIngredient() map[int64]DefautProduit {
-	out := make(map[int64]DefautProduit, len(items))
-	for _, target := range items {
-		out[target.IdIngredient] = target
-	}
-	return out
-}
-
-// ByIdFournisseur returns a map with 'IdFournisseur' as keys.
-// Collision may happen without uniqueness constraint.
-func (items DefautProduits) ByIdFournisseur() map[int64]DefautProduit {
-	out := make(map[int64]DefautProduit, len(items))
-	for _, target := range items {
-		out[target.IdFournisseur] = target
-	}
-	return out
-}
-
-// ByIdProduit returns a map with 'IdProduit' as keys.
-// Collision may happen without uniqueness constraint.
-func (items DefautProduits) ByIdProduit() map[int64]DefautProduit {
-	out := make(map[int64]DefautProduit, len(items))
-	for _, target := range items {
-		out[target.IdProduit] = target
-	}
-	return out
-}
-
 // Insert the links DefautProduit in the database.
-func InsertManyDefautProduits(tx DB, items ...DefautProduit) error {
+func InsertManyDefautProduits(tx *sql.Tx, items ...DefautProduit) error {
 	if len(items) == 0 {
 		return nil
 	}
@@ -485,11 +385,19 @@ func (item Fournisseur) Update(tx DB) (out Fournisseur, err error) {
 	return ScanFournisseur(row)
 }
 
-// Deletes Fournisseur in the database and returns the item.
-// Only the field 'Id' is used.
-func (item Fournisseur) Delete(tx DB) (Fournisseur, error) {
-	row := tx.QueryRow("DELETE FROM fournisseurs WHERE id = $1 RETURNING *;", item.Id)
+// Deletes the Fournisseur and returns the item
+func DeleteFournisseurById(tx DB, id int64) (Fournisseur, error) {
+	row := tx.QueryRow("DELETE FROM fournisseurs WHERE id = $1 RETURNING *;", id)
 	return ScanFournisseur(row)
+}
+
+// Deletes the Fournisseur in the database and returns the ids.
+func DeleteFournisseursByIds(tx DB, ids ...int64) (Ids, error) {
+	rows, err := tx.Query("DELETE FROM fournisseurs WHERE id = ANY($1) RETURNING id", pq.Int64Array(ids))
+	if err != nil {
+		return nil, err
+	}
+	return ScanIds(rows)
 }
 
 func scanOneGroupe(row scanner) (Groupe, error) {
@@ -581,11 +489,19 @@ func (item Groupe) Update(tx DB) (out Groupe, err error) {
 	return ScanGroupe(row)
 }
 
-// Deletes Groupe in the database and returns the item.
-// Only the field 'Id' is used.
-func (item Groupe) Delete(tx DB) (Groupe, error) {
-	row := tx.QueryRow("DELETE FROM groupes WHERE id = $1 RETURNING *;", item.Id)
+// Deletes the Groupe and returns the item
+func DeleteGroupeById(tx DB, id int64) (Groupe, error) {
+	row := tx.QueryRow("DELETE FROM groupes WHERE id = $1 RETURNING *;", id)
 	return ScanGroupe(row)
+}
+
+// Deletes the Groupe in the database and returns the ids.
+func DeleteGroupesByIds(tx DB, ids ...int64) (Ids, error) {
+	rows, err := tx.Query("DELETE FROM groupes WHERE id = ANY($1) RETURNING id", pq.Int64Array(ids))
+	if err != nil {
+		return nil, err
+	}
+	return ScanIds(rows)
 }
 
 func scanOneIngredient(row scanner) (Ingredient, error) {
@@ -678,11 +594,19 @@ func (item Ingredient) Update(tx DB) (out Ingredient, err error) {
 	return ScanIngredient(row)
 }
 
-// Deletes Ingredient in the database and returns the item.
-// Only the field 'Id' is used.
-func (item Ingredient) Delete(tx DB) (Ingredient, error) {
-	row := tx.QueryRow("DELETE FROM ingredients WHERE id = $1 RETURNING *;", item.Id)
+// Deletes the Ingredient and returns the item
+func DeleteIngredientById(tx DB, id int64) (Ingredient, error) {
+	row := tx.QueryRow("DELETE FROM ingredients WHERE id = $1 RETURNING *;", id)
 	return ScanIngredient(row)
+}
+
+// Deletes the Ingredient in the database and returns the ids.
+func DeleteIngredientsByIds(tx DB, ids ...int64) (Ids, error) {
+	rows, err := tx.Query("DELETE FROM ingredients WHERE id = ANY($1) RETURNING id", pq.Int64Array(ids))
+	if err != nil {
+		return nil, err
+	}
+	return ScanIds(rows)
 }
 
 func scanOneIngredientProduit(row scanner) (IngredientProduit, error) {
@@ -734,62 +658,8 @@ func ScanIngredientProduits(rs *sql.Rows) (IngredientProduits, error) {
 	return structs, nil
 }
 
-func SelectIngredientProduitByIdIngredient(tx DB, idIngredients ...int64) (IngredientProduits, error) {
-	rows, err := tx.Query("SELECT * FROM ingredient_produits WHERE id_ingredient = ANY($1)", pq.Int64Array(idIngredients))
-	if err != nil {
-		return nil, err
-	}
-	return ScanIngredientProduits(rows)
-}
-
-func SelectIngredientProduitByIdProduit(tx DB, idProduits ...int64) (IngredientProduits, error) {
-	rows, err := tx.Query("SELECT * FROM ingredient_produits WHERE id_produit = ANY($1)", pq.Int64Array(idProduits))
-	if err != nil {
-		return nil, err
-	}
-	return ScanIngredientProduits(rows)
-}
-
-func SelectIngredientProduitByIdUtilisateur(tx DB, idUtilisateurs ...int64) (IngredientProduits, error) {
-	rows, err := tx.Query("SELECT * FROM ingredient_produits WHERE id_utilisateur = ANY($1)", pq.Int64Array(idUtilisateurs))
-	if err != nil {
-		return nil, err
-	}
-	return ScanIngredientProduits(rows)
-}
-
-// ByIdIngredient returns a map with 'IdIngredient' as keys.
-// Collision may happen without uniqueness constraint.
-func (items IngredientProduits) ByIdIngredient() map[int64]IngredientProduit {
-	out := make(map[int64]IngredientProduit, len(items))
-	for _, target := range items {
-		out[target.IdIngredient] = target
-	}
-	return out
-}
-
-// ByIdProduit returns a map with 'IdProduit' as keys.
-// Collision may happen without uniqueness constraint.
-func (items IngredientProduits) ByIdProduit() map[int64]IngredientProduit {
-	out := make(map[int64]IngredientProduit, len(items))
-	for _, target := range items {
-		out[target.IdProduit] = target
-	}
-	return out
-}
-
-// ByIdUtilisateur returns a map with 'IdUtilisateur' as keys.
-// Collision may happen without uniqueness constraint.
-func (items IngredientProduits) ByIdUtilisateur() map[int64]IngredientProduit {
-	out := make(map[int64]IngredientProduit, len(items))
-	for _, target := range items {
-		out[target.IdUtilisateur] = target
-	}
-	return out
-}
-
 // Insert the links IngredientProduit in the database.
-func InsertManyIngredientProduits(tx DB, items ...IngredientProduit) error {
+func InsertManyIngredientProduits(tx *sql.Tx, items ...IngredientProduit) error {
 	if len(items) == 0 {
 		return nil
 	}
@@ -875,26 +745,8 @@ func ScanLienIngredients(rs *sql.Rows) (LienIngredients, error) {
 	return structs, nil
 }
 
-func SelectLienIngredientByIdIngredient(tx DB, idIngredients ...int64) (LienIngredients, error) {
-	rows, err := tx.Query("SELECT * FROM lien_ingredients WHERE id_ingredient = ANY($1)", pq.Int64Array(idIngredients))
-	if err != nil {
-		return nil, err
-	}
-	return ScanLienIngredients(rows)
-}
-
-// ByIdIngredient returns a map with 'IdIngredient' as keys.
-// Collision may happen without uniqueness constraint.
-func (items LienIngredients) ByIdIngredient() map[int64]LienIngredient {
-	out := make(map[int64]LienIngredient, len(items))
-	for _, target := range items {
-		out[target.IdIngredient] = target
-	}
-	return out
-}
-
 // Insert the links LienIngredient in the database.
-func InsertManyLienIngredients(tx DB, items ...LienIngredient) error {
+func InsertManyLienIngredients(tx *sql.Tx, items ...LienIngredient) error {
 	if len(items) == 0 {
 		return nil
 	}
@@ -1021,11 +873,19 @@ func (item Livraison) Update(tx DB) (out Livraison, err error) {
 	return ScanLivraison(row)
 }
 
-// Deletes Livraison in the database and returns the item.
-// Only the field 'Id' is used.
-func (item Livraison) Delete(tx DB) (Livraison, error) {
-	row := tx.QueryRow("DELETE FROM livraisons WHERE id = $1 RETURNING *;", item.Id)
+// Deletes the Livraison and returns the item
+func DeleteLivraisonById(tx DB, id int64) (Livraison, error) {
+	row := tx.QueryRow("DELETE FROM livraisons WHERE id = $1 RETURNING *;", id)
 	return ScanLivraison(row)
+}
+
+// Deletes the Livraison in the database and returns the ids.
+func DeleteLivraisonsByIds(tx DB, ids ...int64) (Ids, error) {
+	rows, err := tx.Query("DELETE FROM livraisons WHERE id = ANY($1) RETURNING id", pq.Int64Array(ids))
+	if err != nil {
+		return nil, err
+	}
+	return ScanIds(rows)
 }
 
 func scanOneMenu(row scanner) (Menu, error) {
@@ -1115,11 +975,19 @@ func (item Menu) Update(tx DB) (out Menu, err error) {
 	return ScanMenu(row)
 }
 
-// Deletes Menu in the database and returns the item.
-// Only the field 'Id' is used.
-func (item Menu) Delete(tx DB) (Menu, error) {
-	row := tx.QueryRow("DELETE FROM menus WHERE id = $1 RETURNING *;", item.Id)
+// Deletes the Menu and returns the item
+func DeleteMenuById(tx DB, id int64) (Menu, error) {
+	row := tx.QueryRow("DELETE FROM menus WHERE id = $1 RETURNING *;", id)
 	return ScanMenu(row)
+}
+
+// Deletes the Menu in the database and returns the ids.
+func DeleteMenusByIds(tx DB, ids ...int64) (Ids, error) {
+	rows, err := tx.Query("DELETE FROM menus WHERE id = ANY($1) RETURNING id", pq.Int64Array(ids))
+	if err != nil {
+		return nil, err
+	}
+	return ScanIds(rows)
 }
 
 func scanOneMenuIngredient(row scanner) (MenuIngredient, error) {
@@ -1172,44 +1040,8 @@ func ScanMenuIngredients(rs *sql.Rows) (MenuIngredients, error) {
 	return structs, nil
 }
 
-func SelectMenuIngredientByIdMenu(tx DB, idMenus ...int64) (MenuIngredients, error) {
-	rows, err := tx.Query("SELECT * FROM menu_ingredients WHERE id_menu = ANY($1)", pq.Int64Array(idMenus))
-	if err != nil {
-		return nil, err
-	}
-	return ScanMenuIngredients(rows)
-}
-
-func SelectMenuIngredientByIdIngredient(tx DB, idIngredients ...int64) (MenuIngredients, error) {
-	rows, err := tx.Query("SELECT * FROM menu_ingredients WHERE id_ingredient = ANY($1)", pq.Int64Array(idIngredients))
-	if err != nil {
-		return nil, err
-	}
-	return ScanMenuIngredients(rows)
-}
-
-// ByIdMenu returns a map with 'IdMenu' as keys.
-// Collision may happen without uniqueness constraint.
-func (items MenuIngredients) ByIdMenu() map[int64]MenuIngredient {
-	out := make(map[int64]MenuIngredient, len(items))
-	for _, target := range items {
-		out[target.IdMenu] = target
-	}
-	return out
-}
-
-// ByIdIngredient returns a map with 'IdIngredient' as keys.
-// Collision may happen without uniqueness constraint.
-func (items MenuIngredients) ByIdIngredient() map[int64]MenuIngredient {
-	out := make(map[int64]MenuIngredient, len(items))
-	for _, target := range items {
-		out[target.IdIngredient] = target
-	}
-	return out
-}
-
 // Insert the links MenuIngredient in the database.
-func InsertManyMenuIngredients(tx DB, items ...MenuIngredient) error {
+func InsertManyMenuIngredients(tx *sql.Tx, items ...MenuIngredient) error {
 	if len(items) == 0 {
 		return nil
 	}
@@ -1294,44 +1126,8 @@ func ScanMenuRecettes(rs *sql.Rows) (MenuRecettes, error) {
 	return structs, nil
 }
 
-func SelectMenuRecetteByIdMenu(tx DB, idMenus ...int64) (MenuRecettes, error) {
-	rows, err := tx.Query("SELECT * FROM menu_recettes WHERE id_menu = ANY($1)", pq.Int64Array(idMenus))
-	if err != nil {
-		return nil, err
-	}
-	return ScanMenuRecettes(rows)
-}
-
-func SelectMenuRecetteByIdRecette(tx DB, idRecettes ...int64) (MenuRecettes, error) {
-	rows, err := tx.Query("SELECT * FROM menu_recettes WHERE id_recette = ANY($1)", pq.Int64Array(idRecettes))
-	if err != nil {
-		return nil, err
-	}
-	return ScanMenuRecettes(rows)
-}
-
-// ByIdMenu returns a map with 'IdMenu' as keys.
-// Collision may happen without uniqueness constraint.
-func (items MenuRecettes) ByIdMenu() map[int64]MenuRecette {
-	out := make(map[int64]MenuRecette, len(items))
-	for _, target := range items {
-		out[target.IdMenu] = target
-	}
-	return out
-}
-
-// ByIdRecette returns a map with 'IdRecette' as keys.
-// Collision may happen without uniqueness constraint.
-func (items MenuRecettes) ByIdRecette() map[int64]MenuRecette {
-	out := make(map[int64]MenuRecette, len(items))
-	for _, target := range items {
-		out[target.IdRecette] = target
-	}
-	return out
-}
-
 // Insert the links MenuRecette in the database.
-func InsertManyMenuRecettes(tx DB, items ...MenuRecette) error {
+func InsertManyMenuRecettes(tx *sql.Tx, items ...MenuRecette) error {
 	if len(items) == 0 {
 		return nil
 	}
@@ -1459,11 +1255,19 @@ func (item Produit) Update(tx DB) (out Produit, err error) {
 	return ScanProduit(row)
 }
 
-// Deletes Produit in the database and returns the item.
-// Only the field 'Id' is used.
-func (item Produit) Delete(tx DB) (Produit, error) {
-	row := tx.QueryRow("DELETE FROM produits WHERE id = $1 RETURNING *;", item.Id)
+// Deletes the Produit and returns the item
+func DeleteProduitById(tx DB, id int64) (Produit, error) {
+	row := tx.QueryRow("DELETE FROM produits WHERE id = $1 RETURNING *;", id)
 	return ScanProduit(row)
+}
+
+// Deletes the Produit in the database and returns the ids.
+func DeleteProduitsByIds(tx DB, ids ...int64) (Ids, error) {
+	rows, err := tx.Query("DELETE FROM produits WHERE id = ANY($1) RETURNING id", pq.Int64Array(ids))
+	if err != nil {
+		return nil, err
+	}
+	return ScanIds(rows)
 }
 
 func scanOneRecette(row scanner) (Recette, error) {
@@ -1554,11 +1358,19 @@ func (item Recette) Update(tx DB) (out Recette, err error) {
 	return ScanRecette(row)
 }
 
-// Deletes Recette in the database and returns the item.
-// Only the field 'Id' is used.
-func (item Recette) Delete(tx DB) (Recette, error) {
-	row := tx.QueryRow("DELETE FROM recettes WHERE id = $1 RETURNING *;", item.Id)
+// Deletes the Recette and returns the item
+func DeleteRecetteById(tx DB, id int64) (Recette, error) {
+	row := tx.QueryRow("DELETE FROM recettes WHERE id = $1 RETURNING *;", id)
 	return ScanRecette(row)
+}
+
+// Deletes the Recette in the database and returns the ids.
+func DeleteRecettesByIds(tx DB, ids ...int64) (Ids, error) {
+	rows, err := tx.Query("DELETE FROM recettes WHERE id = ANY($1) RETURNING id", pq.Int64Array(ids))
+	if err != nil {
+		return nil, err
+	}
+	return ScanIds(rows)
 }
 
 func scanOneRecetteIngredient(row scanner) (RecetteIngredient, error) {
@@ -1611,44 +1423,8 @@ func ScanRecetteIngredients(rs *sql.Rows) (RecetteIngredients, error) {
 	return structs, nil
 }
 
-func SelectRecetteIngredientByIdRecette(tx DB, idRecettes ...int64) (RecetteIngredients, error) {
-	rows, err := tx.Query("SELECT * FROM recette_ingredients WHERE id_recette = ANY($1)", pq.Int64Array(idRecettes))
-	if err != nil {
-		return nil, err
-	}
-	return ScanRecetteIngredients(rows)
-}
-
-func SelectRecetteIngredientByIdIngredient(tx DB, idIngredients ...int64) (RecetteIngredients, error) {
-	rows, err := tx.Query("SELECT * FROM recette_ingredients WHERE id_ingredient = ANY($1)", pq.Int64Array(idIngredients))
-	if err != nil {
-		return nil, err
-	}
-	return ScanRecetteIngredients(rows)
-}
-
-// ByIdRecette returns a map with 'IdRecette' as keys.
-// Collision may happen without uniqueness constraint.
-func (items RecetteIngredients) ByIdRecette() map[int64]RecetteIngredient {
-	out := make(map[int64]RecetteIngredient, len(items))
-	for _, target := range items {
-		out[target.IdRecette] = target
-	}
-	return out
-}
-
-// ByIdIngredient returns a map with 'IdIngredient' as keys.
-// Collision may happen without uniqueness constraint.
-func (items RecetteIngredients) ByIdIngredient() map[int64]RecetteIngredient {
-	out := make(map[int64]RecetteIngredient, len(items))
-	for _, target := range items {
-		out[target.IdIngredient] = target
-	}
-	return out
-}
-
 // Insert the links RecetteIngredient in the database.
-func InsertManyRecetteIngredients(tx DB, items ...RecetteIngredient) error {
+func InsertManyRecetteIngredients(tx *sql.Tx, items ...RecetteIngredient) error {
 	if len(items) == 0 {
 		return nil
 	}
@@ -1775,11 +1551,19 @@ func (item Repas) Update(tx DB) (out Repas, err error) {
 	return ScanRepas(row)
 }
 
-// Deletes Repas in the database and returns the item.
-// Only the field 'Id' is used.
-func (item Repas) Delete(tx DB) (Repas, error) {
-	row := tx.QueryRow("DELETE FROM repass WHERE id = $1 RETURNING *;", item.Id)
+// Deletes the Repas and returns the item
+func DeleteRepasById(tx DB, id int64) (Repas, error) {
+	row := tx.QueryRow("DELETE FROM repass WHERE id = $1 RETURNING *;", id)
 	return ScanRepas(row)
+}
+
+// Deletes the Repas in the database and returns the ids.
+func DeleteRepassByIds(tx DB, ids ...int64) (Ids, error) {
+	rows, err := tx.Query("DELETE FROM repass WHERE id = ANY($1) RETURNING id", pq.Int64Array(ids))
+	if err != nil {
+		return nil, err
+	}
+	return ScanIds(rows)
 }
 
 func scanOneRepasGroupe(row scanner) (RepasGroupe, error) {
@@ -1830,44 +1614,8 @@ func ScanRepasGroupes(rs *sql.Rows) (RepasGroupes, error) {
 	return structs, nil
 }
 
-func SelectRepasGroupeByIdRepas(tx DB, idRepass ...int64) (RepasGroupes, error) {
-	rows, err := tx.Query("SELECT * FROM repas_groupes WHERE id_repas = ANY($1)", pq.Int64Array(idRepass))
-	if err != nil {
-		return nil, err
-	}
-	return ScanRepasGroupes(rows)
-}
-
-func SelectRepasGroupeByIdGroupe(tx DB, idGroupes ...int64) (RepasGroupes, error) {
-	rows, err := tx.Query("SELECT * FROM repas_groupes WHERE id_groupe = ANY($1)", pq.Int64Array(idGroupes))
-	if err != nil {
-		return nil, err
-	}
-	return ScanRepasGroupes(rows)
-}
-
-// ByIdRepas returns a map with 'IdRepas' as keys.
-// Collision may happen without uniqueness constraint.
-func (items RepasGroupes) ByIdRepas() map[int64]RepasGroupe {
-	out := make(map[int64]RepasGroupe, len(items))
-	for _, target := range items {
-		out[target.IdRepas] = target
-	}
-	return out
-}
-
-// ByIdGroupe returns a map with 'IdGroupe' as keys.
-// Collision may happen without uniqueness constraint.
-func (items RepasGroupes) ByIdGroupe() map[int64]RepasGroupe {
-	out := make(map[int64]RepasGroupe, len(items))
-	for _, target := range items {
-		out[target.IdGroupe] = target
-	}
-	return out
-}
-
 // Insert the links RepasGroupe in the database.
-func InsertManyRepasGroupes(tx DB, items ...RepasGroupe) error {
+func InsertManyRepasGroupes(tx *sql.Tx, items ...RepasGroupe) error {
 	if len(items) == 0 {
 		return nil
 	}
@@ -1954,44 +1702,8 @@ func ScanRepasIngredients(rs *sql.Rows) (RepasIngredients, error) {
 	return structs, nil
 }
 
-func SelectRepasIngredientByIdRepas(tx DB, idRepass ...int64) (RepasIngredients, error) {
-	rows, err := tx.Query("SELECT * FROM repas_ingredients WHERE id_repas = ANY($1)", pq.Int64Array(idRepass))
-	if err != nil {
-		return nil, err
-	}
-	return ScanRepasIngredients(rows)
-}
-
-func SelectRepasIngredientByIdIngredient(tx DB, idIngredients ...int64) (RepasIngredients, error) {
-	rows, err := tx.Query("SELECT * FROM repas_ingredients WHERE id_ingredient = ANY($1)", pq.Int64Array(idIngredients))
-	if err != nil {
-		return nil, err
-	}
-	return ScanRepasIngredients(rows)
-}
-
-// ByIdRepas returns a map with 'IdRepas' as keys.
-// Collision may happen without uniqueness constraint.
-func (items RepasIngredients) ByIdRepas() map[int64]RepasIngredient {
-	out := make(map[int64]RepasIngredient, len(items))
-	for _, target := range items {
-		out[target.IdRepas] = target
-	}
-	return out
-}
-
-// ByIdIngredient returns a map with 'IdIngredient' as keys.
-// Collision may happen without uniqueness constraint.
-func (items RepasIngredients) ByIdIngredient() map[int64]RepasIngredient {
-	out := make(map[int64]RepasIngredient, len(items))
-	for _, target := range items {
-		out[target.IdIngredient] = target
-	}
-	return out
-}
-
 // Insert the links RepasIngredient in the database.
-func InsertManyRepasIngredients(tx DB, items ...RepasIngredient) error {
+func InsertManyRepasIngredients(tx *sql.Tx, items ...RepasIngredient) error {
 	if len(items) == 0 {
 		return nil
 	}
@@ -2076,44 +1788,8 @@ func ScanRepasRecettes(rs *sql.Rows) (RepasRecettes, error) {
 	return structs, nil
 }
 
-func SelectRepasRecetteByIdRepas(tx DB, idRepass ...int64) (RepasRecettes, error) {
-	rows, err := tx.Query("SELECT * FROM repas_recettes WHERE id_repas = ANY($1)", pq.Int64Array(idRepass))
-	if err != nil {
-		return nil, err
-	}
-	return ScanRepasRecettes(rows)
-}
-
-func SelectRepasRecetteByIdRecette(tx DB, idRecettes ...int64) (RepasRecettes, error) {
-	rows, err := tx.Query("SELECT * FROM repas_recettes WHERE id_recette = ANY($1)", pq.Int64Array(idRecettes))
-	if err != nil {
-		return nil, err
-	}
-	return ScanRepasRecettes(rows)
-}
-
-// ByIdRepas returns a map with 'IdRepas' as keys.
-// Collision may happen without uniqueness constraint.
-func (items RepasRecettes) ByIdRepas() map[int64]RepasRecette {
-	out := make(map[int64]RepasRecette, len(items))
-	for _, target := range items {
-		out[target.IdRepas] = target
-	}
-	return out
-}
-
-// ByIdRecette returns a map with 'IdRecette' as keys.
-// Collision may happen without uniqueness constraint.
-func (items RepasRecettes) ByIdRecette() map[int64]RepasRecette {
-	out := make(map[int64]RepasRecette, len(items))
-	for _, target := range items {
-		out[target.IdRecette] = target
-	}
-	return out
-}
-
 // Insert the links RepasRecette in the database.
-func InsertManyRepasRecettes(tx DB, items ...RepasRecette) error {
+func InsertManyRepasRecettes(tx *sql.Tx, items ...RepasRecette) error {
 	if len(items) == 0 {
 		return nil
 	}
@@ -2238,11 +1914,19 @@ func (item Sejour) Update(tx DB) (out Sejour, err error) {
 	return ScanSejour(row)
 }
 
-// Deletes Sejour in the database and returns the item.
-// Only the field 'Id' is used.
-func (item Sejour) Delete(tx DB) (Sejour, error) {
-	row := tx.QueryRow("DELETE FROM sejours WHERE id = $1 RETURNING *;", item.Id)
+// Deletes the Sejour and returns the item
+func DeleteSejourById(tx DB, id int64) (Sejour, error) {
+	row := tx.QueryRow("DELETE FROM sejours WHERE id = $1 RETURNING *;", id)
 	return ScanSejour(row)
+}
+
+// Deletes the Sejour in the database and returns the ids.
+func DeleteSejoursByIds(tx DB, ids ...int64) (Ids, error) {
+	rows, err := tx.Query("DELETE FROM sejours WHERE id = ANY($1) RETURNING id", pq.Int64Array(ids))
+	if err != nil {
+		return nil, err
+	}
+	return ScanIds(rows)
 }
 
 func scanOneSejourFournisseur(row scanner) (SejourFournisseur, error) {
@@ -2294,62 +1978,8 @@ func ScanSejourFournisseurs(rs *sql.Rows) (SejourFournisseurs, error) {
 	return structs, nil
 }
 
-func SelectSejourFournisseurByIdUtilisateur(tx DB, idUtilisateurs ...int64) (SejourFournisseurs, error) {
-	rows, err := tx.Query("SELECT * FROM sejour_fournisseurs WHERE id_utilisateur = ANY($1)", pq.Int64Array(idUtilisateurs))
-	if err != nil {
-		return nil, err
-	}
-	return ScanSejourFournisseurs(rows)
-}
-
-func SelectSejourFournisseurByIdSejour(tx DB, idSejours ...int64) (SejourFournisseurs, error) {
-	rows, err := tx.Query("SELECT * FROM sejour_fournisseurs WHERE id_sejour = ANY($1)", pq.Int64Array(idSejours))
-	if err != nil {
-		return nil, err
-	}
-	return ScanSejourFournisseurs(rows)
-}
-
-func SelectSejourFournisseurByIdFournisseur(tx DB, idFournisseurs ...int64) (SejourFournisseurs, error) {
-	rows, err := tx.Query("SELECT * FROM sejour_fournisseurs WHERE id_fournisseur = ANY($1)", pq.Int64Array(idFournisseurs))
-	if err != nil {
-		return nil, err
-	}
-	return ScanSejourFournisseurs(rows)
-}
-
-// ByIdUtilisateur returns a map with 'IdUtilisateur' as keys.
-// Collision may happen without uniqueness constraint.
-func (items SejourFournisseurs) ByIdUtilisateur() map[int64]SejourFournisseur {
-	out := make(map[int64]SejourFournisseur, len(items))
-	for _, target := range items {
-		out[target.IdUtilisateur] = target
-	}
-	return out
-}
-
-// ByIdSejour returns a map with 'IdSejour' as keys.
-// Collision may happen without uniqueness constraint.
-func (items SejourFournisseurs) ByIdSejour() map[int64]SejourFournisseur {
-	out := make(map[int64]SejourFournisseur, len(items))
-	for _, target := range items {
-		out[target.IdSejour] = target
-	}
-	return out
-}
-
-// ByIdFournisseur returns a map with 'IdFournisseur' as keys.
-// Collision may happen without uniqueness constraint.
-func (items SejourFournisseurs) ByIdFournisseur() map[int64]SejourFournisseur {
-	out := make(map[int64]SejourFournisseur, len(items))
-	for _, target := range items {
-		out[target.IdFournisseur] = target
-	}
-	return out
-}
-
 // Insert the links SejourFournisseur in the database.
-func InsertManySejourFournisseurs(tx DB, items ...SejourFournisseur) error {
+func InsertManySejourFournisseurs(tx *sql.Tx, items ...SejourFournisseur) error {
 	if len(items) == 0 {
 		return nil
 	}
@@ -2474,11 +2104,19 @@ func (item Utilisateur) Update(tx DB) (out Utilisateur, err error) {
 	return ScanUtilisateur(row)
 }
 
-// Deletes Utilisateur in the database and returns the item.
-// Only the field 'Id' is used.
-func (item Utilisateur) Delete(tx DB) (Utilisateur, error) {
-	row := tx.QueryRow("DELETE FROM utilisateurs WHERE id = $1 RETURNING *;", item.Id)
+// Deletes the Utilisateur and returns the item
+func DeleteUtilisateurById(tx DB, id int64) (Utilisateur, error) {
+	row := tx.QueryRow("DELETE FROM utilisateurs WHERE id = $1 RETURNING *;", id)
 	return ScanUtilisateur(row)
+}
+
+// Deletes the Utilisateur in the database and returns the ids.
+func DeleteUtilisateursByIds(tx DB, ids ...int64) (Ids, error) {
+	rows, err := tx.Query("DELETE FROM utilisateurs WHERE id = ANY($1) RETURNING id", pq.Int64Array(ids))
+	if err != nil {
+		return nil, err
+	}
+	return ScanIds(rows)
 }
 
 func scanOneUtilisateurFournisseur(row scanner) (UtilisateurFournisseur, error) {
@@ -2529,44 +2167,8 @@ func ScanUtilisateurFournisseurs(rs *sql.Rows) (UtilisateurFournisseurs, error) 
 	return structs, nil
 }
 
-func SelectUtilisateurFournisseurByIdUtilisateur(tx DB, idUtilisateurs ...int64) (UtilisateurFournisseurs, error) {
-	rows, err := tx.Query("SELECT * FROM utilisateur_fournisseurs WHERE id_utilisateur = ANY($1)", pq.Int64Array(idUtilisateurs))
-	if err != nil {
-		return nil, err
-	}
-	return ScanUtilisateurFournisseurs(rows)
-}
-
-func SelectUtilisateurFournisseurByIdFournisseur(tx DB, idFournisseurs ...int64) (UtilisateurFournisseurs, error) {
-	rows, err := tx.Query("SELECT * FROM utilisateur_fournisseurs WHERE id_fournisseur = ANY($1)", pq.Int64Array(idFournisseurs))
-	if err != nil {
-		return nil, err
-	}
-	return ScanUtilisateurFournisseurs(rows)
-}
-
-// ByIdUtilisateur returns a map with 'IdUtilisateur' as keys.
-// Collision may happen without uniqueness constraint.
-func (items UtilisateurFournisseurs) ByIdUtilisateur() map[int64]UtilisateurFournisseur {
-	out := make(map[int64]UtilisateurFournisseur, len(items))
-	for _, target := range items {
-		out[target.IdUtilisateur] = target
-	}
-	return out
-}
-
-// ByIdFournisseur returns a map with 'IdFournisseur' as keys.
-// Collision may happen without uniqueness constraint.
-func (items UtilisateurFournisseurs) ByIdFournisseur() map[int64]UtilisateurFournisseur {
-	out := make(map[int64]UtilisateurFournisseur, len(items))
-	for _, target := range items {
-		out[target.IdFournisseur] = target
-	}
-	return out
-}
-
 // Insert the links UtilisateurFournisseur in the database.
-func InsertManyUtilisateurFournisseurs(tx DB, items ...UtilisateurFournisseur) error {
+func InsertManyUtilisateurFournisseurs(tx *sql.Tx, items ...UtilisateurFournisseur) error {
 	if len(items) == 0 {
 		return nil
 	}
@@ -2601,4 +2203,726 @@ func (item UtilisateurFournisseur) Delete(tx DB) error {
 	_, err := tx.Exec(`DELETE FROM utilisateur_fournisseurs WHERE 
 	id_utilisateur = $1 AND id_fournisseur = $2;`, item.IdUtilisateur, item.IdFournisseur)
 	return err
+}
+
+func SelectCommandesByIdUtilisateurs(tx DB, idUtilisateurs ...int64) (Commandes, error) {
+	rows, err := tx.Query("SELECT * FROM commandes WHERE id_utilisateur = ANY($1)", pq.Int64Array(idUtilisateurs))
+	if err != nil {
+		return nil, err
+	}
+	return ScanCommandes(rows)
+}
+
+func DeleteCommandesByIdUtilisateurs(tx DB, idUtilisateurs ...int64) (Ids, error) {
+	rows, err := tx.Query("DELETE FROM commandes WHERE id_utilisateur = ANY($1) RETURNING id", pq.Int64Array(idUtilisateurs))
+	if err != nil {
+		return nil, err
+	}
+	return ScanIds(rows)
+}
+
+func SelectCommandeProduitsByIdCommandes(tx DB, idCommandes ...int64) (CommandeProduits, error) {
+	rows, err := tx.Query("SELECT * FROM commande_produits WHERE id_commande = ANY($1)", pq.Int64Array(idCommandes))
+	if err != nil {
+		return nil, err
+	}
+	return ScanCommandeProduits(rows)
+}
+
+func DeleteCommandeProduitsByIdCommandes(tx DB, idCommandes ...int64) error {
+	_, err := tx.Exec("DELETE FROM commande_produits WHERE id_commande = ANY($1)", pq.Int64Array(idCommandes))
+	return err
+}
+
+func SelectCommandeProduitsByIdProduits(tx DB, idProduits ...int64) (CommandeProduits, error) {
+	rows, err := tx.Query("SELECT * FROM commande_produits WHERE id_produit = ANY($1)", pq.Int64Array(idProduits))
+	if err != nil {
+		return nil, err
+	}
+	return ScanCommandeProduits(rows)
+}
+
+func DeleteCommandeProduitsByIdProduits(tx DB, idProduits ...int64) error {
+	_, err := tx.Exec("DELETE FROM commande_produits WHERE id_produit = ANY($1)", pq.Int64Array(idProduits))
+	return err
+}
+
+// ByIdCommande returns a map with 'IdCommande' as keys.
+func (items CommandeProduits) ByIdCommande() map[int64]CommandeProduits {
+	out := make(map[int64]CommandeProduits)
+	for _, target := range items {
+		out[target.IdCommande] = append(out[target.IdCommande], target)
+	}
+	return out
+}
+
+// ByIdProduit returns a map with 'IdProduit' as keys.
+func (items CommandeProduits) ByIdProduit() map[int64]CommandeProduits {
+	out := make(map[int64]CommandeProduits)
+	for _, target := range items {
+		out[target.IdProduit] = append(out[target.IdProduit], target)
+	}
+	return out
+}
+
+func SelectDefautProduitsByIdUtilisateurs(tx DB, idUtilisateurs ...int64) (DefautProduits, error) {
+	rows, err := tx.Query("SELECT * FROM defaut_produits WHERE id_utilisateur = ANY($1)", pq.Int64Array(idUtilisateurs))
+	if err != nil {
+		return nil, err
+	}
+	return ScanDefautProduits(rows)
+}
+
+func DeleteDefautProduitsByIdUtilisateurs(tx DB, idUtilisateurs ...int64) error {
+	_, err := tx.Exec("DELETE FROM defaut_produits WHERE id_utilisateur = ANY($1)", pq.Int64Array(idUtilisateurs))
+	return err
+}
+
+func SelectDefautProduitsByIdIngredients(tx DB, idIngredients ...int64) (DefautProduits, error) {
+	rows, err := tx.Query("SELECT * FROM defaut_produits WHERE id_ingredient = ANY($1)", pq.Int64Array(idIngredients))
+	if err != nil {
+		return nil, err
+	}
+	return ScanDefautProduits(rows)
+}
+
+func DeleteDefautProduitsByIdIngredients(tx DB, idIngredients ...int64) error {
+	_, err := tx.Exec("DELETE FROM defaut_produits WHERE id_ingredient = ANY($1)", pq.Int64Array(idIngredients))
+	return err
+}
+
+func SelectDefautProduitsByIdFournisseurs(tx DB, idFournisseurs ...int64) (DefautProduits, error) {
+	rows, err := tx.Query("SELECT * FROM defaut_produits WHERE id_fournisseur = ANY($1)", pq.Int64Array(idFournisseurs))
+	if err != nil {
+		return nil, err
+	}
+	return ScanDefautProduits(rows)
+}
+
+func DeleteDefautProduitsByIdFournisseurs(tx DB, idFournisseurs ...int64) error {
+	_, err := tx.Exec("DELETE FROM defaut_produits WHERE id_fournisseur = ANY($1)", pq.Int64Array(idFournisseurs))
+	return err
+}
+
+func SelectDefautProduitsByIdProduits(tx DB, idProduits ...int64) (DefautProduits, error) {
+	rows, err := tx.Query("SELECT * FROM defaut_produits WHERE id_produit = ANY($1)", pq.Int64Array(idProduits))
+	if err != nil {
+		return nil, err
+	}
+	return ScanDefautProduits(rows)
+}
+
+func DeleteDefautProduitsByIdProduits(tx DB, idProduits ...int64) error {
+	_, err := tx.Exec("DELETE FROM defaut_produits WHERE id_produit = ANY($1)", pq.Int64Array(idProduits))
+	return err
+}
+
+// ByIdUtilisateur returns a map with 'IdUtilisateur' as keys.
+func (items DefautProduits) ByIdUtilisateur() map[int64]DefautProduits {
+	out := make(map[int64]DefautProduits)
+	for _, target := range items {
+		out[target.IdUtilisateur] = append(out[target.IdUtilisateur], target)
+	}
+	return out
+}
+
+// ByIdIngredient returns a map with 'IdIngredient' as keys.
+func (items DefautProduits) ByIdIngredient() map[int64]DefautProduits {
+	out := make(map[int64]DefautProduits)
+	for _, target := range items {
+		out[target.IdIngredient] = append(out[target.IdIngredient], target)
+	}
+	return out
+}
+
+// ByIdFournisseur returns a map with 'IdFournisseur' as keys.
+func (items DefautProduits) ByIdFournisseur() map[int64]DefautProduits {
+	out := make(map[int64]DefautProduits)
+	for _, target := range items {
+		out[target.IdFournisseur] = append(out[target.IdFournisseur], target)
+	}
+	return out
+}
+
+// ByIdProduit returns a map with 'IdProduit' as keys.
+func (items DefautProduits) ByIdProduit() map[int64]DefautProduits {
+	out := make(map[int64]DefautProduits)
+	for _, target := range items {
+		out[target.IdProduit] = append(out[target.IdProduit], target)
+	}
+	return out
+}
+
+func SelectGroupesByIdSejours(tx DB, idSejours ...int64) (Groupes, error) {
+	rows, err := tx.Query("SELECT * FROM groupes WHERE id_sejour = ANY($1)", pq.Int64Array(idSejours))
+	if err != nil {
+		return nil, err
+	}
+	return ScanGroupes(rows)
+}
+
+func DeleteGroupesByIdSejours(tx DB, idSejours ...int64) (Ids, error) {
+	rows, err := tx.Query("DELETE FROM groupes WHERE id_sejour = ANY($1) RETURNING id", pq.Int64Array(idSejours))
+	if err != nil {
+		return nil, err
+	}
+	return ScanIds(rows)
+}
+
+func SelectIngredientProduitsByIdIngredients(tx DB, idIngredients ...int64) (IngredientProduits, error) {
+	rows, err := tx.Query("SELECT * FROM ingredient_produits WHERE id_ingredient = ANY($1)", pq.Int64Array(idIngredients))
+	if err != nil {
+		return nil, err
+	}
+	return ScanIngredientProduits(rows)
+}
+
+func DeleteIngredientProduitsByIdIngredients(tx DB, idIngredients ...int64) error {
+	_, err := tx.Exec("DELETE FROM ingredient_produits WHERE id_ingredient = ANY($1)", pq.Int64Array(idIngredients))
+	return err
+}
+
+func SelectIngredientProduitsByIdProduits(tx DB, idProduits ...int64) (IngredientProduits, error) {
+	rows, err := tx.Query("SELECT * FROM ingredient_produits WHERE id_produit = ANY($1)", pq.Int64Array(idProduits))
+	if err != nil {
+		return nil, err
+	}
+	return ScanIngredientProduits(rows)
+}
+
+func DeleteIngredientProduitsByIdProduits(tx DB, idProduits ...int64) error {
+	_, err := tx.Exec("DELETE FROM ingredient_produits WHERE id_produit = ANY($1)", pq.Int64Array(idProduits))
+	return err
+}
+
+func SelectIngredientProduitsByIdUtilisateurs(tx DB, idUtilisateurs ...int64) (IngredientProduits, error) {
+	rows, err := tx.Query("SELECT * FROM ingredient_produits WHERE id_utilisateur = ANY($1)", pq.Int64Array(idUtilisateurs))
+	if err != nil {
+		return nil, err
+	}
+	return ScanIngredientProduits(rows)
+}
+
+func DeleteIngredientProduitsByIdUtilisateurs(tx DB, idUtilisateurs ...int64) error {
+	_, err := tx.Exec("DELETE FROM ingredient_produits WHERE id_utilisateur = ANY($1)", pq.Int64Array(idUtilisateurs))
+	return err
+}
+
+// ByIdIngredient returns a map with 'IdIngredient' as keys.
+func (items IngredientProduits) ByIdIngredient() map[int64]IngredientProduits {
+	out := make(map[int64]IngredientProduits)
+	for _, target := range items {
+		out[target.IdIngredient] = append(out[target.IdIngredient], target)
+	}
+	return out
+}
+
+// ByIdProduit returns a map with 'IdProduit' as keys.
+func (items IngredientProduits) ByIdProduit() map[int64]IngredientProduits {
+	out := make(map[int64]IngredientProduits)
+	for _, target := range items {
+		out[target.IdProduit] = append(out[target.IdProduit], target)
+	}
+	return out
+}
+
+// ByIdUtilisateur returns a map with 'IdUtilisateur' as keys.
+func (items IngredientProduits) ByIdUtilisateur() map[int64]IngredientProduits {
+	out := make(map[int64]IngredientProduits)
+	for _, target := range items {
+		out[target.IdUtilisateur] = append(out[target.IdUtilisateur], target)
+	}
+	return out
+}
+
+func SelectLienIngredientsByIdIngredients(tx DB, idIngredients ...int64) (LienIngredients, error) {
+	rows, err := tx.Query("SELECT * FROM lien_ingredients WHERE id_ingredient = ANY($1)", pq.Int64Array(idIngredients))
+	if err != nil {
+		return nil, err
+	}
+	return ScanLienIngredients(rows)
+}
+
+func DeleteLienIngredientsByIdIngredients(tx DB, idIngredients ...int64) error {
+	_, err := tx.Exec("DELETE FROM lien_ingredients WHERE id_ingredient = ANY($1)", pq.Int64Array(idIngredients))
+	return err
+}
+
+// ByIdIngredient returns a map with 'IdIngredient' as keys.
+func (items LienIngredients) ByIdIngredient() map[int64]LienIngredients {
+	out := make(map[int64]LienIngredients)
+	for _, target := range items {
+		out[target.IdIngredient] = append(out[target.IdIngredient], target)
+	}
+	return out
+}
+
+func SelectLivraisonsByIdFournisseurs(tx DB, idFournisseurs ...int64) (Livraisons, error) {
+	rows, err := tx.Query("SELECT * FROM livraisons WHERE id_fournisseur = ANY($1)", pq.Int64Array(idFournisseurs))
+	if err != nil {
+		return nil, err
+	}
+	return ScanLivraisons(rows)
+}
+
+func DeleteLivraisonsByIdFournisseurs(tx DB, idFournisseurs ...int64) (Ids, error) {
+	rows, err := tx.Query("DELETE FROM livraisons WHERE id_fournisseur = ANY($1) RETURNING id", pq.Int64Array(idFournisseurs))
+	if err != nil {
+		return nil, err
+	}
+	return ScanIds(rows)
+}
+
+func SelectMenusByIdUtilisateurs(tx DB, idUtilisateurs ...int64) (Menus, error) {
+	rows, err := tx.Query("SELECT * FROM menus WHERE id_utilisateur = ANY($1)", pq.Int64Array(idUtilisateurs))
+	if err != nil {
+		return nil, err
+	}
+	return ScanMenus(rows)
+}
+
+func DeleteMenusByIdUtilisateurs(tx DB, idUtilisateurs ...int64) (Ids, error) {
+	rows, err := tx.Query("DELETE FROM menus WHERE id_utilisateur = ANY($1) RETURNING id", pq.Int64Array(idUtilisateurs))
+	if err != nil {
+		return nil, err
+	}
+	return ScanIds(rows)
+}
+
+func SelectMenuIngredientsByIdMenus(tx DB, idMenus ...int64) (MenuIngredients, error) {
+	rows, err := tx.Query("SELECT * FROM menu_ingredients WHERE id_menu = ANY($1)", pq.Int64Array(idMenus))
+	if err != nil {
+		return nil, err
+	}
+	return ScanMenuIngredients(rows)
+}
+
+func DeleteMenuIngredientsByIdMenus(tx DB, idMenus ...int64) error {
+	_, err := tx.Exec("DELETE FROM menu_ingredients WHERE id_menu = ANY($1)", pq.Int64Array(idMenus))
+	return err
+}
+
+func SelectMenuIngredientsByIdIngredients(tx DB, idIngredients ...int64) (MenuIngredients, error) {
+	rows, err := tx.Query("SELECT * FROM menu_ingredients WHERE id_ingredient = ANY($1)", pq.Int64Array(idIngredients))
+	if err != nil {
+		return nil, err
+	}
+	return ScanMenuIngredients(rows)
+}
+
+func DeleteMenuIngredientsByIdIngredients(tx DB, idIngredients ...int64) error {
+	_, err := tx.Exec("DELETE FROM menu_ingredients WHERE id_ingredient = ANY($1)", pq.Int64Array(idIngredients))
+	return err
+}
+
+// ByIdMenu returns a map with 'IdMenu' as keys.
+func (items MenuIngredients) ByIdMenu() map[int64]MenuIngredients {
+	out := make(map[int64]MenuIngredients)
+	for _, target := range items {
+		out[target.IdMenu] = append(out[target.IdMenu], target)
+	}
+	return out
+}
+
+// ByIdIngredient returns a map with 'IdIngredient' as keys.
+func (items MenuIngredients) ByIdIngredient() map[int64]MenuIngredients {
+	out := make(map[int64]MenuIngredients)
+	for _, target := range items {
+		out[target.IdIngredient] = append(out[target.IdIngredient], target)
+	}
+	return out
+}
+
+func SelectMenuRecettesByIdMenus(tx DB, idMenus ...int64) (MenuRecettes, error) {
+	rows, err := tx.Query("SELECT * FROM menu_recettes WHERE id_menu = ANY($1)", pq.Int64Array(idMenus))
+	if err != nil {
+		return nil, err
+	}
+	return ScanMenuRecettes(rows)
+}
+
+func DeleteMenuRecettesByIdMenus(tx DB, idMenus ...int64) error {
+	_, err := tx.Exec("DELETE FROM menu_recettes WHERE id_menu = ANY($1)", pq.Int64Array(idMenus))
+	return err
+}
+
+func SelectMenuRecettesByIdRecettes(tx DB, idRecettes ...int64) (MenuRecettes, error) {
+	rows, err := tx.Query("SELECT * FROM menu_recettes WHERE id_recette = ANY($1)", pq.Int64Array(idRecettes))
+	if err != nil {
+		return nil, err
+	}
+	return ScanMenuRecettes(rows)
+}
+
+func DeleteMenuRecettesByIdRecettes(tx DB, idRecettes ...int64) error {
+	_, err := tx.Exec("DELETE FROM menu_recettes WHERE id_recette = ANY($1)", pq.Int64Array(idRecettes))
+	return err
+}
+
+// ByIdMenu returns a map with 'IdMenu' as keys.
+func (items MenuRecettes) ByIdMenu() map[int64]MenuRecettes {
+	out := make(map[int64]MenuRecettes)
+	for _, target := range items {
+		out[target.IdMenu] = append(out[target.IdMenu], target)
+	}
+	return out
+}
+
+// ByIdRecette returns a map with 'IdRecette' as keys.
+func (items MenuRecettes) ByIdRecette() map[int64]MenuRecettes {
+	out := make(map[int64]MenuRecettes)
+	for _, target := range items {
+		out[target.IdRecette] = append(out[target.IdRecette], target)
+	}
+	return out
+}
+
+func SelectProduitsByIdLivraisons(tx DB, idLivraisons ...int64) (Produits, error) {
+	rows, err := tx.Query("SELECT * FROM produits WHERE id_livraison = ANY($1)", pq.Int64Array(idLivraisons))
+	if err != nil {
+		return nil, err
+	}
+	return ScanProduits(rows)
+}
+
+func DeleteProduitsByIdLivraisons(tx DB, idLivraisons ...int64) (Ids, error) {
+	rows, err := tx.Query("DELETE FROM produits WHERE id_livraison = ANY($1) RETURNING id", pq.Int64Array(idLivraisons))
+	if err != nil {
+		return nil, err
+	}
+	return ScanIds(rows)
+}
+
+func SelectRecettesByIdUtilisateurs(tx DB, idUtilisateurs ...int64) (Recettes, error) {
+	rows, err := tx.Query("SELECT * FROM recettes WHERE id_utilisateur = ANY($1)", pq.Int64Array(idUtilisateurs))
+	if err != nil {
+		return nil, err
+	}
+	return ScanRecettes(rows)
+}
+
+func DeleteRecettesByIdUtilisateurs(tx DB, idUtilisateurs ...int64) (Ids, error) {
+	rows, err := tx.Query("DELETE FROM recettes WHERE id_utilisateur = ANY($1) RETURNING id", pq.Int64Array(idUtilisateurs))
+	if err != nil {
+		return nil, err
+	}
+	return ScanIds(rows)
+}
+
+func SelectRecetteIngredientsByIdRecettes(tx DB, idRecettes ...int64) (RecetteIngredients, error) {
+	rows, err := tx.Query("SELECT * FROM recette_ingredients WHERE id_recette = ANY($1)", pq.Int64Array(idRecettes))
+	if err != nil {
+		return nil, err
+	}
+	return ScanRecetteIngredients(rows)
+}
+
+func DeleteRecetteIngredientsByIdRecettes(tx DB, idRecettes ...int64) error {
+	_, err := tx.Exec("DELETE FROM recette_ingredients WHERE id_recette = ANY($1)", pq.Int64Array(idRecettes))
+	return err
+}
+
+func SelectRecetteIngredientsByIdIngredients(tx DB, idIngredients ...int64) (RecetteIngredients, error) {
+	rows, err := tx.Query("SELECT * FROM recette_ingredients WHERE id_ingredient = ANY($1)", pq.Int64Array(idIngredients))
+	if err != nil {
+		return nil, err
+	}
+	return ScanRecetteIngredients(rows)
+}
+
+func DeleteRecetteIngredientsByIdIngredients(tx DB, idIngredients ...int64) error {
+	_, err := tx.Exec("DELETE FROM recette_ingredients WHERE id_ingredient = ANY($1)", pq.Int64Array(idIngredients))
+	return err
+}
+
+// ByIdRecette returns a map with 'IdRecette' as keys.
+func (items RecetteIngredients) ByIdRecette() map[int64]RecetteIngredients {
+	out := make(map[int64]RecetteIngredients)
+	for _, target := range items {
+		out[target.IdRecette] = append(out[target.IdRecette], target)
+	}
+	return out
+}
+
+// ByIdIngredient returns a map with 'IdIngredient' as keys.
+func (items RecetteIngredients) ByIdIngredient() map[int64]RecetteIngredients {
+	out := make(map[int64]RecetteIngredients)
+	for _, target := range items {
+		out[target.IdIngredient] = append(out[target.IdIngredient], target)
+	}
+	return out
+}
+
+func SelectRepassByIdSejours(tx DB, idSejours ...int64) (Repass, error) {
+	rows, err := tx.Query("SELECT * FROM repass WHERE id_sejour = ANY($1)", pq.Int64Array(idSejours))
+	if err != nil {
+		return nil, err
+	}
+	return ScanRepass(rows)
+}
+
+func DeleteRepassByIdSejours(tx DB, idSejours ...int64) (Ids, error) {
+	rows, err := tx.Query("DELETE FROM repass WHERE id_sejour = ANY($1) RETURNING id", pq.Int64Array(idSejours))
+	if err != nil {
+		return nil, err
+	}
+	return ScanIds(rows)
+}
+
+func SelectRepasGroupesByIdRepass(tx DB, idRepass ...int64) (RepasGroupes, error) {
+	rows, err := tx.Query("SELECT * FROM repas_groupes WHERE id_repas = ANY($1)", pq.Int64Array(idRepass))
+	if err != nil {
+		return nil, err
+	}
+	return ScanRepasGroupes(rows)
+}
+
+func DeleteRepasGroupesByIdRepass(tx DB, idRepass ...int64) error {
+	_, err := tx.Exec("DELETE FROM repas_groupes WHERE id_repas = ANY($1)", pq.Int64Array(idRepass))
+	return err
+}
+
+func SelectRepasGroupesByIdGroupes(tx DB, idGroupes ...int64) (RepasGroupes, error) {
+	rows, err := tx.Query("SELECT * FROM repas_groupes WHERE id_groupe = ANY($1)", pq.Int64Array(idGroupes))
+	if err != nil {
+		return nil, err
+	}
+	return ScanRepasGroupes(rows)
+}
+
+func DeleteRepasGroupesByIdGroupes(tx DB, idGroupes ...int64) error {
+	_, err := tx.Exec("DELETE FROM repas_groupes WHERE id_groupe = ANY($1)", pq.Int64Array(idGroupes))
+	return err
+}
+
+// ByIdRepas returns a map with 'IdRepas' as keys.
+func (items RepasGroupes) ByIdRepas() map[int64]RepasGroupes {
+	out := make(map[int64]RepasGroupes)
+	for _, target := range items {
+		out[target.IdRepas] = append(out[target.IdRepas], target)
+	}
+	return out
+}
+
+// ByIdGroupe returns a map with 'IdGroupe' as keys.
+func (items RepasGroupes) ByIdGroupe() map[int64]RepasGroupes {
+	out := make(map[int64]RepasGroupes)
+	for _, target := range items {
+		out[target.IdGroupe] = append(out[target.IdGroupe], target)
+	}
+	return out
+}
+
+func SelectRepasIngredientsByIdRepass(tx DB, idRepass ...int64) (RepasIngredients, error) {
+	rows, err := tx.Query("SELECT * FROM repas_ingredients WHERE id_repas = ANY($1)", pq.Int64Array(idRepass))
+	if err != nil {
+		return nil, err
+	}
+	return ScanRepasIngredients(rows)
+}
+
+func DeleteRepasIngredientsByIdRepass(tx DB, idRepass ...int64) error {
+	_, err := tx.Exec("DELETE FROM repas_ingredients WHERE id_repas = ANY($1)", pq.Int64Array(idRepass))
+	return err
+}
+
+func SelectRepasIngredientsByIdIngredients(tx DB, idIngredients ...int64) (RepasIngredients, error) {
+	rows, err := tx.Query("SELECT * FROM repas_ingredients WHERE id_ingredient = ANY($1)", pq.Int64Array(idIngredients))
+	if err != nil {
+		return nil, err
+	}
+	return ScanRepasIngredients(rows)
+}
+
+func DeleteRepasIngredientsByIdIngredients(tx DB, idIngredients ...int64) error {
+	_, err := tx.Exec("DELETE FROM repas_ingredients WHERE id_ingredient = ANY($1)", pq.Int64Array(idIngredients))
+	return err
+}
+
+// ByIdRepas returns a map with 'IdRepas' as keys.
+func (items RepasIngredients) ByIdRepas() map[int64]RepasIngredients {
+	out := make(map[int64]RepasIngredients)
+	for _, target := range items {
+		out[target.IdRepas] = append(out[target.IdRepas], target)
+	}
+	return out
+}
+
+// ByIdIngredient returns a map with 'IdIngredient' as keys.
+func (items RepasIngredients) ByIdIngredient() map[int64]RepasIngredients {
+	out := make(map[int64]RepasIngredients)
+	for _, target := range items {
+		out[target.IdIngredient] = append(out[target.IdIngredient], target)
+	}
+	return out
+}
+
+func SelectRepasRecettesByIdRepass(tx DB, idRepass ...int64) (RepasRecettes, error) {
+	rows, err := tx.Query("SELECT * FROM repas_recettes WHERE id_repas = ANY($1)", pq.Int64Array(idRepass))
+	if err != nil {
+		return nil, err
+	}
+	return ScanRepasRecettes(rows)
+}
+
+func DeleteRepasRecettesByIdRepass(tx DB, idRepass ...int64) error {
+	_, err := tx.Exec("DELETE FROM repas_recettes WHERE id_repas = ANY($1)", pq.Int64Array(idRepass))
+	return err
+}
+
+func SelectRepasRecettesByIdRecettes(tx DB, idRecettes ...int64) (RepasRecettes, error) {
+	rows, err := tx.Query("SELECT * FROM repas_recettes WHERE id_recette = ANY($1)", pq.Int64Array(idRecettes))
+	if err != nil {
+		return nil, err
+	}
+	return ScanRepasRecettes(rows)
+}
+
+func DeleteRepasRecettesByIdRecettes(tx DB, idRecettes ...int64) error {
+	_, err := tx.Exec("DELETE FROM repas_recettes WHERE id_recette = ANY($1)", pq.Int64Array(idRecettes))
+	return err
+}
+
+// ByIdRepas returns a map with 'IdRepas' as keys.
+func (items RepasRecettes) ByIdRepas() map[int64]RepasRecettes {
+	out := make(map[int64]RepasRecettes)
+	for _, target := range items {
+		out[target.IdRepas] = append(out[target.IdRepas], target)
+	}
+	return out
+}
+
+// ByIdRecette returns a map with 'IdRecette' as keys.
+func (items RepasRecettes) ByIdRecette() map[int64]RepasRecettes {
+	out := make(map[int64]RepasRecettes)
+	for _, target := range items {
+		out[target.IdRecette] = append(out[target.IdRecette], target)
+	}
+	return out
+}
+
+func SelectSejoursByIdUtilisateurs(tx DB, idUtilisateurs ...int64) (Sejours, error) {
+	rows, err := tx.Query("SELECT * FROM sejours WHERE id_utilisateur = ANY($1)", pq.Int64Array(idUtilisateurs))
+	if err != nil {
+		return nil, err
+	}
+	return ScanSejours(rows)
+}
+
+func DeleteSejoursByIdUtilisateurs(tx DB, idUtilisateurs ...int64) (Ids, error) {
+	rows, err := tx.Query("DELETE FROM sejours WHERE id_utilisateur = ANY($1) RETURNING id", pq.Int64Array(idUtilisateurs))
+	if err != nil {
+		return nil, err
+	}
+	return ScanIds(rows)
+}
+
+func SelectSejourFournisseursByIdUtilisateurs(tx DB, idUtilisateurs ...int64) (SejourFournisseurs, error) {
+	rows, err := tx.Query("SELECT * FROM sejour_fournisseurs WHERE id_utilisateur = ANY($1)", pq.Int64Array(idUtilisateurs))
+	if err != nil {
+		return nil, err
+	}
+	return ScanSejourFournisseurs(rows)
+}
+
+func DeleteSejourFournisseursByIdUtilisateurs(tx DB, idUtilisateurs ...int64) error {
+	_, err := tx.Exec("DELETE FROM sejour_fournisseurs WHERE id_utilisateur = ANY($1)", pq.Int64Array(idUtilisateurs))
+	return err
+}
+
+func SelectSejourFournisseursByIdSejours(tx DB, idSejours ...int64) (SejourFournisseurs, error) {
+	rows, err := tx.Query("SELECT * FROM sejour_fournisseurs WHERE id_sejour = ANY($1)", pq.Int64Array(idSejours))
+	if err != nil {
+		return nil, err
+	}
+	return ScanSejourFournisseurs(rows)
+}
+
+func DeleteSejourFournisseursByIdSejours(tx DB, idSejours ...int64) error {
+	_, err := tx.Exec("DELETE FROM sejour_fournisseurs WHERE id_sejour = ANY($1)", pq.Int64Array(idSejours))
+	return err
+}
+
+func SelectSejourFournisseursByIdFournisseurs(tx DB, idFournisseurs ...int64) (SejourFournisseurs, error) {
+	rows, err := tx.Query("SELECT * FROM sejour_fournisseurs WHERE id_fournisseur = ANY($1)", pq.Int64Array(idFournisseurs))
+	if err != nil {
+		return nil, err
+	}
+	return ScanSejourFournisseurs(rows)
+}
+
+func DeleteSejourFournisseursByIdFournisseurs(tx DB, idFournisseurs ...int64) error {
+	_, err := tx.Exec("DELETE FROM sejour_fournisseurs WHERE id_fournisseur = ANY($1)", pq.Int64Array(idFournisseurs))
+	return err
+}
+
+// ByIdUtilisateur returns a map with 'IdUtilisateur' as keys.
+func (items SejourFournisseurs) ByIdUtilisateur() map[int64]SejourFournisseurs {
+	out := make(map[int64]SejourFournisseurs)
+	for _, target := range items {
+		out[target.IdUtilisateur] = append(out[target.IdUtilisateur], target)
+	}
+	return out
+}
+
+// ByIdSejour returns a map with 'IdSejour' as keys.
+func (items SejourFournisseurs) ByIdSejour() map[int64]SejourFournisseurs {
+	out := make(map[int64]SejourFournisseurs)
+	for _, target := range items {
+		out[target.IdSejour] = append(out[target.IdSejour], target)
+	}
+	return out
+}
+
+// ByIdFournisseur returns a map with 'IdFournisseur' as keys.
+func (items SejourFournisseurs) ByIdFournisseur() map[int64]SejourFournisseurs {
+	out := make(map[int64]SejourFournisseurs)
+	for _, target := range items {
+		out[target.IdFournisseur] = append(out[target.IdFournisseur], target)
+	}
+	return out
+}
+
+func SelectUtilisateurFournisseursByIdUtilisateurs(tx DB, idUtilisateurs ...int64) (UtilisateurFournisseurs, error) {
+	rows, err := tx.Query("SELECT * FROM utilisateur_fournisseurs WHERE id_utilisateur = ANY($1)", pq.Int64Array(idUtilisateurs))
+	if err != nil {
+		return nil, err
+	}
+	return ScanUtilisateurFournisseurs(rows)
+}
+
+func DeleteUtilisateurFournisseursByIdUtilisateurs(tx DB, idUtilisateurs ...int64) error {
+	_, err := tx.Exec("DELETE FROM utilisateur_fournisseurs WHERE id_utilisateur = ANY($1)", pq.Int64Array(idUtilisateurs))
+	return err
+}
+
+func SelectUtilisateurFournisseursByIdFournisseurs(tx DB, idFournisseurs ...int64) (UtilisateurFournisseurs, error) {
+	rows, err := tx.Query("SELECT * FROM utilisateur_fournisseurs WHERE id_fournisseur = ANY($1)", pq.Int64Array(idFournisseurs))
+	if err != nil {
+		return nil, err
+	}
+	return ScanUtilisateurFournisseurs(rows)
+}
+
+func DeleteUtilisateurFournisseursByIdFournisseurs(tx DB, idFournisseurs ...int64) error {
+	_, err := tx.Exec("DELETE FROM utilisateur_fournisseurs WHERE id_fournisseur = ANY($1)", pq.Int64Array(idFournisseurs))
+	return err
+}
+
+// ByIdUtilisateur returns a map with 'IdUtilisateur' as keys.
+func (items UtilisateurFournisseurs) ByIdUtilisateur() map[int64]UtilisateurFournisseurs {
+	out := make(map[int64]UtilisateurFournisseurs)
+	for _, target := range items {
+		out[target.IdUtilisateur] = append(out[target.IdUtilisateur], target)
+	}
+	return out
+}
+
+// ByIdFournisseur returns a map with 'IdFournisseur' as keys.
+func (items UtilisateurFournisseurs) ByIdFournisseur() map[int64]UtilisateurFournisseurs {
+	out := make(map[int64]UtilisateurFournisseurs)
+	for _, target := range items {
+		out[target.IdFournisseur] = append(out[target.IdFournisseur], target)
+	}
+	return out
 }

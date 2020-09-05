@@ -10,11 +10,11 @@ import (
 // vérifie que tous les ingrédients liés au produit
 // appartiennent à l'utilisateur courant
 func (ct RequeteContext) checkProprioAllIngredient(produit models.Produit) error {
-	rows, err := ct.tx.Query("SELECT id_utilisateur FROM ingredient_produits WHERE id_produit = $1", produit.Id)
+	rows, err := ct.DB.Query("SELECT id_utilisateur FROM ingredient_produits WHERE id_produit = $1", produit.Id)
 	if err != nil {
 		return ErrorSQL(err)
 	}
-	ids, err := models.ScanInts(rows)
+	ids, err := models.ScanIds(rows)
 	if err != nil {
 		return ErrorSQL(err)
 	}
@@ -28,11 +28,7 @@ func (ct RequeteContext) checkProprioAllIngredient(produit models.Produit) error
 
 // vérification de la présence dans les commandes
 func (ct RequeteContext) checkCommandes(produit models.Produit) error {
-	rows, err := ct.tx.Query("SELECT  * FROM commande_produits WHERE id_produit = $1", produit.Id)
-	if err != nil {
-		return ErrorSQL(err)
-	}
-	cps, err := models.ScanCommandeProduits(rows)
+	cps, err := models.SelectCommandeProduitsByIdProduits(ct.DB, produit.Id)
 	if err != nil {
 		return ErrorSQL(err)
 	}
@@ -43,10 +39,7 @@ func (ct RequeteContext) checkCommandes(produit models.Produit) error {
 	return nil
 }
 
-func (s Server) GetIngredientProduits(ct RequeteContext, idIngredient int64) (IngredientProduits, error) {
-	if err := ct.beginTx(s); err != nil {
-		return IngredientProduits{}, err
-	}
+func (ct RequeteContext) GetIngredientProduits(idIngredient int64) (IngredientProduits, error) {
 	// sélection des fournisseurs autorisés
 	fourns, err := ct.loadFournisseurs()
 	if err != nil {
@@ -54,7 +47,7 @@ func (s Server) GetIngredientProduits(ct RequeteContext, idIngredient int64) (In
 	}
 
 	ing := models.Ingredient{Id: idIngredient}
-	produits, err := ing.GetProduits(ct.tx, fourns)
+	produits, err := ing.GetProduits(ct.DB, fourns)
 	if err != nil {
 		return IngredientProduits{}, ErrorSQL(err)
 	}
@@ -70,37 +63,29 @@ func (s Server) GetIngredientProduits(ct RequeteContext, idIngredient int64) (In
 		return out.Produits[i].IdLivraison < out.Produits[j].IdLivraison
 	})
 
-	rows, err := ct.tx.Query("SELECT id_produit FROM defaut_produits WHERE id_utilisateur = $1 AND id_ingredient = $2",
-		ct.idProprietaire, idIngredient)
+	rows, err := ct.DB.Query("SELECT id_produit FROM defaut_produits WHERE id_utilisateur = $1 AND id_ingredient = $2",
+		ct.IdProprietaire, idIngredient)
 	if err != nil {
 		return IngredientProduits{}, ErrorSQL(err)
 	}
-	defaults, err := models.ScanInts(rows)
+	defaults, err := models.ScanIds(rows)
 	if err != nil {
 		return IngredientProduits{}, ErrorSQL(err)
 	}
 	out.Defaults = models.NewSetFromSlice(defaults)
-	if err = ct.commitTx(); err != nil {
-		return out, err
-	}
-
 	return out, nil
 }
 
 // AjouteIngredientProduit crée le produit donné et l'associe à l'ingrédient.
-func (s Server) AjouteIngredientProduit(ct RequeteContext, idIngredient int64, produit models.Produit) error {
+func (ct RequeteContext) AjouteIngredientProduit(idIngredient int64, produit models.Produit) (models.Produit, error) {
 	contrainte := ContrainteProduit{produit: produit}
 	if err := contrainte.Check(); err != nil {
-		return err
+		return produit, err
 	}
 
-	if err := ct.beginTx(s); err != nil {
-		return err
-	}
-
-	ing, err := models.SelectIngredient(ct.tx, idIngredient)
+	ing, err := models.SelectIngredient(ct.DB, idIngredient)
 	if err != nil {
-		return ErrorSQL(err)
+		return produit, ErrorSQL(err)
 	}
 
 	// L'unité Piece est particulière car elle laisse la responsabilité au produit
@@ -108,33 +93,33 @@ func (s Server) AjouteIngredientProduit(ct RequeteContext, idIngredient int64, p
 	// Pour les autres, les unités du produit et de l'ingrédient doivent être identiques.
 	contrainte2 := ContrainteIngredientProduit{ingredient: ing, produit: produit}
 	if err := contrainte2.Check(); err != nil {
-		return err
+		return produit, err
 	}
 
 	if _, err := ct.checkFournisseurs(produit); err != nil {
-		return err
+		return produit, err
 	}
 
-	produit, err = produit.Insert(ct.tx)
+	tx, err := ct.beginTx()
 	if err != nil {
-		return ErrorSQL(err)
+		return produit, err
 	}
-	err = models.InsertManyIngredientProduits(ct.tx,
-		models.IngredientProduit{IdIngredient: idIngredient, IdProduit: produit.Id, IdUtilisateur: ct.idProprietaire})
+	produit, err = produit.Insert(tx)
 	if err != nil {
-		return ct.rollbackTx(err)
+		return produit, tx.rollback(err)
 	}
-	return ct.commitTx()
+	err = models.InsertManyIngredientProduits(tx.Tx,
+		models.IngredientProduit{IdIngredient: idIngredient, IdProduit: produit.Id, IdUtilisateur: ct.IdProprietaire})
+	if err != nil {
+		return produit, tx.rollback(err)
+	}
+	return produit, tx.Commit()
 }
 
 // UpdateProduit modifie un produit, sous réserve qu'il ne soit pas encore utilisé dans une commande.
-func (s Server) UpdateProduit(ct RequeteContext, produit models.Produit) (out models.Produit, err error) {
+func (ct RequeteContext) UpdateProduit(produit models.Produit) (out models.Produit, err error) {
 	contrainte := ContrainteProduit{produit: produit}
 	if err := contrainte.Check(); err != nil {
-		return out, err
-	}
-
-	if err := ct.beginTx(s); err != nil {
 		return out, err
 	}
 
@@ -148,7 +133,7 @@ func (s Server) UpdateProduit(ct RequeteContext, produit models.Produit) (out mo
 	}
 
 	// vérification des contraintes ingrédient/produit
-	rows, err := ct.tx.Query(`SELECT ingredients.* FROM ingredients
+	rows, err := ct.DB.Query(`SELECT ingredients.* FROM ingredients
 		JOIN ingredient_produits ON ingredient_produits.id_ingredient = ingredients.id
 		WHERE ingredient_produits.id_produit = $1`, produit.Id)
 	if err != nil {
@@ -166,20 +151,12 @@ func (s Server) UpdateProduit(ct RequeteContext, produit models.Produit) (out mo
 	}
 
 	// finalement, mise à jour
-	out, err = produit.Update(ct.tx)
-	if err != nil {
-		return out, ct.rollbackTx(err)
-	}
-	err = ct.commitTx()
-	return out, err
+	out, err = produit.Update(ct.DB)
+	return out, ErrorSQL(err)
 }
 
-func (s Server) DeleteProduit(ct RequeteContext, idProduit int64) error {
-	if err := ct.beginTx(s); err != nil {
-		return err
-	}
-
-	produit, err := models.SelectProduit(ct.tx, idProduit)
+func (ct RequeteContext) DeleteProduit(idProduit int64) error {
+	produit, err := models.SelectProduit(ct.DB, idProduit)
 	if err != nil {
 		return ErrorSQL(err)
 	}
@@ -196,34 +173,19 @@ func (s Server) DeleteProduit(ct RequeteContext, idProduit int64) error {
 		return err
 	}
 
-	// suppression des préférences
-	_, err = ct.tx.Exec("DELETE FROM defaut_produits WHERE id_produit = $1", idProduit)
-	if err != nil {
-		return ct.rollbackTx(err)
-	}
+	// suppression des préférences par cascade
 
-	// suppression de la liaison ingrédient
-	_, err = ct.tx.Exec("DELETE FROM ingredient_produits WHERE id_produit = $1", idProduit)
-	if err != nil {
-		return ct.rollbackTx(err)
-	}
+	// suppression de la liaison ingrédient par cascade
 
 	// suppression du produit
-	_, err = produit.Delete(ct.tx)
-	if err != nil {
-		return ct.rollbackTx(err)
-	}
-	return ct.commitTx()
+	_, err = models.DeleteProduitById(ct.DB, produit.Id)
+	return ErrorSQL(err)
 }
 
 // SetDefautProduit met à jour le produit par défaut pour l'ingrédient donné
 // `GetIngredientProduits` devrait être appelé ensuite.
-func (s Server) SetDefautProduit(ct RequeteContext, idIngredient int64, idProduit int64, on bool) error {
-	if err := ct.beginTx(s); err != nil {
-		return err
-	}
-
-	produit, err := models.SelectProduit(ct.tx, idProduit)
+func (ct RequeteContext) SetDefautProduit(idIngredient int64, idProduit int64, on bool) error {
+	produit, err := models.SelectProduit(ct.DB, idProduit)
 	if err != nil {
 		return ErrorSQL(err)
 	}
@@ -233,26 +195,30 @@ func (s Server) SetDefautProduit(ct RequeteContext, idIngredient int64, idProdui
 		return err
 	}
 
+	tx, err := ct.beginTx()
+	if err != nil {
+		return err
+	}
 	// on enlève un éventuel produit par défaut du même fournisseur
 	// par la même occasion, on supprime la valeur par défaut (cas `on` == false )
-	_, err = ct.tx.Exec(`DELETE FROM defaut_produits 
+	_, err = tx.Exec(`DELETE FROM defaut_produits 
 		WHERE defaut_produits.id_fournisseur = $1
 			AND defaut_produits.id_utilisateur = $2
 			AND defaut_produits.id_ingredient = $3`,
-		livraison.IdFournisseur, ct.idProprietaire, idIngredient)
+		livraison.IdFournisseur, ct.IdProprietaire, idIngredient)
 	if err != nil {
-		return ct.rollbackTx(err)
+		return tx.rollback(err)
 	}
 	if on { // on ajoute le nouveau défaut
 		dp := models.DefautProduit{
 			IdFournisseur: livraison.IdFournisseur, // déduit du produit
 			IdIngredient:  idIngredient,
 			IdProduit:     idProduit,
-			IdUtilisateur: ct.idProprietaire,
+			IdUtilisateur: ct.IdProprietaire,
 		}
-		if err := models.InsertManyDefautProduits(ct.tx, dp); err != nil {
-			return ct.rollbackTx(err)
+		if err := models.InsertManyDefautProduits(tx.Tx, dp); err != nil {
+			return tx.rollback(err)
 		}
 	}
-	return ct.commitTx()
+	return tx.Commit()
 }

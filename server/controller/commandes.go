@@ -93,7 +93,7 @@ func (ct RequeteContext) resoudProduits(idsIngredients models.Ids, livraisons mo
 		defauts:      make(map[int64][]models.Produit),
 	}
 
-	rows, err := ct.tx.Query(`SELECT ingredient_produits.* FROM ingredient_produits 
+	rows, err := ct.DB.Query(`SELECT ingredient_produits.* FROM ingredient_produits 
 	JOIN produits ON ingredient_produits.id_produit = produits.id 
 	WHERE ingredient_produits.id_ingredient = ANY($1)
 	AND produits.id_livraison = ANY($2)`,
@@ -106,7 +106,7 @@ func (ct RequeteContext) resoudProduits(idsIngredients models.Ids, livraisons mo
 		return cacheIngredientProduits{}, ErrorSQL(err)
 	}
 
-	rows, err = ct.tx.Query(`SELECT produits.* FROM produits 
+	rows, err = ct.DB.Query(`SELECT produits.* FROM produits 
 	JOIN ingredient_produits ON ingredient_produits.id_produit = produits.id 
 	WHERE ingredient_produits.id_ingredient = ANY($1)
 	AND produits.id_livraison = ANY($2)`,
@@ -124,11 +124,7 @@ func (ct RequeteContext) resoudProduits(idsIngredients models.Ids, livraisons mo
 		out.associations[ingProd.IdIngredient] = append(out.associations[ingProd.IdIngredient], out.produits[ingProd.IdProduit])
 	}
 
-	rows, err = ct.tx.Query("SELECT * FROM defaut_produits WHERE id_produit = ANY($1)", out.produits.Ids().AsSQL())
-	if err != nil {
-		return cacheIngredientProduits{}, ErrorSQL(err)
-	}
-	defauts, err := models.ScanDefautProduits(rows)
+	defauts, err := models.SelectDefautProduitsByIdProduits(ct.DB, out.produits.Ids()...)
 	if err != nil {
 		return cacheIngredientProduits{}, ErrorSQL(err)
 	}
@@ -174,14 +170,9 @@ func (ts timedProduits) groupe() timedProduits {
 
 // EtablitCommande calcule pour chaque ingrédient le jour de commande du produit
 // et le nombre d'exemplaire.
-func (s Server) EtablitCommande(ct RequeteContext, ingredients []DateIngredientQuantites, contraintes CommandeContraintes) ([]CommandeItem, Ambiguites, error) {
+func (ct RequeteContext) EtablitCommande(ingredients []DateIngredientQuantites, contraintes CommandeContraintes) ([]CommandeItem, Ambiguites, error) {
 	// TODO: vérifier les associations ing -> produit,
 	// où au moins les contraintes d'unité, etc..
-
-	if err := ct.beginTx(s); err != nil {
-		return nil, nil, err
-	}
-	defer ct.rollbackTx(nil) // pas de modifications sur les données
 
 	fourns, err := ct.loadFournisseurs()
 	if err != nil {

@@ -2,7 +2,9 @@
 
 package models
 
-func queriesCommande(tx DB, item Commande) (Commande, error) {
+import "database/sql"
+
+func queriesCommande(tx *sql.Tx, item Commande) (Commande, error) {
 	item, err := item.Insert(tx)
 
 	if err != nil {
@@ -28,7 +30,7 @@ func queriesCommande(tx DB, item Commande) (Commande, error) {
 	return item, err
 }
 
-func queriesCommandeProduit(tx DB, item CommandeProduit) (CommandeProduit, error) {
+func queriesCommandeProduit(tx *sql.Tx, item CommandeProduit) (CommandeProduit, error) {
 	err := InsertManyCommandeProduits(tx, item)
 	if err != nil {
 		return item, err
@@ -51,7 +53,7 @@ func queriesCommandeProduit(tx DB, item CommandeProduit) (CommandeProduit, error
 	return item, err
 }
 
-func queriesDefautProduit(tx DB, item DefautProduit) (DefautProduit, error) {
+func queriesDefautProduit(tx *sql.Tx, item DefautProduit) (DefautProduit, error) {
 	err := InsertManyDefautProduits(tx, item)
 	if err != nil {
 		return item, err
@@ -74,7 +76,7 @@ func queriesDefautProduit(tx DB, item DefautProduit) (DefautProduit, error) {
 	return item, err
 }
 
-func queriesFournisseur(tx DB, item Fournisseur) (Fournisseur, error) {
+func queriesFournisseur(tx *sql.Tx, item Fournisseur) (Fournisseur, error) {
 	item, err := item.Insert(tx)
 
 	if err != nil {
@@ -100,7 +102,7 @@ func queriesFournisseur(tx DB, item Fournisseur) (Fournisseur, error) {
 	return item, err
 }
 
-func queriesGroupe(tx DB, item Groupe) (Groupe, error) {
+func queriesGroupe(tx *sql.Tx, item Groupe) (Groupe, error) {
 	item, err := item.Insert(tx)
 
 	if err != nil {
@@ -126,7 +128,7 @@ func queriesGroupe(tx DB, item Groupe) (Groupe, error) {
 	return item, err
 }
 
-func queriesIngredient(tx DB, item Ingredient) (Ingredient, error) {
+func queriesIngredient(tx *sql.Tx, item Ingredient) (Ingredient, error) {
 	item, err := item.Insert(tx)
 
 	if err != nil {
@@ -152,7 +154,7 @@ func queriesIngredient(tx DB, item Ingredient) (Ingredient, error) {
 	return item, err
 }
 
-func queriesIngredientProduit(tx DB, item IngredientProduit) (IngredientProduit, error) {
+func queriesIngredientProduit(tx *sql.Tx, item IngredientProduit) (IngredientProduit, error) {
 	err := InsertManyIngredientProduits(tx, item)
 	if err != nil {
 		return item, err
@@ -175,7 +177,7 @@ func queriesIngredientProduit(tx DB, item IngredientProduit) (IngredientProduit,
 	return item, err
 }
 
-func queriesLienIngredient(tx DB, item LienIngredient) (LienIngredient, error) {
+func queriesLienIngredient(tx *sql.Tx, item LienIngredient) (LienIngredient, error) {
 	err := InsertManyLienIngredients(tx, item)
 	if err != nil {
 		return item, err
@@ -198,7 +200,7 @@ func queriesLienIngredient(tx DB, item LienIngredient) (LienIngredient, error) {
 	return item, err
 }
 
-func queriesLivraison(tx DB, item Livraison) (Livraison, error) {
+func queriesLivraison(tx *sql.Tx, item Livraison) (Livraison, error) {
 	item, err := item.Insert(tx)
 
 	if err != nil {
@@ -224,7 +226,7 @@ func queriesLivraison(tx DB, item Livraison) (Livraison, error) {
 	return item, err
 }
 
-func queriesMenu(tx DB, item Menu) (Menu, error) {
+func queriesMenu(tx *sql.Tx, item Menu) (Menu, error) {
 	item, err := item.Insert(tx)
 
 	if err != nil {
@@ -250,7 +252,7 @@ func queriesMenu(tx DB, item Menu) (Menu, error) {
 	return item, err
 }
 
-func queriesMenuIngredient(tx DB, item MenuIngredient) (MenuIngredient, error) {
+func queriesMenuIngredient(tx *sql.Tx, item MenuIngredient) (MenuIngredient, error) {
 	err := InsertManyMenuIngredients(tx, item)
 	if err != nil {
 		return item, err
@@ -273,7 +275,7 @@ func queriesMenuIngredient(tx DB, item MenuIngredient) (MenuIngredient, error) {
 	return item, err
 }
 
-func queriesMenuRecette(tx DB, item MenuRecette) (MenuRecette, error) {
+func queriesMenuRecette(tx *sql.Tx, item MenuRecette) (MenuRecette, error) {
 	err := InsertManyMenuRecettes(tx, item)
 	if err != nil {
 		return item, err
@@ -296,7 +298,7 @@ func queriesMenuRecette(tx DB, item MenuRecette) (MenuRecette, error) {
 	return item, err
 }
 
-func queriesProduit(tx DB, item Produit) (Produit, error) {
+func queriesProduit(tx *sql.Tx, item Produit) (Produit, error) {
 	item, err := item.Insert(tx)
 
 	if err != nil {
@@ -322,7 +324,7 @@ func queriesProduit(tx DB, item Produit) (Produit, error) {
 	return item, err
 }
 
-func queriesRecette(tx DB, item Recette) (Recette, error) {
+func queriesRecette(tx *sql.Tx, item Recette) (Recette, error) {
 	item, err := item.Insert(tx)
 
 	if err != nil {
@@ -348,7 +350,7 @@ func queriesRecette(tx DB, item Recette) (Recette, error) {
 	return item, err
 }
 
-func queriesRecetteIngredient(tx DB, item RecetteIngredient) (RecetteIngredient, error) {
+func queriesRecetteIngredient(tx *sql.Tx, item RecetteIngredient) (RecetteIngredient, error) {
 	err := InsertManyRecetteIngredients(tx, item)
 	if err != nil {
 		return item, err
@@ -371,7 +373,7 @@ func queriesRecetteIngredient(tx DB, item RecetteIngredient) (RecetteIngredient,
 	return item, err
 }
 
-func queriesRepas(tx DB, item Repas) (Repas, error) {
+func queriesRepas(tx *sql.Tx, item Repas) (Repas, error) {
 	item, err := item.Insert(tx)
 
 	if err != nil {
@@ -397,7 +399,7 @@ func queriesRepas(tx DB, item Repas) (Repas, error) {
 	return item, err
 }
 
-func queriesRepasGroupe(tx DB, item RepasGroupe) (RepasGroupe, error) {
+func queriesRepasGroupe(tx *sql.Tx, item RepasGroupe) (RepasGroupe, error) {
 	err := InsertManyRepasGroupes(tx, item)
 	if err != nil {
 		return item, err
@@ -420,7 +422,7 @@ func queriesRepasGroupe(tx DB, item RepasGroupe) (RepasGroupe, error) {
 	return item, err
 }
 
-func queriesRepasIngredient(tx DB, item RepasIngredient) (RepasIngredient, error) {
+func queriesRepasIngredient(tx *sql.Tx, item RepasIngredient) (RepasIngredient, error) {
 	err := InsertManyRepasIngredients(tx, item)
 	if err != nil {
 		return item, err
@@ -443,7 +445,7 @@ func queriesRepasIngredient(tx DB, item RepasIngredient) (RepasIngredient, error
 	return item, err
 }
 
-func queriesRepasRecette(tx DB, item RepasRecette) (RepasRecette, error) {
+func queriesRepasRecette(tx *sql.Tx, item RepasRecette) (RepasRecette, error) {
 	err := InsertManyRepasRecettes(tx, item)
 	if err != nil {
 		return item, err
@@ -466,7 +468,7 @@ func queriesRepasRecette(tx DB, item RepasRecette) (RepasRecette, error) {
 	return item, err
 }
 
-func queriesSejour(tx DB, item Sejour) (Sejour, error) {
+func queriesSejour(tx *sql.Tx, item Sejour) (Sejour, error) {
 	item, err := item.Insert(tx)
 
 	if err != nil {
@@ -492,7 +494,7 @@ func queriesSejour(tx DB, item Sejour) (Sejour, error) {
 	return item, err
 }
 
-func queriesSejourFournisseur(tx DB, item SejourFournisseur) (SejourFournisseur, error) {
+func queriesSejourFournisseur(tx *sql.Tx, item SejourFournisseur) (SejourFournisseur, error) {
 	err := InsertManySejourFournisseurs(tx, item)
 	if err != nil {
 		return item, err
@@ -515,7 +517,7 @@ func queriesSejourFournisseur(tx DB, item SejourFournisseur) (SejourFournisseur,
 	return item, err
 }
 
-func queriesUtilisateur(tx DB, item Utilisateur) (Utilisateur, error) {
+func queriesUtilisateur(tx *sql.Tx, item Utilisateur) (Utilisateur, error) {
 	item, err := item.Insert(tx)
 
 	if err != nil {
@@ -541,7 +543,7 @@ func queriesUtilisateur(tx DB, item Utilisateur) (Utilisateur, error) {
 	return item, err
 }
 
-func queriesUtilisateurFournisseur(tx DB, item UtilisateurFournisseur) (UtilisateurFournisseur, error) {
+func queriesUtilisateurFournisseur(tx *sql.Tx, item UtilisateurFournisseur) (UtilisateurFournisseur, error) {
 	err := InsertManyUtilisateurFournisseurs(tx, item)
 	if err != nil {
 		return item, err

@@ -32,7 +32,7 @@ func NullableId(id int64) sql.NullInt64 {
 	return sql.NullInt64{Valid: true, Int64: id}
 }
 
-func ScanInts(rs *sql.Rows) ([]int64, error) {
+func ScanIds(rs *sql.Rows) ([]int64, error) {
 	ints := make([]int64, 0, 16)
 	var err error
 	for rs.Next() {
@@ -72,7 +72,7 @@ func (ig Ingredient) GetProduits(tx DB, fournisseurs Fournisseurs) (Produits, er
 	if err != nil {
 		return nil, err
 	}
-	ids, err := ScanInts(rows)
+	ids, err := ScanIds(rows)
 	if err != nil {
 		return nil, err
 	}

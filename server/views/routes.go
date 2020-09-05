@@ -10,13 +10,13 @@ import (
 	"github.com/labstack/echo"
 )
 
-// Server est partagé entre chaque requête.
-// Il est à instancier dans le main
-var Server controller.Server
+// Server expose l'API du serveur via des handler HTTP
+type Server struct {
+	controller.Server
+}
 
 // return the query parameter 'id'
-func getId(c echo.Context) (int64, error) {
-	idS := c.QueryParam("id")
+func parseId(idS string) (int64, error) {
 	id, err := strconv.ParseInt(idS, 10, 64)
 	if err != nil {
 		return 0, fmt.Errorf("Impossible de décrypter l'ID reçu %s : %s", idS, err)
@@ -36,12 +36,12 @@ func Accueil(c echo.Context) error {
 }
 
 // -------------------------------- Loggin --------------------------------
-func Loggin(c echo.Context) error {
+func (s Server) Loggin(c echo.Context) error {
 	var params InLoggin
 	if err := c.Bind(&params); err != nil {
 		return err
 	}
-	out, err := Server.Loggin(params.Mail, params.Password)
+	out, err := s.Server.Loggin(params.Mail, params.Password)
 	if err != nil {
 		return err
 	}
@@ -51,374 +51,311 @@ func Loggin(c echo.Context) error {
 // --------------------------------------------------------------------------
 // ------------------------------ Utilisateurs ------------------------------
 // --------------------------------------------------------------------------
-func GetUtilisateurs(c echo.Context) error {
-	ct, err := Server.Authentifie(c.Request())
+func (s Server) GetUtilisateurs(c echo.Context) error {
+	out, err := s.Server.LoadUtilisateurs()
 	if err != nil {
 		return err
 	}
-	out, err := Server.LoadUtilisateurs()
-	if err != nil {
-		return err
-	}
-	return c.JSON(200, OutUtilisateurs{Token: ct.Token, Utilisateurs: out})
+	return c.JSON(200, out)
 }
 
 // --------------------------------------------------------------------------
 // ------------------------------ Ingredients -------------------------------
 // --------------------------------------------------------------------------
 
-func GetIngredients(c echo.Context) error {
-	ct, err := Server.Authentifie(c.Request())
+func (s Server) GetIngredients(c echo.Context) error {
+	out, err := s.Server.LoadIngredients()
 	if err != nil {
 		return err
 	}
-	out, err := Server.LoadIngredients()
-	if err != nil {
-		return err
-	}
-	return c.JSON(200, OutIngredients{Token: ct.Token, Ingredients: out})
+	return c.JSON(200, out)
 }
 
-func CreateIngredient(c echo.Context) error {
-	ct, err := Server.Authentifie(c.Request())
-	if err != nil {
-		return err
-	}
+func (s Server) CreateIngredient(c echo.Context) error {
+	ct := s.Server.NewRequeteContext(c)
 	var ingredientIn models.Ingredient
-	if err = c.Bind(&ingredientIn); err != nil {
+	if err := c.Bind(&ingredientIn); err != nil {
 		return err
 	}
-	newIngredient, err := Server.CreateIngredient(ct)
+	newIngredient, err := ct.CreateIngredient()
 	ingredientIn.Id = newIngredient.Id
 	if err != nil {
 		return err
 	}
-	ingredientIn, err = Server.UpdateIngredient(ct, ingredientIn)
+	ingredientIn, err = ct.UpdateIngredient(ingredientIn)
 	if err != nil {
 		return err
 	}
-	return c.JSON(200, OutIngredient{Token: ct.Token, Ingredient: ingredientIn})
+	return c.JSON(200, ingredientIn)
 }
 
-func UpdateIngredient(c echo.Context) error {
-	ct, err := Server.Authentifie(c.Request())
-	if err != nil {
-		return err
-	}
+func (s Server) UpdateIngredient(c echo.Context) error {
+	ct := s.Server.NewRequeteContext(c)
 	var ig models.Ingredient
-	if err = c.Bind(&ig); err != nil {
+	if err := c.Bind(&ig); err != nil {
 		return err
 	}
-	ig, err = Server.UpdateIngredient(ct, ig)
+	ig, err := ct.UpdateIngredient(ig)
 	if err != nil {
 		return err
 	}
-	return c.JSON(200, OutIngredient{Token: ct.Token, Ingredient: ig})
+	return c.JSON(200, ig)
 }
 
-func DeleteIngredient(c echo.Context) error {
-	ct, err := Server.Authentifie(c.Request())
-	if err != nil {
-		return err
-	}
-	id, err := getId(c)
+func (s Server) DeleteIngredient(c echo.Context) error {
+	ct := s.Server.NewRequeteContext(c)
+	idS := c.QueryParam("id")
+	id, err := parseId(idS)
 	if err != nil {
 		return err
 	}
 	checkS := c.QueryParam("check_produits")
-	if err = Server.DeleteIngredient(ct, id, checkS != ""); err != nil {
+	if err = ct.DeleteIngredient(id, checkS != ""); err != nil {
 		return err
 	}
-	out, err := Server.LoadIngredients()
+	out, err := s.Server.LoadIngredients()
 	if err != nil {
 		return err
 	}
-	return c.JSON(200, OutIngredients{Token: ct.Token, Ingredients: out})
+	return c.JSON(200, out)
 }
 
 // --------------------------------------------------------------------------
 // ------------------------------ Recettes ----------------------------------
 // --------------------------------------------------------------------------
 
-func GetRecettes(c echo.Context) error {
-	ct, err := Server.Authentifie(c.Request())
+func (s Server) GetRecettes(c echo.Context) error {
+	out, err := s.Server.LoadRecettes()
 	if err != nil {
 		return err
 	}
-	out, err := Server.LoadRecettes()
-	if err != nil {
-		return err
-	}
-	return c.JSON(200, OutRecettes{Token: ct.Token, Recettes: out})
+	return c.JSON(200, out)
 }
 
-func CreateRecette(c echo.Context) error {
-	ct, err := Server.Authentifie(c.Request())
-	if err != nil {
-		return err
-	}
+func (s Server) CreateRecette(c echo.Context) error {
+	ct := s.Server.NewRequeteContext(c)
 	var recetteIn controller.RecetteComplet
-	if err = c.Bind(&recetteIn); err != nil {
+	if err := c.Bind(&recetteIn); err != nil {
 		return err
 	}
-	newRecette, err := Server.CreateRecette(ct)
+	newRecette, err := ct.CreateRecette()
 	if err != nil {
 		return err
 	}
 	// on utilise l'id fourni par la recette créée
 	recetteIn.Id = newRecette.Id
-	recetteIn, err = Server.UpdateRecette(ct, recetteIn)
+	recetteIn, err = ct.UpdateRecette(recetteIn)
 	if err != nil {
 		return err
 	}
-	return c.JSON(200, OutRecette{Token: ct.Token, Recette: recetteIn})
+	return c.JSON(200, recetteIn)
 }
 
-func UpdateRecette(c echo.Context) error {
-	ct, err := Server.Authentifie(c.Request())
-	if err != nil {
-		return err
-	}
+func (s Server) UpdateRecette(c echo.Context) error {
+	ct := s.Server.NewRequeteContext(c)
 	var recette controller.RecetteComplet
-	if err = c.Bind(&recette); err != nil {
+	if err := c.Bind(&recette); err != nil {
 		return err
 	}
-	recette, err = Server.UpdateRecette(ct, recette)
+	recette, err := ct.UpdateRecette(recette)
 	if err != nil {
 		return err
 	}
-	return c.JSON(200, OutRecette{Token: ct.Token, Recette: recette})
+	return c.JSON(200, recette)
 }
 
-func DeleteRecette(c echo.Context) error {
-	ct, err := Server.Authentifie(c.Request())
+func (s Server) DeleteRecette(c echo.Context) error {
+	ct := s.Server.NewRequeteContext(c)
+	idS := c.QueryParam("id")
+	id, err := parseId(idS)
 	if err != nil {
 		return err
 	}
-	id, err := getId(c)
+	if err = ct.DeleteRecette(id); err != nil {
+		return err
+	}
+	out, err := s.Server.LoadRecettes()
 	if err != nil {
 		return err
 	}
-	if err = Server.DeleteRecette(ct, id); err != nil {
-		return err
-	}
-	out, err := Server.LoadRecettes()
-	if err != nil {
-		return err
-	}
-	return c.JSON(200, OutRecettes{Token: ct.Token, Recettes: out})
+	return c.JSON(200, out)
 }
 
 // --------------------------------------------------------------------------
 // -------------------------------- Menus -----------------------------------
 // --------------------------------------------------------------------------
 
-func GetMenus(c echo.Context) error {
-	ct, err := Server.Authentifie(c.Request())
+func (s Server) GetMenus(c echo.Context) error {
+	out, err := s.Server.LoadMenus()
 	if err != nil {
 		return err
 	}
-	out, err := Server.LoadMenus()
-	if err != nil {
-		return err
-	}
-	return c.JSON(200, OutMenus{Token: ct.Token, Menus: out})
+	return c.JSON(200, out)
 }
 
-func CreateMenu(c echo.Context) error {
-	ct, err := Server.Authentifie(c.Request())
-	if err != nil {
-		return err
-	}
+func (s Server) CreateMenu(c echo.Context) error {
+	ct := s.Server.NewRequeteContext(c)
 	var menuIn controller.MenuComplet
-	if err = c.Bind(&menuIn); err != nil {
+	if err := c.Bind(&menuIn); err != nil {
 		return err
 	}
-	newMenu, err := Server.CreateMenu(ct)
+	newMenu, err := ct.CreateMenu()
 	if err != nil {
 		return err
 	}
 
 	// on utilise l'id fourni par le menu créé
 	menuIn.Id = newMenu.Id
-	menuIn, err = Server.UpdateMenu(ct, menuIn)
+	menuIn, err = ct.UpdateMenu(menuIn)
 	if err != nil {
 		return err
 	}
-	return c.JSON(200, OutMenu{Token: ct.Token, Menu: menuIn})
+	return c.JSON(200, menuIn)
 }
 
-func UpdateMenu(c echo.Context) error {
-	ct, err := Server.Authentifie(c.Request())
+func (s Server) UpdateMenu(c echo.Context) error {
+	ct := s.Server.NewRequeteContext(c)
+	var menu controller.MenuComplet
+	if err := c.Bind(&menu); err != nil {
+		return err
+	}
+	menu, err := ct.UpdateMenu(menu)
 	if err != nil {
 		return err
 	}
-	var recette controller.MenuComplet
-	if err = c.Bind(&recette); err != nil {
-		return err
-	}
-	recette, err = Server.UpdateMenu(ct, recette)
-	if err != nil {
-		return err
-	}
-	return c.JSON(200, OutMenu{Token: ct.Token, Menu: recette})
+	return c.JSON(200, menu)
 }
 
-func DeleteMenu(c echo.Context) error {
-	ct, err := Server.Authentifie(c.Request())
+func (s Server) DeleteMenu(c echo.Context) error {
+	ct := s.Server.NewRequeteContext(c)
+	idS := c.QueryParam("id")
+	id, err := parseId(idS)
 	if err != nil {
 		return err
 	}
-	id, err := getId(c)
+	if err = ct.DeleteMenu(id); err != nil {
+		return err
+	}
+	out, err := s.Server.LoadMenus()
 	if err != nil {
 		return err
 	}
-	if err = Server.DeleteMenu(ct, id); err != nil {
-		return err
-	}
-	out, err := Server.LoadMenus()
-	if err != nil {
-		return err
-	}
-	return c.JSON(200, OutMenus{Token: ct.Token, Menus: out})
+	return c.JSON(200, out)
 }
 
 // --------------------------------------------------------------------------
 // ---------------------------- Sejours et repas ----------------------------
 // --------------------------------------------------------------------------
 
-func GetSejours(c echo.Context) error {
-	ct, err := Server.Authentifie(c.Request())
+func (s Server) GetSejours(c echo.Context) error {
+	ct := s.Server.NewRequeteContext(c)
+	out, err := ct.LoadSejoursUtilisateur()
 	if err != nil {
 		return err
 	}
-	out, err := Server.LoadSejoursUtilisateur(ct)
-	if err != nil {
-		return err
-	}
-	return c.JSON(200, OutSejours{Token: ct.Token, Sejours: out})
+	return c.JSON(200, out)
 }
 
-func CreateSejour(c echo.Context) error {
-	ct, err := Server.Authentifie(c.Request())
-	if err != nil {
-		return err
-	}
+func (s Server) CreateSejour(c echo.Context) error {
+	ct := s.Server.NewRequeteContext(c)
 	var sejourIn models.Sejour
-	if err = c.Bind(&sejourIn); err != nil {
+	if err := c.Bind(&sejourIn); err != nil {
 		return err
 	}
-	newSejour, err := Server.CreateSejour(ct)
+	newSejour, err := ct.CreateSejour()
 	if err != nil {
 		return err
 	}
 	sejourIn.Id = newSejour.Id // on garde les valeurs d'entrée
-	sejourIn, err = Server.UpdateSejour(ct, sejourIn)
+	sejourIn, err = ct.UpdateSejour(sejourIn)
 	if err != nil {
 		return err
 	}
-	return c.JSON(200, OutSejour{Token: ct.Token, Sejour: sejourIn})
+	return c.JSON(200, sejourIn)
 }
 
-func UpdateSejour(c echo.Context) error {
-	ct, err := Server.Authentifie(c.Request())
-	if err != nil {
-		return err
-	}
+func (s Server) UpdateSejour(c echo.Context) error {
+	ct := s.Server.NewRequeteContext(c)
 	var sejour models.Sejour
-	if err = c.Bind(&sejour); err != nil {
+	if err := c.Bind(&sejour); err != nil {
 		return err
 	}
-	sejour, err = Server.UpdateSejour(ct, sejour)
+	sejour, err := ct.UpdateSejour(sejour)
 	if err != nil {
 		return err
 	}
-	return c.JSON(200, OutSejour{Token: ct.Token, Sejour: sejour})
+	return c.JSON(200, sejour)
 }
 
-func DeleteSejour(c echo.Context) error {
-	ct, err := Server.Authentifie(c.Request())
+func (s Server) DeleteSejour(c echo.Context) error {
+	ct := s.Server.NewRequeteContext(c)
+	idS := c.QueryParam("id")
+	id, err := parseId(idS)
 	if err != nil {
 		return err
 	}
-	id, err := getId(c)
+	if err = ct.DeleteSejour(id); err != nil {
+		return err
+	}
+	out, err := ct.LoadSejoursUtilisateur()
 	if err != nil {
 		return err
 	}
-	if err = Server.DeleteSejour(ct, id); err != nil {
-		return err
-	}
-	out, err := Server.LoadSejoursUtilisateur(ct)
-	if err != nil {
-		return err
-	}
-	return c.JSON(200, OutSejours{Token: ct.Token, Sejours: out})
+	return c.JSON(200, out)
 }
 
-func CreateGroupe(c echo.Context) error {
-	ct, err := Server.Authentifie(c.Request())
-	if err != nil {
-		return err
-	}
+func (s Server) CreateGroupe(c echo.Context) error {
+	ct := s.Server.NewRequeteContext(c)
 	var groupe models.Groupe
-	if err = c.Bind(&groupe); err != nil {
+	if err := c.Bind(&groupe); err != nil {
 		return err
 	}
-	newGroupe, err := Server.CreateGroupe(ct, groupe.IdSejour)
+	newGroupe, err := ct.CreateGroupe(groupe.IdSejour)
 	if err != nil {
 		return err
 	}
 	groupe.Id = newGroupe.Id // on garde les valeurs d'entrée
-	groupe, err = Server.UpdateGroupe(ct, groupe)
+	groupe, err = ct.UpdateGroupe(groupe)
 	if err != nil {
 		return err
 	}
-	return c.JSON(200, OutGroupe{Token: ct.Token, Groupe: groupe})
+	return c.JSON(200, groupe)
 }
 
-func UpdateGroupe(c echo.Context) error {
-	ct, err := Server.Authentifie(c.Request())
-	if err != nil {
-		return err
-	}
+func (s Server) UpdateGroupe(c echo.Context) error {
+	ct := s.Server.NewRequeteContext(c)
 	var sejour models.Groupe
-	if err = c.Bind(&sejour); err != nil {
+	if err := c.Bind(&sejour); err != nil {
 		return err
 	}
-	sejour, err = Server.UpdateGroupe(ct, sejour)
+	sejour, err := ct.UpdateGroupe(sejour)
 	if err != nil {
 		return err
 	}
-	return c.JSON(200, OutGroupe{Token: ct.Token, Groupe: sejour})
+	return c.JSON(200, sejour)
 }
 
-func DeleteGroupe(c echo.Context) error {
-	ct, err := Server.Authentifie(c.Request())
-	if err != nil {
-		return err
-	}
-	id, err := getId(c)
+func (s Server) DeleteGroupe(c echo.Context) error {
+	ct := s.Server.NewRequeteContext(c)
+	idS := c.QueryParam("id")
+	id, err := parseId(idS)
 	if err != nil {
 		return err
 	}
 	var out OutDeleteGroupe
-	if out.NbRepas, err = Server.DeleteGroupe(ct, id); err != nil {
+	if out.NbRepas, err = ct.DeleteGroupe(id); err != nil {
 		return err
 	}
-	out.Token = ct.Token
 	return c.JSON(200, out)
 }
 
-func CreateRepas(c echo.Context) error {
-	ct, err := Server.Authentifie(c.Request())
-	if err != nil {
-		return err
-	}
+func (s Server) CreateRepas(c echo.Context) error {
+	ct := s.Server.NewRequeteContext(c)
 	var repasIn controller.RepasComplet
-	if err = c.Bind(&repasIn); err != nil {
+	if err := c.Bind(&repasIn); err != nil {
 		return err
 	}
-	newRepas, err := Server.CreateRepas(ct, repasIn.IdSejour)
+	newRepas, err := ct.CreateRepas(repasIn.IdSejour)
 	if err != nil {
 		return err
 	}
@@ -426,99 +363,89 @@ func CreateRepas(c echo.Context) error {
 	for i := range repasIn.Groupes {
 		repasIn.Groupes[i].IdRepas = newRepas.Id
 	}
-	err = Server.UpdateManyRepas(ct, []controller.RepasComplet{repasIn})
+	err = ct.UpdateManyRepas([]controller.RepasComplet{repasIn})
 	if err != nil {
 		return err
 	}
-	out, err := Server.LoadSejoursUtilisateur(ct)
+	out, err := ct.LoadSejoursUtilisateur()
 	if err != nil {
 		return err
 	}
-	return c.JSON(200, OutSejours{Token: ct.Token, Sejours: out})
+	return c.JSON(200, out)
 }
 
-func UpdateRepas(c echo.Context) error {
-	ct, err := Server.Authentifie(c.Request())
-	if err != nil {
-		return err
-	}
+func (s Server) UpdateRepas(c echo.Context) error {
+	ct := s.Server.NewRequeteContext(c)
 	var repass []controller.RepasComplet
-	if err = c.Bind(&repass); err != nil {
+	if err := c.Bind(&repass); err != nil {
 		return err
 	}
-	err = Server.UpdateManyRepas(ct, repass)
+	err := ct.UpdateManyRepas(repass)
 	if err != nil {
 		return err
 	}
-	out, err := Server.LoadSejoursUtilisateur(ct)
+	out, err := ct.LoadSejoursUtilisateur()
 	if err != nil {
 		return err
 	}
-	return c.JSON(200, OutSejours{Token: ct.Token, Sejours: out})
+	return c.JSON(200, out)
 }
 
-func DeleteRepas(c echo.Context) error {
-	ct, err := Server.Authentifie(c.Request())
+func (s Server) DeleteRepas(c echo.Context) error {
+	ct := s.Server.NewRequeteContext(c)
+	idS := c.QueryParam("id")
+	id, err := parseId(idS)
 	if err != nil {
 		return err
 	}
-	id, err := getId(c)
+	if err = ct.DeleteRepas(id); err != nil {
+		return err
+	}
+	out, err := ct.LoadSejoursUtilisateur()
 	if err != nil {
 		return err
 	}
-	if err = Server.DeleteRepas(ct, id); err != nil {
-		return err
-	}
-	out, err := Server.LoadSejoursUtilisateur(ct)
-	if err != nil {
-		return err
-	}
-	return c.JSON(200, OutSejours{Token: ct.Token, Sejours: out})
+	return c.JSON(200, out)
 }
 
 // -------------------------- Assistant de création --------------------------
 
-func AssistantCreateRepas(c echo.Context) error {
-	ct, err := Server.Authentifie(c.Request())
-	if err != nil {
-		return err
-	}
+func (s Server) AssistantCreateRepas(c echo.Context) error {
+	ct := s.Server.NewRequeteContext(c)
 	var params InAssistantCreateRepass
 	if err := c.Bind(&params); err != nil {
 		return err
 	}
-	if err := Server.InitiateRepas(ct, params); err != nil {
+	if err := ct.InitiateRepas(params); err != nil {
 		return err
 	}
-	out, err := Server.LoadSejoursUtilisateur(ct)
+	out, err := ct.LoadSejoursUtilisateur()
 	if err != nil {
 		return err
 	}
-	return c.JSON(200, OutSejours{Token: ct.Token, Sejours: out})
+	return c.JSON(200, out)
 }
 
 // --------------------------------------------------------------------------
 // -------------------- Résolutions des ingrédients -------------------------
 // --------------------------------------------------------------------------
 
-func ResoudIngredients(c echo.Context) error {
-	ct, err := Server.Authentifie(c.Request())
-	if err != nil {
-		return err
-	}
+func (s Server) ResoudIngredients(c echo.Context) error {
 	var params InResoudIngredients
-	if err = c.Bind(&params); err != nil {
+	if err := c.Bind(&params); err != nil {
 		return err
 	}
-	var out OutResoudIngredients
-	out.Token = ct.Token
+	var (
+		out []controller.DateIngredientQuantites
+		err error
+	)
 	switch params.Mode {
 	case "repas":
 		var di controller.DateIngredientQuantites
-		di.Ingredients, err = Server.ResoudIngredientsRepas(params.IdRepas, params.NbPersonnes)
-		out.DateIngredients = append(out.DateIngredients, di)
+		di.Ingredients, err = s.Server.ResoudIngredientsRepas(params.IdRepas, params.NbPersonnes)
+		out = append(out, di)
 	case "journees":
-		out.DateIngredients, err = Server.ResoudIngredientsJournees(params.IdSejour, params.JourOffsets)
+		out, err = s.Server.ResoudIngredientsJournees(params.IdSejour, params.JourOffsets)
 	default:
 		return fmt.Errorf("Mode de résolution inconnu : %s", params.Mode)
 	}
@@ -532,248 +459,210 @@ func ResoudIngredients(c echo.Context) error {
 // ----------------------------- Produits -----------------------------------
 // --------------------------------------------------------------------------
 
-func GetFournisseurs(c echo.Context) error {
-	ct, err := Server.Authentifie(c.Request())
+func (s Server) GetFournisseurs(c echo.Context) error {
+	ct := s.Server.NewRequeteContext(c)
+	fourn, livr, err := ct.LoadFournisseurs()
 	if err != nil {
 		return err
 	}
-	fourn, livr, err := Server.LoadFournisseurs(ct)
-	if err != nil {
-		return err
-	}
-	return c.JSON(200, OutFournisseurs{Token: ct.Token, Fournisseurs: fourn, Livraisons: livr})
+	return c.JSON(200, OutFournisseurs{Fournisseurs: fourn, Livraisons: livr})
 }
 
-func CreateFournisseur(c echo.Context) error {
-	ct, err := Server.Authentifie(c.Request())
-	if err != nil {
-		return err
-	}
+func (s Server) CreateFournisseur(c echo.Context) error {
+	ct := s.Server.NewRequeteContext(c)
 	var fournisseur models.Fournisseur
-	if err = c.Bind(&fournisseur); err != nil {
+	if err := c.Bind(&fournisseur); err != nil {
 		return err
 	}
-	_, err = Server.CreateFournisseur(ct, fournisseur)
+	_, err := ct.CreateFournisseur(fournisseur)
 	if err != nil {
 		return err
 	}
 
-	fourn, livr, err := Server.LoadFournisseurs(ct)
+	fourn, livr, err := ct.LoadFournisseurs()
 	if err != nil {
 		return err
 	}
-	return c.JSON(200, OutFournisseurs{Token: ct.Token, Fournisseurs: fourn, Livraisons: livr})
+	return c.JSON(200, OutFournisseurs{Fournisseurs: fourn, Livraisons: livr})
 }
 
-func UpdateFournisseur(c echo.Context) error {
-	ct, err := Server.Authentifie(c.Request())
-	if err != nil {
-		return err
-	}
+func (s Server) UpdateFournisseur(c echo.Context) error {
+	ct := s.Server.NewRequeteContext(c)
 	var fournisseur models.Fournisseur
-	if err = c.Bind(&fournisseur); err != nil {
+	if err := c.Bind(&fournisseur); err != nil {
 		return err
 	}
-	fournisseur, err = Server.UpdateFournisseur(ct, fournisseur)
+	fournisseur, err := ct.UpdateFournisseur(fournisseur)
 	if err != nil {
 		return err
 	}
-	return c.JSON(200, OutFournisseur{Token: ct.Token, Fournisseur: fournisseur})
+	return c.JSON(200, fournisseur)
 }
 
-func DeleteFournisseur(c echo.Context) error {
-	ct, err := Server.Authentifie(c.Request())
+func (s Server) DeleteFournisseur(c echo.Context) error {
+	ct := s.Server.NewRequeteContext(c)
+	idS := c.QueryParam("id")
+	id, err := parseId(idS)
 	if err != nil {
 		return err
 	}
-	id, err := getId(c)
+	if err = ct.DeleteFournisseur(id); err != nil {
+		return err
+	}
+	f, l, err := ct.LoadFournisseurs()
 	if err != nil {
 		return err
 	}
-	if err = Server.DeleteFournisseur(ct, id); err != nil {
-		return err
-	}
-	f, l, err := Server.LoadFournisseurs(ct)
-	if err != nil {
-		return err
-	}
-	return c.JSON(200, OutFournisseurs{Token: ct.Token, Fournisseurs: f, Livraisons: l})
+	return c.JSON(200, OutFournisseurs{Fournisseurs: f, Livraisons: l})
 }
 
-func UpdateSejourFournisseurs(c echo.Context) error {
-	ct, err := Server.Authentifie(c.Request())
-	if err != nil {
-		return err
-	}
+func (s Server) UpdateSejourFournisseurs(c echo.Context) error {
+	ct := s.Server.NewRequeteContext(c)
 	var params InSejourFournisseurs
 	if err := c.Bind(&params); err != nil {
 		return err
 	}
-	if err := Server.UpdateSejourFournisseurs(ct, params.IdSejour, params.IdsFournisseurs); err != nil {
+	if err := ct.UpdateSejourFournisseurs(params.IdSejour, params.IdsFournisseurs); err != nil {
 		return err
 	}
-	out, err := Server.LoadSejoursUtilisateur(ct)
+	out, err := ct.LoadSejoursUtilisateur()
 	if err != nil {
 		return err
 	}
-	return c.JSON(200, OutSejours{Token: ct.Token, Sejours: out})
+	return c.JSON(200, out)
 }
 
-func CreateLivraison(c echo.Context) error {
-	ct, err := Server.Authentifie(c.Request())
-	if err != nil {
-		return err
-	}
+func (s Server) CreateLivraison(c echo.Context) error {
+	ct := s.Server.NewRequeteContext(c)
 	var livraison models.Livraison
-	if err = c.Bind(&livraison); err != nil {
+	if err := c.Bind(&livraison); err != nil {
 		return err
 	}
-	livraison, err = Server.CreateLivraison(ct, livraison)
+	livraison, err := ct.CreateLivraison(livraison)
 	if err != nil {
 		return err
 	}
-	return c.JSON(200, OutLivraison{Token: ct.Token, Livraison: livraison})
+	return c.JSON(200, livraison)
 }
 
-func UpdateLivraison(c echo.Context) error {
-	ct, err := Server.Authentifie(c.Request())
-	if err != nil {
-		return err
-	}
+func (s Server) UpdateLivraison(c echo.Context) error {
+	ct := s.Server.NewRequeteContext(c)
 	var livraison models.Livraison
-	if err = c.Bind(&livraison); err != nil {
+	if err := c.Bind(&livraison); err != nil {
 		return err
 	}
-	livraison, err = Server.UpdateLivraison(ct, livraison)
+	livraison, err := ct.UpdateLivraison(livraison)
 	if err != nil {
 		return err
 	}
-	return c.JSON(200, OutLivraison{Token: ct.Token, Livraison: livraison})
+	return c.JSON(200, livraison)
 }
 
-func DeleteLivraison(c echo.Context) error {
-	ct, err := Server.Authentifie(c.Request())
+func (s Server) DeleteLivraison(c echo.Context) error {
+	ct := s.Server.NewRequeteContext(c)
+	idS := c.QueryParam("id")
+	id, err := parseId(idS)
 	if err != nil {
 		return err
 	}
-	id, err := getId(c)
+	if err = ct.DeleteLivraison(id); err != nil {
+		return err
+	}
+	f, l, err := ct.LoadFournisseurs()
 	if err != nil {
 		return err
 	}
-	if err = Server.DeleteLivraison(ct, id); err != nil {
-		return err
-	}
-	f, l, err := Server.LoadFournisseurs(ct)
-	if err != nil {
-		return err
-	}
-	return c.JSON(200, OutFournisseurs{Token: ct.Token, Fournisseurs: f, Livraisons: l})
+	return c.JSON(200, OutFournisseurs{Fournisseurs: f, Livraisons: l})
 }
 
-func GetIngredientProduits(c echo.Context) error {
-	ct, err := Server.Authentifie(c.Request())
+func (s Server) GetIngredientProduits(c echo.Context) error {
+	ct := s.Server.NewRequeteContext(c)
+	idS := c.QueryParam("id")
+	idIngredient, err := parseId(idS)
 	if err != nil {
 		return err
 	}
-	idIngredient, err := getId(c)
+	out, err := ct.GetIngredientProduits(idIngredient)
 	if err != nil {
 		return err
 	}
-	out, err := Server.GetIngredientProduits(ct, idIngredient)
-	if err != nil {
-		return err
-	}
-	return c.JSON(200, OutIngredientProduits{Token: ct.Token, Produits: out})
+	return c.JSON(200, out)
 }
 
-func AjouteIngredientProduit(c echo.Context) error {
-	ct, err := Server.Authentifie(c.Request())
-	if err != nil {
-		return err
-	}
+func (s Server) AjouteIngredientProduit(c echo.Context) error {
+	ct := s.Server.NewRequeteContext(c)
 	var params InAjouteIngredientProduit
-	if err = c.Bind(&params); err != nil {
+	if err := c.Bind(&params); err != nil {
 		return err
 	}
-	err = Server.AjouteIngredientProduit(ct, params.IdIngredient, params.Produit)
+	_, err := ct.AjouteIngredientProduit(params.IdIngredient, params.Produit)
 	if err != nil {
 		return err
 	}
-	out, err := Server.GetIngredientProduits(ct, params.IdIngredient)
+	out, err := ct.GetIngredientProduits(params.IdIngredient)
 	if err != nil {
 		return err
 	}
-	return c.JSON(200, OutIngredientProduits{Token: ct.Token, Produits: out})
+	return c.JSON(200, out)
 }
 
-func UpdateProduit(c echo.Context) error {
-	ct, err := Server.Authentifie(c.Request())
-	if err != nil {
-		return err
-	}
+func (s Server) UpdateProduit(c echo.Context) error {
+	ct := s.Server.NewRequeteContext(c)
 	var produit models.Produit
-	if err = c.Bind(&produit); err != nil {
+	if err := c.Bind(&produit); err != nil {
 		return err
 	}
-	produit, err = Server.UpdateProduit(ct, produit)
+	produit, err := ct.UpdateProduit(produit)
 	if err != nil {
 		return err
 	}
-	return c.JSON(200, OutProduit{Token: ct.Token, Produit: produit})
+	return c.JSON(200, produit)
 }
 
-func DeleteProduit(c echo.Context) error {
-	ct, err := Server.Authentifie(c.Request())
+func (s Server) DeleteProduit(c echo.Context) error {
+	ct := s.Server.NewRequeteContext(c)
+	idS := c.QueryParam("id")
+	id, err := parseId(idS)
 	if err != nil {
 		return err
 	}
-	id, err := getId(c)
-	if err != nil {
-		return err
-	}
-	if err = Server.DeleteProduit(ct, id); err != nil {
+	if err = ct.DeleteProduit(id); err != nil {
 		return err
 	}
 	return c.NoContent(200)
 }
 
-func SetDefautProduit(c echo.Context) error {
-	ct, err := Server.Authentifie(c.Request())
-	if err != nil {
-		return err
-	}
+func (s Server) SetDefautProduit(c echo.Context) error {
+	ct := s.Server.NewRequeteContext(c)
 	var def InSetDefautProduit
-	if err = c.Bind(&def); err != nil {
+	if err := c.Bind(&def); err != nil {
 		return err
 	}
-	err = Server.SetDefautProduit(ct, def.IdIngredient, def.IdProduit, def.On)
+	err := ct.SetDefautProduit(def.IdIngredient, def.IdProduit, def.On)
 	if err != nil {
 		return err
 	}
 
-	out, err := Server.GetIngredientProduits(ct, def.IdIngredient)
+	out, err := ct.GetIngredientProduits(def.IdIngredient)
 	if err != nil {
 		return err
 	}
-	return c.JSON(200, OutIngredientProduits{Token: ct.Token, Produits: out})
+	return c.JSON(200, out)
 }
 
 // --------------------------------------------------------------------------
 // ----------------------------- Commandes ----------------------------------
 // --------------------------------------------------------------------------
 
-func EtablitCommande(c echo.Context) error {
-	ct, err := Server.Authentifie(c.Request())
-	if err != nil {
-		return err
-	}
+func (s Server) EtablitCommande(c echo.Context) error {
+	ct := s.Server.NewRequeteContext(c)
 	var params InCommande
-	if err = c.Bind(&params); err != nil {
+	if err := c.Bind(&params); err != nil {
 		return err
 	}
-	out, ambs, err := Server.EtablitCommande(ct, params.Ingredients, params.Contraintes)
+	out, ambs, err := ct.EtablitCommande(params.Ingredients, params.Contraintes)
 	if err != nil {
 		return err
 	}
-	return c.JSON(200, OutCommande{Token: ct.Token, Commande: out, Ambiguites: ambs})
+	return c.JSON(200, OutCommande{Commande: out, Ambiguites: ambs})
 }

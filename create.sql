@@ -5,7 +5,7 @@
 CREATE TABLE commandes (
 	id serial PRIMARY KEY,
 	id_utilisateur integer NOT NULL,
-	date_emission timestamp NOT NULL,
+	date_emission timestamp (0) with time zone,
 	tag varchar NOT NULL
 );
 
@@ -156,7 +156,7 @@ CREATE TABLE repas_recettes (
 CREATE TABLE sejours (
 	id serial PRIMARY KEY,
 	id_utilisateur integer NOT NULL,
-	date_debut timestamp NOT NULL,
+	date_debut timestamp (0) with time zone,
 	nom varchar NOT NULL
 );
 
@@ -187,13 +187,13 @@ ALTER TABLE commande_produits ADD FOREIGN KEY(id_produit) REFERENCES produits ;
 ALTER TABLE defaut_produits ADD FOREIGN KEY(id_utilisateur) REFERENCES utilisateurs ;
 ALTER TABLE defaut_produits ADD FOREIGN KEY(id_ingredient) REFERENCES ingredients ;
 ALTER TABLE defaut_produits ADD FOREIGN KEY(id_fournisseur) REFERENCES fournisseurs ;
-ALTER TABLE defaut_produits ADD FOREIGN KEY(id_produit) REFERENCES produits ;
+ALTER TABLE defaut_produits ADD FOREIGN KEY(id_produit) REFERENCES produits ON DELETE CASCADE;
 ALTER TABLE groupes ADD FOREIGN KEY(id_sejour) REFERENCES sejours ;
 ALTER TABLE ingredient_produits ADD FOREIGN KEY(id_ingredient) REFERENCES ingredients ;
-ALTER TABLE ingredient_produits ADD FOREIGN KEY(id_produit) REFERENCES produits ;
+ALTER TABLE ingredient_produits ADD FOREIGN KEY(id_produit) REFERENCES produits ON DELETE CASCADE;
 ALTER TABLE ingredient_produits ADD FOREIGN KEY(id_utilisateur) REFERENCES utilisateurs ;
 ALTER TABLE lien_ingredients ADD FOREIGN KEY(id_ingredient) REFERENCES ingredients ;
-ALTER TABLE livraisons ADD FOREIGN KEY(id_fournisseur) REFERENCES fournisseurs ;
+ALTER TABLE livraisons ADD FOREIGN KEY(id_fournisseur) REFERENCES fournisseurs ON DELETE CASCADE;
 ALTER TABLE menus ADD FOREIGN KEY(id_utilisateur) REFERENCES utilisateurs ;
 ALTER TABLE menu_ingredients ADD FOREIGN KEY(id_menu) REFERENCES menus ;
 ALTER TABLE menu_ingredients ADD FOREIGN KEY(id_ingredient) REFERENCES ingredients ;
@@ -204,11 +204,11 @@ ALTER TABLE recettes ADD FOREIGN KEY(id_utilisateur) REFERENCES utilisateurs ;
 ALTER TABLE recette_ingredients ADD FOREIGN KEY(id_recette) REFERENCES recettes ;
 ALTER TABLE recette_ingredients ADD FOREIGN KEY(id_ingredient) REFERENCES ingredients ;
 ALTER TABLE repass ADD FOREIGN KEY(id_sejour) REFERENCES sejours ;
-ALTER TABLE repas_groupes ADD FOREIGN KEY(id_repas) REFERENCES repass ;
+ALTER TABLE repas_groupes ADD FOREIGN KEY(id_repas) REFERENCES repass ON DELETE CASCADE;
 ALTER TABLE repas_groupes ADD FOREIGN KEY(id_groupe) REFERENCES groupes ;
-ALTER TABLE repas_ingredients ADD FOREIGN KEY(id_repas) REFERENCES repass ;
+ALTER TABLE repas_ingredients ADD FOREIGN KEY(id_repas) REFERENCES repass ON DELETE CASCADE;
 ALTER TABLE repas_ingredients ADD FOREIGN KEY(id_ingredient) REFERENCES ingredients ;
-ALTER TABLE repas_recettes ADD FOREIGN KEY(id_repas) REFERENCES repass ;
+ALTER TABLE repas_recettes ADD FOREIGN KEY(id_repas) REFERENCES repass ON DELETE CASCADE;
 ALTER TABLE repas_recettes ADD FOREIGN KEY(id_recette) REFERENCES recettes ;
 ALTER TABLE sejours ADD FOREIGN KEY(id_utilisateur) REFERENCES utilisateurs ;
 ALTER TABLE sejour_fournisseurs ADD FOREIGN KEY(id_utilisateur) REFERENCES utilisateurs ;

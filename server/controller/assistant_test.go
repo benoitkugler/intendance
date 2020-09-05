@@ -9,26 +9,26 @@ import (
 
 func TestAssistant(t *testing.T) {
 	s, ct := setupTest(t)
-	defer s.db.Close()
+	defer s.DB.Close()
 
-	sej, err := s.CreateSejour(ct)
+	sej, err := ct.CreateSejour()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	groupe1, err := s.CreateGroupe(ct, sej.Id)
+	groupe1, err := ct.CreateGroupe(sej.Id)
 	if err != nil {
 		t.Fatal(err)
 	}
-	groupe2, err := s.CreateGroupe(ct, sej.Id)
+	groupe2, err := ct.CreateGroupe(sej.Id)
 	if err != nil {
 		t.Fatal(err)
 	}
-	groupe3, err := s.CreateGroupe(ct, sej.Id)
+	groupe3, err := ct.CreateGroupe(sej.Id)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = s.InitiateRepas(ct, InAssistantCreateRepass{
+	err = ct.InitiateRepas(InAssistantCreateRepass{
 		IdSejour: sej.Id,
 		GroupesSorties: map[int][]int64{
 			0: {groupe1.Id, groupe2.Id},
@@ -45,7 +45,7 @@ func TestAssistant(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	a, err := s.LoadSejoursUtilisateur(ct)
+	a, err := ct.LoadSejoursUtilisateur()
 	if err != nil {
 		t.Fatal(err)
 	}

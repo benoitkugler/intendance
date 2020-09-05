@@ -16,8 +16,8 @@ func setupTest(t *testing.T) (Server, RequeteContext) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	s := Server{db: db}
-	ct := RequeteContext{idProprietaire: 2}
+	s := Server{DB: db}
+	ct := RequeteContext{IdProprietaire: 2, DB: db}
 	return s, ct
 }
 
@@ -27,7 +27,7 @@ func TestLoggin(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer db.Close()
-	s := Server{db: db}
+	s := Server{DB: db}
 
 	out, err := s.Loggin("mldks", "sdsd")
 	if err != nil {
@@ -44,8 +44,8 @@ func TestLoggin(t *testing.T) {
 
 func TestLoadData(t *testing.T) {
 	s, ct := setupTest(t)
-	defer s.db.Close()
-	a, err := s.LoadSejoursUtilisateur(ct)
+	defer s.DB.Close()
+	a, err := ct.LoadSejoursUtilisateur()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -86,19 +86,19 @@ func (a Sejours) String() string {
 
 func TestCRUD(t *testing.T) {
 	s, ct := setupTest(t)
-	defer s.db.Close()
+	defer s.DB.Close()
 
-	ig, err := s.CreateIngredient(ct)
+	ig, err := ct.CreateIngredient()
 	if err != nil {
 		t.Fatal(err)
 	}
 	ig.Nom = fmt.Sprintf("Tom acs tesd sdl sddddds ddsd35 %d", time.Now().UnixNano())
 	ig.Unite = models.Kilos
-	ig, err = s.UpdateIngredient(ct, ig)
+	ig, err = ct.UpdateIngredient(ig)
 	if err != nil {
 		t.Fatal(err)
 	}
-	re, err := s.CreateRecette(ct)
+	re, err := ct.CreateRecette()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -106,18 +106,18 @@ func TestCRUD(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = s.UpdateRecette(ct, RecetteComplet{Recette: re, Ingredients: models.LienIngredients{
+	_, err = ct.UpdateRecette(RecetteComplet{Recette: re, Ingredients: models.LienIngredients{
 		{IdIngredient: ig.Id, Quantite: 4},
 	}})
 	if err != nil {
 		t.Fatal(err)
 	}
-	m, err := s.CreateMenu(ct)
+	m, err := ct.CreateMenu()
 	if err != nil {
 		t.Fatal(err)
 	}
 	m.Commentaire = "Un menu bien équilibré"
-	_, err = s.UpdateMenu(ct, MenuComplet{Menu: m, Recettes: models.Ids{
+	_, err = ct.UpdateMenu(MenuComplet{Menu: m, Recettes: models.Ids{
 		re.Id,
 	}, Ingredients: models.LienIngredients{
 		{IdIngredient: ig.Id},
@@ -125,53 +125,53 @@ func TestCRUD(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	sej, err := s.CreateSejour(ct)
+	sej, err := ct.CreateSejour()
 	if err != nil {
 		t.Fatal(err)
 	}
 	sej.Nom = "C2"
-	if _, err = s.UpdateSejour(ct, sej); err != nil {
+	if _, err = ct.UpdateSejour(sej); err != nil {
 		t.Fatal(err)
 	}
 
-	groupe, err := s.CreateGroupe(ct, sej.Id)
+	groupe, err := ct.CreateGroupe(sej.Id)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rep, err := s.CreateRepas(ct, sej.Id)
+	rep, err := ct.CreateRepas(sej.Id)
 	if err != nil {
 		t.Fatal(err)
 	}
 	rep.OffsetPersonnes = 55
 	rep.Horaire = models.Midi
-	if err = s.UpdateManyRepas(ct, []RepasComplet{{Repas: rep, Groupes: []models.RepasGroupe{
+	if err = ct.UpdateManyRepas([]RepasComplet{{Repas: rep, Groupes: []models.RepasGroupe{
 		{IdRepas: rep.Id, IdGroupe: groupe.Id}},
 	}}); err != nil {
 		t.Fatal(err)
 	}
 
-	a, err := s.LoadSejoursUtilisateur(ct)
+	a, err := ct.LoadSejoursUtilisateur()
 	if err != nil {
 		t.Fatal(err)
 	}
 	fmt.Println(a)
-	if err = s.DeleteRepas(ct, rep.Id); err != nil {
+	if err = ct.DeleteRepas(rep.Id); err != nil {
 		t.Fatal(err)
 	}
-	if _, err = s.DeleteGroupe(ct, groupe.Id); err != nil {
+	if _, err = ct.DeleteGroupe(groupe.Id); err != nil {
 		t.Fatal(err)
 	}
-	if err = s.DeleteSejour(ct, sej.Id); err != nil {
+	if err = ct.DeleteSejour(sej.Id); err != nil {
 		t.Fatal(err)
 	}
-	if err = s.DeleteMenu(ct, m.Id); err != nil {
+	if err = ct.DeleteMenu(m.Id); err != nil {
 		t.Fatal(err)
 	}
-	if err = s.DeleteRecette(ct, re.Id); err != nil {
+	if err = ct.DeleteRecette(re.Id); err != nil {
 		t.Fatal(err)
 	}
-	if err = s.DeleteIngredient(ct, ig.Id, true); err != nil {
+	if err = ct.DeleteIngredient(ig.Id, true); err != nil {
 		t.Fatal(err)
 	}
 }

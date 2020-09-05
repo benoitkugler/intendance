@@ -37,6 +37,8 @@ func (e errorSQL) parseDetails() string {
 	return e.error.Error()
 }
 
+// ErrorSQL adds better formatting to errors;
+// if `err == nil`, returns nil as well
 func ErrorSQL(err error) error {
 	if err == nil {
 		return nil

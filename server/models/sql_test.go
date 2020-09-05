@@ -176,37 +176,37 @@ func TestSql(t *testing.T) {
 	}
 
 	//suppressions des objets
-	if _, err := i10.Delete(tx); err != nil {
+	if _, err := DeleteRepasById(tx, i10.Id); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := i9.Delete(tx); err != nil {
+	if _, err := DeleteGroupeById(tx, i9.Id); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := i8.Delete(tx); err != nil {
+	if _, err := DeleteCommandeById(tx, i8.Id); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := i7.Delete(tx); err != nil {
+	if _, err := DeleteProduitById(tx, i7.Id); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := i6bis.Delete(tx); err != nil {
+	if _, err := DeleteLivraisonById(tx, i6bis.Id); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := i6.Delete(tx); err != nil {
+	if _, err := DeleteFournisseurById(tx, i6.Id); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := i5.Delete(tx); err != nil {
+	if _, err := DeleteSejourById(tx, i5.Id); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := i4.Delete(tx); err != nil {
+	if _, err := DeleteMenuById(tx, i4.Id); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := i3.Delete(tx); err != nil {
+	if _, err := DeleteRecetteById(tx, i3.Id); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := i2.Delete(tx); err != nil {
+	if _, err := DeleteIngredientById(tx, i2.Id); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := i1.Delete(tx); err != nil {
+	if _, err := DeleteUtilisateurById(tx, i1.Id); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -257,7 +257,7 @@ func TestProduits(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err = ScanInts(rows); err != nil {
+	if _, err = ScanIds(rows); err != nil {
 		t.Fatal(err)
 	}
 

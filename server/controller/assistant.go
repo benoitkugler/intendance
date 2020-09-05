@@ -27,14 +27,15 @@ type InAssistantCreateRepass struct {
 }
 
 // crée un repas et y ajoute les groupes donnés
-func creeRepasComplet(ct RequeteContext, params InAssistantCreateRepass,
+// ne commit pas; ne rollback pas
+func (tx Tx) creeRepasComplet(params InAssistantCreateRepass,
 	horaire models.Horaire, jourOffset int, idsGroupes models.Set) error {
 	repas := models.Repas{
 		IdSejour:   params.IdSejour,
 		Horaire:    horaire,
 		JourOffset: int64(jourOffset),
 	}
-	repas, err := repas.Insert(ct.tx)
+	repas, err := repas.Insert(tx)
 	if err != nil {
 		return ErrorSQL(err)
 	}
@@ -42,58 +43,55 @@ func creeRepasComplet(ct RequeteContext, params InAssistantCreateRepass,
 	for idGroupe := range idsGroupes {
 		rg = append(rg, models.RepasGroupe{IdGroupe: idGroupe, IdRepas: repas.Id})
 	}
-	if err = models.InsertManyRepasGroupes(ct.tx, rg...); err != nil {
+	if err = models.InsertManyRepasGroupes(tx.Tx, rg...); err != nil {
 		return ErrorSQL(err)
 	}
 	return nil
 }
 
-func (s Server) InitiateRepas(ct RequeteContext, params InAssistantCreateRepass) error {
-	if err := ct.beginTx(s); err != nil {
-		return err
-	}
+func (ct RequeteContext) InitiateRepas(params InAssistantCreateRepass) error {
 	if err := ct.proprioSejour(models.Sejour{Id: params.IdSejour}, false); err != nil {
 		return err
 	}
 
+	tx, err := ct.beginTx()
+	if err != nil {
+		return err
+	}
 	if params.Options.DeleteExisting {
 		// on supprime tous les repas liés au séjour
 		// lien repas-groupes
-		_, err := s.db.Exec(`DELETE FROM repas_groupes WHERE id_repas = 
+		_, err := tx.Exec(`DELETE FROM repas_groupes WHERE id_repas = 
 			ANY(SELECT id_repas FROM sejours WHERE id = $1)`, params.IdSejour)
 		if err != nil {
-			return ct.rollbackTx(err)
+			return tx.rollback(err)
 		}
 
 		// lien repas-recettes
-		_, err = s.db.Exec(`DELETE FROM repas_recettes WHERE id_repas = 
+		_, err = tx.Exec(`DELETE FROM repas_recettes WHERE id_repas = 
 		ANY(SELECT id_repas FROM sejours WHERE id = $1)`, params.IdSejour)
 		if err != nil {
-			return ct.rollbackTx(err)
+			return tx.rollback(err)
 		}
 
 		// lien repas-ingredients
-		_, err = s.db.Exec(`DELETE FROM repas_ingredients WHERE id_repas = 
+		_, err = tx.Exec(`DELETE FROM repas_ingredients WHERE id_repas = 
 		ANY(SELECT id_repas FROM sejours WHERE id = $1)`, params.IdSejour)
 		if err != nil {
-			return ct.rollbackTx(err)
+			return tx.rollback(err)
 		}
 
 		// repas
-		_, err = s.db.Exec(`DELETE FROM repass WHERE id_sejour = $1`, params.IdSejour)
+		_, err = tx.Exec(`DELETE FROM repass WHERE id_sejour = $1`, params.IdSejour)
 		if err != nil {
-			return ct.rollbackTx(err)
+			return tx.rollback(err)
 		}
 	}
 
 	// on récupère les groupes du séjour
-	rows, err := s.db.Query(`SELECT * FROM groupes WHERE id_sejour = $1`, params.IdSejour)
+	groupes, err := models.SelectGroupesByIdSejours(tx, params.IdSejour)
 	if err != nil {
-		return ct.rollbackTx(err)
-	}
-	groupes, err := models.ScanGroupes(rows)
-	if err != nil {
-		return ct.rollbackTx(err)
+		return tx.rollback(err)
 	}
 
 	// on calcule les horaires à ajouter
@@ -112,32 +110,30 @@ func (s Server) InitiateRepas(ct RequeteContext, params InAssistantCreateRepass)
 		for _, horaire := range horaires {
 			if len(sorties) != 0 {
 				// on crée le repas 'sorties'
-				err = creeRepasComplet(ct, params, horaire, jourOffset, sorties)
+				err = tx.creeRepasComplet(params, horaire, jourOffset, sorties)
 				if err != nil {
-					return ct.rollbackTx(err)
+					return tx.rollback(err)
 				}
 			}
 
 			if len(sorties) == 0 || len(basique) > 0 {
 				// 'sorties' vide ou 'basique' plein -> repas 'basique'
-				err = creeRepasComplet(ct, params, horaire, jourOffset, basique)
+				err = tx.creeRepasComplet(params, horaire, jourOffset, basique)
 				if err != nil {
-					return ct.rollbackTx(err)
+					return tx.rollback(err)
 				}
 			}
 		}
 
 		// cas du cinquième
 		if groupes5 := params.Options.Cinquieme; len(groupes5) > 0 {
-			err = creeRepasComplet(ct, params, models.Cinquieme, jourOffset, groupes5.AsSet())
+			err = tx.creeRepasComplet(params, models.Cinquieme, jourOffset, groupes5.AsSet())
 			if err != nil {
-				return ct.rollbackTx(err)
+				return tx.rollback(err)
 			}
 		}
 	}
 
-	if err = ct.commitTx(); err != nil {
-		return ct.rollbackTx(err)
-	}
-	return nil
+	err = tx.Commit()
+	return err
 }
