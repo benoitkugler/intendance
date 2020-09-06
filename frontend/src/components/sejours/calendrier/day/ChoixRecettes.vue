@@ -35,7 +35,7 @@ import Vue from "vue";
 import Component from "vue-class-component";
 
 import { C } from "../../../../logic/controller";
-import { Recette, RecetteComplet } from "../../../../logic/types";
+import { Recette, RecetteComplet } from "../../../../logic/api";
 import { DragKind, setDragData } from "../../../utils/utils_drag";
 import Toolbar from "../../../utils/Toolbar.vue";
 import { searchFunction } from "../../../utils/utils";

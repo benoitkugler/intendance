@@ -16,7 +16,7 @@ import Vue from "vue";
 import Component from "vue-class-component";
 import { C } from "../../logic/controller";
 import { searchFunction } from "./utils";
-import { EnumItem } from "../../logic/types2";
+import { EnumItem } from "../../logic/api";
 const IngredientFieldProps = Vue.extend({
   props: {}
 });

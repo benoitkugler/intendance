@@ -70,14 +70,14 @@ import {
   DateIngredientQuantites,
   IngredientQuantite,
   RepasGroupe
-} from "../../logic/types";
+} from "../../logic/api";
 import {
   New,
   DetailsRepas,
   EditMode,
   toNullableId,
   deepcopy
-} from "../../logic/types2";
+} from "../../logic/api";
 import DateField from "../utils/DateField.vue";
 import HoraireField from "../utils/HoraireField.vue";
 import TooltipBtn from "../utils/TooltipBtn.vue";

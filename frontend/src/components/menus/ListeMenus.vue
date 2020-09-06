@@ -76,7 +76,7 @@ import TooltipBtn from "../utils/TooltipBtn.vue";
 import Toolbar from "../utils/Toolbar.vue";
 
 import { C } from "../../logic/controller";
-import { Menu } from "../../logic/types";
+import { Menu } from "../../logic/api";
 import { StateMenus } from "./types";
 import { searchFunction } from "../utils/utils";
 import { BaseList, ListKind } from "./shared";

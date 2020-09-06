@@ -35,9 +35,9 @@
 <script lang="ts">
 import Vue from "vue";
 import Component from "vue-class-component";
-import { LienIngredient, UniteLabels } from "../../logic/types";
+import { LienIngredient, UniteLabels } from "../../logic/api";
 import { Watch } from "vue-property-decorator";
-import { deepcopy } from "../../logic/types2";
+import { deepcopy } from "../../logic/api";
 import QuantiteRelative from "./QuantiteRelative.vue";
 import { C } from "../../logic/controller";
 

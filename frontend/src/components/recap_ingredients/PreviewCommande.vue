@@ -112,7 +112,7 @@ import {
   Produit,
   Ambiguites,
   CommandeContraintes
-} from "../../logic/types";
+} from "../../logic/api";
 import { Watch } from "vue-property-decorator";
 import { C } from "../../logic/controller";
 import { Formatter } from "../../logic/formatter";

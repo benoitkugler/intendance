@@ -1,6 +1,6 @@
 /** Helpers for type-safe drag and drop operations */
 
-import { RepasComplet, MenuComplet } from "@/logic/types";
+import { RepasComplet, MenuComplet } from "@/logic/api";
 
 interface GroupeDragData {
   idGroupe: number;

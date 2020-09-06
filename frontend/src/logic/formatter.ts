@@ -1,15 +1,15 @@
 import { Controller } from "./controller";
 import {
+  RepasComplet,
+  MenuComplet,
   Menu,
   Recette,
-  RepasComplet,
   Time,
   Conditionnement,
-  MenuComplet,
+  UniteLabels,
   Produit,
-  Livraison,
-  UniteLabels
-} from "./types";
+  Livraison
+} from "./api";
 
 const Months = [
   "Janvier",
@@ -54,7 +54,7 @@ export class Formatter {
     const prop = this.controller.getMenuOrRecetteProprietaire(item);
     if (prop == null) {
       return "public";
-    } else if (prop.id == this.controller.idUtilisateur) {
+    } else if (prop.id == this.controller.state.idUtilisateur) {
       return "vous appartient";
     }
     return `appartient à ${prop.prenom_nom}`;

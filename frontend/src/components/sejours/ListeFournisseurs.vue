@@ -57,7 +57,7 @@ import Component from "vue-class-component";
 
 import TooltipBtn from "../utils/TooltipBtn.vue";
 import { C } from "../../logic/controller";
-import { SejourRepas } from "../../logic/types";
+import { SejourRepas } from "../../logic/api";
 import { Watch } from "vue-property-decorator";
 
 const ListeFournisseursProps = Vue.extend({

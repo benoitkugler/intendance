@@ -44,7 +44,7 @@ import {
   DateIngredientQuantites,
   OutResoudIngredients,
   SejourRepas
-} from "../../logic/types";
+} from "../../logic/api";
 import { compareArrays, Debounce } from "../utils/utils";
 
 const FormCalculProps = Vue.extend({

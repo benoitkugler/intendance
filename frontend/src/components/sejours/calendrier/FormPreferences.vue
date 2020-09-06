@@ -18,7 +18,7 @@
 <script lang="ts">
 import Vue from "vue";
 import Component from "vue-class-component";
-import { PreferencesAgenda, deepcopy } from "../../../logic/types2";
+import { PreferencesAgenda, deepcopy } from "../../../logic/api";
 
 const Props = Vue.extend({
   model: {

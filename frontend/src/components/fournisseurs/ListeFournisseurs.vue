@@ -140,8 +140,8 @@ import TooltipBtn from "../utils/TooltipBtn.vue";
 import DetailsFournisseur from "./DetailsFournisseur.vue";
 import DetailsLivraison from "./DetailsLivraison.vue";
 
-import { EditMode, New, defaultLivraison } from "../../logic/types2";
-import { Fournisseur, Livraison } from "../../logic/types";
+import { EditMode, New, defaultLivraison } from "../../logic/api";
+import { Fournisseur, Livraison } from "../../logic/api";
 import { Days } from "../utils/utils";
 
 const ListeFournisseursProps = Vue.extend({

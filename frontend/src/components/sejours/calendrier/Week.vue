@@ -55,7 +55,7 @@ import Component from "vue-class-component";
 import ListeRepas from "./ListeRepas.vue";
 import TooltipBtn from "../../utils/TooltipBtn.vue";
 import { C } from "../../../logic/controller";
-import { RepasComplet, Sejour } from "../../../logic/types";
+import { RepasComplet, Sejour } from "../../../logic/api";
 import { DragKind, getDragData } from "../../utils/utils_drag";
 import { Formatter } from "../../../logic/formatter";
 

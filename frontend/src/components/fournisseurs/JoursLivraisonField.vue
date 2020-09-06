@@ -12,9 +12,9 @@
 <script lang="ts">
 import Vue from "vue";
 import Component from "vue-class-component";
-import { JoursLivraison } from "../../logic/types";
+import { JoursLivraison } from "../../logic/api";
 import { Days, cycleDays } from "../utils/utils";
-import { EnumItem } from "../../logic/types2";
+import { EnumItem } from "../../logic/api";
 
 const JoursLivraisonFieldProps = Vue.extend({
   props: {

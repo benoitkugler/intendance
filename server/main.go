@@ -58,11 +58,12 @@ func setup(e *echo.Echo, dev bool, s controller.Server) string {
 	if dev {
 		adress = "localhost:1323"
 		autoriseCORS(e)
-		id, token, err := s.GetDevToken()
+		credences, err := s.GetDevToken()
 		if err != nil {
 			log.Fatalf("Can't get token : %s", err)
 		}
-		fmt.Printf("Dev: user %d, token %s\n", id, token)
+		fmt.Printf("Dev: %s\n", credences)
+		e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{Format: "${uri} => ${status} ${error}\n"}))
 	} else {
 		autoriseCORS(e) //FIXME:
 		if err := s.DB.Ping(); err != nil {
@@ -97,7 +98,7 @@ func routes(e *echo.Echo, s views.Server) {
 
 	e.POST("/api/loggin", s.Loggin)
 
-	tokenMid := middleware.JWT(logs.PASSPHRASE)
+	tokenMid := s.JWTMiddleware()
 
 	e.GET("/api/utilisateurs", s.GetUtilisateurs, tokenMid)
 
@@ -128,7 +129,7 @@ func routes(e *echo.Echo, s views.Server) {
 	e.POST("/api/sejours/fournisseurs", s.UpdateSejourFournisseurs, tokenMid)
 
 	e.PUT("/api/sejours/repas", s.CreateRepas, tokenMid)
-	e.POST("/api/sejours/repas", s.UpdateRepas, tokenMid)
+	e.POST("/api/sejours/repas", s.UpdateManyRepas, tokenMid)
 	e.DELETE("/api/sejours/repas", s.DeleteRepas, tokenMid)
 
 	e.PUT("/api/sejours/assistant", s.AssistantCreateRepas, tokenMid)

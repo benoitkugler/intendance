@@ -502,29 +502,29 @@ func (ct RequeteContext) UpdateGroupe(in models.Groupe) (models.Groupe, error) {
 }
 
 // DeleteGroupe supprime le groupe et renvoie le nombre de repas touchés.
-func (ct RequeteContext) DeleteGroupe(id int64) (int, error) {
+func (ct RequeteContext) DeleteGroupe(id int64) (OutDeleteGroupe, error) {
 	if err := ct.proprioGroupe(id); err != nil {
-		return 0, err
+		return OutDeleteGroupe{}, err
 	}
 	tx, err := ct.beginTx()
 	if err != nil {
-		return 0, err
+		return OutDeleteGroupe{}, err
 	}
 
 	// on enlève le groupe des repas
 	res, err := tx.Exec("DELETE FROM repas_groupes WHERE id_groupe = $1", id)
 	if err != nil {
-		return 0, tx.rollback(err)
+		return OutDeleteGroupe{}, tx.rollback(err)
 	}
 	nbDelete, err := res.RowsAffected()
 	if err != nil {
-		return 0, tx.rollback(err)
+		return OutDeleteGroupe{}, tx.rollback(err)
 	}
 	_, err = models.DeleteGroupeById(tx.Tx, id)
 	if err != nil {
-		return 0, tx.rollback(err)
+		return OutDeleteGroupe{}, tx.rollback(err)
 	}
-	return int(nbDelete), tx.Commit()
+	return OutDeleteGroupe{NbRepas: nbDelete, Id: id}, tx.Commit()
 }
 
 // Repas

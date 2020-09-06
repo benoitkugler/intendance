@@ -168,8 +168,8 @@ import {
   IngredientQuantite,
   Horaire,
   HoraireLabels
-} from "../../../../logic/types";
-import { New, deepcopy, enumIntToOptions } from "../../../../logic/types2";
+} from "../../../../logic/api";
+import { New, deepcopy, enumIntToOptions } from "../../../../logic/api";
 import { HorairesColors, HorairesIcons } from "../../../utils/utils";
 import { DragKind, getDragData, setDragData } from "../../../utils/utils_drag";
 import ChoixIngredients from "./ChoixIngredients.vue";

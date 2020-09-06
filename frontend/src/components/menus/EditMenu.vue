@@ -68,8 +68,8 @@ import Component from "vue-class-component";
 import TooltipBtn from "../utils/TooltipBtn.vue";
 
 import { C } from "../../logic/controller";
-import { Menu, Recette, LienIngredient, MenuComplet } from "../../logic/types";
-import { New, EditMode, deepcopy } from "../../logic/types2";
+import { Menu, Recette, LienIngredient, MenuComplet } from "../../logic/api";
+import { New, EditMode, deepcopy } from "../../logic/api";
 import { Watch } from "vue-property-decorator";
 import ListeLienIngredients from "../utils/ListeLienIngredients.vue";
 import { DragKind, getDragData } from "../utils/utils_drag";

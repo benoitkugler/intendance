@@ -87,7 +87,7 @@ import TooltipBtn from "../utils/TooltipBtn.vue";
 import Toolbar from "../utils/Toolbar.vue";
 
 import { C } from "../../logic/controller";
-import { Recette } from "../../logic/types";
+import { Recette } from "../../logic/api";
 import { StateMenus } from "./types";
 import levenshtein from "js-levenshtein";
 import { searchFunction } from "../utils/utils";

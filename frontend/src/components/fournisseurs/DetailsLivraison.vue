@@ -50,14 +50,14 @@
 <script lang="ts">
 import Vue from "vue";
 import Component from "vue-class-component";
-import { Livraison } from "../../logic/types";
+import { Livraison } from "../../logic/api";
 import {
   New,
   EditMode,
   deepcopy,
   defaultLivraison,
   EnumItem
-} from "../../logic/types2";
+} from "../../logic/api";
 import { Watch } from "vue-property-decorator";
 import { C } from "../../logic/controller";
 import JoursLivraisonField from "./JoursLivraisonField.vue";

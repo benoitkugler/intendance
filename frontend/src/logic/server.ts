@@ -1,5 +1,20 @@
 import Cookie from "js-cookie";
-import { AbstractAPI } from "./api";
+import Vue from "vue";
+import {
+  AbstractAPI,
+  Sejours,
+  Sejour,
+  Groupe,
+  OutDeleteGroupe,
+  OutFournisseurs,
+  Fournisseur,
+  Livraison,
+  IngredientProduits,
+  Produit,
+  OutCommande,
+  DateIngredientQuantites,
+  InResoudIngredients
+} from "./api";
 import { Notifications } from "./notifications";
 import { Controller } from "./controller";
 import {
@@ -13,19 +28,9 @@ import {
   Fournisseurs,
   Livraisons,
   OutLoggin,
-  Sejours,
-  Sejour,
-  Groupe,
-  OutDeleteGroupe,
-  OutFournisseurs,
-  Fournisseur,
-  Livraison,
-  IngredientProduits,
-  Produit,
-  OutCommande,
   Ingredients
-} from "./types";
-import { compareArrays } from "@/components/utils/utils";
+} from "./api";
+
 export const devMode = process.env.NODE_ENV != "production";
 const host = devMode ? "http://localhost:1323" : window.location.origin;
 
@@ -53,7 +58,7 @@ export class API extends AbstractAPI {
     this.notifications.startSpin();
   }
 
-  protected onSuccessLoggin(data: OutLoggin): void {}
+  protected onSuccessLoggin(data: OutLoggin) {}
 
   protected onSuccessGetUtilisateurs(
     data: { [key: number]: Utilisateur } | null
@@ -65,6 +70,177 @@ export class API extends AbstractAPI {
   protected onSuccessGetIngredients(data: Ingredients): void {
     this.ingredients = data || {};
     this.notifications.setMessage("Ingrédients chargés.");
+  }
+
+  protected onSuccessCreateIngredient(data: Ingredient): void {
+    Vue.set(this.ingredients || {}, data.id, data); // VRC
+    this.notifications.setMessage("Ingrédient ajouté.");
+  }
+  protected onSuccessUpdateIngredient(data: Ingredient): void {
+    Vue.set(this.ingredients || {}, data.id, data); // VRC
+    this.notifications.setMessage("Ingrédient mis à jour.");
+  }
+  protected onSuccessDeleteIngredient(data: Ingredients): void {
+    this.ingredients = data || {};
+    this.notifications.setMessage("Ingrédient bien supprimé.");
+  }
+  protected onSuccessGetRecettes(
+    data: { [key: number]: RecetteComplet } | null
+  ): void {
+    this.recettes = data || {};
+    this.notifications.setMessage("Recettes chargées.");
+  }
+  protected onSuccessCreateRecette(data: RecetteComplet): void {
+    Vue.set(this.recettes, data.id, data); // VRC
+    this.notifications.setMessage("Recette ajoutée.");
+  }
+  protected onSuccessUpdateRecette(data: RecetteComplet): void {
+    Vue.set(this.recettes, data.id, data); // VRC
+    this.notifications.setMessage("Recette mise à jour.");
+  }
+  protected onSuccessDeleteRecette(
+    data: { [key: number]: RecetteComplet } | null
+  ): void {
+    this.recettes = data || {};
+    this.notifications.setMessage("Recette supprimée.");
+  }
+  protected onSuccessGetMenus(
+    data: { [key: number]: MenuComplet } | null
+  ): void {
+    this.menus = data || {};
+    this.notifications.setMessage("Menus chargés.");
+  }
+  protected onSuccessCreateMenu(data: MenuComplet): void {
+    Vue.set(this.menus, data.id, data); // VRC
+    this.notifications.setMessage("Menu créé.");
+  }
+  protected onSuccessUpdateMenu(data: MenuComplet): void {
+    Vue.set(this.menus, data.id, data); // VRC
+    this.notifications.setMessage("Menu mis à jour.");
+  }
+  protected onSuccessDeleteMenu(
+    data: { [key: number]: MenuComplet } | null
+  ): void {
+    this.menus = data || {};
+    this.notifications.setMessage("Menu supprimé.");
+  }
+  protected onSuccessGetSejours(data: Sejours): void {
+    this.sejours.sejours = data.sejours || {};
+    this.sejours.groupes = data.groupes || {};
+    this.notifications.setMessage("Séjours chargés.");
+  }
+  protected onSuccessCreateSejour(data: Sejour): void {
+    const newSejour: SejourRepas = { ...data, repass: [], fournisseurs: [] };
+    Vue.set(this.sejours.sejours, newSejour.id, newSejour); // VRC
+    this.notifications.setMessage("Sejour créé");
+  }
+  protected onSuccessUpdateSejour(data: Sejour): void {
+    const oldSejour = this.sejours.sejours[data.id];
+    const updatedSejour: SejourRepas = {
+      ...data,
+      repass: oldSejour.repass,
+      fournisseurs: oldSejour.fournisseurs
+    };
+    this.sejours.sejours[data.id] = updatedSejour;
+    this.notifications.setMessage("Sejour mis à jour.");
+  }
+  protected onSuccessDeleteSejour(data: Sejours): void {
+    this.sejours.sejours = data.sejours || {};
+    this.sejours.groupes = data.groupes || {};
+    this.notifications.setMessage("Sejour supprimé.");
+  }
+  protected onSuccessCreateGroupe(data: Groupe): void {
+    Vue.set(this.sejours.groupes, data.id, data); // VRC
+    this.notifications.setMessage("Groupe créé.");
+  }
+  protected onSuccessUpdateGroupe(data: Groupe): void {
+    Vue.set(this.sejours.groupes, data.id, data); // VRC
+    this.notifications.setMessage("Groupe mis à jour.");
+  }
+  protected onSuccessDeleteGroupe(data: OutDeleteGroupe): void {
+    Vue.delete(this.sejours.groupes || {}, data.id); // VRC
+    this.notifications.setMessage(
+      `Groupe supprimé, ${data.nb_repas} repas supprimé(s)`
+    );
+  }
+  protected onSuccessUpdateSejourFournisseurs(data: Sejours): void {
+    this.sejours.sejours = data.sejours || {};
+    this.sejours.groupes = data.groupes || {};
+    this.notifications.setMessage("Fournisseurs mis à jour.");
+  }
+  protected onSuccessCreateRepas(data: Sejours): void {
+    this.sejours.sejours = data.sejours || {};
+    this.sejours.groupes = data.groupes || {};
+    this.notifications.setMessage("Repas créé.");
+  }
+  protected onSuccessUpdateManyRepas(data: Sejours): void {
+    this.sejours.sejours = data.sejours || {};
+    this.sejours.groupes = data.groupes || {};
+    this.notifications.setMessage("Repas mis à jour.");
+  }
+  protected onSuccessDeleteRepas(data: Sejours): void {
+    this.sejours.sejours = data.sejours || {};
+    this.sejours.groupes = data.groupes || {};
+    this.notifications.setMessage("Repas supprimé.");
+  }
+  protected onSuccessAssistantCreateRepas(data: Sejours): void {
+    this.sejours.sejours = data.sejours || {};
+    this.sejours.groupes = data.groupes || {};
+    this.notifications.setMessage("Repas ajoutés.");
+  }
+  protected onSuccessResoudIngredients(
+    data: DateIngredientQuantites[] | null
+  ): void {}
+
+  protected onSuccessGetFournisseurs(data: OutFournisseurs): void {
+    this.fournisseurs = data.fournisseurs || {};
+    this.livraisons = data.livraisons || {};
+    this.notifications.setMessage("Fournisseurs chargés.");
+  }
+  protected onSuccessCreateFournisseur(data: OutFournisseurs): void {
+    this.fournisseurs = data.fournisseurs || {};
+    this.livraisons = data.livraisons || {};
+    this.notifications.setMessage("Fournisseur créé.");
+  }
+  protected onSuccessUpdateFournisseur(data: Fournisseur): void {
+    Vue.set(this.fournisseurs, data.id, data); // VRC
+    this.notifications.setMessage("Fournisseur mis à jour.");
+  }
+  protected onSuccessDeleteFournisseur(data: OutFournisseurs): void {
+    this.fournisseurs = data.fournisseurs || {};
+    this.livraisons = data.livraisons || {};
+    this.notifications.setMessage("Fournisseur supprimé.");
+  }
+  protected onSuccessCreateLivraison(data: Livraison): void {
+    Vue.set(this.livraisons, data.id, data); // VRC
+    this.notifications.setMessage("Contrainte de livraison créé");
+  }
+  protected onSuccessUpdateLivraison(data: Livraison): void {
+    Vue.set(this.livraisons, data.id, data); // VRC
+    this.notifications.setMessage("Contrainte de livraison mise à jour.");
+  }
+  protected onSuccessDeleteLivraison(data: OutFournisseurs): void {
+    this.fournisseurs = data.fournisseurs || {};
+    this.livraisons = data.livraisons || {};
+    this.notifications.setMessage("Contrainte de livraison supprimée.");
+  }
+  protected onSuccessGetIngredientProduits(data: IngredientProduits): void {
+    this.notifications.setMessage("Produits chargés.");
+  }
+  protected onSuccessAjouteIngredientProduit(data: IngredientProduits): void {
+    this.notifications.setMessage("Produit ajouté.");
+  }
+  protected onSuccessSetDefautProduit(data: IngredientProduits): void {
+    this.notifications.setMessage("Produit choisi par défaut.");
+  }
+  protected onSuccessUpdateProduit(data: Produit): void {
+    this.notifications.setMessage("Produit mis à jour.");
+  }
+  protected onSuccessDeleteProduit(data: any): void {
+    this.notifications.setMessage("Produit supprimé.");
+  }
+  protected onSuccessEtablitCommande(data: OutCommande): void {
+    this.notifications.setMessage("Commande établie.");
   }
 
   // charge en parallèle les données nécessaires aux menus
@@ -96,10 +272,10 @@ export interface Meta {
   token: string;
 }
 
-const metaDev: Meta = {
-  idUtilisateur: 2,
+export const metaDev: Meta = {
+  idUtilisateur: 1,
   token:
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJJZFByb3ByaWV0YWlyZSI6MiwiZXhwIjoxNTk5NTgzNDU5fQ.FUnzS7wMn5nJB-bqvCOhdqnXDTwvSRBBLLX05QoaG98"
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJJZFByb3ByaWV0YWlyZSI6MSwiZXhwIjoxNTk5NjUwODQ0fQ.IUj2FPeABi-LZeLp0CmJ7Us-a90Jl4tWX5yQ0j2TtL0"
 };
 
 export class Loggin {

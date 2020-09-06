@@ -2,7 +2,6 @@ package views
 
 import (
 	"fmt"
-	"strconv"
 
 	"github.com/avct/uasurfer"
 	"github.com/benoitkugler/intendance/server/controller"
@@ -13,15 +12,6 @@ import (
 // Server expose l'API du serveur via des handler HTTP
 type Server struct {
 	controller.Server
-}
-
-// return the query parameter 'id'
-func parseId(idS string) (int64, error) {
-	id, err := strconv.ParseInt(idS, 10, 64)
-	if err != nil {
-		return 0, fmt.Errorf("Impossible de décrypter l'ID reçu %s : %s", idS, err)
-	}
-	return id, nil
 }
 
 func Accueil(c echo.Context) error {
@@ -74,7 +64,7 @@ func (s Server) GetIngredients(c echo.Context) error {
 func (s Server) CreateIngredient(c echo.Context) error {
 	ct := s.Server.NewRequeteContext(c)
 	var ingredientIn models.Ingredient
-	if err := c.Bind(&ingredientIn); err != nil {
+	if err := BindNoId(c, &ingredientIn); err != nil {
 		return err
 	}
 	newIngredient, err := ct.CreateIngredient()
@@ -104,13 +94,12 @@ func (s Server) UpdateIngredient(c echo.Context) error {
 
 func (s Server) DeleteIngredient(c echo.Context) error {
 	ct := s.Server.NewRequeteContext(c)
-	idS := c.QueryParam("id")
-	id, err := parseId(idS)
+	id, err := QueryParamInt64(c, "id")
 	if err != nil {
 		return err
 	}
-	checkS := c.QueryParam("check_produits")
-	if err = ct.DeleteIngredient(id, checkS != ""); err != nil {
+	check := QueryParamBool(c, "check_produits")
+	if err = ct.DeleteIngredient(id, check); err != nil {
 		return err
 	}
 	out, err := s.Server.LoadIngredients()
@@ -135,7 +124,7 @@ func (s Server) GetRecettes(c echo.Context) error {
 func (s Server) CreateRecette(c echo.Context) error {
 	ct := s.Server.NewRequeteContext(c)
 	var recetteIn controller.RecetteComplet
-	if err := c.Bind(&recetteIn); err != nil {
+	if err := BindNoId(c, &recetteIn); err != nil {
 		return err
 	}
 	newRecette, err := ct.CreateRecette()
@@ -166,8 +155,7 @@ func (s Server) UpdateRecette(c echo.Context) error {
 
 func (s Server) DeleteRecette(c echo.Context) error {
 	ct := s.Server.NewRequeteContext(c)
-	idS := c.QueryParam("id")
-	id, err := parseId(idS)
+	id, err := QueryParamInt64(c, "id")
 	if err != nil {
 		return err
 	}
@@ -196,7 +184,7 @@ func (s Server) GetMenus(c echo.Context) error {
 func (s Server) CreateMenu(c echo.Context) error {
 	ct := s.Server.NewRequeteContext(c)
 	var menuIn controller.MenuComplet
-	if err := c.Bind(&menuIn); err != nil {
+	if err := BindNoId(c, &menuIn); err != nil {
 		return err
 	}
 	newMenu, err := ct.CreateMenu()
@@ -228,8 +216,7 @@ func (s Server) UpdateMenu(c echo.Context) error {
 
 func (s Server) DeleteMenu(c echo.Context) error {
 	ct := s.Server.NewRequeteContext(c)
-	idS := c.QueryParam("id")
-	id, err := parseId(idS)
+	id, err := QueryParamInt64(c, "id")
 	if err != nil {
 		return err
 	}
@@ -259,7 +246,7 @@ func (s Server) GetSejours(c echo.Context) error {
 func (s Server) CreateSejour(c echo.Context) error {
 	ct := s.Server.NewRequeteContext(c)
 	var sejourIn models.Sejour
-	if err := c.Bind(&sejourIn); err != nil {
+	if err := BindNoId(c, &sejourIn); err != nil {
 		return err
 	}
 	newSejour, err := ct.CreateSejour()
@@ -289,8 +276,7 @@ func (s Server) UpdateSejour(c echo.Context) error {
 
 func (s Server) DeleteSejour(c echo.Context) error {
 	ct := s.Server.NewRequeteContext(c)
-	idS := c.QueryParam("id")
-	id, err := parseId(idS)
+	id, err := QueryParamInt64(c, "id")
 	if err != nil {
 		return err
 	}
@@ -307,7 +293,7 @@ func (s Server) DeleteSejour(c echo.Context) error {
 func (s Server) CreateGroupe(c echo.Context) error {
 	ct := s.Server.NewRequeteContext(c)
 	var groupe models.Groupe
-	if err := c.Bind(&groupe); err != nil {
+	if err := BindNoId(c, &groupe); err != nil {
 		return err
 	}
 	newGroupe, err := ct.CreateGroupe(groupe.IdSejour)
@@ -337,13 +323,12 @@ func (s Server) UpdateGroupe(c echo.Context) error {
 
 func (s Server) DeleteGroupe(c echo.Context) error {
 	ct := s.Server.NewRequeteContext(c)
-	idS := c.QueryParam("id")
-	id, err := parseId(idS)
+	id, err := QueryParamInt64(c, "id")
 	if err != nil {
 		return err
 	}
-	var out controller.OutDeleteGroupe
-	if out.NbRepas, err = ct.DeleteGroupe(id); err != nil {
+	out, err := ct.DeleteGroupe(id)
+	if err != nil {
 		return err
 	}
 	return c.JSON(200, out)
@@ -352,7 +337,7 @@ func (s Server) DeleteGroupe(c echo.Context) error {
 func (s Server) CreateRepas(c echo.Context) error {
 	ct := s.Server.NewRequeteContext(c)
 	var repasIn controller.RepasComplet
-	if err := c.Bind(&repasIn); err != nil {
+	if err := BindNoId(c, &repasIn); err != nil {
 		return err
 	}
 	newRepas, err := ct.CreateRepas(repasIn.IdSejour)
@@ -374,7 +359,7 @@ func (s Server) CreateRepas(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
-func (s Server) UpdateRepas(c echo.Context) error {
+func (s Server) UpdateManyRepas(c echo.Context) error {
 	ct := s.Server.NewRequeteContext(c)
 	var repass []controller.RepasComplet
 	if err := c.Bind(&repass); err != nil {
@@ -393,8 +378,7 @@ func (s Server) UpdateRepas(c echo.Context) error {
 
 func (s Server) DeleteRepas(c echo.Context) error {
 	ct := s.Server.NewRequeteContext(c)
-	idS := c.QueryParam("id")
-	id, err := parseId(idS)
+	id, err := QueryParamInt64(c, "id")
 	if err != nil {
 		return err
 	}
@@ -471,7 +455,7 @@ func (s Server) GetFournisseurs(c echo.Context) error {
 func (s Server) CreateFournisseur(c echo.Context) error {
 	ct := s.Server.NewRequeteContext(c)
 	var fournisseur models.Fournisseur
-	if err := c.Bind(&fournisseur); err != nil {
+	if err := BindNoId(c, &fournisseur); err != nil {
 		return err
 	}
 	_, err := ct.CreateFournisseur(fournisseur)
@@ -501,8 +485,7 @@ func (s Server) UpdateFournisseur(c echo.Context) error {
 
 func (s Server) DeleteFournisseur(c echo.Context) error {
 	ct := s.Server.NewRequeteContext(c)
-	idS := c.QueryParam("id")
-	id, err := parseId(idS)
+	id, err := QueryParamInt64(c, "id")
 	if err != nil {
 		return err
 	}
@@ -535,7 +518,7 @@ func (s Server) UpdateSejourFournisseurs(c echo.Context) error {
 func (s Server) CreateLivraison(c echo.Context) error {
 	ct := s.Server.NewRequeteContext(c)
 	var livraison models.Livraison
-	if err := c.Bind(&livraison); err != nil {
+	if err := BindNoId(c, &livraison); err != nil {
 		return err
 	}
 	livraison, err := ct.CreateLivraison(livraison)
@@ -560,8 +543,7 @@ func (s Server) UpdateLivraison(c echo.Context) error {
 
 func (s Server) DeleteLivraison(c echo.Context) error {
 	ct := s.Server.NewRequeteContext(c)
-	idS := c.QueryParam("id")
-	id, err := parseId(idS)
+	id, err := QueryParamInt64(c, "id")
 	if err != nil {
 		return err
 	}
@@ -577,8 +559,7 @@ func (s Server) DeleteLivraison(c echo.Context) error {
 
 func (s Server) GetIngredientProduits(c echo.Context) error {
 	ct := s.Server.NewRequeteContext(c)
-	idS := c.QueryParam("id")
-	idIngredient, err := parseId(idS)
+	idIngredient, err := QueryParamInt64(c, "id")
 	if err != nil {
 		return err
 	}
@@ -621,8 +602,7 @@ func (s Server) UpdateProduit(c echo.Context) error {
 
 func (s Server) DeleteProduit(c echo.Context) error {
 	ct := s.Server.NewRequeteContext(c)
-	idS := c.QueryParam("id")
-	id, err := parseId(idS)
+	id, err := QueryParamInt64(c, "id")
 	if err != nil {
 		return err
 	}

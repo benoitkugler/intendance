@@ -12,7 +12,8 @@ type InLoggin struct {
 }
 
 type OutDeleteGroupe struct {
-	NbRepas int `json:"nb_repas"`
+	Id      int64 `json:"id"`
+	NbRepas int64 `json:"nb_repas"`
 }
 
 type InResoudIngredients struct {

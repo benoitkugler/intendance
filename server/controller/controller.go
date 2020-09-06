@@ -3,9 +3,6 @@ package controller
 import (
 	"database/sql"
 	"fmt"
-
-	"github.com/dgrijalva/jwt-go"
-	"github.com/labstack/echo"
 )
 
 // Server est le controller principal, partagé par toutes les requêtes.
@@ -23,12 +20,6 @@ type RequeteContext struct {
 type Tx struct {
 	*sql.Tx
 	IdProprietaire int64
-}
-
-// NewRequeteContext attend une requête authentifiée par JWT
-func (s Server) NewRequeteContext(c echo.Context) RequeteContext {
-	meta := c.Get("user").(*jwt.Token).Claims.(*UserMeta)
-	return RequeteContext{IdProprietaire: meta.IdProprietaire, DB: s.DB}
 }
 
 func (ct RequeteContext) beginTx() (Tx, error) {

@@ -25,7 +25,7 @@ import DateIngredients from "./DateIngredients.vue";
 import {
   DateIngredientQuantites,
   TimedIngredientQuantite
-} from "../../logic/types";
+} from "../../logic/api";
 
 const ResultIngredientsProps = Vue.extend({
   props: {

@@ -28,8 +28,8 @@
 <script lang="ts">
 import Vue from "vue";
 import Component from "vue-class-component";
-import { Sejour } from "../../logic/types";
-import { New, DetailsSejour, EditMode, deepcopy } from "../../logic/types2";
+import { Sejour } from "../../logic/api";
+import { New, DetailsSejour, EditMode, deepcopy } from "../../logic/api";
 import DateField from "../utils/DateField.vue";
 import { Watch } from "vue-property-decorator";
 

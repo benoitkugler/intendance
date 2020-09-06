@@ -33,8 +33,8 @@
 <script lang="ts">
 import Vue from "vue";
 import Component from "vue-class-component";
-import { RepasComplet, Menu, MenuComplet } from "../../../logic/types";
-import { deepcopy, toNullableId } from "../../../logic/types2";
+import { RepasComplet, Menu, MenuComplet } from "../../../logic/api";
+import { deepcopy, toNullableId } from "../../../logic/api";
 import { C } from "../../../logic/controller";
 import { HorairesColors, HorairesIcons } from "../../utils/utils";
 import { DragKind, getDragData, setDragData } from "../../utils/utils_drag";

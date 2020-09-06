@@ -1,5 +1,8 @@
-import { C } from "../controller";
-import { RepasComplet } from "../types";
+import { Controller } from "../controller";
+import { metaDev, N } from "../server";
+import { RepasComplet } from "../api";
+
+const C = new Controller(metaDev, N);
 
 test("resoud ingredients", async () => {
   await C.api.GetSejours();
@@ -10,17 +13,12 @@ test("resoud ingredients", async () => {
     repas.push(rep);
   });
   if (repas.length == 0) return;
-  await C.calculs.resoudIngredientsRepas(repas[0].id);
+  await C.resoudIngredientsRepas(repas[0].id);
   expect(C.notifications.getError()).toBeNull();
 
-  const sejour = Object.values(C.data.sejours.sejours || {})[0];
+  const sejour = Object.values(C.api.sejours.sejours || {})[0];
 
-  const res = await C.calculs.resoudIngredientsJournees(sejour.id, [
-    0,
-    1,
-    2,
-    3
-  ]);
+  const res = await C.resoudIngredientsJournees(sejour.id, [0, 1, 2, 3]);
   expect(C.notifications.getError()).toBeNull();
   expect(res).not.toBeUndefined();
 });

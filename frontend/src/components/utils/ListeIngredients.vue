@@ -35,7 +35,7 @@
 <script lang="ts">
 import Vue from "vue";
 import Component from "vue-class-component";
-import { IngredientQuantite } from "../../logic/types";
+import { IngredientQuantite } from "../../logic/api";
 import { Formatter } from "../../logic/formatter";
 import { Crible } from "./utils";
 

@@ -78,16 +78,10 @@ import Component from "vue-class-component";
 
 import ConditionnementField from "../utils/ConditionnementField.vue";
 
-import { Produit } from "../../logic/types";
+import { Produit } from "../../logic/api";
 import { C } from "../../logic/controller";
 import { sortByText } from "../utils/utils";
-import {
-  New,
-  deepcopy,
-  NullId,
-  toNullableId,
-  EnumItem
-} from "../../logic/types2";
+import { New, deepcopy, NullId, toNullableId, EnumItem } from "../../logic/api";
 import { Watch } from "vue-property-decorator";
 
 const DetailsProduitProps = Vue.extend({

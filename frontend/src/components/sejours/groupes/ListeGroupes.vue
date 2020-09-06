@@ -151,11 +151,11 @@
 <script lang="ts">
 import Vue from "vue";
 import Component from "vue-class-component";
-import { SejourRepas, Sejour, Groupe } from "../../../logic/types";
+import { SejourRepas, Sejour, Groupe } from "../../../logic/api";
 import { C } from "../../../logic/controller";
 
 import TooltipBtn from "../../utils/TooltipBtn.vue";
-import { EditMode, New, deepcopy } from "../../../logic/types2";
+import { EditMode, New, deepcopy } from "../../../logic/api";
 import { Watch } from "vue-property-decorator";
 
 const ListeGroupesProps = Vue.extend({

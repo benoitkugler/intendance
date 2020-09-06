@@ -107,9 +107,9 @@ import ListeGroupes from "../components/sejours/groupes/ListeGroupes.vue";
 import ListeFournisseurs from "../components/sejours/ListeFournisseurs.vue";
 import AssistantCreateRepass from "../components/sejours/groupes/AssistantCreateRepass.vue";
 
-import { EditMode, DetailsSejour, New } from "../logic/types2";
+import { EditMode, DetailsSejour, New } from "../logic/api";
 import { C } from "../logic/controller";
-import { Sejour, OptionsAssistantCreateRepass } from "../logic/types";
+import { Sejour, OptionsAssistantCreateRepass } from "../logic/api";
 
 const SejoursProps = Vue.extend({
   props: {}

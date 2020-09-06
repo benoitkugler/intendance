@@ -5,9 +5,9 @@ import {
   RecetteComplet,
   MenuComplet,
   Unite
-} from "@/logic/types";
+} from "@/logic/api";
 
-import { IngredientOptions, New } from "@/logic/types2";
+import { IngredientOptions, New } from "@/logic/api";
 
 type ModeMenu = "visu" | "editMenu" | "editRecette" | "editIngredient";
 export interface SelectionMenu {

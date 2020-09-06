@@ -1,5 +1,5 @@
 import { AxiosResponse } from "axios";
-import { New } from "./types2";
+import { New } from "./types";
 import Vue from "vue";
 import { API } from "./server";
 import {
@@ -170,8 +170,8 @@ export class Data {
           auth: this.controller.auth()
         }
       );
-      this.controller.token = response.data.token;
-      this.recettes = response.data.recettes || {};
+      this.controller.token = data;
+      this.recettes = data || {};
     } catch (error) {
       this.controller.notifications.setAxiosError(error);
     }
@@ -191,10 +191,10 @@ export class Data {
           auth: this.controller.auth()
         }
       );
-      Vue.set(this.recettes, response.data.recette.id, response.data.recette); // VRC
-      this.controller.token = response.data.token;
+      Vue.set(this.recettes, data.id, data); // VRC
+      this.controller.token = data;
 
-      return response.data.recette;
+      return data;
     } catch (error) {
       this.controller.notifications.setAxiosError(error);
     }
@@ -218,8 +218,8 @@ export class Data {
           auth: this.controller.auth()
         }
       );
-      this.recettes = response.data.recettes || {};
-      this.controller.token = response.data.token;
+      this.recettes = data || {};
+      this.controller.token = data;
     } catch (error) {
       this.controller.notifications.setAxiosError(error);
     }
@@ -234,8 +234,8 @@ export class Data {
           auth: this.controller.auth()
         }
       );
-      this.controller.token = response.data.token;
-      this.menus = response.data.menus || {};
+      this.controller.token = data;
+      this.menus = data || {};
     } catch (error) {
       this.controller.notifications.setAxiosError(error);
     }
@@ -255,10 +255,10 @@ export class Data {
           auth: this.controller.auth()
         }
       );
-      Vue.set(this.menus, response.data.menu.id, response.data.menu); // VRC
-      this.controller.token = response.data.token;
+      Vue.set(this.menus, data.id, data); // VRC
+      this.controller.token = data;
 
-      return response.data.menu;
+      return data;
     } catch (error) {
       this.controller.notifications.setAxiosError(error);
     }
@@ -282,8 +282,8 @@ export class Data {
           auth: this.controller.auth()
         }
       );
-      this.menus = response.data.menus || {};
-      this.controller.token = response.data.token;
+      this.menus = data || {};
+      this.controller.token = data;
     } catch (error) {
       this.controller.notifications.setAxiosError(error);
     }
@@ -298,8 +298,8 @@ export class Data {
           auth: this.controller.auth()
         }
       );
-      this.controller.token = response.data.token;
-      this.sejours = response.data.sejours;
+      this.controller.token = data;
+      this.sejours = data;
     } catch (error) {
       this.controller.notifications.setAxiosError(error);
     }
@@ -319,8 +319,8 @@ export class Data {
           auth: this.controller.auth()
         }
       );
-      this.controller.token = response.data.token;
-      return response.data.sejour;
+      this.controller.token = data;
+      return data;
     } catch (error) {
       this.controller.notifications.setAxiosError(error);
     }
@@ -357,8 +357,8 @@ export class Data {
           auth: this.controller.auth()
         }
       );
-      this.sejours = response.data.sejours;
-      this.controller.token = response.data.token;
+      this.sejours = data;
+      this.controller.token = data;
     } catch (error) {
       this.controller.notifications.setAxiosError(error);
     }
@@ -375,9 +375,9 @@ export class Data {
           auth: this.controller.auth()
         }
       );
-      this.controller.token = response.data.token;
-      this.fournisseurs = response.data.fournisseurs || {};
-      this.livraisons = response.data.livraisons || {};
+      this.controller.token = data;
+      this.fournisseurs = data || {};
+      this.livraisons = data || {};
     } catch (error) {
       this.controller.notifications.setAxiosError(error);
     }
@@ -395,11 +395,11 @@ export class Data {
       );
       Vue.set(
         this.fournisseurs || {},
-        response.data.fournisseur.id,
-        response.data.fournisseur
+        data.id,
+        data
       ); // VRC
-      this.controller.token = response.data.token;
-      return response.data.fournisseur;
+      this.controller.token = data;
+      return data;
     } catch (error) {
       this.controller.notifications.setAxiosError(error);
     }
@@ -415,9 +415,9 @@ export class Data {
           auth: this.controller.auth()
         }
       );
-      this.fournisseurs = response.data.fournisseurs || {};
-      this.livraisons = response.data.livraisons || {};
-      this.controller.token = response.data.token;
+      this.fournisseurs = data || {};
+      this.livraisons = data || {};
+      this.controller.token = data;
     } catch (error) {
       this.controller.notifications.setAxiosError(error);
     }
@@ -440,8 +440,8 @@ export class Data {
           auth: this.controller.auth()
         }
       );
-      this.controller.token = response.data.token;
-      this.sejours = response.data.sejours;
+      this.controller.token = data;
+      this.sejours = data;
     } catch (error) {
       this.controller.notifications.setAxiosError(error);
     }
@@ -464,12 +464,12 @@ export class Data {
       );
       Vue.set(
         this.livraisons || {},
-        response.data.livraison.id,
-        response.data.livraison
+        data.id,
+        data
       ); // VRC
-      this.controller.token = response.data.token;
+      this.controller.token = data;
 
-      return response.data.livraison;
+      return data;
     } catch (error) {
       this.controller.notifications.setAxiosError(error);
     }
@@ -493,9 +493,9 @@ export class Data {
           auth: this.controller.auth()
         }
       );
-      this.livraisons = response.data.livraisons || {};
-      this.fournisseurs = response.data.fournisseurs || {};
-      this.controller.token = response.data.token;
+      this.livraisons = data || {};
+      this.fournisseurs = data || {};
+      this.controller.token = data;
     } catch (error) {
       this.controller.notifications.setAxiosError(error);
     }
@@ -517,11 +517,11 @@ export class Data {
       );
       Vue.set(
         this.sejours.groupes || {},
-        response.data.groupe.id,
-        response.data.groupe
+        data.id,
+        data
       ); // VRC
-      this.controller.token = response.data.token;
-      return response.data.groupe;
+      this.controller.token = data;
+      return data;
     } catch (error) {
       this.controller.notifications.setAxiosError(error);
     }
@@ -547,8 +547,8 @@ export class Data {
         }
       );
       Vue.delete(this.sejours.groupes || {}, groupe.id); // VRC
-      this.controller.token = response.data.token;
-      return response.data.nb_repas;
+      this.controller.token = data;
+      return data;
     } catch (error) {
       this.controller.notifications.setAxiosError(error);
     }
@@ -564,8 +564,8 @@ export class Data {
           auth: this.controller.auth()
         }
       );
-      this.sejours = response.data.sejours;
-      this.controller.token = response.data.token;
+      this.sejours = data;
+      this.controller.token = data;
     } catch (error) {
       this.controller.notifications.setAxiosError(error);
     }
@@ -581,8 +581,8 @@ export class Data {
           auth: this.controller.auth()
         }
       );
-      this.sejours = response.data.sejours;
-      this.controller.token = response.data.token;
+      this.sejours = data;
+      this.controller.token = data;
     } catch (error) {
       this.controller.notifications.setAxiosError(error);
     }
@@ -598,8 +598,8 @@ export class Data {
           auth: this.controller.auth()
         }
       );
-      this.sejours = response.data.sejours;
-      this.controller.token = response.data.token;
+      this.sejours = data;
+      this.controller.token = data;
     } catch (error) {
       this.controller.notifications.setAxiosError(error);
     }
@@ -633,49 +633,6 @@ export class Data {
     return (this.sejours.sejours || {})[idSejour];
   }
 
-  // échange les deux journées, en modifiant les dates
-  // des repas concernés pour le séjour donné.
-  async switchDays(idSejour: number, from: Date, to: Date) {
-    const sejour = this.getSejour(idSejour);
-    if (!sejour) return;
-    const offsetTo = this.getOffset(sejour, to);
-    if (offsetTo === undefined) return;
-    const offsetFrom = this.getOffset(sejour, from);
-    if (offsetFrom === undefined) return;
-    if (offsetFrom == offsetTo) return;
-    const repasFrom = (sejour.repass || []).filter(
-      rep => rep.jour_offset == offsetFrom
-    );
-    const repasTo = (sejour.repass || []).filter(
-      rep => rep.jour_offset == offsetTo
-    );
-    repasFrom.forEach(m => (m.jour_offset = offsetTo));
-    repasTo.forEach(m => (m.jour_offset = offsetFrom));
-    const modifs = repasFrom.concat(repasTo);
-    if (modifs.length === 0) return;
-    await this.updateManyRepas(modifs);
-    if (this.controller.notifications.getError() === null) {
-      this.controller.notifications.setMessage(
-        "Les journées ont étés échangées avec succès."
-      );
-    }
-  }
-
-  // modifie le moment du repas
-  async deplaceRepas(repas: RepasComplet, jour: Date, horaire: Horaire) {
-    const sejour = this.getSejour(repas.id_sejour);
-    if (!sejour) return;
-    const offset = this.getOffset(sejour, jour);
-    if (offset === undefined) return;
-    repas.jour_offset = offset;
-    repas.horaire = horaire;
-    await this.updateManyRepas([repas]);
-    if (this.controller.notifications.getError() === null) {
-      this.controller.notifications.setMessage(
-        "Le repas a été déplacé avec succès."
-      );
-    }
-  }
 
   async assitantCreateRepass(
     idSejour: number,
@@ -696,8 +653,8 @@ export class Data {
           auth: this.controller.auth()
         }
       );
-      this.sejours = response.data.sejours;
-      this.controller.token = response.data.token;
+      this.sejours = data;
+      this.controller.token = data;
     } catch (error) {
       this.controller.notifications.setAxiosError(error);
     }

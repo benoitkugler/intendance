@@ -1,12 +1,15 @@
 package controller
 
 import (
+	"encoding/json"
 	"errors"
 	"time"
 
 	"github.com/benoitkugler/intendance/logs"
 	"github.com/benoitkugler/intendance/server/models"
 	"github.com/dgrijalva/jwt-go"
+	"github.com/labstack/echo"
+	"github.com/labstack/echo/middleware"
 )
 
 const DeltaToken = 72 * time.Hour
@@ -15,6 +18,14 @@ const DeltaToken = 72 * time.Hour
 type UserMeta struct {
 	IdProprietaire int64
 	jwt.StandardClaims
+}
+
+func (s Server) JWTMiddleware() echo.MiddlewareFunc {
+	config := middleware.JWTConfig{SigningKey: logs.PASSPHRASE, Claims: &UserMeta{}}
+	if s.Dev {
+		config.SigningKey = logs.PASSPHRASE_DEV
+	}
+	return middleware.JWTWithConfig(config)
 }
 
 func (s Server) newToken(id int64) (string, error) {
@@ -37,17 +48,31 @@ func (s Server) newToken(id int64) (string, error) {
 	return token.SignedString(pass)
 }
 
+// NewRequeteContext attend une requête authentifiée par JWT
+func (s Server) NewRequeteContext(c echo.Context) RequeteContext {
+	meta := c.Get("user").(*jwt.Token).Claims.(*UserMeta)
+	return RequeteContext{IdProprietaire: meta.IdProprietaire, DB: s.DB}
+}
+
 // GetDevToken choisit un utilisateur au hasard et renvoie
 // un token de connection
-func (s Server) GetDevToken() (int64, string, error) {
+func (s Server) GetDevToken() (string, error) {
 	users, err := models.SelectAllUtilisateurs(s.DB)
 	if err != nil {
-		return 0, "", err
+		return "", err
 	}
 	if len(users) == 0 {
-		return 0, "", errors.New("Aucun utilisateur n'est présent dans la base de données.")
+		return "", errors.New("Aucun utilisateur n'est présent dans la base de données.")
 	}
 	id := users.Ids()[0]
 	token, err := s.newToken(id)
-	return id, token, err
+	if err != nil {
+		return "", err
+	}
+	type meta struct {
+		User  int64  `json:"idUtilisateur"`
+		Token string `json:"token"`
+	}
+	out, err := json.Marshal(meta{User: id, Token: token})
+	return string(out), err
 }

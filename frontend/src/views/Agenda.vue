@@ -108,7 +108,7 @@ import {
   New,
   DetailsRepas,
   ViewMode
-} from "../logic/types2";
+} from "../logic/api";
 
 import Calendar from "../components/sejours/calendrier/Calendar.vue";
 import Day from "../components/sejours/calendrier/day/Day.vue";
@@ -117,7 +117,7 @@ import ToolbarSwitch from "../components/utils/ToolbarSwitch.vue";
 import FormPreferences from "../components/sejours/calendrier/FormPreferences.vue";
 import FormRepas from "../components/sejours/FormRepas.vue";
 
-import { RepasGroupe, RepasComplet, Horaire } from "../logic/types";
+import { RepasGroupe, RepasComplet, Horaire } from "../logic/api";
 
 @Component({
   components: {

@@ -1,4 +1,4 @@
-import { RepasComplet, MenuComplet, LienIngredient } from "@/logic/types";
+import { RepasComplet, MenuComplet, LienIngredient } from "@/logic/api";
 import { compareArrays } from "@/components/utils/utils";
 
 export const ColorAnticipation = "lime lighten-3";

@@ -34,7 +34,7 @@ import {
   DateIngredientQuantites,
   OutResoudIngredients,
   TimedIngredientQuantite
-} from "../logic/types";
+} from "../logic/api";
 
 const RecapIngredientsProps = Vue.extend({
   props: {}

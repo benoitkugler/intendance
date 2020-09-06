@@ -78,10 +78,10 @@ import {
   IngredientProduits,
   Produit,
   Unite
-} from "../../logic/types";
+} from "../../logic/api";
 import { C } from "../../logic/controller";
 import { Watch } from "vue-property-decorator";
-import { New, NullId } from "../../logic/types2";
+import { New, NullId } from "../../logic/api";
 import { Formatter } from "../../logic/formatter";
 
 const AssociationIngredientProps = Vue.extend({

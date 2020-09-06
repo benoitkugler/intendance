@@ -50,8 +50,8 @@ import Component from "vue-class-component";
 import TooltipBtn from "../utils/TooltipBtn.vue";
 
 import { C } from "../../logic/controller";
-import { Recette, RecetteComplet, LienIngredient } from "../../logic/types";
-import { New, EditMode, deepcopy } from "../../logic/types2";
+import { Recette, RecetteComplet, LienIngredient } from "../../logic/api";
+import { New, EditMode, deepcopy } from "../../logic/api";
 import { Watch } from "vue-property-decorator";
 
 import ListeLienIngredients from "../utils/ListeLienIngredients.vue";

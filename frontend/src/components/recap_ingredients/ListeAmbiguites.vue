@@ -44,7 +44,7 @@
 <script lang="ts">
 import Vue from "vue";
 import Component from "vue-class-component";
-import { Ambiguites, Ingredient, Produit } from "../../logic/types";
+import { Ambiguites, Ingredient, Produit } from "../../logic/api";
 import { C } from "../../logic/controller";
 import { ContraintesProduits } from "./types";
 

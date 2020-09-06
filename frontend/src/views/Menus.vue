@@ -76,8 +76,8 @@ import {
   Ingredient,
   RecetteComplet,
   MenuComplet
-} from "../logic/types";
-import { IngredientOptions, EditMode, New, deepcopy } from "../logic/types2";
+} from "../logic/api";
+import { IngredientOptions, EditMode, New, deepcopy } from "../logic/api";
 import {
   StateMenus,
   DefautRecette,

@@ -1,5 +1,5 @@
 import levenshtein from "js-levenshtein";
-import { Horaire, HoraireLabels } from "@/logic/types";
+import { Horaire } from "@/logic/api";
 const MAX_DIST_LEVENSHTEIN = 5;
 
 const N = Object.keys(Horaire).length;

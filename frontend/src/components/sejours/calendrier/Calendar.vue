@@ -37,14 +37,14 @@ import ListeRepas from "./ListeRepas.vue";
 import TooltipBtn from "../../utils/TooltipBtn.vue";
 import Week from "./Week.vue";
 
-import { Sejour, SejourRepas, RepasComplet } from "../../../logic/types";
+import { Sejour, SejourRepas, RepasComplet } from "../../../logic/api";
 import { C } from "../../../logic/controller";
 import {
   DetailsSejour,
   New,
   DetailsRepas,
   PreferencesAgenda
-} from "../../../logic/types2";
+} from "../../../logic/api";
 import { Formatter } from "../../../logic/formatter";
 import { toDateVuetify } from "./utils";
 import { HorairesColors } from "../../utils/utils";

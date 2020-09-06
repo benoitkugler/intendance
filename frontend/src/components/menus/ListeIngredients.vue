@@ -126,8 +126,8 @@ import AssociationIngredient from "../produits/AssociationIngredient.vue";
 import Toolbar from "../utils/Toolbar.vue";
 
 import { C } from "../../logic/controller";
-import { Ingredient } from "../../logic/types";
-import { IngredientOptions, EditMode, New } from "../../logic/types2";
+import { Ingredient } from "../../logic/api";
+import { IngredientOptions, EditMode, New } from "../../logic/api";
 import TooltipBtn from "../utils/TooltipBtn.vue";
 import levenshtein from "js-levenshtein";
 import { StateMenus, DefautIngredient } from "./types";

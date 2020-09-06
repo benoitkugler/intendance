@@ -95,7 +95,7 @@ import DetailsIngredient from "./DetailsIngredient.vue";
 import TooltipBtn from "./TooltipBtn.vue";
 import IngredientField from "./IngredientField.vue";
 
-import { LienIngredient } from "../../logic/types";
+import { LienIngredient } from "../../logic/api";
 import { C } from "../../logic/controller";
 import { DragKind, getDragData } from "./utils_drag";
 

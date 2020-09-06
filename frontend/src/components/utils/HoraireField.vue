@@ -16,8 +16,8 @@
 import Vue from "vue";
 import Component from "vue-class-component";
 import { HorairesColors } from "./utils";
-import { enumIntToOptions } from "../../logic/types2";
-import { HoraireLabels, Horaire } from "../../logic/types";
+import { enumIntToOptions } from "../../logic/api";
+import { HoraireLabels, Horaire } from "../../logic/api";
 
 const HoraireFieldProps = Vue.extend({
   props: {

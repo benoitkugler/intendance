@@ -96,10 +96,7 @@
 <script lang="ts">
 import Vue from "vue";
 import Component from "vue-class-component";
-import {
-  RepasGroupe,
-  OptionsAssistantCreateRepass
-} from "../../../logic/types";
+import { RepasGroupe, OptionsAssistantCreateRepass } from "../../../logic/api";
 import { C } from "../../../logic/controller";
 
 const AssitantCreateRepassProps = Vue.extend({

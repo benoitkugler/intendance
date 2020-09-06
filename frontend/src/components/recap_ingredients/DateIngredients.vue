@@ -37,7 +37,7 @@ import {
   DateIngredientQuantites,
   IngredientQuantite,
   TimedIngredientQuantite
-} from "../../logic/types";
+} from "../../logic/api";
 import { Formatter } from "../../logic/formatter";
 import { Crible } from "../utils/utils";
 
