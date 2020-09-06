@@ -26,6 +26,7 @@
 
     <v-dialog v-model="showEditLivraison" max-width="800px">
       <details-livraison
+        :C="C"
         :livraison="currentLivraison"
         :editMode="editMode"
         @accept="onEditLivraisonDone"
@@ -66,44 +67,46 @@
     </v-toolbar>
 
     <v-treeview :items="treeItems" dense class="my-2" open-on-click>
-      <template v-slot:label="{ item }">
+      <template v-slot:label="props">
         <!-- Fournisseur -->
-        <v-row v-if="asTI(item).isFournisseur" no-gutters>
+        <v-row v-if="asTI(props.item).isFournisseur" no-gutters>
           <v-col class="align-self-center">
-            {{ asTIF(item).fournisseur.nom }}
+            {{ asTIF(props.item).fournisseur.nom }}
             -
-            <i>{{ asTIF(item).fournisseur.lieu }}</i>
+            <i>{{ asTIF(props.item).fournisseur.lieu }}</i>
           </v-col>
           <v-col class="align-self-center text-right">
             <tooltip-btn
               tooltip="Ajouter une contrainte de livraison..."
               mdi-icon="plus"
               color="green"
-              @click="startCreateLivraison(asTIF(item).fournisseur)"
+              @click="startCreateLivraison(asTIF(props.item).fournisseur)"
             ></tooltip-btn>
             <tooltip-btn
               mdi-icon="pencil"
               tooltip="Modifier ce fournisseur..."
               color="secondary"
-              @click="startEditFournisseur(asTIF(item).fournisseur)"
+              @click="startEditFournisseur(asTIF(props.item).fournisseur)"
             ></tooltip-btn>
 
             <tooltip-btn
               mdi-icon="close"
               color="red"
               tooltip="Supprimer le fournisseur et les produits associés"
-              @click="confirmeDeleteFournisseur(asTIF(item).fournisseur)"
+              @click="confirmeDeleteFournisseur(asTIF(props.item).fournisseur)"
             ></tooltip-btn>
           </v-col>
         </v-row>
         <!-- Livraisons -->
         <v-row v-else no-gutters>
           <v-col cols="2" class="align-self-center">
-            <span v-html="formatLivraisonNom(asTIL(item).livraison)"></span>
+            <span
+              v-html="formatLivraisonNom(asTIL(props.item).livraison)"
+            ></span>
           </v-col>
           <v-col cols="8" class="align-self-center">
             <v-chip
-              v-for="jour in filterJoursLivraison(asTIL(item).livraison)"
+              v-for="jour in filterJoursLivraison(asTIL(props.item).livraison)"
               :key="jour"
               small
             >
@@ -116,14 +119,14 @@
               mdi-icon="pencil"
               tooltip="Modifier cette contrainte de livraison..."
               color="secondary"
-              @click="startEditLivraison(asTIL(item).livraison)"
+              @click="startEditLivraison(asTIL(props.item).livraison)"
             ></tooltip-btn>
 
             <tooltip-btn
               mdi-icon="close"
               color="red"
               tooltip="Supprimer la contrainte de livraison..."
-              @click="confirmeDeleteLivraison(asTIL(item).livraison)"
+              @click="confirmeDeleteLivraison(asTIL(props.item).livraison)"
             ></tooltip-btn>
           </v-col>
         </v-row>
@@ -135,17 +138,19 @@
 <script lang="ts">
 import Vue from "vue";
 import Component from "vue-class-component";
-import { C } from "../../logic/controller";
 import TooltipBtn from "../utils/TooltipBtn.vue";
 import DetailsFournisseur from "./DetailsFournisseur.vue";
 import DetailsLivraison from "./DetailsLivraison.vue";
 
-import { EditMode, New, defaultLivraison } from "../../logic/api";
-import { Fournisseur, Livraison } from "../../logic/api";
+import { EditMode, defaultLivraison } from "@/logic/types";
+import { Fournisseur, Livraison, New } from "@/logic/api";
 import { Days } from "../utils/utils";
+import { Controller } from "@/logic/controller";
 
 const ListeFournisseursProps = Vue.extend({
-  props: {}
+  props: {
+    C: Object as () => Controller
+  }
 });
 
 interface treeItem {
@@ -181,8 +186,8 @@ export default class ListeFournisseurs extends ListeFournisseursProps {
   asTIL = (a: treeItemLivraison) => a;
 
   get treeItems(): treeItemFournisseur[] {
-    const fournisseurs = Object.values(C.data.fournisseurs || {});
-    const livraisons = Object.values(C.data.livraisons || {});
+    const fournisseurs = Object.values(this.C.api.fournisseurs);
+    const livraisons = Object.values(this.C.api.livraisons);
     return fournisseurs.map(fournisseur => {
       const lvs = livraisons.filter(l => l.id_fournisseur == fournisseur.id);
       const children = lvs.map(l => {
@@ -208,18 +213,12 @@ export default class ListeFournisseurs extends ListeFournisseursProps {
     this.showEditFournisseur = true;
   }
 
-  async onEditFournisseurDone(fournisseur: Fournisseur) {
+  onEditFournisseurDone(fournisseur: Fournisseur) {
     this.showEditFournisseur = false;
-    let message: string;
     if (this.editMode == "new") {
-      await C.data.createFournisseur(fournisseur);
-      message = "Fournisseur ajouté avec succès.";
+      this.C.api.CreateFournisseur(fournisseur);
     } else {
-      await C.data.updateFournisseur(fournisseur);
-      message = "Fournisseur édité avec succès.";
-    }
-    if (C.notifications.getError() == null) {
-      C.notifications.setMessage(message);
+      this.C.api.UpdateFournisseur(fournisseur);
     }
   }
 
@@ -235,15 +234,12 @@ export default class ListeFournisseurs extends ListeFournisseursProps {
     )
       return;
     this.showConfirmeSupprimeFournisseur = false;
-    await C.data.deleteFournisseur(this.currentFournisseur.id);
-    await C.data.loadSejours(); // les fournisseurs associés on pu changer
-    if (C.notifications.getError() == null) {
-      C.notifications.setMessage("Fournisseur supprimé avec succès.");
-    }
+    await this.C.api.DeleteFournisseur({ id: this.currentFournisseur.id });
+    await this.C.api.GetSejours(); // les fournisseurs associés on pu changer
   }
 
   formatFournisseur(idFournisseur: number) {
-    return C.getFournisseur(idFournisseur).nom;
+    return this.C.getFournisseur(idFournisseur).nom;
   }
 
   formatLivraisonNom(livraison: Livraison) {
@@ -275,18 +271,12 @@ export default class ListeFournisseurs extends ListeFournisseursProps {
     this.showEditLivraison = true;
   }
 
-  async onEditLivraisonDone(livraison: Livraison) {
+  onEditLivraisonDone(livraison: Livraison) {
     this.showEditLivraison = false;
-    let message: string;
     if (this.editMode == "new") {
-      await C.data.createLivraison(livraison);
-      message = "Contrainte de livraison ajoutée avec succès.";
+      this.C.api.CreateLivraison(livraison);
     } else {
-      await C.data.updateLivraison(livraison);
-      message = "Contrainte de livraison éditée avec succès.";
-    }
-    if (C.notifications.getError() == null) {
-      C.notifications.setMessage(message);
+      this.C.api.UpdateLivraison(livraison);
     }
   }
 
@@ -295,16 +285,11 @@ export default class ListeFournisseurs extends ListeFournisseursProps {
     this.showConfirmeSupprimeLivraison = true;
   }
 
-  async deleteLivraison() {
+  deleteLivraison() {
     if (this.currentLivraison == null || this.currentLivraison.id == undefined)
       return;
     this.showConfirmeSupprimeLivraison = false;
-    await C.data.deleteLivraison(this.currentLivraison.id);
-    if (C.notifications.getError() == null) {
-      C.notifications.setMessage(
-        "Contrainte de livraison supprimée avec succès."
-      );
-    }
+    this.C.api.DeleteLivraison({ id: this.currentLivraison.id });
   }
 }
 </script>

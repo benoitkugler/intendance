@@ -37,8 +37,8 @@ import {
   DateIngredientQuantites,
   IngredientQuantite,
   TimedIngredientQuantite
-} from "../../logic/api";
-import { Formatter } from "../../logic/formatter";
+} from "@/logic/api";
+import { Formatter } from "@/logic/formatter";
 import { Crible } from "../utils/utils";
 
 const DateIngredientsProps = Vue.extend({

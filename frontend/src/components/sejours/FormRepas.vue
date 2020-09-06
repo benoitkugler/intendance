@@ -35,8 +35,12 @@
               ></v-text-field>
             </v-col>
             <v-col md="6">
-              <recettes-fields v-model="repas.recettes"></recettes-fields>
+              <recettes-fields
+                :C="C"
+                v-model="repas.recettes"
+              ></recettes-fields>
               <liste-lien-ingredients
+                :C="C"
                 class="ml-n2"
                 subheader="Ingrédients"
                 showAdd
@@ -69,26 +73,22 @@ import {
   RepasComplet,
   DateIngredientQuantites,
   IngredientQuantite,
-  RepasGroupe
-} from "../../logic/api";
-import {
-  New,
-  DetailsRepas,
-  EditMode,
-  toNullableId,
-  deepcopy
-} from "../../logic/api";
+  RepasGroupe,
+  New
+} from "@/logic/api";
+import { DetailsRepas, EditMode, toNullableId, deepcopy } from "@/logic/types";
 import DateField from "../utils/DateField.vue";
 import HoraireField from "../utils/HoraireField.vue";
 import TooltipBtn from "../utils/TooltipBtn.vue";
-import { C } from "../../logic/controller";
+import { Controller } from "@/logic/controller";
 import { Watch } from "vue-property-decorator";
-import { Formatter } from "../../logic/formatter";
+import { Formatter } from "@/logic/formatter";
 import RecettesFields from "../utils/RecettesFields.vue";
 import ListeLienIngredients from "../utils/ListeLienIngredients.vue";
 
 const Props = Vue.extend({
   props: {
+    C: Object as () => Controller,
     initialRepas: Object as () => RepasComplet,
     mode: String as () => EditMode
   }
@@ -112,17 +112,17 @@ export default class FormRepas extends Props {
   }
 
   get sejour() {
-    return (C.data.sejours.sejours || {})[this.initialRepas.id_sejour];
+    return (this.C.api.sejours.sejours || {})[this.initialRepas.id_sejour];
   }
 
   get menus() {
-    return Object.values(C.data.menus).map(menu => {
-      return { text: C.formatter.formatMenuName(menu), value: menu.id };
+    return Object.values(this.C.api.menus).map(menu => {
+      return { text: this.C.formatter.formatMenuName(menu), value: menu.id };
     });
   }
 
   get groupes() {
-    return C.state.getGroupes().map(groupe => {
+    return this.C.getGroupes().map(groupe => {
       const rg: RepasGroupe = {
         id_repas: this.initialRepas.id,
         id_groupe: groupe.id

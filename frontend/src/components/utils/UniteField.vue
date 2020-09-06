@@ -11,8 +11,8 @@
 <script lang="ts">
 import Vue from "vue";
 import Component from "vue-class-component";
-import { UniteLabels } from "../../logic/api";
-import { enumStringToOptions } from "../../logic/api";
+import { UniteLabels } from "@/logic/api";
+import { enumStringToOptions } from "@/logic/types";
 
 const UniteFieldProps = Vue.extend({
   props: {

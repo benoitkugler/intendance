@@ -1,6 +1,7 @@
 <template>
   <div class="two-weeks-calendar" ref="weeks">
     <week
+      :C="C"
       :sejour="sejour"
       :weekdays="weekdays"
       :start="startWeek1"
@@ -8,12 +9,13 @@
       :events="events"
       :currentDay="currentDay"
       :hoverDay="hoverDay"
-      @editRepas="r => $emit('editRepas', r)"
-      @addRepas="r => $emit('addRepas', r)"
+      @editRepas="r => $emit('edit-repas', r)"
+      @addRepas="r => $emit('add-repas', r)"
       @change="o => $emit('change', o)"
       @hover="d => (hoverDay = d)"
     ></week>
     <week
+      :C="C"
       :sejour="sejour"
       :weekdays="weekdays"
       :start="startWeek2"
@@ -21,8 +23,8 @@
       :events="events"
       :currentDay="currentDay"
       :hoverDay="hoverDay"
-      @editRepas="r => $emit('editRepas', r)"
-      @addRepas="r => $emit('addRepas', r)"
+      @editRepas="r => $emit('edit-repas', r)"
+      @addRepas="r => $emit('add-repas', r)"
       @change="o => $emit('change', o)"
       @hover="d => (hoverDay = d)"
     ></week>
@@ -37,15 +39,10 @@ import ListeRepas from "./ListeRepas.vue";
 import TooltipBtn from "../../utils/TooltipBtn.vue";
 import Week from "./Week.vue";
 
-import { Sejour, SejourRepas, RepasComplet } from "../../../logic/api";
-import { C } from "../../../logic/controller";
-import {
-  DetailsSejour,
-  New,
-  DetailsRepas,
-  PreferencesAgenda
-} from "../../../logic/api";
-import { Formatter } from "../../../logic/formatter";
+import { Sejour, SejourRepas, RepasComplet, New } from "@/logic/api";
+import { Controller } from "@/logic/controller";
+import { DetailsSejour, DetailsRepas, PreferencesAgenda } from "@/logic/types";
+import { Formatter } from "@/logic/formatter";
 import { toDateVuetify } from "./utils";
 import { HorairesColors } from "../../utils/utils";
 import { Watch } from "vue-property-decorator";
@@ -63,6 +60,7 @@ function weekdaysFromStart(start: Date) {
 
 const Props = Vue.extend({
   props: {
+    C: Object as () => Controller,
     sejour: Object as () => SejourRepas | null,
     preferences: Object as () => PreferencesAgenda,
     activeJourOffset: Number as () => number | null
@@ -90,7 +88,9 @@ export default class Calendar extends Props {
 
   get currentDay(): string | null {
     if (this.sejour == null || this.activeJourOffset == null) return null;
-    return toDateVuetify(C.offsetToDate(this.sejour.id, this.activeJourOffset));
+    return toDateVuetify(
+      this.C.offsetToDate(this.sejour.id, this.activeJourOffset)
+    );
   }
 
   get startDate(): Date {
@@ -121,7 +121,9 @@ export default class Calendar extends Props {
     if (sejour == null) return {};
     let out: { [key: string]: RepasComplet[] } = {};
     (sejour.repass || []).forEach(repas => {
-      const d = toDateVuetify(C.offsetToDate(sejour.id, repas.jour_offset));
+      const d = toDateVuetify(
+        this.C.offsetToDate(sejour.id, repas.jour_offset)
+      );
       const l = out[d] || [];
       l.push(repas);
       out[d] = l;

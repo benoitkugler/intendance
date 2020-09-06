@@ -30,9 +30,10 @@
 <script lang="ts">
 import Vue from "vue";
 import Component from "vue-class-component";
-import { Fournisseur } from "../../logic/api";
-import { New, EditMode, deepcopy } from "../../logic/api";
+import { Fournisseur } from "@/logic/api";
+import { New } from "@/logic/api";
 import { Watch } from "vue-property-decorator";
+import { deepcopy, EditMode } from "@/logic/types";
 
 const DetailsFournisseurProps = Vue.extend({
   props: {

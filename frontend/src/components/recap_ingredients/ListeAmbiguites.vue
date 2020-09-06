@@ -44,12 +44,13 @@
 <script lang="ts">
 import Vue from "vue";
 import Component from "vue-class-component";
-import { Ambiguites, Ingredient, Produit } from "../../logic/api";
-import { C } from "../../logic/controller";
+import { Ambiguites, Ingredient, Produit } from "@/logic/api";
+import { Controller } from "@/logic/controller";
 import { ContraintesProduits } from "./types";
 
 const ListeAmbiguitesProps = Vue.extend({
   props: {
+    C: Object as () => Controller,
     ambiguites: Object as () => Ambiguites
   }
 });
@@ -66,12 +67,12 @@ export default class ListeAmbiguites extends ListeAmbiguitesProps {
   get items(): Amb[] {
     const ambs = this.ambiguites || {};
     return Object.keys(ambs).map(idIngredient => {
-      const ing = C.getIngredient(Number(idIngredient));
+      const ing = this.C.getIngredient(Number(idIngredient));
       return { ingredient: ing, produits: ambs[Number(idIngredient)] || [] };
     });
   }
 
-  formatProduit = C.formatter.formatProduit;
+  formatProduit = this.C.formatter.formatProduit;
 }
 </script>
 

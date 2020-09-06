@@ -14,11 +14,12 @@
 <script lang="ts">
 import Vue from "vue";
 import Component from "vue-class-component";
-import { C } from "../../logic/controller";
+import { Controller } from "@/logic/controller";
 import { sortByText } from "../utils/utils";
 
 const SelectSejourProps = Vue.extend({
   props: {
+    C: Object as () => Controller,
     label: String,
     idSejour: Number
   },
@@ -31,7 +32,7 @@ const SelectSejourProps = Vue.extend({
 @Component({})
 export default class SelectSejour extends SelectSejourProps {
   get sejours() {
-    const items = Object.values(C.data.sejours.sejours || {}).map(sejour => {
+    const items = Object.values(this.C.api.sejours.sejours).map(sejour => {
       return { value: sejour.id, text: sejour.nom };
     });
     return sortByText(items);

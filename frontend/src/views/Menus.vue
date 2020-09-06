@@ -20,6 +20,7 @@
           <edit-menu
             v-show="state.mode == 'editMenu'"
             key="edit"
+            :C="C"
             :mode="editMode"
             :initialMenu="editedMenu"
             @undo="editMenuCancel"
@@ -32,6 +33,7 @@
           v-show="state.mode == 'visu' || state.mode == 'editMenu'"
           key="liste"
           height="75vh"
+          :C="C"
           :state="state"
           @change="idRecette => (state.selection.idRecette = idRecette)"
           @edit="startEditRecette"
@@ -41,6 +43,7 @@
         <edit-recette
           v-show="state.mode == 'editRecette'"
           key="edit"
+          :C="C"
           :mode="editMode"
           :initialRecette="editedRecette"
           @undo="editRecetteCancel"
@@ -50,6 +53,7 @@
       <v-col md="4" sm="12">
         <liste-ingredients
           height="75vh"
+          :C="C"
           :state="state"
           @change="
             idIngredient => (state.selection.idIngredient = idIngredient)
@@ -69,21 +73,29 @@ import ListeRecettes from "../components/menus/ListeRecettes.vue";
 import ListeIngredients from "../components/menus/ListeIngredients.vue";
 import EditMenu from "../components/menus/EditMenu.vue";
 import EditRecette from "../components/menus/EditRecette.vue";
-import { C } from "../logic/controller";
+import { Controller } from "../logic/controller";
 import {
   Menu,
   Recette,
   Ingredient,
   RecetteComplet,
-  MenuComplet
+  MenuComplet,
+  New
 } from "../logic/api";
-import { IngredientOptions, EditMode, New, deepcopy } from "../logic/api";
+import { IngredientOptions, EditMode, deepcopy } from "../logic/types";
 import {
   StateMenus,
   DefautRecette,
   DefautMenu
 } from "../components/menus/types";
 import { Watch } from "vue-property-decorator";
+import { ClickOutside } from "vuetify/lib";
+
+const MenuProps = Vue.extend({
+  props: {
+    C: Object as () => Controller
+  }
+});
 
 @Component({
   components: {
@@ -94,7 +106,7 @@ import { Watch } from "vue-property-decorator";
     EditRecette
   }
 })
-export default class Menus extends Vue {
+export default class Menus extends MenuProps {
   state: StateMenus = {
     mode: "visu",
     selection: { idMenu: null, idRecette: null, idIngredient: null }
@@ -113,17 +125,12 @@ export default class Menus extends Vue {
   };
 
   async mounted() {
-    await C.data.loadAllMenus();
-    if (C.notifications.getError() == null) {
-      C.notifications.setMessage(
-        "Les menus, recettes et ingrédients ont bien été chargés."
-      );
-    }
+    await this.C.api.loadAllMenus();
     this.selectIngredient();
   }
 
   activated() {
-    if (C.notifications.getSpin()) {
+    if (this.C.notifications.getSpin()) {
       return; // données en cours de chargement
     }
     this.selectIngredient();
@@ -148,9 +155,9 @@ export default class Menus extends Vue {
   }
 
   startCreateMenu() {
-    if (C.idUtilisateur == null) return;
+    if (this.C.state.idUtilisateur == null) return;
     const newMenu: Menu = { ...deepcopy(DefautMenu), id: -1 };
-    newMenu.id_utilisateur.Int64 = C.idUtilisateur;
+    newMenu.id_utilisateur.Int64 = this.C.state.idUtilisateur;
     this.editedMenu = newMenu;
     this.editMode = "new";
     this.state.mode = "editMenu";
@@ -161,20 +168,15 @@ export default class Menus extends Vue {
   }
 
   async editMenuDone(menu: MenuComplet) {
-    let message = "";
+    let out: MenuComplet | undefined;
     if (this.editMode == "edit") {
-      menu = (await C.data.updateMenu(menu)) as MenuComplet;
-      message = "Le menu a bien été mis à jour.";
+      out = await this.C.api.UpdateMenu(menu);
     } else {
-      menu = (await C.data.createMenu(menu)) as MenuComplet;
-      message = "Le menu a bien été ajouté.";
+      out = await this.C.api.CreateMenu(menu);
     }
     this.state.mode = "visu";
-    if (C.notifications.getError() == null) {
-      C.notifications.setMessage(message);
-      this.$nextTick(() => {
-        this.$refs.listeMenus.goToItem(menu.id);
-      });
+    if (out !== undefined) {
+      this.$refs.listeMenus.goToItem(out.id);
     }
   }
 
@@ -186,9 +188,8 @@ export default class Menus extends Vue {
   }
 
   startCreateRecette() {
-    if (C.idUtilisateur == null) return;
     const newRecette: Recette = { ...deepcopy(DefautRecette), id: -1 };
-    newRecette.id_utilisateur.Int64 = C.idUtilisateur;
+    newRecette.id_utilisateur.Int64 = this.C.state.idUtilisateur;
     this.editedRecette = newRecette;
     this.editMode = "new";
     this.state.mode = "editRecette";
@@ -198,18 +199,15 @@ export default class Menus extends Vue {
   }
 
   async editRecetteDone(recette: RecetteComplet) {
-    let message = "";
+    let out: RecetteComplet | undefined;
     if (this.editMode == "edit") {
-      recette = (await C.data.updateRecette(recette)) as RecetteComplet;
-      message = "La recette a bien été mise à jour.";
+      out = await this.C.api.UpdateRecette(recette);
     } else {
-      recette = (await C.data.createRecette(recette)) as RecetteComplet;
-      message = "La recette a bien été ajoutée.";
+      out = await this.C.api.CreateRecette(recette);
     }
     this.state.mode = "visu";
-    if (C.notifications.getError() == null) {
-      C.notifications.setMessage(message);
-      this.$refs.listeRecettes.goToItem(recette.id);
+    if (out !== undefined) {
+      this.$refs.listeRecettes.goToItem(out.id);
     }
   }
 }

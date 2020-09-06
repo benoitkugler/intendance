@@ -19,28 +19,34 @@
 <script lang="ts">
 import Vue from "vue";
 import Component from "vue-class-component";
-import { C } from "../logic/controller";
+import { Notifications } from "../logic/notifications";
+
+const ErrorDialogProps = Vue.extend({
+  props: {
+    N: Object as () => Notifications
+  }
+});
 
 @Component
-export default class ErrorDialog extends Vue {
+export default class ErrorDialog extends ErrorDialogProps {
   get show() {
-    return C.notifications.getError() != null;
+    return this.N.getError() != null;
   }
 
   set show(b: boolean) {
     if (!b) {
-      C.notifications.setError(null);
+      this.N.setError(null);
     }
   }
 
   get mainTitle() {
-    const err = C.notifications.getError();
+    const err = this.N.getError();
     if (err == null) return "";
     return err.kind;
   }
 
   get subTitle() {
-    const err = C.notifications.getError();
+    const err = this.N.getError();
     if (err && err.code != null) {
       return `code ${err.code}`;
     }
@@ -48,7 +54,7 @@ export default class ErrorDialog extends Vue {
   }
 
   get message() {
-    const err = C.notifications.getError() || { messageHtml: "" };
+    const err = this.N.getError() || { messageHtml: "" };
     return err.messageHtml;
   }
 }

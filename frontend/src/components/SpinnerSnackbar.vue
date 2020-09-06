@@ -8,12 +8,18 @@
 <script lang="ts">
 import Vue from "vue";
 import Component from "vue-class-component";
-import { C } from "../logic/controller";
+import { Notifications } from "../logic/notifications";
+
+const SpinnerSnackbarProps = Vue.extend({
+  props: {
+    N: Object as () => Notifications
+  }
+});
 
 @Component
-export default class SpinnerSnackbar extends Vue {
+export default class SpinnerSnackbar extends SpinnerSnackbarProps {
   get show() {
-    return C.notifications.getSpin();
+    return this.N.getSpin();
   }
 
   set show(b: boolean) {}

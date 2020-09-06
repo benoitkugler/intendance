@@ -37,14 +37,15 @@
 import Vue from "vue";
 import Component from "vue-class-component";
 
-import { C } from "../../../../logic/controller";
-import { Ingredient } from "../../../../logic/api";
+import { Controller } from "@/logic/controller";
+import { Ingredient } from "@/logic/api";
 import { DragKind, setDragData } from "../../../utils/utils_drag";
 import Toolbar from "../../../utils/Toolbar.vue";
 import { searchFunction } from "../../../utils/utils";
 
 const ChoixIngredientsProps = Vue.extend({
   props: {
+    C: Object as () => Controller,
     height: String
   }
 });
@@ -57,7 +58,7 @@ export default class ChoixIngredients extends ChoixIngredientsProps {
 
   get ingredients() {
     const sf = searchFunction(this.search);
-    return Object.values(C.data.ingredients || {}).filter(ingredient =>
+    return Object.values(this.C.api.ingredients).filter(ingredient =>
       sf(ingredient.nom)
     );
   }

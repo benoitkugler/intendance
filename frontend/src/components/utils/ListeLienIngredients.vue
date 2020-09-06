@@ -2,6 +2,7 @@
   <div>
     <v-dialog v-model="showEditIngredient" max-width="500px">
       <details-ingredient
+        :C="C"
         :ingredient="editedIngredient"
         @edit="editIngredientDone"
         ref="editIngredient"
@@ -13,7 +14,7 @@
         <v-chip
           color="teal"
           small
-          v-for="ingredient in ingredients"
+          v-for="ingredient in ingredients || []"
           :key="ingredient.id_ingredient"
           close
           @click.stop="editIngredient(ingredient)"
@@ -38,7 +39,7 @@
         </v-list-item>
 
         <v-list-item
-          v-for="ingredient in ingredients"
+          v-for="ingredient in ingredients || []"
           :key="ingredient.id_ingredient"
         >
           <template v-slot:default="{}">
@@ -78,6 +79,7 @@
         <div class="px-3">
           <ingredient-field
             v-if="showAdd"
+            :C="C"
             @change="addIngredient"
           ></ingredient-field>
         </div>
@@ -95,12 +97,13 @@ import DetailsIngredient from "./DetailsIngredient.vue";
 import TooltipBtn from "./TooltipBtn.vue";
 import IngredientField from "./IngredientField.vue";
 
-import { LienIngredient } from "../../logic/api";
-import { C } from "../../logic/controller";
+import { LienIngredient } from "@/logic/api";
+import { Controller } from "@/logic/controller";
 import { DragKind, getDragData } from "./utils_drag";
 
 const ListeLienIngredientsProps = Vue.extend({
   props: {
+    C: Object as () => Controller,
     subheader: String,
     showAdd: Boolean,
     ingredients: Array as () => LienIngredient[] | null,
@@ -124,7 +127,7 @@ export default class ListeLienIngredients extends ListeLienIngredientsProps {
   };
 
   getIngredient(ing: LienIngredient) {
-    return (C.data.ingredients || {})[ing.id_ingredient];
+    return (this.C.api.ingredients || {})[ing.id_ingredient];
   }
 
   editIngredient(ing: LienIngredient) {

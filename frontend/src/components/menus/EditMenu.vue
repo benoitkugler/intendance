@@ -56,6 +56,7 @@
       </v-list>
     </div>
     <liste-lien-ingredients
+      :C="C"
       subheader="Ingrédients additionnels"
       v-model="menu.ingredients"
     ></liste-lien-ingredients>
@@ -67,15 +68,16 @@ import Vue from "vue";
 import Component from "vue-class-component";
 import TooltipBtn from "../utils/TooltipBtn.vue";
 
-import { C } from "../../logic/controller";
-import { Menu, Recette, LienIngredient, MenuComplet } from "../../logic/api";
-import { New, EditMode, deepcopy } from "../../logic/api";
+import { Menu, Recette, LienIngredient, MenuComplet, New } from "@/logic/api";
+import { EditMode, deepcopy } from "@/logic/types";
 import { Watch } from "vue-property-decorator";
 import ListeLienIngredients from "../utils/ListeLienIngredients.vue";
 import { DragKind, getDragData } from "../utils/utils_drag";
+import { Controller } from "@/logic/controller";
 
 const EditMenuProps = Vue.extend({
   props: {
+    C: Object as () => Controller,
     mode: String as () => EditMode,
     initialMenu: Object as () => New<MenuComplet>
   }
@@ -102,10 +104,10 @@ export default class EditMenu extends EditMenuProps {
 
   // résoud les recettes à partir des ids
   get recettes() {
-    return C.getMenuRecettes(this.menu);
+    return this.C.getMenuRecettes(this.menu);
   }
 
-  formatRecetteProprietaire = C.formatter.formatMenuOrRecetteProprietaire;
+  formatRecetteProprietaire = this.C.formatter.formatMenuOrRecetteProprietaire;
 
   removeRecette(toRemove: Recette) {
     this.menu.recettes = (this.menu.recettes || []).filter(

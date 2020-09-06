@@ -4,11 +4,9 @@ import {
   Ingredient,
   LienIngredient,
   NullInt64,
-  Livraison
+  Livraison,
+  New
 } from "./api";
-
-export type New<T extends { id: number }> = Omit<T, "id"> &
-  Partial<Pick<T, "id">>;
 
 export type DetailsSejour = Omit<Sejour, "id" | "id_utilisateur">;
 export type DetailsRepas = Omit<RepasComplet, "id" | "id_sejour">;

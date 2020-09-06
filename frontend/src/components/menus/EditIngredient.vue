@@ -67,13 +67,13 @@ import { Watch } from "vue-property-decorator";
 import UniteField from "../utils/UniteField.vue";
 import ConditionnementField from "../utils/ConditionnementField.vue";
 
-import { Ingredient, Unite, UniteLabels } from "../../logic/api";
+import { Ingredient, Unite, UniteLabels } from "@/logic/api";
 import {
   IngredientOptions,
   EditMode,
   deepcopy,
   enumStringToOptions
-} from "../../logic/api";
+} from "@/logic/types";
 import { DefautIngredient } from "./types";
 
 const EditIngredientProps = Vue.extend({

@@ -1,15 +1,16 @@
 import Vue from "vue";
-import Vuetify from "vuetify";
 import Component from "vue-class-component";
 
 import { StateMenus, SelectionMenu } from "./types";
+import { Controller } from "@/logic/controller";
 
 export type ListKind = keyof SelectionMenu;
 const Props = Vue.extend({
   props: {
     height: String,
     state: Object as () => StateMenus,
-    kind: String as () => ListKind
+    kind: String as () => ListKind,
+    C: Object as () => Controller
   }
 });
 

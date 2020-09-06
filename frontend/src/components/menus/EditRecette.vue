@@ -34,6 +34,7 @@
       </v-col>
       <v-col>
         <liste-lien-ingredients
+          :C="C"
           style="max-height: 60vh;"
           class="mt-0 pt-0 overflow-y-auto"
           subheader="Ingrédients"
@@ -49,15 +50,16 @@ import Vue from "vue";
 import Component from "vue-class-component";
 import TooltipBtn from "../utils/TooltipBtn.vue";
 
-import { C } from "../../logic/controller";
-import { Recette, RecetteComplet, LienIngredient } from "../../logic/api";
-import { New, EditMode, deepcopy } from "../../logic/api";
+import { Controller } from "@/logic/controller";
+import { New, Recette, RecetteComplet, LienIngredient } from "@/logic/api";
+import { EditMode, deepcopy } from "@/logic/types";
 import { Watch } from "vue-property-decorator";
 
 import ListeLienIngredients from "../utils/ListeLienIngredients.vue";
 
 const EditRecetteProps = Vue.extend({
   props: {
+    C: Object as () => Controller,
     mode: String as () => EditMode,
     initialRecette: Object as () => RecetteComplet
   }
@@ -82,7 +84,7 @@ export default class EditRecette extends EditRecetteProps {
     return "Ajouter une recette";
   }
 
-  formatRecetteProprietaire = C.formatter.formatMenuOrRecetteProprietaire;
+  formatRecetteProprietaire = this.C.formatter.formatMenuOrRecetteProprietaire;
 }
 </script>
 

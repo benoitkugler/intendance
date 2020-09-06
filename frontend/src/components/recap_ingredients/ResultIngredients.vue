@@ -11,7 +11,7 @@
       style="max-height: 75vh;"
       :date-ingredients="dateIngredients"
       :highlight="origineIngredients"
-      @go="id => $emit('goToIngredient', id)"
+      @go="id => $emit('go-to-ingredient', id)"
     ></date-ingredients>
   </v-card>
 </template>
@@ -22,10 +22,7 @@ import Component from "vue-class-component";
 
 import DateIngredients from "./DateIngredients.vue";
 
-import {
-  DateIngredientQuantites,
-  TimedIngredientQuantite
-} from "../../logic/api";
+import { DateIngredientQuantites, TimedIngredientQuantite } from "@/logic/api";
 
 const ResultIngredientsProps = Vue.extend({
   props: {

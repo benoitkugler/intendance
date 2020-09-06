@@ -11,11 +11,11 @@
               :rules="[rules.idRequired]"
               v-model="innerProduit.id_livraison"
             >
-              <template v-slot:item="{ item }">
-                <span v-html="item.text"></span>
+              <template v-slot:item="props">
+                <span v-html="asE(props.item).text"></span>
               </template>
-              <template v-slot:selection="{ item }">
-                <span v-html="item.text"></span>
+              <template v-slot:selection="props">
+                <span v-html="asE(props.item).text"></span>
               </template>
             </v-select>
           </v-col>
@@ -78,14 +78,15 @@ import Component from "vue-class-component";
 
 import ConditionnementField from "../utils/ConditionnementField.vue";
 
-import { Produit } from "../../logic/api";
-import { C } from "../../logic/controller";
+import { Produit, New } from "@/logic/api";
+import { Controller } from "@/logic/controller";
 import { sortByText } from "../utils/utils";
-import { New, deepcopy, NullId, toNullableId, EnumItem } from "../../logic/api";
+import { deepcopy, NullId, toNullableId, EnumItem } from "@/logic/types";
 import { Watch } from "vue-property-decorator";
 
 const DetailsProduitProps = Vue.extend({
   props: {
+    C: Object as () => Controller,
     // contraint le produit possible
     produit: Object as () => Produit
   }
@@ -102,6 +103,8 @@ export default class DetailsProduit extends DetailsProduitProps {
     form: VForm;
   };
 
+  asE = (i: EnumItem) => i;
+
   @Watch("produit")
   onChange() {
     this.innerProduit = this.duplique();
@@ -112,15 +115,14 @@ export default class DetailsProduit extends DetailsProduitProps {
   }
 
   get optionsLivraisons() {
-    if (C.data == null) return [];
-    const items: EnumItem<number>[] = Object.values(
-      C.data.livraisons || {}
-    ).map(livraison => {
-      return {
-        text: C.formatter.formatLivraison(livraison),
-        value: livraison.id
-      };
-    });
+    const items: EnumItem<number>[] = Object.values(this.C.api.livraisons).map(
+      livraison => {
+        return {
+          text: this.C.formatter.formatLivraison(livraison),
+          value: livraison.id
+        };
+      }
+    );
     return items;
   }
 

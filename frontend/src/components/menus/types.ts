@@ -1,13 +1,10 @@
 import {
-  Menu,
-  Recette,
   Ingredient,
   RecetteComplet,
   MenuComplet,
-  Unite
+  Unite,
+  New
 } from "@/logic/api";
-
-import { IngredientOptions, New } from "@/logic/api";
 
 type ModeMenu = "visu" | "editMenu" | "editRecette" | "editIngredient";
 export interface SelectionMenu {

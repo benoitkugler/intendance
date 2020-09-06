@@ -52,11 +52,13 @@
                       nudge-left="16"
                       :close-on-content-click="false"
                     >
-                      <template v-slot:activator="{ on }">
+                      <template v-slot:activator="props">
                         <div
                           class="color-preview"
-                          :style="{ backgroundColor: tmpGroupe.couleur }"
-                          v-on="on"
+                          :style="{
+                            backgroundColor: (tmpGroupe || {}).couleur
+                          }"
+                          v-on="props.on"
                         />
                       </template>
                       <v-card>
@@ -151,15 +153,16 @@
 <script lang="ts">
 import Vue from "vue";
 import Component from "vue-class-component";
-import { SejourRepas, Sejour, Groupe } from "../../../logic/api";
-import { C } from "../../../logic/controller";
+import { SejourRepas, Sejour, Groupe, New } from "@/logic/api";
+import { Controller } from "@/logic/controller";
 
 import TooltipBtn from "../../utils/TooltipBtn.vue";
-import { EditMode, New, deepcopy } from "../../../logic/api";
+import { EditMode, deepcopy } from "@/logic/types";
 import { Watch } from "vue-property-decorator";
 
 const ListeGroupesProps = Vue.extend({
   props: {
+    C: Object as () => Controller,
     sejour: Object as () => Sejour | null
   }
 });
@@ -192,7 +195,7 @@ export default class ListeGroupes extends ListeGroupesProps {
   get groupes() {
     const sej = this.sejour;
     if (sej === null) return [];
-    return Object.values(C.data.sejours.groupes || {}).filter(
+    return Object.values(this.C.api.sejours.groupes).filter(
       groupe => groupe.id_sejour == sej.id
     );
   }
@@ -218,19 +221,13 @@ export default class ListeGroupes extends ListeGroupesProps {
 
   async editDone() {
     if (this.tmpGroupe === null) return;
-    let message: string;
     if (this.editMode == "new") {
-      message = "Groupe ajouté avec succès.";
-      await C.data.createGroupe(this.tmpGroupe);
+      await this.C.api.CreateGroupe(this.tmpGroupe);
     } else {
-      message = "Groupe modifié avec succès.";
-      await C.data.updateGroupe(this.tmpGroupe as Groupe);
+      await this.C.api.UpdateGroupe(this.tmpGroupe as Groupe);
     }
     this.tmpGroupe = null;
     this.showEdit = false;
-    if (C.notifications.getError() == null) {
-      C.notifications.setMessage(message);
-    }
   }
 
   askConfirmeSupprime(groupe: Groupe) {
@@ -240,12 +237,7 @@ export default class ListeGroupes extends ListeGroupesProps {
   async supprime() {
     this.confirmeSupprime = false;
     if (this.groupe == null || this.groupe.id == undefined) return;
-    const nbRepas = await C.data.deleteGroupe(this.groupe as Groupe);
-    if (C.notifications.getError() == null) {
-      C.notifications.setMessage(
-        `Groupe bien retiré. ${nbRepas} repas ont été modifié(s).`
-      );
-    }
+    await this.C.api.DeleteGroupe(this.groupe);
   }
 }
 </script>

@@ -38,17 +38,14 @@ import Component from "vue-class-component";
 import TooltipBtn from "../utils/TooltipBtn.vue";
 
 import { Watch } from "vue-property-decorator";
-import { C } from "../../logic/controller";
-import { Formatter } from "../../logic/formatter";
-import {
-  DateIngredientQuantites,
-  OutResoudIngredients,
-  SejourRepas
-} from "../../logic/api";
+import { Controller } from "@/logic/controller";
+import { Formatter } from "@/logic/formatter";
+import { DateIngredientQuantites, SejourRepas, Time } from "@/logic/api";
 import { compareArrays, Debounce } from "../utils/utils";
 
 const FormCalculProps = Vue.extend({
   props: {
+    C: Object as () => Controller,
     sejour: Object as () => SejourRepas | null
   }
 });
@@ -85,8 +82,8 @@ export default class FormCalcul extends FormCalculProps {
 
   offsetToDate(offset: number) {
     if (this.sejour == null) return "";
-    const d = C.offsetToDate(this.sejour.id, offset);
-    return Formatter.formatDate(d.toISOString());
+    const d = this.C.offsetToDate(this.sejour.id, offset);
+    return Formatter.formatDate(d.toISOString() as Time);
   }
 
   emitEvent() {

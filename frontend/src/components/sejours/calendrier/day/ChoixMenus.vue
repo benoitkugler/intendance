@@ -34,13 +34,14 @@
 import Vue from "vue";
 import Component from "vue-class-component";
 
-import { C } from "../../../../logic/controller";
-import { Menu, MenuComplet } from "../../../../logic/api";
+import { Controller } from "@/logic/controller";
+import { Menu, MenuComplet } from "@/logic/api";
 import { DragKind, setDragData } from "../../../utils/utils_drag";
 import Toolbar from "../../../utils/Toolbar.vue";
 
 const ChoixMenusProps = Vue.extend({
   props: {
+    C: Object as () => Controller,
     height: String
   }
 });
@@ -50,11 +51,11 @@ const ChoixMenusProps = Vue.extend({
 })
 export default class ChoixMenus extends ChoixMenusProps {
   search = "";
-  formatMenuName = C.formatter.formatMenuName;
-  formatMenuProprietaire = C.formatter.formatMenuOrRecetteProprietaire;
+  formatMenuName = this.C.formatter.formatMenuName;
+  formatMenuProprietaire = this.C.formatter.formatMenuOrRecetteProprietaire;
 
   get menus() {
-    return C.searchMenu(this.search);
+    return this.C.searchMenu(this.search);
   }
 
   onDrag(event: DragEvent, menu: MenuComplet) {

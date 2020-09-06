@@ -19,22 +19,28 @@
 <script lang="ts">
 import Vue from "vue";
 import Component from "vue-class-component";
-import { C } from "../logic/controller";
+import { Notifications } from "../logic/notifications";
+
+const SuccessSnackbarProps = Vue.extend({
+  props: {
+    N: Object as () => Notifications
+  }
+});
 
 @Component
-export default class SuccessSnackbar extends Vue {
+export default class SuccessSnackbar extends SuccessSnackbarProps {
   get show() {
-    return C.notifications.getMessage() != null;
+    return this.N.getMessage() != null;
   }
 
   set show(b: boolean) {
     if (!b) {
-      C.notifications.setMessage(null);
+      this.N.setMessage(null);
     }
   }
 
   get message() {
-    return C.notifications.getMessage();
+    return this.N.getMessage();
   }
 
   currentTime() {

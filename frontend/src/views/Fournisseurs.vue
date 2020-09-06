@@ -3,7 +3,7 @@
     <v-dialog max-width="500"> </v-dialog>
 
     <v-container>
-      <liste-fournisseurs></liste-fournisseurs>
+      <liste-fournisseurs :C="C"></liste-fournisseurs>
     </v-container>
   </div>
 </template>
@@ -12,11 +12,13 @@
 import Vue from "vue";
 import Component from "vue-class-component";
 
-import { C } from "../logic/controller";
+import { Controller } from "../logic/controller";
 import ListeFournisseurs from "../components/fournisseurs/ListeFournisseurs.vue";
 
 const FournisseursProps = Vue.extend({
-  props: {}
+  props: {
+    C: Object as () => Controller
+  }
 });
 
 @Component({
@@ -25,11 +27,8 @@ const FournisseursProps = Vue.extend({
   }
 })
 export default class Fournisseurs extends FournisseursProps {
-  async mounted() {
-    await C.data.loadFournisseurs();
-    if (C.notifications.getError() == null) {
-      C.notifications.setMessage("Fournisseurs chargés.");
-    }
+  mounted() {
+    this.C.api.GetFournisseurs();
   }
 }
 </script>

@@ -33,9 +33,9 @@
 <script lang="ts">
 import Vue from "vue";
 import Component from "vue-class-component";
-import { RepasComplet, Menu, MenuComplet } from "../../../logic/api";
-import { deepcopy, toNullableId } from "../../../logic/api";
-import { C } from "../../../logic/controller";
+import { RepasComplet, Menu, MenuComplet } from "@/logic/api";
+import { deepcopy, toNullableId } from "@/logic/types";
+import { Controller } from "@/logic/controller";
 import { HorairesColors, HorairesIcons } from "../../utils/utils";
 import { DragKind, getDragData, setDragData } from "../../utils/utils_drag";
 import {
@@ -46,6 +46,7 @@ import {
 
 const ListeRepasProps = Vue.extend({
   props: {
+    C: Object as () => Controller,
     repass: Array as () => RepasComplet[]
   }
 });
@@ -54,11 +55,11 @@ export default class ListeRepas extends ListeRepasProps {
   colorAnticipation = ColorAnticipation;
 
   repasTitle(repas: RepasComplet) {
-    return C.formatter.formatRepasName(repas);
+    return this.C.formatter.formatRepasName(repas);
   }
 
   repasSubTitle(repas: RepasComplet) {
-    const nbPersonnes = C.getRepasNbPersonnes(repas);
+    const nbPersonnes = this.C.getRepasNbPersonnes(repas);
     return `${nbPersonnes} personne(s)`;
   }
 
@@ -102,10 +103,7 @@ export default class ListeRepas extends ListeRepasProps {
       target.jour_offset,
       origin.jour_offset
     ];
-    await C.data.updateManyRepas([target, origin]);
-    if (C.notifications.getError() == null) {
-      C.notifications.setMessage("Repas échangés avec succès.");
-    }
+    await this.C.api.UpdateManyRepas([target, origin]);
   }
 }
 </script>

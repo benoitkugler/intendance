@@ -75,8 +75,8 @@ import { Prop, Watch } from "vue-property-decorator";
 import TooltipBtn from "../utils/TooltipBtn.vue";
 import Toolbar from "../utils/Toolbar.vue";
 
-import { C } from "../../logic/controller";
-import { Menu } from "../../logic/api";
+import { C } from "@/logic/controller";
+import { Menu } from "@/logic/api";
 import { StateMenus } from "./types";
 import { searchFunction } from "../utils/utils";
 import { BaseList, ListKind } from "./shared";
@@ -112,7 +112,7 @@ export default class ListeMenus extends BaseList {
   async supprime() {
     this.confirmeSupprime = false;
     if (this.state.selection.idMenu == null) return;
-    await C.data.deleteMenu(this.state.selection.idMenu);
+    await C.api.deleteMenu(this.state.selection.idMenu);
     if (C.notifications.getError() == null) {
       C.notifications.setMessage("Menu supprimé avec succès.");
     }

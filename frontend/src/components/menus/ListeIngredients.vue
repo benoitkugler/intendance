@@ -10,6 +10,7 @@
 
     <v-dialog v-model="showEditProduits" scrollable width="90%">
       <association-ingredient
+        :C="C"
         :ingredient="editedIngredientProduit"
         :activated="showEditProduits"
       ></association-ingredient>
@@ -67,7 +68,7 @@
           :value="ingredient.ingredient.id"
           :class="classItem(ingredient.ingredient.id)"
         >
-          <template v-slot:default="{ active }">
+          <template v-slot:default="props">
             <v-list-item-content
               draggable="true"
               @dragstart="ev => onDragStart(ev, ingredient.ingredient)"
@@ -78,7 +79,7 @@
               <v-list-item-subtitle v-html="subtitle(ingredient)">
               </v-list-item-subtitle>
             </v-list-item-content>
-            <v-list-item-action v-if="showActions(active)">
+            <v-list-item-action v-if="showActions(props.active)">
               <v-row no-gutters>
                 <v-col>
                   <tooltip-btn
@@ -125,9 +126,9 @@ import EditIngredient from "./EditIngredient.vue";
 import AssociationIngredient from "../produits/AssociationIngredient.vue";
 import Toolbar from "../utils/Toolbar.vue";
 
-import { C } from "../../logic/controller";
-import { Ingredient } from "../../logic/api";
-import { IngredientOptions, EditMode, New } from "../../logic/api";
+import { Controller } from "@/logic/controller";
+import { Ingredient, New } from "@/logic/api";
+import { IngredientOptions, EditMode } from "@/logic/types";
 import TooltipBtn from "../utils/TooltipBtn.vue";
 import levenshtein from "js-levenshtein";
 import { StateMenus, DefautIngredient } from "./types";
@@ -184,7 +185,7 @@ export default class ListeIngredients extends BaseList {
 
   private get editedIngredientProduit() {
     if (this.state.selection.idIngredient == null) return null;
-    return C.getIngredient(this.state.selection.idIngredient);
+    return this.C.getIngredient(this.state.selection.idIngredient);
   }
 
   // filtre suivant la recherche
@@ -201,13 +202,15 @@ export default class ListeIngredients extends BaseList {
   private get ingredients() {
     let baseIngredients: IngredientOptions[];
     if (this.state.mode == "editMenu" || this.state.mode == "editRecette") {
-      baseIngredients = C.getAllIngredients();
+      baseIngredients = this.C.getAllIngredients();
     } else if (this.state.selection.idRecette != null) {
-      baseIngredients = C.getRecetteIngredients(this.state.selection.idRecette);
+      baseIngredients = this.C.getRecetteIngredients(
+        this.state.selection.idRecette
+      );
     } else if (this.state.selection.idMenu != null) {
-      baseIngredients = C.getMenuIngredients(this.state.selection.idMenu);
+      baseIngredients = this.C.getMenuIngredients(this.state.selection.idMenu);
     } else {
-      baseIngredients = C.getAllIngredients();
+      baseIngredients = this.C.getAllIngredients();
     }
     return this.searchIngredients(baseIngredients, this.search);
   }
@@ -220,16 +223,13 @@ export default class ListeIngredients extends BaseList {
     );
   }
 
-  private async supprime(checkProduits: boolean) {
+  private supprime(checkProduits: boolean) {
     this.confirmeSupprime = false;
     if (this.state.selection.idIngredient == null) return;
-    await C.data.deleteIngredient(
-      this.state.selection.idIngredient,
-      checkProduits
-    );
-    if (C.notifications.getError() == null) {
-      C.notifications.setMessage("Ingrédient supprimé avec succès.");
-    }
+    this.C.api.DeleteIngredient({
+      id: this.state.selection.idIngredient,
+      check_produits: checkProduits
+    });
   }
 
   private onDragStart(event: DragEvent, ingredient: Ingredient) {
@@ -247,16 +247,12 @@ export default class ListeIngredients extends BaseList {
 
   private async editIngredientDone(ing: Ingredient) {
     this.showEditIngredient = false;
-    let message = "";
     if (this.editMode == "edit") {
-      ing = (await C.data.updateIngredient(ing)) as Ingredient;
-      message = "L'ingrédient a été modifié avec succès.";
+      ing = (await this.C.api.UpdateIngredient(ing)) as Ingredient;
     } else {
-      ing = (await C.data.createIngredient(ing)) as Ingredient;
-      message = "L'ingrédient a été ajouté avec succès.";
+      ing = (await this.C.api.CreateIngredient(ing)) as Ingredient;
     }
-    if (C.notifications.getError() == null) {
-      C.notifications.setMessage(message);
+    if (this.C.notifications.getError() == null) {
       this.state.selection.idIngredient = ing.id;
     }
     this.$emit("change", null);

@@ -50,20 +50,16 @@
 <script lang="ts">
 import Vue from "vue";
 import Component from "vue-class-component";
-import { Livraison } from "../../logic/api";
-import {
-  New,
-  EditMode,
-  deepcopy,
-  defaultLivraison,
-  EnumItem
-} from "../../logic/api";
+import { Livraison } from "@/logic/api";
+import { New } from "@/logic/api";
 import { Watch } from "vue-property-decorator";
-import { C } from "../../logic/controller";
+import { Controller } from "@/logic/controller";
 import JoursLivraisonField from "./JoursLivraisonField.vue";
+import { deepcopy, defaultLivraison, EditMode, EnumItem } from "@/logic/types";
 
 const DetailsLivraisonProps = Vue.extend({
   props: {
+    C: Object as () => Controller,
     livraison: Object as () => New<Livraison> | null,
     editMode: String as () => EditMode
   }
@@ -86,8 +82,7 @@ export default class DetailsLivraison extends DetailsLivraisonProps {
   }
 
   get optionsFournisseurs(): EnumItem<number>[] {
-    if (C.data == null) return [];
-    const items = Object.values(C.data.fournisseurs || {}).map(fourn => {
+    const items = Object.values(this.C.api.fournisseurs).map(fourn => {
       return { text: fourn.nom, value: fourn.id };
     });
     return items;

@@ -2,6 +2,7 @@
   <div>
     <v-dialog v-model="showAmbiguites" max-width="800">
       <liste-ambiguites
+        :C="C"
         :ambiguites="ambiguites"
         @apply="applyContraintes"
       ></liste-ambiguites>
@@ -71,9 +72,9 @@
                 <tr v-for="(item, j) in commandeJour.produits" :key="j">
                   <td>
                     <v-tooltip left>
-                      <template v-slot:activator="{ on }">
+                      <template v-slot:activator="props">
                         <a
-                          v-on="on"
+                          v-on="props.on"
                           @click="showOrigines(item)"
                           v-html="formatProduit(item.produit)"
                         >
@@ -112,14 +113,15 @@ import {
   Produit,
   Ambiguites,
   CommandeContraintes
-} from "../../logic/api";
+} from "@/logic/api";
 import { Watch } from "vue-property-decorator";
-import { C } from "../../logic/controller";
-import { Formatter } from "../../logic/formatter";
+import { Controller } from "@/logic/controller";
+import { Formatter } from "@/logic/formatter";
 import { ContraintesProduits } from "./types";
 
 const PreviewCommandeProps = Vue.extend({
   props: {
+    C: Object as () => Controller,
     dateIngredients: Array as () => DateIngredientQuantites[]
   }
 });
@@ -159,7 +161,7 @@ export default class PreviewCommande extends PreviewCommandeProps {
 
   private async computeCommande() {
     this.loading = true;
-    const res = await C.calculs.previewCommande({
+    const res = await this.C.api.EtablitCommande({
       ingredients: this.dateIngredients,
       contraintes: this.contraintes
     });
@@ -191,14 +193,14 @@ export default class PreviewCommande extends PreviewCommandeProps {
     });
     const out: commandeJour[] = [];
     for (const time in tmp) {
-      out.push({ date: time, produits: tmp[time] });
+      out.push({ date: time as Time, produits: tmp[time] });
     }
     return out.sort(
       (a, b) => new Date(a.date).valueOf() - new Date(b.date).valueOf()
     );
   }
 
-  formatProduit = C.formatter.formatProduit;
+  formatProduit = this.C.formatter.formatProduit;
 
   tooltipOrigin(item: CommandeItem) {
     const or = item.origines || [];

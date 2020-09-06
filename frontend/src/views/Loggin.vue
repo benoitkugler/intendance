@@ -48,7 +48,6 @@
 <script lang="ts">
 import Component from "vue-class-component";
 import Vue from "vue";
-import { C } from "../logic/controller";
 import { InLoggin } from "../logic/api";
 import { routes } from "../router/index";
 
@@ -72,9 +71,11 @@ export default class Loggin extends Vue {
 
   async mounted() {}
 
+  // TODO:
   async loggin() {
     if (!this.formValid) return;
     this.loading = true;
+
     const err = await C.logger.loggin(this.params);
     this.loading = false;
     if (C.notifications.getError() != null) return; // erreur déjà gérée

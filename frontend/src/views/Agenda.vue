@@ -6,6 +6,7 @@
 
     <v-dialog v-model="showEditFormRepas" size="lg">
       <form-repas
+        :C="C"
         :initialRepas="editedRepas"
         :mode="editMode"
         @accept="onEditRepasDone"
@@ -33,7 +34,7 @@
             ></tooltip-btn>
             <v-toolbar-title>
               Organisation du séjour <b>{{ sejour.nom }}</b>
-              <span v-if="viewMode == 'day'">
+              <span v-if="viewMode == 'day' && activeDay !== null">
                 - Journée du
                 {{
                   activeDay.toLocaleDateString("fr-FR", {
@@ -47,18 +48,18 @@
             <v-spacer></v-spacer>
             <v-toolbar-items>
               <tooltip-btn
+                v-if="viewMode == 'day'"
                 tooltip="Reculer"
                 mdi-icon="arrow-left"
                 small
-                @click="activeJourOffset -= 1"
-                v-if="viewMode == 'day'"
+                @click="addOffset(-1)"
               ></tooltip-btn>
               <tooltip-btn
+                v-if="viewMode == 'day'"
                 tooltip="Avancer"
                 mdi-icon="arrow-right"
                 small
-                @click="activeJourOffset += 1"
-                v-if="viewMode == 'day'"
+                @click="addOffset(1)"
               ></tooltip-btn>
               <v-divider vertical></v-divider>
               <tooltip-btn
@@ -79,6 +80,7 @@
           <calendar
             v-if="viewMode == 'month'"
             ref="calendar"
+            :C="C"
             :sejour="sejour"
             :preferences="preferences"
             :activeJourOffset="activeJourOffset"
@@ -88,6 +90,7 @@
           />
           <day
             v-else
+            :C="C"
             :jourOffset="activeJourOffset"
             @addRepas="startAddRepasFromHoraire"
             @editRepas="startEditRepas"
@@ -101,14 +104,13 @@
 <script lang="ts">
 import Component from "vue-class-component";
 import Vue from "vue";
-import { C } from "../logic/controller";
+import { Controller } from "../logic/controller";
 import {
   PreferencesAgenda,
   EditMode,
-  New,
   DetailsRepas,
   ViewMode
-} from "../logic/api";
+} from "../logic/types";
 
 import Calendar from "../components/sejours/calendrier/Calendar.vue";
 import Day from "../components/sejours/calendrier/day/Day.vue";
@@ -117,7 +119,13 @@ import ToolbarSwitch from "../components/utils/ToolbarSwitch.vue";
 import FormPreferences from "../components/sejours/calendrier/FormPreferences.vue";
 import FormRepas from "../components/sejours/FormRepas.vue";
 
-import { RepasGroupe, RepasComplet, Horaire } from "../logic/api";
+import { RepasGroupe, RepasComplet, Horaire, New } from "../logic/api";
+
+const AgendaProps = Vue.extend({
+  props: {
+    C: Object as () => Controller
+  }
+});
 
 @Component({
   components: {
@@ -129,7 +137,7 @@ import { RepasGroupe, RepasComplet, Horaire } from "../logic/api";
     FormRepas
   }
 })
-export default class Agenda extends Vue {
+export default class Agenda extends AgendaProps {
   showPreferences = false;
   preferences: PreferencesAgenda = {
     startPremierJour: true
@@ -158,42 +166,48 @@ export default class Agenda extends Vue {
   };
 
   get sejour() {
-    return C.state.getSejour();
+    return this.C.getSejour();
   }
 
   get activeDay(): Date | null {
-    if (this.activeJourOffset == null || C.state.idSejour == null) return null;
-    return C.offsetToDate(C.state.idSejour, this.activeJourOffset);
+    if (this.activeJourOffset == null || this.C.state.idSejour == null)
+      return null;
+    return this.C.offsetToDate(this.C.state.idSejour, this.activeJourOffset);
   }
 
   get tooltip() {
-    const sej = C.state.getSejour();
+    const sej = this.sejour;
     let nbRepas = sej ? (sej.repass || []).length : 0;
     return `<b>${nbRepas}</b> repas`;
   }
 
   async mounted() {
-    await C.data.loadAllMenus();
-    await C.data.loadSejours();
-    if (C.notifications.getError() == null) {
-      C.notifications.setMessage("L'agenda a bien été chargé.");
-    }
+    await this.C.api.loadAllMenus();
+    await this.C.api.GetSejours();
   }
 
   onChangeDay(date: string) {
-    if (C.state.idSejour == null) {
+    if (this.C.state.idSejour == null) {
       this.activeJourOffset = null;
     } else {
       const target = new Date(date);
-      this.activeJourOffset = C.dateToOffset(C.state.idSejour, target);
+      this.activeJourOffset = this.C.dateToOffset(
+        this.C.state.idSejour,
+        target
+      );
       this.viewMode = "day";
     }
   }
 
+  addOffset(offset: number) {
+    if (this.activeJourOffset === null) return;
+    this.activeJourOffset += offset;
+  }
+
   // Edition des repas
   startAddRepasFromDate(date: string) {
-    if (C.state.idSejour == null) return;
-    const offset = C.dateToOffset(C.state.idSejour, new Date(date));
+    if (this.C.state.idSejour == null) return;
+    const offset = this.C.dateToOffset(this.C.state.idSejour, new Date(date));
     this.startAddRepas(offset, Horaire.Midi);
   }
 
@@ -235,28 +249,20 @@ export default class Agenda extends Vue {
         ...repas,
         id_sejour: this.sejour.id
       };
-      await C.data.createRepas(newRepas);
-      message = "Le repas a bien été ajouté.";
+      await this.C.api.CreateRepas(newRepas);
     } else {
       const repasFull = {
         ...repas,
         id_sejour: this.editedRepas.id_sejour,
         id: this.editedRepas.id
       };
-      await C.data.updateManyRepas([repasFull]);
-      message = "Le repas a bien été mis à jour.";
-    }
-    if (C.notifications.getError() == null) {
-      C.notifications.setMessage(message);
+      await this.C.api.UpdateManyRepas([repasFull]);
     }
   }
 
   async deleteRepas(repas: RepasComplet) {
     this.showEditFormRepas = false;
-    await C.data.deleteRepas(repas);
-    if (C.notifications.getError() == null) {
-      C.notifications.setMessage("Le repas a été retiré avec succès.");
-    }
+    await this.C.api.DeleteRepas(repas);
   }
 }
 </script>

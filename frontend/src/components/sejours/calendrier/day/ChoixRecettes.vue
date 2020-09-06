@@ -34,14 +34,15 @@
 import Vue from "vue";
 import Component from "vue-class-component";
 
-import { C } from "../../../../logic/controller";
-import { Recette, RecetteComplet } from "../../../../logic/api";
+import { Controller } from "@/logic/controller";
+import { Recette, RecetteComplet } from "@/logic/api";
 import { DragKind, setDragData } from "../../../utils/utils_drag";
 import Toolbar from "../../../utils/Toolbar.vue";
 import { searchFunction } from "../../../utils/utils";
 
 const ChoixRecettesProps = Vue.extend({
   props: {
+    C: Object as () => Controller,
     height: String
   }
 });
@@ -52,11 +53,11 @@ const ChoixRecettesProps = Vue.extend({
 export default class ChoixRecettes extends ChoixRecettesProps {
   search = "";
 
-  formatRecetteProprietaire = C.formatter.formatMenuOrRecetteProprietaire;
+  formatRecetteProprietaire = this.C.formatter.formatMenuOrRecetteProprietaire;
 
   get recettes() {
     const sf = searchFunction(this.search);
-    return Object.values(C.data.recettes || {}).filter(recette =>
+    return Object.values(this.C.api.recettes).filter(recette =>
       sf(recette.nom)
     );
   }

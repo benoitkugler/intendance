@@ -14,11 +14,12 @@
 <script lang="ts">
 import Vue from "vue";
 import Component from "vue-class-component";
-import { C } from "../../logic/controller";
+import { Controller } from "@/logic/controller";
 import { searchFunction } from "./utils";
-import { EnumItem } from "../../logic/api";
+import { EnumItem } from "@/logic/types";
 const RecettesFieldsProps = Vue.extend({
   props: {
+    C: Object as () => Controller,
     recettes: Array as () => number[]
   },
   model: {
@@ -42,7 +43,7 @@ export default class RecettesFields extends RecettesFieldsProps {
   }
 
   get items() {
-    return Object.values(C.data.recettes || {}).map(rec => {
+    return Object.values(this.C.api.recettes).map(rec => {
       return { text: rec.nom, value: rec.id };
     });
   }

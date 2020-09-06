@@ -1,9 +1,9 @@
 <template>
   <v-menu :close-on-content-click="false" ref="menuDatePicker">
-    <template v-slot:activator="{ on }">
+    <template v-slot:activator="props">
       <v-text-field
         readonly
-        v-on="on"
+        v-on="props.on"
         :value="showDate(currentDate)"
         :label="label"
         :disabled="disabled"
@@ -25,8 +25,8 @@
 import Vue from "vue";
 import Component from "vue-class-component";
 import { Watch, Model } from "vue-property-decorator";
-import { C } from "../../logic/controller";
-import { Formatter } from "../../logic/formatter";
+import { Formatter } from "@/logic/formatter";
+import { Time } from "@/logic/api";
 
 const Props = Vue.extend({
   model: {
@@ -35,7 +35,7 @@ const Props = Vue.extend({
   },
   props: {
     // Date as string
-    currentDate: String,
+    currentDate: String as () => Time,
     label: String,
     disabled: Boolean
   }

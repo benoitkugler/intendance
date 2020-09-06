@@ -17,12 +17,12 @@
       <v-list-item-group v-model="idsFournisseurs" multiple>
         <template v-for="(fournisseur, i) in allFournisseurs">
           <v-list-item :key="i" :value="fournisseur.id">
-            <template v-slot:default="{ active, toggle }">
+            <template v-slot:default="props">
               <v-list-item-action>
                 <v-checkbox
-                  :input-value="active"
+                  :input-value="props.active"
                   :true-value="fournisseur.id"
-                  @click="toggle"
+                  @click="props.toggle"
                 ></v-checkbox>
               </v-list-item-action>
               <v-list-item-content>
@@ -56,12 +56,13 @@ import Vue from "vue";
 import Component from "vue-class-component";
 
 import TooltipBtn from "../utils/TooltipBtn.vue";
-import { C } from "../../logic/controller";
-import { SejourRepas } from "../../logic/api";
+import { Controller } from "@/logic/controller";
+import { SejourRepas } from "@/logic/api";
 import { Watch } from "vue-property-decorator";
 
 const ListeFournisseursProps = Vue.extend({
   props: {
+    C: Object as () => Controller,
     sejour: Object as () => SejourRepas | null
   }
 });
@@ -83,7 +84,7 @@ export default class ListeFournisseurs extends ListeFournisseursProps {
   }
 
   get allFournisseurs() {
-    return Object.values(C.data.fournisseurs || {});
+    return Object.values(this.C.api.fournisseurs || {});
   }
 
   select(lieu: string) {
@@ -92,12 +93,12 @@ export default class ListeFournisseurs extends ListeFournisseursProps {
       .map(f => f.id);
   }
 
-  async save() {
+  save() {
     if (this.sejour == null) return;
-    await C.data.updateSejourFournisseurs(this.sejour, this.idsFournisseurs);
-    if (C.notifications.getError() == null) {
-      C.notifications.setMessage("Fournisseurs mis à jour.");
-    }
+    this.C.api.UpdateSejourFournisseurs({
+      id_sejour: this.sejour.id,
+      ids_fournisseurs: this.idsFournisseurs
+    });
   }
 }
 </script>

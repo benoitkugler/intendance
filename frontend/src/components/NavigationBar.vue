@@ -13,8 +13,8 @@
         :to="route.path"
       >
         <v-tooltip top>
-          <template v-slot:activator="{ on }">
-            <v-list-item-action v-on="on">
+          <template v-slot:activator="props">
+            <v-list-item-action v-on="props.on">
               <v-icon>{{ route.meta.icon }}</v-icon>
             </v-list-item-action>
           </template>
@@ -25,8 +25,8 @@
       <v-divider></v-divider>
       <v-list-item @click="$emit('logout')">
         <v-tooltip top>
-          <template v-slot:activator="{ on }">
-            <v-list-item-action v-on="on">
+          <template v-slot:activator="props">
+            <v-list-item-action v-on="props.on">
               <v-icon>mdi-logout</v-icon>
             </v-list-item-action>
           </template>

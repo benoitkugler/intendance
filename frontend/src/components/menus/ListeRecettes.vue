@@ -39,7 +39,7 @@
           :value="recette.id"
           :class="classItem(recette.id)"
         >
-          <template v-slot:default="{ active }">
+          <template v-slot:default="props">
             <v-list-item-content
               draggable="true"
               @dragstart="ev => onDragStart(ev, recette)"
@@ -51,7 +51,7 @@
                 <i> {{ formatRecetteProprietaire(recette) }}</i>
               </v-list-item-subtitle>
             </v-list-item-content>
-            <v-list-item-action v-if="showActions(active, recette)">
+            <v-list-item-action v-if="showActions(props.active, recette)">
               <v-row no-gutters>
                 <v-col
                   ><tooltip-btn
@@ -86,8 +86,8 @@ import { Prop, Watch } from "vue-property-decorator";
 import TooltipBtn from "../utils/TooltipBtn.vue";
 import Toolbar from "../utils/Toolbar.vue";
 
-import { C } from "../../logic/controller";
-import { Recette } from "../../logic/api";
+import { Controller } from "@/logic/controller";
+import { Recette } from "@/logic/api";
 import { StateMenus } from "./types";
 import levenshtein from "js-levenshtein";
 import { searchFunction } from "../utils/utils";
@@ -116,11 +116,13 @@ export default class ListeRecettes extends BaseList {
   get recettes() {
     let baseRecettes: Recette[];
     if (this.state.mode == "editMenu") {
-      baseRecettes = Object.values(C.data.recettes);
+      baseRecettes = Object.values(this.C.api.recettes);
     } else if (this.state.selection.idMenu != null) {
-      baseRecettes = C.getMenuRecettes(C.getMenu(this.state.selection.idMenu));
+      baseRecettes = this.C.getMenuRecettes(
+        this.C.getMenu(this.state.selection.idMenu)
+      );
     } else {
-      baseRecettes = Object.values(C.data.recettes);
+      baseRecettes = Object.values(this.C.api.recettes);
     }
     return this.searchRecettes(baseRecettes, this.search);
   }
@@ -134,25 +136,22 @@ export default class ListeRecettes extends BaseList {
     }
     return "Toutes les recettes";
   }
-  formatRecetteProprietaire = C.formatter.formatMenuOrRecetteProprietaire;
+  formatRecetteProprietaire = this.C.formatter.formatMenuOrRecetteProprietaire;
 
   showActions(active: boolean, recette: Recette) {
     if (this.state.selection.idMenu != null) return false;
     return (
       active &&
       (!recette.id_utilisateur.Valid ||
-        recette.id_utilisateur.Int64 == C.idUtilisateur)
+        recette.id_utilisateur.Int64 == this.C.state.idUtilisateur)
     );
   }
 
   async supprime() {
     this.confirmeSupprime = false;
     if (this.state.selection.idRecette == null) return;
-    await C.data.deleteRecette(this.state.selection.idRecette);
+    await this.C.api.DeleteRecette({ id: this.state.selection.idRecette });
     this.$emit("change", null);
-    if (C.notifications.getError() == null) {
-      C.notifications.setMessage("Recette supprimée avec succès.");
-    }
   }
 
   onDragStart(event: DragEvent, recette: Recette) {

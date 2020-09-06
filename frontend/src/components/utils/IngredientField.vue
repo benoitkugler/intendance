@@ -14,11 +14,14 @@
 <script lang="ts">
 import Vue from "vue";
 import Component from "vue-class-component";
-import { C } from "../../logic/controller";
+import { Controller } from "@/logic/controller";
 import { searchFunction } from "./utils";
-import { EnumItem } from "../../logic/api";
+import { EnumItem } from "@/logic/types";
+
 const IngredientFieldProps = Vue.extend({
-  props: {}
+  props: {
+    C: Object as () => Controller
+  }
 });
 
 @Component({})
@@ -38,7 +41,7 @@ export default class IngredientField extends IngredientFieldProps {
   }
 
   get items() {
-    return C.getAllIngredients().map(ing => {
+    return this.C.getAllIngredients().map(ing => {
       return { text: ing.ingredient.nom, value: ing.ingredient.id };
     });
   }

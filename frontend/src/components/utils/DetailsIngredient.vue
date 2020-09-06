@@ -35,14 +35,15 @@
 <script lang="ts">
 import Vue from "vue";
 import Component from "vue-class-component";
-import { LienIngredient, UniteLabels } from "../../logic/api";
+import { LienIngredient, UniteLabels } from "@/logic/api";
 import { Watch } from "vue-property-decorator";
-import { deepcopy } from "../../logic/api";
+import { deepcopy } from "@/logic/types";
 import QuantiteRelative from "./QuantiteRelative.vue";
-import { C } from "../../logic/controller";
+import { Controller } from "@/logic/controller";
 
 const DetailsIngredientProps = Vue.extend({
   props: {
+    C: Object as () => Controller,
     ingredient: Object as () => LienIngredient
   }
 });
@@ -63,7 +64,9 @@ export default class DetailsIngredient extends DetailsIngredientProps {
   };
 
   get uniteHint() {
-    return UniteLabels[C.getIngredient(this.ingredient.id_ingredient).unite];
+    return UniteLabels[
+      this.C.getIngredient(this.ingredient.id_ingredient).unite
+    ];
   }
 
   focus() {

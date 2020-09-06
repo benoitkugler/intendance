@@ -1,7 +1,7 @@
 <template>
   <v-row class="fill-height px-2">
     <v-col md="3" sm="6" class="align-self-center">
-      <form-calcul :sejour="sejour" @change="onChange"></form-calcul>
+      <form-calcul :C="C" :sejour="sejour" @change="onChange"></form-calcul>
     </v-col>
     <v-col md="4" sm="6" class="align-self-center">
       <result-ingredients
@@ -14,6 +14,7 @@
     </v-col>
     <v-col class="align-self-center" md="5" sm="12">
       <preview-commande
+        :C="C"
         :dateIngredients="dateIngredients"
         @showOrigines="o => (origineIngredients = o)"
       ></preview-commande>
@@ -29,15 +30,13 @@ import FormCalcul from "../components/recap_ingredients/FormCalcul.vue";
 import ResultIngredients from "../components/recap_ingredients/ResultIngredients.vue";
 import PreviewCommande from "../components/recap_ingredients/PreviewCommande.vue";
 
-import { C } from "../logic/controller";
-import {
-  DateIngredientQuantites,
-  OutResoudIngredients,
-  TimedIngredientQuantite
-} from "../logic/api";
+import { Controller } from "../logic/controller";
+import { DateIngredientQuantites, TimedIngredientQuantite } from "../logic/api";
 
 const RecapIngredientsProps = Vue.extend({
-  props: {}
+  props: {
+    C: Object as () => Controller
+  }
 });
 
 @Component({
@@ -55,21 +54,18 @@ export default class RecapIngredients extends RecapIngredientsProps {
   critere: number[] = [];
 
   get sejour() {
-    return C.state.getSejour();
+    return this.C.getSejour();
   }
 
   async mounted() {
     let ps = [];
-    if (Object.keys(C.data.ingredients || {}).length == 0) {
-      ps.push(C.data.loadIngredients);
+    if (Object.keys(this.C.api.ingredients || {}).length == 0) {
+      ps.push(this.C.api.GetIngredients);
     }
-    if (Object.keys(C.data.fournisseurs || {}).length == 0) {
-      ps.push(C.data.loadFournisseurs);
+    if (Object.keys(this.C.api.fournisseurs || {}).length == 0) {
+      ps.push(this.C.api.GetFournisseurs);
     }
     await Promise.all(ps);
-    if (C.notifications.getError() == null) {
-      C.notifications.setMessage("Fournisseurs et ingrédients chargés.");
-    }
   }
 
   onChange(critere: number[]) {
@@ -81,7 +77,7 @@ export default class RecapIngredients extends RecapIngredientsProps {
     if (this.sejour == null) return;
 
     this.loadingIngredients = true;
-    const res = await C.calculs.resoudIngredientsJournees(
+    const res = await this.C.resoudIngredientsJournees(
       this.sejour.id,
       this.critere
     );
@@ -89,7 +85,7 @@ export default class RecapIngredients extends RecapIngredientsProps {
     if (!res) {
       return;
     }
-    this.dateIngredients = res.date_ingredients || [];
+    this.dateIngredients = res;
   }
 
   goToIngredient(id: number) {

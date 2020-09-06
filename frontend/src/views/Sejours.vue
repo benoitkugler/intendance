@@ -26,6 +26,7 @@
 
     <v-dialog v-model="showAssistantCreate" max-width="1000px">
       <assistant-create-repass
+        :C="C"
         @create="assistantCreate"
       ></assistant-create-repass>
     </v-dialog>
@@ -36,8 +37,8 @@
         <v-spacer></v-spacer>
         <v-toolbar-items>
           <v-tooltip bottom>
-            <template v-slot:activator="{ on }">
-              <v-btn text v-on="on" @click="showAssistantCreate = true">
+            <template v-slot:activator="props">
+              <v-btn text v-on="props.on" @click="showAssistantCreate = true">
                 <v-icon class="mx-1" color="green"
                   >mdi-calendar-multiple</v-icon
                 >
@@ -51,6 +52,7 @@
       <v-row justify="center">
         <v-col class="col-4 align-self-center">
           <select-sejour
+            :C="C"
             label="Séjour actif"
             v-model.number="idSejour"
           ></select-sejour>
@@ -86,10 +88,10 @@
       </v-row>
       <v-row>
         <v-col>
-          <liste-groupes :sejour="sejour"></liste-groupes>
+          <liste-groupes :C="C" :sejour="sejour"></liste-groupes>
         </v-col>
         <v-col>
-          <liste-fournisseurs :sejour="sejour"></liste-fournisseurs>
+          <liste-fournisseurs :C="C" :sejour="sejour"></liste-fournisseurs>
         </v-col>
       </v-row>
     </v-container>
@@ -107,12 +109,14 @@ import ListeGroupes from "../components/sejours/groupes/ListeGroupes.vue";
 import ListeFournisseurs from "../components/sejours/ListeFournisseurs.vue";
 import AssistantCreateRepass from "../components/sejours/groupes/AssistantCreateRepass.vue";
 
-import { EditMode, DetailsSejour, New } from "../logic/api";
-import { C } from "../logic/controller";
-import { Sejour, OptionsAssistantCreateRepass } from "../logic/api";
+import { EditMode, DetailsSejour } from "../logic/types";
+import { Controller } from "../logic/controller";
+import { Sejour, OptionsAssistantCreateRepass, New } from "../logic/api";
 
 const SejoursProps = Vue.extend({
-  props: {}
+  props: {
+    C: Object as () => Controller
+  }
 });
 
 @Component({
@@ -136,23 +140,22 @@ export default class Sejours extends SejoursProps {
     return sej == null ? null : sej.id;
   }
   set idSejour(idSejour: number | null) {
-    C.state.idSejour = idSejour;
+    this.C.state.idSejour = idSejour;
   }
 
   get sejour() {
-    return C.state.getSejour();
+    return this.C.getSejour();
   }
 
   async mounted() {
-    await Promise.all([C.data.loadSejours(), C.data.loadFournisseurs()]);
-    if (C.notifications.getError() == null) {
-      C.notifications.setMessage("Séjours et fournisseurs chargés.");
+    await Promise.all([this.C.api.GetSejours(), this.C.api.GetFournisseurs()]);
+    if (this.C.notifications.getError() == null) {
       this.setClosestSejour();
     }
   }
 
   private setClosestSejour() {
-    const sejours = Object.values(C.data.sejours.sejours || {});
+    const sejours = Object.values(this.C.api.sejours.sejours || {});
     if (sejours.length == 0) return;
     const now = new Date().valueOf();
     const computeDistance = (sejour: Sejour) => {
@@ -176,16 +179,14 @@ export default class Sejours extends SejoursProps {
   }
 
   private async addSejour(modif: DetailsSejour) {
-    if (C.idUtilisateur == null) return;
     const sejour: New<Sejour> = {
       nom: modif.nom,
       date_debut: modif.date_debut,
-      id_utilisateur: C.idUtilisateur
+      id_utilisateur: this.C.state.idUtilisateur
     };
-    const newSejour = await C.data.createSejour(sejour);
-    if (C.notifications.getError() == null && newSejour != undefined) {
-      C.notifications.setMessage("Le séjour a bien été ajouté.");
-      C.state.idSejour = newSejour.id;
+    const newSejour = await this.C.api.CreateSejour(sejour);
+    if (this.C.notifications.getError() == null && newSejour != undefined) {
+      this.C.state.idSejour = newSejour.id;
     }
   }
 
@@ -194,10 +195,7 @@ export default class Sejours extends SejoursProps {
     if (sejour === null) return;
     sejour.date_debut = modif.date_debut;
     sejour.nom = modif.nom;
-    await C.data.updateSejour(sejour);
-    if (C.notifications.getError() == null) {
-      C.notifications.setMessage("Le séjour a bien été modifié.");
-    }
+    await this.C.api.UpdateSejour(sejour);
   }
 
   async supprimeSejour() {
@@ -205,9 +203,8 @@ export default class Sejours extends SejoursProps {
     if (sej == null) return;
     this.idSejour = null;
     this.showConfirmeSupprime = false;
-    await C.data.deleteSejour(sej);
-    if (C.notifications.getError() == null) {
-      C.notifications.setMessage("Le séjour a été supprimé avec succès.");
+    await this.C.api.DeleteSejour(sej);
+    if (this.C.notifications.getError() == null) {
       this.setClosestSejour();
     }
   }
@@ -217,10 +214,11 @@ export default class Sejours extends SejoursProps {
     groupesSorties: { [key: number]: number[] }
   ) {
     if (this.idSejour == null) return;
-    await C.data.assitantCreateRepass(this.idSejour, options, groupesSorties);
-    if (C.notifications.getError() == null) {
-      C.notifications.setMessage("Les repas ont été créés avec succès.");
-    }
+    await this.C.api.AssistantCreateRepas({
+      id_sejour: this.idSejour,
+      options,
+      groupes_sorties: groupesSorties
+    });
     this.showAssistantCreate = false;
   }
 }

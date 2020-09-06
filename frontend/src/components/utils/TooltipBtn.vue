@@ -1,9 +1,9 @@
 <template>
   <v-tooltip bottom>
-    <template v-slot:activator="{ on }">
+    <template v-slot:activator="props">
       <v-btn
         :disabled="disabled"
-        v-on="on"
+        v-on="props.on"
         :icon="!!mdiIcon"
         :text="!mdiIcon"
         :color="color"

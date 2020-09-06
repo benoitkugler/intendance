@@ -14,8 +14,8 @@
       >
         <td>
           <v-tooltip left v-if="!hideLinks">
-            <template v-slot:activator="{ on }">
-              <a @click="$emit('go', ingredient.ingredient.id)" v-on="on">
+            <template v-slot:activator="props">
+              <a @click="$emit('go', ingredient.ingredient.id)" v-on="props.on">
                 {{ ingredient.ingredient.nom }}
               </a>
             </template>
@@ -35,8 +35,8 @@
 <script lang="ts">
 import Vue from "vue";
 import Component from "vue-class-component";
-import { IngredientQuantite } from "../../logic/api";
-import { Formatter } from "../../logic/formatter";
+import { IngredientQuantite } from "@/logic/api";
+import { Formatter } from "@/logic/formatter";
 import { Crible } from "./utils";
 
 const ListeIngredientsProps = Vue.extend({

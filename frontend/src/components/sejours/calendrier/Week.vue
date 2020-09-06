@@ -5,43 +5,44 @@
     :start="start"
     :weekdays="weekdays"
   >
-    <template v-slot:day-label="{ date }">
-      <v-row no-gutters @mouseover="$emit('hover', date)" class="mb-1">
+    <template v-slot:day-label="props">
+      <v-row no-gutters @mouseover="$emit('hover', props.date)" class="mb-1">
         <v-col>
           <v-btn
             text
             small
-            @click="$emit('change', date)"
-            :input-value="currentDay === date"
+            @click="$emit('change', props.date)"
+            :input-value="currentDay === props.date"
             class="mx-0 px-1"
-            @dragover="onDayDragover($event, date)"
-            @drop="onDayDrop($event, date)"
-            >{{ dayTitle(date) }}
+            @dragover="onDayDragover($event, props.date)"
+            @drop="onDayDrop($event, props.date)"
+            >{{ dayTitle(props.date) }}
           </v-btn></v-col
         >
         <v-col cols="4">
           <tooltip-btn
-            v-if="hoverDay === date"
+            v-if="hoverDay === props.date"
             small
             mdi-icon="plus"
             color="green"
             tooltip="Ajouter un repas..."
-            @click="$emit('addRepas', date)"
+            @click="$emit('add-repas', props.date)"
           ></tooltip-btn>
         </v-col>
       </v-row>
     </template>
-    <template v-slot:day="{ date }">
+    <template v-slot:day="props">
       <div
-        @dragover="onDayDragover($event, date)"
-        @drop="onDayDrop($event, date)"
+        @dragover="onDayDragover($event, props.date)"
+        @drop="onDayDrop($event, props.date)"
         class="overflow-y-auto"
         :style="{ height: dayHeight }"
-        @mouseover="$emit('hover', date)"
+        @mouseover="$emit('hover', props.date)"
       >
         <liste-repas
-          :repass="events[date]"
-          @edit="args => $emit('editRepas', args)"
+          :C="C"
+          :repass="events[props.date]"
+          @edit="args => $emit('edit-repas', args)"
         ></liste-repas>
       </div>
     </template>
@@ -54,13 +55,14 @@ import Component from "vue-class-component";
 
 import ListeRepas from "./ListeRepas.vue";
 import TooltipBtn from "../../utils/TooltipBtn.vue";
-import { C } from "../../../logic/controller";
-import { RepasComplet, Sejour } from "../../../logic/api";
+import { Controller } from "@/logic/controller";
+import { RepasComplet, Sejour } from "@/logic/api";
 import { DragKind, getDragData } from "../../utils/utils_drag";
-import { Formatter } from "../../../logic/formatter";
+import { Formatter } from "@/logic/formatter";
 
 const Props = Vue.extend({
   props: {
+    C: Object as () => Controller,
     sejour: Object as () => Sejour,
     weekdays: Array,
     start: String,
@@ -93,17 +95,17 @@ export default class Week extends Props {
   }
 
   async onDayDrop(event: DragEvent, date: string) {
-    if (!event.dataTransfer || C.state.idSejour == null) return;
+    if (!event.dataTransfer || this.C.state.idSejour == null) return;
     event.preventDefault();
     const repas = getDragData(event.dataTransfer, DragKind.Repas);
 
-    const targetOffset = C.dateToOffset(C.state.idSejour, new Date(date));
+    const targetOffset = this.C.dateToOffset(
+      this.C.state.idSejour,
+      new Date(date)
+    );
     if (targetOffset == repas.jour_offset) return;
     repas.jour_offset = targetOffset;
-    await C.data.updateManyRepas([repas]);
-    if (C.notifications.getError() == null) {
-      C.notifications.setMessage("Repas déplacé avec succès.");
-    }
+    await this.C.api.UpdateManyRepas([repas]);
   }
 }
 </script>

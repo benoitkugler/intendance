@@ -96,11 +96,13 @@
 <script lang="ts">
 import Vue from "vue";
 import Component from "vue-class-component";
-import { RepasGroupe, OptionsAssistantCreateRepass } from "../../../logic/api";
-import { C } from "../../../logic/controller";
+import { RepasGroupe, OptionsAssistantCreateRepass } from "@/logic/api";
+import { Controller } from "@/logic/controller";
 
 const AssitantCreateRepassProps = Vue.extend({
-  props: {}
+  props: {
+    C: Object as () => Controller
+  }
 });
 
 @Component({})
@@ -120,19 +122,19 @@ export default class AssitantCreateRepass extends AssitantCreateRepassProps {
   }
 
   get groupes() {
-    return C.state.getGroupes().map(groupe => {
+    return this.C.getGroupes().map(groupe => {
       return { text: groupe.nom, value: groupe.id };
     });
   }
 
   get sejour() {
-    const sej = C.state.getSejour();
+    const sej = this.C.getSejour();
     return sej ? sej.nom : "";
   }
 
   formatOffset(offset: number) {
-    if (C.state.idSejour == null) return "";
-    const date = C.offsetToDate(C.state.idSejour, offset);
+    if (this.C.state.idSejour == null) return "";
+    const date = this.C.offsetToDate(this.C.state.idSejour, offset);
     return date.toLocaleDateString("fr-FR", {
       weekday: "long",
       day: "numeric",
@@ -141,7 +143,7 @@ export default class AssitantCreateRepass extends AssitantCreateRepassProps {
   }
 
   onCreate() {
-    const sej = C.state.getSejour();
+    const sej = this.C.getSejour();
     if (sej && sej.repass && sej.repass.length > 0) {
       this.showConfirme = true;
     } else {

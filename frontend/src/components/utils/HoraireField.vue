@@ -6,8 +6,10 @@
     @change="args => $emit('change', args)"
     :label="label"
   >
-    <template v-slot:item="{ item }">
-      <div :style="{ color: item.color }">{{ item.text }}</div>
+    <template v-slot:item="props">
+      <div :style="{ color: HorairesColors[asI(props.item).value] }">
+        {{ asI(props.item).text }}
+      </div>
     </template></v-select
   >
 </template>
@@ -16,8 +18,8 @@
 import Vue from "vue";
 import Component from "vue-class-component";
 import { HorairesColors } from "./utils";
-import { enumIntToOptions } from "../../logic/api";
-import { HoraireLabels, Horaire } from "../../logic/api";
+import { enumIntToOptions, EnumItem } from "@/logic/types";
+import { HoraireLabels, Horaire } from "@/logic/api";
 
 const HoraireFieldProps = Vue.extend({
   props: {
@@ -36,9 +38,13 @@ const HoraireFieldProps = Vue.extend({
     event: "change"
   }
 });
+
 @Component({})
 export default class HoraireField extends HoraireFieldProps {
   horaires = enumIntToOptions(HoraireLabels);
+  HorairesColors = HorairesColors;
+
+  asI = (i: EnumItem<Horaire>) => i;
 }
 </script>
 

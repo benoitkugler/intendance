@@ -16,7 +16,7 @@
     ></navigation-bar>
     <v-main>
       <keep-alive v-if="isLoggedIn">
-        <router-view></router-view>
+        <router-view :C="C"></router-view>
       </keep-alive>
       <loggin v-else></loggin>
 
@@ -38,8 +38,8 @@ import SpinnerSnackbar from "./components/SpinnerSnackbar.vue";
 import NavigationBar from "./components/NavigationBar.vue";
 import Loggin from "./views/Loggin.vue";
 
-import { C } from "./logic/controller";
-import { devMode } from "./logic/data";
+import { Controller } from "./logic/controller";
+import { devMode } from "./logic/server";
 import { RouteType } from "./router";
 
 declare var process: {

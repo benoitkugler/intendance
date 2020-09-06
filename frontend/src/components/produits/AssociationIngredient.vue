@@ -58,7 +58,7 @@
           </v-skeleton-loader>
         </v-col>
         <v-col>
-          <details-produit @add="addProduit" :produit="newProduit">
+          <details-produit :C="C" @add="addProduit" :produit="newProduit">
           </details-produit>
         </v-col>
       </v-row>
@@ -73,19 +73,15 @@ import Component from "vue-class-component";
 import DetailsProduit from "./DetailsProduit.vue";
 import TooltipBtn from "../utils/TooltipBtn.vue";
 
-import {
-  Ingredient,
-  IngredientProduits,
-  Produit,
-  Unite
-} from "../../logic/api";
-import { C } from "../../logic/controller";
+import { Ingredient, IngredientProduits, Produit, Unite } from "@/logic/api";
+import { Controller } from "@/logic/controller";
 import { Watch } from "vue-property-decorator";
-import { New, NullId } from "../../logic/api";
-import { Formatter } from "../../logic/formatter";
+import { New } from "@/logic/api";
+import { Formatter } from "@/logic/formatter";
 
 const AssociationIngredientProps = Vue.extend({
   props: {
+    C: Object as () => Controller,
     ingredient: Object as () => Ingredient | null,
     activated: Boolean
   }
@@ -117,7 +113,7 @@ export default class AssociationIngredient extends AssociationIngredientProps {
   }
 
   get loading() {
-    return C.notifications.getSpin();
+    return this.C.notifications.getSpin();
   }
 
   ingredientProduits: IngredientProduits | null = null;
@@ -130,7 +126,7 @@ export default class AssociationIngredient extends AssociationIngredientProps {
   }
 
   formatFournisseur(produit: Produit) {
-    return C.formatter.formatFournisseur(produit);
+    return this.C.formatter.formatFournisseur(produit);
   }
 
   isDefault(produit: Produit) {
@@ -140,7 +136,9 @@ export default class AssociationIngredient extends AssociationIngredientProps {
 
   private async loadProduits() {
     if (this.ingredient == null) return;
-    const res = await C.data.getIngredientProduits(this.ingredient.id);
+    const res = await this.C.api.GetIngredientProduits({
+      id: this.ingredient.id
+    });
     if (res == undefined) return;
     this.ingredientProduits = res;
   }
@@ -157,39 +155,31 @@ export default class AssociationIngredient extends AssociationIngredientProps {
 
   async addProduit(produit: Produit) {
     if (this.ingredient == null) return;
-    const res = await C.data.ajouteIngredientProduit({
+    const res = await this.C.api.AjouteIngredientProduit({
       produit: produit,
       id_ingredient: this.ingredient.id
     });
     if (res) {
       this.ingredientProduits = res;
-      C.notifications.setMessage(
-        `Produit créé et lié à ${this.ingredient.nom}`
-      );
     }
   }
 
   async deleteProduit(produit: Produit) {
     if (this.ingredient == null) return;
-    await C.data.deleteProduit(produit.id);
-    if (C.notifications.getError() != null) return;
+    await this.C.api.DeleteProduit({ id: produit.id });
     await this.loadProduits();
-    if (C.notifications.getError() != null) return;
-    C.notifications.setMessage(`Produit ${produit.nom} supprimé avec succès`);
   }
 
   async setDefault(produit: Produit) {
     const newState = !this.isDefault(produit);
-
     if (this.ingredient == null) return;
-    const res = await C.data.setDefautProduit({
+    const res = await this.C.api.SetDefautProduit({
       id_ingredient: this.ingredient.id,
       id_produit: produit.id,
       on: newState
     });
     if (res) {
       this.ingredientProduits = res;
-      C.notifications.setMessage("Préférence modifiée avec succès.");
     }
   }
 }
