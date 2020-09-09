@@ -10,6 +10,7 @@
           <liste-menus
             v-show="state.mode == 'visu'"
             key="liste"
+            :C="C"
             height="75vh"
             :state="state"
             @change="idMenu => (state.selection.idMenu = idMenu)"

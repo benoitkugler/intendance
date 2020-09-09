@@ -33,14 +33,14 @@
           :value="menu.id"
           :class="classItem(menu.id)"
         >
-          <template v-slot:default="{ active }">
+          <template v-slot:default="props">
             <v-list-item-content>
               <v-list-item-title>{{ formatMenuName(menu) }}</v-list-item-title>
               <v-list-item-subtitle>
                 <i> {{ formatMenuProprietaire(menu) }}</i>
               </v-list-item-subtitle>
             </v-list-item-content>
-            <v-list-item-action v-if="showButtons(active, menu)">
+            <v-list-item-action v-if="showButtons(props.active, menu)">
               <v-row no-gutters>
                 <v-col>
                   <tooltip-btn
@@ -75,7 +75,7 @@ import { Prop, Watch } from "vue-property-decorator";
 import TooltipBtn from "../utils/TooltipBtn.vue";
 import Toolbar from "../utils/Toolbar.vue";
 
-import { C } from "@/logic/controller";
+import { Controller } from "@/logic/controller";
 import { Menu } from "@/logic/api";
 import { StateMenus } from "./types";
 import { searchFunction } from "../utils/utils";
@@ -84,6 +84,7 @@ import { BaseList, ListKind } from "./shared";
 @Component({
   components: { TooltipBtn, Toolbar },
   props: {
+    C: Object as () => Controller,
     kind: {
       type: String as () => ListKind,
       default: "idMenu"
@@ -92,30 +93,27 @@ import { BaseList, ListKind } from "./shared";
 })
 export default class ListeMenus extends BaseList {
   confirmeSupprime = false;
-  formatMenuName = C.formatter.formatMenuName;
-  formatMenuProprietaire = C.formatter.formatMenuOrRecetteProprietaire;
+  formatMenuName = this.C.formatter.formatMenuName;
+  formatMenuProprietaire = this.C.formatter.formatMenuOrRecetteProprietaire;
 
   search = "";
 
   get menus() {
-    return C.searchMenu(this.search);
+    return this.C.searchMenu(this.search);
   }
 
   showButtons(active: boolean, menu: Menu) {
     return (
       active &&
       (!menu.id_utilisateur.Valid ||
-        menu.id_utilisateur.Int64 == C.idUtilisateur)
+        menu.id_utilisateur.Int64 == this.C.state.idUtilisateur)
     );
   }
 
   async supprime() {
     this.confirmeSupprime = false;
     if (this.state.selection.idMenu == null) return;
-    await C.api.deleteMenu(this.state.selection.idMenu);
-    if (C.notifications.getError() == null) {
-      C.notifications.setMessage("Menu supprimé avec succès.");
-    }
+    await this.C.api.DeleteMenu({ id: this.state.selection.idMenu });
   }
 }
 </script>

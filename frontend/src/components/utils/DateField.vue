@@ -35,7 +35,7 @@ const Props = Vue.extend({
   },
   props: {
     // Date as string
-    currentDate: String as () => Time,
+    currentDate: (String as unknown) as () => Time,
     label: String,
     disabled: Boolean
   }
