@@ -14,15 +14,17 @@ function arrayBufferToString(buffer: ArrayBuffer) {
 // (erreurs ou succès)
 export class Notifications {
   private error: Error | null = null;
-  private message: string | null = null;
+  private _messages: { text: string; id: number }[] = [];
   private spin: boolean = false;
+
+  private queueIndex = 0;
 
   getError() {
     return this.error;
   }
 
-  getMessage() {
-    return this.message;
+  get messages() {
+    return this._messages.map(v => v.text);
   }
 
   getSpin() {
@@ -31,13 +33,21 @@ export class Notifications {
 
   startSpin() {
     // on enlève une éventuelle notication
-    this.message = null;
     this.spin = true;
   }
 
-  setMessage(message: string | null) {
+  setMessage(message: string) {
     this.spin = false;
-    this.message = message;
+    const index = this.queueIndex;
+    this.queueIndex++;
+    this._messages.push({ text: message, id: index });
+    setTimeout(() => {
+      this._messages = this._messages.filter(v => v.id != index);
+      console.log(this._messages);
+    }, 4000);
+  }
+  clearMessages() {
+    this._messages = [];
   }
 
   setError(error: Error | null) {

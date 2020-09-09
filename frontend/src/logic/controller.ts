@@ -1,5 +1,5 @@
 import { Notifications } from "./notifications";
-import { IngredientOptions, New, DetailsRepas } from "./types";
+import { IngredientOptions, DetailsRepas } from "./types";
 import { Formatter } from "./formatter";
 import { searchFunction } from "@/components/utils/utils";
 import { API, Meta } from "./server";
@@ -14,7 +14,8 @@ import {
   RepasGroupe,
   Groupe,
   InResoudIngredients,
-  Horaire
+  Horaire,
+  New
 } from "./api";
 
 /**  Object principal de stockage des données

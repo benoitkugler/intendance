@@ -1,19 +1,21 @@
 <template>
-  <v-snackbar v-model="show" bottom right :timeout="4000" color="success">
-    <v-row no-gutters>
-      <v-col cols="2" align-self="center">
-        <i>({{ currentTime() }})</i>
-      </v-col>
-      <v-col cols="9" align-self="center">
-        <span v-html="message"></span>
-      </v-col>
-      <v-col cols="1">
-        <v-btn color="black" text icon @click="show = false" class="mx-0">
-          <v-icon>mdi-close</v-icon>
-        </v-btn>
-      </v-col>
-    </v-row>
-  </v-snackbar>
+  <div>
+    <v-snackbar v-model="show" :timeout="-1" bottom right color="success">
+      <v-row no-gutters>
+        <v-col cols="2" align-self="center">
+          <i>({{ currentTime() }})</i>
+        </v-col>
+        <v-col cols="9" align-self="center" class="pl-2">
+          <span v-html="message"></span>
+        </v-col>
+        <v-col cols="1" align-self="center">
+          <v-btn color="black" text icon @click="show = false" class="mx-0">
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
+        </v-col>
+      </v-row>
+    </v-snackbar>
+  </div>
 </template>
 
 <script lang="ts">
@@ -30,17 +32,17 @@ const SuccessSnackbarProps = Vue.extend({
 @Component
 export default class SuccessSnackbar extends SuccessSnackbarProps {
   get show() {
-    return this.N.getMessage() != null;
+    return this.N.messages.length != 0;
   }
 
   set show(b: boolean) {
     if (!b) {
-      this.N.setMessage(null);
+      this.N.clearMessages();
     }
   }
 
   get message() {
-    return this.N.getMessage();
+    return this.N.messages.join("<br/>");
   }
 
   currentTime() {
