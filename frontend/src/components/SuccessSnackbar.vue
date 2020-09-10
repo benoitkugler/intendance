@@ -2,13 +2,10 @@
   <div>
     <v-snackbar v-model="show" :timeout="-1" bottom right color="success">
       <v-row no-gutters>
-        <v-col cols="2" align-self="center">
-          <i>({{ currentTime() }})</i>
-        </v-col>
-        <v-col cols="9" align-self="center" class="pl-2">
+        <v-col cols="10" align-self="center" class="pr-2">
           <span v-html="message"></span>
         </v-col>
-        <v-col cols="1" align-self="center">
+        <v-col cols="2" align-self="center">
           <v-btn color="black" text icon @click="show = false" class="mx-0">
             <v-icon>mdi-close</v-icon>
           </v-btn>
@@ -42,13 +39,19 @@ export default class SuccessSnackbar extends SuccessSnackbarProps {
   }
 
   get message() {
-    return this.N.messages.join("<br/>");
+    return this.N.messages
+      .map(m => this.formatTime(m.time) + m.text)
+      .join("<br/>");
   }
 
-  currentTime() {
-    const datetime = new Date();
+  formatTime(datetime: Date) {
     const min = ("00" + datetime.getMinutes()).substr(-2, 2);
-    return `${datetime.getHours()}:${min}`;
+    const ti = datetime.toLocaleTimeString(undefined, {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit"
+    });
+    return `<small><i>[${ti}]</i></small>  `;
   }
 }
 </script>

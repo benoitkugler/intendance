@@ -14,7 +14,7 @@ function arrayBufferToString(buffer: ArrayBuffer) {
 // (erreurs ou succès)
 export class Notifications {
   private error: Error | null = null;
-  private _messages: { text: string; id: number }[] = [];
+  private _messages: { text: string; id: number; time: Date }[] = [];
   spin: boolean = false;
 
   private queueIndex = 0;
@@ -24,14 +24,14 @@ export class Notifications {
   }
 
   get messages() {
-    return this._messages.map(v => v.text);
+    return this._messages.map(v => ({ text: v.text, time: v.time }));
   }
 
   setMessage(message: string) {
     this.spin = false;
     const index = this.queueIndex;
     this.queueIndex++;
-    this._messages.push({ text: message, id: index });
+    this._messages.push({ text: message, id: index, time: new Date() });
     setTimeout(() => {
       this._messages = this._messages.filter(v => v.id != index);
     }, 4000);
