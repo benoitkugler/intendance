@@ -19,7 +19,7 @@ const SpinnerSnackbarProps = Vue.extend({
 @Component
 export default class SpinnerSnackbar extends SpinnerSnackbarProps {
   get show() {
-    return this.N.getSpin();
+    return this.N.spin;
   }
 
   set show(b: boolean) {}

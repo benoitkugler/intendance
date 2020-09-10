@@ -131,7 +131,7 @@ export default class Menus extends MenuProps {
   }
 
   activated() {
-    if (this.C.notifications.getSpin()) {
+    if (this.C.notifications.spin) {
       return; // données en cours de chargement
     }
     this.selectIngredient();

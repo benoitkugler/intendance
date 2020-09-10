@@ -55,7 +55,7 @@ export class API extends AbstractAPI {
   }
 
   startRequest() {
-    this.notifications.startSpin();
+    this.notifications.spin = true;
   }
 
   static Loggin(notifications: Notifications, params: InLoggin) {
@@ -195,7 +195,9 @@ export class API extends AbstractAPI {
   }
   protected onSuccessResoudIngredients(
     data: DateIngredientQuantites[] | null
-  ): void {}
+  ): void {
+    this.notifications.spin = false;
+  }
 
   protected onSuccessGetFournisseurs(data: OutFournisseurs): void {
     this.fournisseurs = data.fournisseurs || {};
@@ -250,7 +252,7 @@ export class API extends AbstractAPI {
 
   // charge en parallèle les données nécessaires aux menus
   async loadAllMenus() {
-    this.notifications.startSpin();
+    this.notifications.spin = true;
     try {
       const datas = await Promise.all([
         this.rawGetIngredients(),

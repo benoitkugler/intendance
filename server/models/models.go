@@ -129,7 +129,6 @@ type RepasGroupe struct {
 // Fournisseur définit un fournisseur.
 // Chaque fournisseur possède au moins une contrainte de livraison
 // (voir `Livraison`), et peut en posséder plusieurs.
-// sql: ADD UNIQUE(nom)
 type Fournisseur struct {
 	Id   int64  `json:"id"`
 	Nom  string `json:"nom"`

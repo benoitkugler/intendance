@@ -113,7 +113,7 @@ export default class AssociationIngredient extends AssociationIngredientProps {
   }
 
   get loading() {
-    return this.C.notifications.getSpin();
+    return this.C.notifications.spin;
   }
 
   ingredientProduits: IngredientProduits | null = null;

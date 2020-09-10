@@ -15,7 +15,7 @@ function arrayBufferToString(buffer: ArrayBuffer) {
 export class Notifications {
   private error: Error | null = null;
   private _messages: { text: string; id: number }[] = [];
-  private spin: boolean = false;
+  spin: boolean = false;
 
   private queueIndex = 0;
 
@@ -25,15 +25,6 @@ export class Notifications {
 
   get messages() {
     return this._messages.map(v => v.text);
-  }
-
-  getSpin() {
-    return this.spin;
-  }
-
-  startSpin() {
-    // on enlève une éventuelle notication
-    this.spin = true;
   }
 
   setMessage(message: string) {

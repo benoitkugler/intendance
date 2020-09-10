@@ -45,7 +45,7 @@ export class Data {
   constructor(private api: API, private notifications: Notifications) {}
 
   async loadFournisseurs() {
-    this.notifications.startSpin();
+    this.notifications.spin = true;
     const data = await this.api.GetFournisseurs();
     if (data === undefined) return; // erreur
     this.fournisseurs = data.fournisseurs || {};
@@ -55,7 +55,7 @@ export class Data {
 
   // charge en parallèle les données nécessaires aux menus
   async loadAllMenus() {
-    this.notifications.startSpin();
+    this.notifications.spin = true;
     const datas = await Promise.all([
       this.api.GetIngredients(),
       this.api.GetUtilisateurs(),
@@ -74,7 +74,7 @@ export class Data {
   }
 
   loadUtilisateurs = async () => {
-    this.notifications.startSpin();
+    this.notifications.spin = true;
     const data = await this.api.GetUtilisateurs();
     if (data === undefined) return;
     this.utilisateurs = data || {};
@@ -82,7 +82,7 @@ export class Data {
   };
 
   loadIngredients = async () => {
-    this.notifications.startSpin();
+    this.notifications.spin = true;
     const data = await this.api.GetIngredients();
     if (data === undefined) return;
     this.ingredients = data || {};
@@ -93,7 +93,7 @@ export class Data {
     ing: Ingredient,
     method: "create" | "update"
   ) => {
-    this.notifications.startSpin();
+    this.notifications.spin = true;
     const f =
       method == "create"
         ? this.api.CreateIngredient
@@ -114,7 +114,7 @@ export class Data {
   };
 
   deleteIngredient = async (idIngredient: number, checkProduits: boolean) => {
-    this.notifications.startSpin();
+    this.notifications.spin = true;
     const data = await this.api.DeleteIngredient({
       id: String(idIngredient),
       check_produits: checkProduits ? "check" : ""
@@ -125,7 +125,7 @@ export class Data {
   };
 
   getIngredientProduits = async (idIngredient: number) => {
-    this.notifications.startSpin();
+    this.notifications.spin = true;
     const data = await this.api.GetIngredientProduits({
       id: String(idIngredient)
     });
@@ -136,7 +136,7 @@ export class Data {
 
   // renvoie la liste des produits mise à jour
   ajdataeIngredientProduit = async (ip: InAjdataeIngredientProduit) => {
-    this.notifications.startSpin();
+    this.notifications.spin = true;
     const data = await this.api.AjdataeIngredientProduit(ip);
     if (data == undefined) return;
     this.notifications.setMessage("Produit ajdataé.");
@@ -145,7 +145,7 @@ export class Data {
 
   // `getIngredientProduits` devrait être appelé ensuite
   deleteProduit = async (idProduit: number) => {
-    this.notifications.startSpin();
+    this.notifications.spin = true;
     await this.api.DeleteProduit({ id: String(idProduit) });
     if (this.notifications.getError() != null) return;
     this.notifications.setMessage("Produit supprimé.");
@@ -153,7 +153,7 @@ export class Data {
 
   // renvoie la liste des produits mise à jour
   setDefautProduit = async (params: InSetDefautProduit) => {
-    this.notifications.startSpin();
+    this.notifications.spin = true;
     const data = await this.api.SetDefautProduit(params);
     if (data === undefined) return;
     this.notifications.setMessage("Produit choisi par défaut.");
@@ -162,7 +162,7 @@ export class Data {
 
   // TODO: WIP
   loadRecettes = async () => {
-    this.controller.notifications.startSpin();
+    this.controller.notifications.spin = true;
     try {
       const response: AxiosResponse<dataRecettes> = await axios.get(
         ServerURL + "/recettes",
@@ -181,7 +181,7 @@ export class Data {
     recette: New<RecetteComplet>,
     method: "put" | "post"
   ) => {
-    this.controller.notifications.startSpin();
+    this.controller.notifications.spin = true;
     const f = method == "put" ? axios.put : axios.post;
     try {
       const response: AxiosResponse<dataRecette> = await f(
@@ -209,7 +209,7 @@ export class Data {
   };
 
   deleteRecette = async (idRecette: number) => {
-    this.controller.notifications.startSpin();
+    this.controller.notifications.spin = true;
     try {
       const response: AxiosResponse<dataRecettes> = await axios.delete(
         ServerURL + "/recettes",
@@ -226,7 +226,7 @@ export class Data {
   };
 
   loadMenus = async () => {
-    this.controller.notifications.startSpin();
+    this.controller.notifications.spin = true;
     try {
       const response: AxiosResponse<dataMenus> = await axios.get(
         ServerURL + "/menus",
@@ -245,7 +245,7 @@ export class Data {
     menu: New<MenuComplet>,
     method: "put" | "post"
   ) => {
-    this.controller.notifications.startSpin();
+    this.controller.notifications.spin = true;
     const f = method == "put" ? axios.put : axios.post;
     try {
       const response: AxiosResponse<dataMenu> = await f(
@@ -273,7 +273,7 @@ export class Data {
   };
 
   deleteMenu = async (idMenu: number) => {
-    this.controller.notifications.startSpin();
+    this.controller.notifications.spin = true;
     try {
       const response: AxiosResponse<dataMenus> = await axios.delete(
         ServerURL + "/menus",
@@ -290,7 +290,7 @@ export class Data {
   };
 
   loadSejours = async () => {
-    this.controller.notifications.startSpin();
+    this.controller.notifications.spin = true;
     try {
       const response: AxiosResponse<dataSejours> = await axios.get(
         ServerURL + "/sejours",
@@ -309,7 +309,7 @@ export class Data {
     sejour: New<Sejour>,
     method: "put" | "post"
   ) => {
-    this.controller.notifications.startSpin();
+    this.controller.notifications.spin = true;
     const f = method == "put" ? axios.put : axios.post;
     try {
       const response: AxiosResponse<dataSejour> = await f(
@@ -348,7 +348,7 @@ export class Data {
   };
 
   deleteSejour = async (sejour: Sejour) => {
-    this.controller.notifications.startSpin();
+    this.controller.notifications.spin = true;
     try {
       const response: AxiosResponse<dataSejours> = await axios.delete(
         ServerURL + "/sejours",
@@ -366,7 +366,7 @@ export class Data {
 
   // Fournisseurs
   createFournisseur = async (fournisseur: New<Fournisseur>) => {
-    this.controller.notifications.startSpin();
+    this.controller.notifications.spin = true;
     try {
       const response: AxiosResponse<dataFournisseurs> = await axios.put(
         ServerURL + "/fournisseurs",
@@ -384,7 +384,7 @@ export class Data {
   };
 
   updateFournisseur = async (fournisseur: Fournisseur) => {
-    this.controller.notifications.startSpin();
+    this.controller.notifications.spin = true;
     try {
       const response: AxiosResponse<dataFournisseur> = await axios.post(
         ServerURL + "/fournisseurs",
@@ -406,7 +406,7 @@ export class Data {
   };
 
   deleteFournisseur = async (idFournisseur: number) => {
-    this.controller.notifications.startSpin();
+    this.controller.notifications.spin = true;
     try {
       const response: AxiosResponse<dataFournisseurs> = await axios.delete(
         ServerURL + "/fournisseurs",
@@ -427,7 +427,7 @@ export class Data {
     sejour: Sejour,
     idsFournisseurs: number[]
   ) => {
-    this.controller.notifications.startSpin();
+    this.controller.notifications.spin = true;
     const params: InSejourFournisseurs = {
       id_sejour: sejour.id,
       ids_fournisseurs: idsFournisseurs
@@ -452,7 +452,7 @@ export class Data {
     livraison: New<Livraison>,
     method: "put" | "post"
   ) => {
-    this.controller.notifications.startSpin();
+    this.controller.notifications.spin = true;
     const f = method == "put" ? axios.put : axios.post;
     try {
       const response: AxiosResponse<dataLivraison> = await f(
@@ -484,7 +484,7 @@ export class Data {
   };
 
   deleteLivraison = async (idLivraison: number) => {
-    this.controller.notifications.startSpin();
+    this.controller.notifications.spin = true;
     try {
       const response: AxiosResponse<dataFournisseurs> = await axios.delete(
         ServerURL + "/livraisons",
@@ -505,7 +505,7 @@ export class Data {
     groupe: New<Groupe>,
     method: "put" | "post"
   ) => {
-    this.controller.notifications.startSpin();
+    this.controller.notifications.spin = true;
     const f = method == "put" ? axios.put : axios.post;
     try {
       const response: AxiosResponse<dataGroupe> = await f(
@@ -537,7 +537,7 @@ export class Data {
 
   // Renvoie le nombre de repas touchés par la suppression
   deleteGroupe = async (groupe: Groupe) => {
-    this.controller.notifications.startSpin();
+    this.controller.notifications.spin = true;
     try {
       const response: AxiosResponse<dataDeleteGroupe> = await axios.delete(
         ServerURL + "/groupes",
@@ -555,7 +555,7 @@ export class Data {
   };
 
   createRepas = async (repas: New<RepasComplet>) => {
-    this.controller.notifications.startSpin();
+    this.controller.notifications.spin = true;
     try {
       const response: AxiosResponse<dataSejours> = await axios.put(
         ServerURL + "/sejours/repas",
@@ -572,7 +572,7 @@ export class Data {
   };
 
   updateManyRepas = async (repass: RepasComplet[]) => {
-    this.controller.notifications.startSpin();
+    this.controller.notifications.spin = true;
     try {
       const response: AxiosResponse<dataSejours> = await axios.post(
         ServerURL + "/sejours/repas",
@@ -589,7 +589,7 @@ export class Data {
   };
 
   deleteRepas = async (repas: RepasComplet) => {
-    this.controller.notifications.startSpin();
+    this.controller.notifications.spin = true;
     try {
       const response: AxiosResponse<dataSejours> = await axios.delete(
         ServerURL + "/sejours/repas",
@@ -639,7 +639,7 @@ export class Data {
     options: OptionsAssistantCreateRepass,
     groupesSorties: { [key: number]: number[] }
   ) {
-    this.controller.notifications.startSpin();
+    this.controller.notifications.spin = true;
     const params: InAssistantCreateRepass = {
       id_sejour: idSejour,
       options: options,
