@@ -17,6 +17,7 @@ export interface OutLoggin {
   erreur: string;
   token: string;
   utilisateur: Utilisateur;
+  expires: number;
 }
 // github.com/benoitkugler/intendance/server/models.Unite
 export enum Unite {

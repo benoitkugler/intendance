@@ -43,7 +43,6 @@ export class Notifications {
     this._messages.push({ text: message, id: index });
     setTimeout(() => {
       this._messages = this._messages.filter(v => v.id != index);
-      console.log(this._messages);
     }, 4000);
   }
   clearMessages() {

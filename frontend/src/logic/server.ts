@@ -58,6 +58,11 @@ export class API extends AbstractAPI {
     this.notifications.startSpin();
   }
 
+  static Loggin(notifications: Notifications, params: InLoggin) {
+    // Le serveur ignore le token sur cette requête
+    return new API(notifications, "").Loggin(params);
+  }
+
   protected onSuccessLoggin(data: OutLoggin) {}
 
   protected onSuccessGetUtilisateurs(
@@ -275,22 +280,13 @@ export interface Meta {
 export const metaDev: Meta = {
   idUtilisateur: 1,
   token:
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJJZFByb3ByaWV0YWlyZSI6MSwiZXhwIjoxNTk5NjUwODQ0fQ.IUj2FPeABi-LZeLp0CmJ7Us-a90Jl4tWX5yQ0j2TtL0"
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJJZFByb3ByaWV0YWlyZSI6MSwiZXhwIjoxNjAwMDE1NjcxfQ.4IiKMIVsoWNBuTq3DWMf_PfiVQPG2IMqQrJLL7hnN28"
 };
 
-export class Loggin {
-  constructor(private readonly notifications: Notifications) {
-    // const aut = this.checkCookies();
-    //TODO: handle loggin via cookie
-    // if (aut != null) {
-    //   this.controller.token = aut.token;
-    //   this.controller.idUtilisateur = aut.idUtilisateur;
-    //   this.controller.state.isLoggedIn = true;
-    // }
-  }
-
+/** Exposes une série d'utilitaires gérant la connection (par mot de passe ou par cookies) */
+export class LogginController {
   /** Vérifie les cookies */
-  checkCookies(): Meta | null {
+  static checkCookies(): Meta | null {
     const token = Cookie.get("token");
     const idUtilisateur = Cookie.get("id_utilisateur");
     if (token == undefined || idUtilisateur == undefined) {
@@ -301,35 +297,24 @@ export class Loggin {
 
   // renvoie un message d'erreur ou la chaine vide
   // si le mot de passe est correct.
-  async loggin(params: InLoggin) {
-    const out = await new API(this.notifications, "").Loggin(params); // token is ignored here
+  static async loggin(notifications: Notifications, params: InLoggin) {
+    const out = await API.Loggin(notifications, params); // token is ignored here
     if (out === undefined) return; // erreur inatendue
 
     // save for future connections
-    Cookie.set("token", out.token);
-    Cookie.set("id_utilisateur", out.utilisateur);
+    Cookie.set("token", out.token, { expires: out.expires });
+    Cookie.set("id_utilisateur", out.utilisateur, { expires: out.expires });
 
-    this.notifications.setMessage(
-      `Connecté sous le nom de <b>${out.utilisateur.prenom_nom}</b>`
+    notifications.setMessage(
+      `Connecté sous le nom de <b>${out.utilisateur.prenom_nom}</b>.`
     );
     return out;
   }
 
-  logout() {
+  static logout() {
     Cookie.remove("token");
     Cookie.remove("id_utilisateur");
   }
 }
 
 export const N = new Notifications();
-
-// point d'entrée : le controller n'est pas encore disponible
-export function init() {
-  const meta = new Loggin(N).checkCookies();
-  if (meta !== null) {
-    return new Controller(meta, N);
-  }
-  if (devMode) {
-    return new Controller(metaDev, N);
-  }
-}

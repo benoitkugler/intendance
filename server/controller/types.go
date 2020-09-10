@@ -106,6 +106,7 @@ type OutLoggin struct {
 	Erreur      string      `json:"erreur"`
 	Token       string      `json:"token"`
 	Utilisateur Utilisateur `json:"utilisateur"`
+	Expires     int         `json:"expires"` // en jours
 }
 
 type IngredientQuantite struct {

@@ -12,7 +12,10 @@ import (
 	"github.com/labstack/echo/middleware"
 )
 
-const DeltaToken = 72 * time.Hour
+const (
+	DeltaTokenJours = 3
+	deltaToken      = DeltaTokenJours * 24 * time.Hour
+)
 
 // UserMeta are custom claims extending default ones.
 type UserMeta struct {
@@ -33,7 +36,7 @@ func (s Server) newToken(id int64) (string, error) {
 	claims := &UserMeta{
 		IdProprietaire: id,
 		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(DeltaToken).Unix(),
+			ExpiresAt: time.Now().Add(deltaToken).Unix(),
 		},
 	}
 

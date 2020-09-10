@@ -49,12 +49,19 @@
 import Component from "vue-class-component";
 import Vue from "vue";
 import { InLoggin } from "../logic/api";
-import { routes } from "../router/index";
+import { LogginController } from "@/logic/server";
+import { Notifications } from "@/logic/notifications";
 
 const patternMail = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
 
+const LogginProps = Vue.extend({
+  props: {
+    N: Object as () => Notifications
+  }
+});
+
 @Component({})
-export default class Loggin extends Vue {
+export default class Loggin extends LogginProps {
   params: InLoggin = { mail: "", password: "" };
   showPassword = false;
   error: string | null = null;
@@ -69,22 +76,17 @@ export default class Loggin extends Vue {
   loading = false;
   formValid = false;
 
-  async mounted() {}
-
-  // TODO:
   async loggin() {
     if (!this.formValid) return;
     this.loading = true;
 
-    const err = await C.logger.loggin(this.params);
+    const out = await LogginController.loggin(this.N, this.params);
     this.loading = false;
-    if (C.notifications.getError() != null) return; // erreur déjà gérée
+    if (out === undefined) return; // erreur déjà gérée
+    const err = out.erreur;
     if (err == "" || !err) {
       this.error = null;
-      const currentPath = this.$router.currentRoute.path;
-      if (routes.map(r => r.path).indexOf(currentPath) == -1) {
-        this.$router.push("/sejours");
-      }
+      this.$emit("loggin", out);
     } else {
       this.error = err;
     }

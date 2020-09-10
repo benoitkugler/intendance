@@ -3,8 +3,8 @@
     <v-app-bar app color="primary" :dense="isLoggedIn">
       <v-toolbar-title class="headline text-uppercase">
         <v-tooltip>
-          <template v-slot:activator="{ on }">
-            <span v-on="on">{{ mainTitle }}</span>
+          <template v-slot:activator="props">
+            <span v-on="props.on">{{ mainTitle }}</span>
           </template>
           Version {{ version }}
         </v-tooltip>
@@ -16,13 +16,13 @@
     ></navigation-bar>
     <v-main>
       <keep-alive v-if="isLoggedIn">
-        <router-view :C="C"></router-view>
+        <router-view :C="controller"></router-view>
       </keep-alive>
-      <loggin v-else></loggin>
+      <loggin v-else :N="notifications" @loggin="onLoggin"></loggin>
 
-      <spinner-snackbar></spinner-snackbar>
-      <error-dialog></error-dialog>
-      <success-snackbar></success-snackbar>
+      <spinner-snackbar :N="notifications"></spinner-snackbar>
+      <error-dialog :N="notifications"></error-dialog>
+      <success-snackbar :N="notifications"></success-snackbar>
     </v-main>
   </v-app>
 </template>
@@ -39,8 +39,10 @@ import NavigationBar from "./components/NavigationBar.vue";
 import Loggin from "./views/Loggin.vue";
 
 import { Controller } from "./logic/controller";
-import { devMode } from "./logic/server";
-import { RouteType } from "./router";
+import { devMode, LogginController, metaDev } from "./logic/server";
+import { routes, RouteType } from "./router";
+import { Notifications } from "./logic/notifications";
+import { OutLoggin } from "./logic/api";
 
 declare var process: {
   env: {
@@ -58,14 +60,16 @@ declare var process: {
   }
 })
 export default class App extends Vue {
-  private controller = C;
+  // a créer après le loggin
+  private controller: Controller | null = null;
+  private notifications = new Notifications();
 
   get version() {
     return process.env.VUE_APP_VERSION;
   }
 
   get isLoggedIn() {
-    return this.controller.state.isLoggedIn;
+    return this.controller != null;
   }
 
   get mainTitle() {
@@ -75,8 +79,37 @@ export default class App extends Vue {
     return this.getPageTitle();
   }
 
+  created() {
+    // point d'entrée : le controller n'est pas encore disponible
+
+    // on commence par vérifier les cookies
+    const meta = LogginController.checkCookies();
+    if (meta !== null) {
+      this.controller = new Controller(meta, this.notifications);
+      this.notifications.setMessage("Bon retour parmi nous !");
+    } else if (devMode) {
+      this.controller = new Controller(metaDev, this.notifications);
+      this.notifications.setMessage("Connecté en mode développement");
+    } else {
+      // pas de loggin automatique : par défaut, affiche la page de loggin
+    }
+  }
+
+  onLoggin(out: OutLoggin) {
+    // loggin réussi
+    this.controller = new Controller(
+      { idUtilisateur: out.utilisateur.id, token: out.token },
+      this.notifications
+    );
+    const currentPath = this.$router.currentRoute.path;
+    if (routes.map(r => r.path).indexOf(currentPath) == -1) {
+      this.$router.push("/sejours");
+    }
+  }
+
   logout() {
-    this.controller.logger.logout();
+    LogginController.logout();
+    this.controller = null;
   }
 
   private getPageTitle() {

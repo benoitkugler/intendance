@@ -30,6 +30,7 @@ func (s Server) Loggin(mail, password string) (out OutLoggin, err error) {
 	out = OutLoggin{
 		Utilisateur: Utilisateur{Id: u.Id, PrenomNom: u.PrenomNom},
 		Token:       token,
+		Expires:     DeltaTokenJours,
 	}
 	return out, err
 }
