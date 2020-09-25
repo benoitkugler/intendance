@@ -11,9 +11,9 @@ import {
   Livraison,
   IngredientProduits,
   Produit,
-  OutCommande,
   DateIngredientQuantites,
-  InResoudIngredients
+  OutCommandeComplete,
+  OutCommandeSimple
 } from "./api";
 import { Notifications } from "./notifications";
 import { Controller } from "./controller";
@@ -246,8 +246,11 @@ export class API extends AbstractAPI {
   protected onSuccessDeleteProduit(data: any): void {
     this.notifications.setMessage("Produit supprimé.");
   }
-  protected onSuccessEtablitCommande(data: OutCommande): void {
+  protected onSuccessEtablitCommandeComplete(data: OutCommandeComplete): void {
     this.notifications.setMessage("Commande établie.");
+  }
+  protected onSuccessEtablitCommandeSimple(data: OutCommandeSimple): void {
+    this.notifications.setMessage("Commande simplifiée établie.");
   }
 
   // charge en parallèle les données nécessaires aux menus

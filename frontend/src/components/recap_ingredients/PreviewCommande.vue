@@ -107,12 +107,12 @@ import TooltipBtn from "../utils/TooltipBtn.vue";
 import ListeAmbiguites from "./ListeAmbiguites.vue";
 
 import {
-  CommandeItem,
   Time,
   DateIngredientQuantites,
   Produit,
   Ambiguites,
-  CommandeContraintes
+  CommandeCompleteItem,
+  CommandeCompleteContraintes
 } from "@/logic/api";
 import { Watch } from "vue-property-decorator";
 import { Controller } from "@/logic/controller";
@@ -128,20 +128,20 @@ const PreviewCommandeProps = Vue.extend({
 
 interface commandeJour {
   date: Time;
-  produits: CommandeItem[];
+  produits: CommandeCompleteItem[];
 }
 
 @Component({
   components: { TooltipBtn, ListeAmbiguites }
 })
 export default class PreviewCommande extends PreviewCommandeProps {
-  data: CommandeItem[] = [];
+  data: CommandeCompleteItem[] = [];
   loading = false;
 
   formatDate = Formatter.formatDate;
   formatQuantite = Formatter.formatQuantite;
 
-  contraintes: CommandeContraintes = {
+  contraintes: CommandeCompleteContraintes = {
     contrainte_produits: {},
     regroupe: false
   };
@@ -161,7 +161,7 @@ export default class PreviewCommande extends PreviewCommandeProps {
 
   private async computeCommande() {
     this.loading = true;
-    const res = await this.C.api.EtablitCommande({
+    const res = await this.C.api.EtablitCommandeComplete({
       ingredients: this.dateIngredients,
       contraintes: this.contraintes
     });
@@ -185,7 +185,7 @@ export default class PreviewCommande extends PreviewCommandeProps {
 
   // produit par jour
   get commandes() {
-    const tmp: { [key: string]: CommandeItem[] } = {};
+    const tmp: { [key: string]: CommandeCompleteItem[] } = {};
     this.data.forEach(c => {
       const current = tmp[c.jour_commande] || [];
       current.push(c);
@@ -202,7 +202,7 @@ export default class PreviewCommande extends PreviewCommandeProps {
 
   formatProduit = this.C.formatter.formatProduit;
 
-  tooltipOrigin(item: CommandeItem) {
+  tooltipOrigin(item: CommandeCompleteItem) {
     const or = item.origines || [];
     if (or.length == 1) {
       return "Afficher l'ingrédient d'origine";
@@ -210,7 +210,7 @@ export default class PreviewCommande extends PreviewCommandeProps {
     return `Affiches les ${or.length} ingrédients d'origine`;
   }
 
-  showOrigines(item: CommandeItem) {
+  showOrigines(item: CommandeCompleteItem) {
     this.$emit("showOrigines", item.origines);
   }
 }
