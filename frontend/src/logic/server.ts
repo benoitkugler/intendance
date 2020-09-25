@@ -16,7 +16,6 @@ import {
   OutCommandeSimple
 } from "./api";
 import { Notifications } from "./notifications";
-import { Controller } from "./controller";
 import {
   InLoggin,
   SejourRepas,
@@ -33,6 +32,12 @@ import {
 
 export const devMode = process.env.NODE_ENV != "production";
 const host = devMode ? "http://localhost:1323" : window.location.origin;
+
+export const metaDev: Meta = {
+  idUtilisateur: 1,
+  token:
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJJZFByb3ByaWV0YWlyZSI6MSwiZXhwIjoxNjAxMzE1OTUyfQ.cnGpJ3Gvc2bl2RihhQYGBe0twvQANsLQcU1G6un6xHU"
+};
 
 export class API extends AbstractAPI {
   sejours: {
@@ -281,12 +286,6 @@ export interface Meta {
   idUtilisateur: number;
   token: string;
 }
-
-export const metaDev: Meta = {
-  idUtilisateur: 1,
-  token:
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJJZFByb3ByaWV0YWlyZSI6MSwiZXhwIjoxNjAwMDE1NjcxfQ.4IiKMIVsoWNBuTq3DWMf_PfiVQPG2IMqQrJLL7hnN28"
-};
 
 /** Exposes une série d'utilitaires gérant la connection (par mot de passe ou par cookies) */
 export class LogginController {

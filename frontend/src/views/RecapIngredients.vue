@@ -13,6 +13,12 @@
       </result-ingredients>
     </v-col>
     <v-col class="align-self-center" md="5" sm="12">
+      <associe-livraisons
+        :C="C"
+        :dateIngredients="dateIngredients"
+      ></associe-livraisons>
+    </v-col>
+    <v-col class="align-self-center" md="5" sm="12">
       <preview-commande
         :C="C"
         :dateIngredients="dateIngredients"
@@ -32,6 +38,7 @@ import PreviewCommande from "../components/recap_ingredients/PreviewCommande.vue
 
 import { Controller } from "../logic/controller";
 import { DateIngredientQuantites, TimedIngredientQuantite } from "../logic/api";
+import AssocieLivraisons from "@/components/recap_ingredients/AssocieLivraisons.vue";
 
 const RecapIngredientsProps = Vue.extend({
   props: {
@@ -40,11 +47,15 @@ const RecapIngredientsProps = Vue.extend({
 });
 
 @Component({
-  components: { FormCalcul, ResultIngredients, PreviewCommande }
+  components: {
+    FormCalcul,
+    ResultIngredients,
+    PreviewCommande,
+    AssocieLivraisons
+  }
 })
 export default class RecapIngredients extends RecapIngredientsProps {
   showFormCalcul = false;
-
   loadingIngredients = false;
   dateIngredients: DateIngredientQuantites[] = [];
 
