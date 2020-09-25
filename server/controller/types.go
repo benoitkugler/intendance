@@ -56,14 +56,23 @@ type InSetDefautProduit struct {
 	On           bool  `json:"on"`
 }
 
-type InCommande struct {
-	Ingredients []DateIngredientQuantites `json:"ingredients"`
-	Contraintes CommandeContraintes       `json:"contraintes"`
+type InCommandeComplete struct {
+	Ingredients []DateIngredientQuantites   `json:"ingredients"`
+	Contraintes CommandeCompleteContraintes `json:"contraintes"`
 }
 
-type OutCommande struct {
-	Commande   []CommandeItem `json:"commande"`
-	Ambiguites Ambiguites     `json:"ambiguites"`
+type OutCommandeComplete struct {
+	Commande   []CommandeCompleteItem `json:"commande"`
+	Ambiguites Ambiguites             `json:"ambiguites"`
+}
+
+type InCommandeSimple struct {
+	Ingredients []DateIngredientQuantites `json:"ingredients"`
+	Contraintes CommandeSimpleContraintes `json:"contraintes"`
+}
+
+type OutCommandeSimple struct {
+	Commande []CommandeSimpleItem `json:"commande"`
 }
 
 type RecetteComplet struct {
@@ -125,7 +134,7 @@ type IngredientProduits struct {
 }
 
 type PreviewCommande struct {
-	Produits []CommandeItem
+	Produits []CommandeCompleteItem
 }
 
 type Ingredients = models.Ingredients

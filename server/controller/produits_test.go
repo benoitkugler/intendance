@@ -19,18 +19,22 @@ func TestGetProduits(t *testing.T) {
 	fmt.Println(out)
 }
 
-func getLivraison(db models.DB) models.Livraison {
+func getLivraison(db models.DB) (models.Livraison, models.Livraison) {
 	livraisons, err := models.SelectAllLivraisons(db)
 	if err != nil {
 		log.Fatal(err)
 	}
-	return livraisons[livraisons.Ids()[0]]
+	ids := livraisons.Ids()
+	if L := len(ids); L < 2 {
+		log.Fatalf("besoin de 2 livraisons, seulement %d présentes", L)
+	}
+	return livraisons[ids[0]], livraisons[ids[1]]
 }
 
 func TestDelete(t *testing.T) {
 	s, ct := setupTest(t)
 	defer s.DB.Close()
-	livraison := getLivraison(s.DB)
+	livraison, _ := getLivraison(s.DB)
 	produit, err := models.Produit{IdLivraison: livraison.Id}.Insert(ct.DB)
 	if err != nil {
 		t.Fatal(err)
@@ -48,7 +52,7 @@ func TestDefault(t *testing.T) {
 		t.Fatal(err)
 	}
 	ingredient := ingredients[ingredients.Ids()[0]]
-	livraison := getLivraison(s.DB)
+	livraison, _ := getLivraison(s.DB)
 	produit, err := ct.AjouteIngredientProduit(ingredient.Id, models.Produit{
 		IdLivraison: livraison.Id,
 		Nom:         fmt.Sprintf("Produit superbe %d", time.Now().Unix()), Conditionnement: models.Conditionnement{Quantite: 1, Unite: ingredient.Unite},

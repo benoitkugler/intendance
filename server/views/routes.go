@@ -634,13 +634,26 @@ func (s Server) SetDefautProduit(c echo.Context) error {
 // ----------------------------- Commandes ----------------------------------
 // --------------------------------------------------------------------------
 
-func (s Server) EtablitCommande(c echo.Context) error {
+func (s Server) EtablitCommandeComplete(c echo.Context) error {
 	ct := s.Server.NewRequeteContext(c)
-	var params controller.InCommande
+	var params controller.InCommandeComplete
 	if err := c.Bind(&params); err != nil {
 		return err
 	}
-	out, err := ct.EtablitCommande(params.Ingredients, params.Contraintes)
+	out, err := ct.EtablitCommandeComplete(params.Ingredients, params.Contraintes)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, out)
+}
+
+func (s Server) EtablitCommandeSimple(c echo.Context) error {
+	ct := s.Server.NewRequeteContext(c)
+	var params controller.InCommandeSimple
+	if err := c.Bind(&params); err != nil {
+		return err
+	}
+	out, err := ct.EtablitCommandeSimple(params.Ingredients, params.Contraintes)
 	if err != nil {
 		return err
 	}
