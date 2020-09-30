@@ -273,15 +273,17 @@ export interface InSetDefautProduit {
   id_produit: number;
   on: boolean;
 }
-// github.com/benoitkugler/intendance/server/controller.CommandeCompleteContraintes
-export interface CommandeCompleteContraintes {
-  contrainte_produits: { [key: number]: number } | null;
+// github.com/benoitkugler/intendance/server/controller.ProduitsPossibles
+export type ProduitsPossibles = { [key: number]: Produit[] | null } | null;
+// github.com/benoitkugler/intendance/server/controller.CommandeContraintes
+export interface CommandeContraintes {
+  associations: { [key: number]: number } | null;
   regroupe: boolean;
 }
 // github.com/benoitkugler/intendance/server/controller.InCommandeComplete
 export interface InCommandeComplete {
   ingredients: DateIngredientQuantites[] | null;
-  contraintes: CommandeCompleteContraintes;
+  contraintes: CommandeContraintes;
 }
 // github.com/benoitkugler/intendance/server/controller.TimedIngredientQuantite
 export type TimedIngredientQuantite = {
@@ -294,22 +296,16 @@ export interface CommandeCompleteItem {
   quantite: number;
   origines: TimedIngredientQuantite[] | null;
 }
-// github.com/benoitkugler/intendance/server/controller.Ambiguites
-export type Ambiguites = { [key: number]: Produit[] | null } | null;
 // github.com/benoitkugler/intendance/server/controller.OutCommandeComplete
 export interface OutCommandeComplete {
   commande: CommandeCompleteItem[] | null;
-  ambiguites: Ambiguites;
 }
-// github.com/benoitkugler/intendance/server/controller.CommandeSimpleContraintes
-export interface CommandeSimpleContraintes {
-  ContrainteLivraisons: { [key: number]: number } | null;
-  regroupe: boolean;
-}
+// github.com/benoitkugler/intendance/server/controller.LivraisonsPossibles
+export type LivraisonsPossibles = { [key: number]: Livraison[] | null } | null;
 // github.com/benoitkugler/intendance/server/controller.InCommandeSimple
 export interface InCommandeSimple {
   ingredients: DateIngredientQuantites[] | null;
-  contraintes: CommandeSimpleContraintes;
+  contraintes: CommandeContraintes;
 }
 // github.com/benoitkugler/intendance/server/controller.CommandeSimpleItem
 export interface CommandeSimpleItem {
@@ -1244,6 +1240,34 @@ export abstract class AbstractAPI {
 
   protected abstract onSuccessDeleteProduit(data: any): void;
 
+  protected async rawProposeLienIngredientProduit(
+    params: DateIngredientQuantites[] | null
+  ) {
+    const fullUrl = this.baseUrl + "/api/commande/hint_produits";
+    const rep: AxiosResponse<ProduitsPossibles> = await Axios.post(
+      fullUrl,
+      params,
+      { headers: this.getHeaders() }
+    );
+    return rep.data;
+  }
+
+  // wraps rawProposeLienIngredientProduit and handles the error
+  async ProposeLienIngredientProduit(params: DateIngredientQuantites[] | null) {
+    this.startRequest();
+    try {
+      const out = await this.rawProposeLienIngredientProduit(params);
+      this.onSuccessProposeLienIngredientProduit(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessProposeLienIngredientProduit(
+    data: ProduitsPossibles
+  ): void;
+
   protected async rawEtablitCommandeComplete(params: InCommandeComplete) {
     const fullUrl = this.baseUrl + "/api/commande/complete";
     const rep: AxiosResponse<OutCommandeComplete> = await Axios.post(
@@ -1268,6 +1292,36 @@ export abstract class AbstractAPI {
 
   protected abstract onSuccessEtablitCommandeComplete(
     data: OutCommandeComplete
+  ): void;
+
+  protected async rawProposeLienIngredientLivraison(
+    params: DateIngredientQuantites[] | null
+  ) {
+    const fullUrl = this.baseUrl + "/api/commande/hint_livraisons";
+    const rep: AxiosResponse<LivraisonsPossibles> = await Axios.post(
+      fullUrl,
+      params,
+      { headers: this.getHeaders() }
+    );
+    return rep.data;
+  }
+
+  // wraps rawProposeLienIngredientLivraison and handles the error
+  async ProposeLienIngredientLivraison(
+    params: DateIngredientQuantites[] | null
+  ) {
+    this.startRequest();
+    try {
+      const out = await this.rawProposeLienIngredientLivraison(params);
+      this.onSuccessProposeLienIngredientLivraison(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessProposeLienIngredientLivraison(
+    data: LivraisonsPossibles
   ): void;
 
   protected async rawEtablitCommandeSimple(params: InCommandeSimple) {

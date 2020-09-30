@@ -1,20 +1,36 @@
 package controller
 
 import (
-	"fmt"
 	"sort"
 	"time"
 
 	"github.com/benoitkugler/intendance/server/models"
 )
 
-type CommandeSimpleContraintes struct {
-	// Indique quelle livraison utiliser pour l'ingrédient (idIngredient -> idLivraison)
-	ContrainteLivraisons map[int64]int64
+// LivraisonsPossibles indique les livraisons conseillées pour un ingrédient
+type LivraisonsPossibles map[int64][]models.Livraison // id_ingredient -> livraisons
 
-	// Si `true`, regroupe toutes les commandes
-	// à la date courante (prototype)
-	Regroupe bool `json:"regroupe"`
+// ProposeLienIngredientLivraison renvoie une association possible
+// pour les ingrédients donnés, en général incomplète.
+// Le client doit la complèter avant d'utiliser `EtablitCommandeSimple`.
+func (ct RequeteContext) ProposeLienIngredientLivraison(ingredients []DateIngredientQuantites) (LivraisonsPossibles, error) {
+	livraisons, allIngredients, err := ct.fetchDataCommande(ingredients)
+	if err != nil {
+		return nil, err
+	}
+	data, err := ct.newCacheIngredientProduits(allIngredients.Ids(), livraisons)
+	if err != nil {
+		return nil, err
+	}
+
+	out := make(LivraisonsPossibles)
+	for idIngredient := range allIngredients {
+		// utilise les produits déjà associés
+		for _, produit := range data.associations[idIngredient] {
+			out[idIngredient] = append(out[idIngredient], livraisons[produit.IdLivraison])
+		}
+	}
+	return out, nil
 }
 
 // CommandeSimpleItem représente la commande d'un ingrédient (ou plusieurs ingrédient)
@@ -55,7 +71,8 @@ func regroupeIngredients(l []TimedIngredientQuantite) map[int64]float64 {
 
 // EtablitCommandeSimple regroupe chaque ingrédient par fournisseur, en précisant
 // une date de commande respectant les délais de livraisons.
-func (ct RequeteContext) EtablitCommandeSimple(ingredients []DateIngredientQuantites, contraintes CommandeSimpleContraintes) (OutCommandeSimple, error) {
+// Tous les ingrédients doivent être associés à une livraison par le client.
+func (ct RequeteContext) EtablitCommandeSimple(ingredients []DateIngredientQuantites, contraintes CommandeContraintes) (OutCommandeSimple, error) {
 	livraisons, allIngredients, err := ct.fetchDataCommande(ingredients)
 	if err != nil {
 		return OutCommandeSimple{}, err
@@ -63,13 +80,12 @@ func (ct RequeteContext) EtablitCommandeSimple(ingredients []DateIngredientQuant
 
 	// on vérifie que toutes les correspondances ingrédient -> livraisons
 	// sont fournies par le client
-	for _, ingredient := range allIngredients {
-		if _, ok := contraintes.ContrainteLivraisons[ingredient.Id]; !ok {
-			return OutCommandeSimple{}, fmt.Errorf("L'ingrédient %s n'est associé à aucun fournisseur !", ingredient.Nom)
-		}
+	err = contraintes.checkAssociations(allIngredients)
+	if err != nil {
+		return OutCommandeSimple{}, err
 	}
 
-	resolver := livraisonResolver{livraisons: livraisons, targets: contraintes.ContrainteLivraisons}
+	resolver := livraisonResolver{livraisons: livraisons, targets: contraintes.Associations}
 	accu := calculeDateCommande(resolver, ingredients)
 
 	if contraintes.Regroupe {

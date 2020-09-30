@@ -151,7 +151,9 @@ func routes(e *echo.Echo, s views.Server) {
 	e.POST("/api/produits", s.UpdateProduit, tokenMid)
 	e.DELETE("/api/produits", s.DeleteProduit, tokenMid)
 
+	e.POST("/api/commande/hint_produits", s.ProposeLienIngredientProduit, tokenMid)
 	e.POST("/api/commande/complete", s.EtablitCommandeComplete, tokenMid)
+	e.POST("/api/commande/hint_livraisons", s.ProposeLienIngredientLivraison, tokenMid)
 	e.POST("/api/commande/simple", s.EtablitCommandeSimple, tokenMid)
 }
 

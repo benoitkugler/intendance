@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/benoitkugler/intendance/server/models"
@@ -32,6 +33,26 @@ const jourDuration = 24 * time.Hour
 type TimedIngredientQuantite struct {
 	IngredientQuantite
 	Date time.Time `json:"date"`
+}
+
+type CommandeContraintes struct {
+	// Force l'utilisation la cible pour l'ingrédient (idIngredient -> idCible)
+	Associations map[int64]int64 `json:"associations"`
+
+	// Si `true`, regroupe toutes les commandes
+	// à la date courante (prototype)
+	Regroupe bool `json:"regroupe"`
+}
+
+// vérifie que toutes les correspondances ingrédient -> target
+// sont fournies par le client
+func (c CommandeContraintes) checkAssociations(ingredients models.Ingredients) error {
+	for _, ingredient := range ingredients {
+		if _, ok := c.Associations[ingredient.Id]; !ok {
+			return fmt.Errorf("L'ingrédient %s n'est associé à aucune cible !", ingredient.Nom)
+		}
+	}
+	return nil
 }
 
 type timedTarget struct {

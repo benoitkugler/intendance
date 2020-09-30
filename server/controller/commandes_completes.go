@@ -9,17 +9,8 @@ import (
 	"github.com/benoitkugler/intendance/server/models"
 )
 
-type CommandeCompleteContraintes struct {
-	// Force l'utilisation du produit pour l'ingrédient (idIngredient -> idProduit)
-	ContrainteProduits map[int64]int64 `json:"contrainte_produits"`
-
-	// Si `true`, regroupe toutes les commandes
-	// à la date courante (prototype)
-	Regroupe bool `json:"regroupe"`
-}
-
-// Ambiguites indique les ingrédients pour lesquelles plusieurs produits sont disponibles
-type Ambiguites map[int64][]models.Produit // id_ingredient -> produits
+// ProduitsPossibles indique les produits disponibles pour un ingrédient
+type ProduitsPossibles map[int64][]models.Produit // id_ingredient -> produits
 
 // CommandeCompleteItem représente la commande d'un produit.
 type CommandeCompleteItem struct {
@@ -43,7 +34,7 @@ type cacheIngredientProduits struct {
 // charge en (seulement) 3 requêtes les infos nécessaires
 // à l'établissement d'une commande
 // se restreint aux produits associés aux livraisons données
-func (ct RequeteContext) resoudProduits(idsIngredients models.Ids, livraisons models.Livraisons) (cacheIngredientProduits, error) {
+func (ct RequeteContext) newCacheIngredientProduits(idsIngredients models.Ids, livraisons models.Livraisons) (cacheIngredientProduits, error) {
 	out := cacheIngredientProduits{ // initialization des map
 		produits:     make(models.Produits),
 		associations: make(map[int64][]models.Produit),
@@ -91,15 +82,51 @@ func (ct RequeteContext) resoudProduits(idsIngredients models.Ids, livraisons mo
 	return out, nil
 }
 
+// ProposeLienIngredientProduit renvoie une association possible
+// pour les ingrédients donnés, en général incomplète.
+// Le client doit la complèter avant d'utiliser `EtablitCommandeComplete`.
+func (ct RequeteContext) ProposeLienIngredientProduit(ingredients []DateIngredientQuantites) (ProduitsPossibles, error) {
+	livraisons, allIngredients, err := ct.fetchDataCommande(ingredients)
+	if err != nil {
+		return nil, err
+	}
+
+	// on récupére les données des produits
+	data, err := ct.newCacheIngredientProduits(allIngredients.Ids(), livraisons)
+	if err != nil {
+		return nil, err
+	}
+
+	targetProduits := make(ProduitsPossibles)
+	for idIngredient := range allIngredients {
+		// on récupère les produits associés
+		produits := data.associations[idIngredient]
+		if len(produits) > 1 {
+			// on essaye de résoudre les ambiguités
+			if defauts := data.defauts[idIngredient]; len(defauts) >= 1 {
+				// utilise les produits par défaut
+				produits = defauts
+			}
+		}
+		sort.Slice(produits, func(i, j int) bool {
+			return produits[i].Nom < produits[j].Nom
+		})
+		targetProduits[idIngredient] = produits
+	}
+
+	return targetProduits, nil
+}
+
 type produitResolver struct {
-	targets    map[int64]models.Produit // id-ingredient -> produit
+	targets    map[int64]int64 // id-ingredient -> id-produit
+	produits   models.Produits
 	livraisons models.Livraisons
 }
 
 func (p produitResolver) resolve(idIngredient int64) (idTarget int64, livraison models.Livraison) {
-	targetProduit := p.targets[idIngredient]
-	livraison = p.livraisons[targetProduit.IdLivraison]
-	return targetProduit.Id, livraison
+	idTargetProduit := p.targets[idIngredient]
+	livraison = p.livraisons[p.produits[idTargetProduit].IdLivraison]
+	return idTargetProduit, livraison
 }
 
 // renvoie la quantité équivalente à la somme
@@ -119,79 +146,28 @@ func aggregeIngredients(l []TimedIngredientQuantite) (float64, error) {
 
 // EtablitCommandeComplete associe à chaque ingrédient un produit (avec une quantité) et un jour de commande
 // respectant la date d'utilisation et le délai de livraison.
-// Les produits sont résolus en prenant en compte les associations enregistrées puis les contraintes fournies en arguments.
-func (ct RequeteContext) EtablitCommandeComplete(ingredients []DateIngredientQuantites, contraintes CommandeCompleteContraintes) (OutCommandeComplete, error) {
-	// TODO: vérifier les associations ing -> produit,
-	// où au moins les contraintes d'unité, etc..
-
+// Tous les ingrédients doivent être associés à un produit par le client.
+func (ct RequeteContext) EtablitCommandeComplete(ingredients []DateIngredientQuantites, contraintes CommandeContraintes) (OutCommandeComplete, error) {
 	livraisons, allIngredients, err := ct.fetchDataCommande(ingredients)
 	if err != nil {
 		return OutCommandeComplete{}, err
 	}
 
-	// on récupére les données des produits
-	data, err := ct.resoudProduits(allIngredients.Ids(), livraisons)
+	err = contraintes.checkAssociations(allIngredients)
 	if err != nil {
 		return OutCommandeComplete{}, err
 	}
 
-	// on commence par associer à chaque ingrédient un produit
-	// indépendement de la date d'utilisation
-	ambiguites := make(Ambiguites)
-	targetProduits := produitResolver{targets: make(map[int64]models.Produit), livraisons: livraisons}
-	for idIngredient, ingredient := range allIngredients {
-		var (
-			ambs          []models.Produit
-			targetProduit models.Produit
-		)
-		targetIdProduit, hasContrainte := contraintes.ContrainteProduits[idIngredient]
-		if hasContrainte {
-			var has bool
-			targetProduit, has = data.produits[targetIdProduit]
-			if !has { // le produit imposé n'est pas conforme
-				return OutCommandeComplete{}, fmt.Errorf("Le produit (%d) n'est pas associé à l'ingrédient <b>%s</b> !",
-					targetIdProduit, ingredient.Nom)
-			}
-		} else {
-			// on récupère les produits associés
-			prods := data.associations[idIngredient]
-
-			switch {
-			case len(prods) == 0: // l'absence de produit est fatale
-				return OutCommandeComplete{}, fmt.Errorf("L'ingrédient %s n'est associé à aucun produit !", ingredient.Nom)
-			case len(prods) > 1: // on essaye de résoudre les ambiguités
-				defauts := data.defauts[idIngredient]
-				switch {
-				case len(defauts) == 0:
-					// pas de valeur par défaut : on fait un choix arbitraire
-					ambs = prods
-					targetProduit = prods[0]
-				case len(defauts) > 1:
-					// on restreint l'ambiguité aux défauts et on fait un choix arbitraire
-					ambs = defauts
-					targetProduit = defauts[0]
-				default:
-					// OK : on utilise l'unique produit par défaut
-					targetProduit = defauts[0]
-				}
-			default:
-				// OK : on utilise le seul produit
-				targetProduit = prods[0]
-			}
-		}
-		sort.Slice(ambs, func(i, j int) bool {
-			return ambs[i].Nom < ambs[j].Nom
-		})
-		targetProduits.targets[idIngredient] = targetProduit
-		if len(ambs) > 0 {
-			ambiguites[idIngredient] = ambs
-		}
+	// on récupére les données des produits
+	data, err := ct.newCacheIngredientProduits(allIngredients.Ids(), livraisons)
+	if err != nil {
+		return OutCommandeComplete{}, err
 	}
 
-	// puis on utilise les produits trouvés pour
-	// ajuster les dates de commandes
+	// on ajuste les dates de commandes
 
-	accu := calculeDateCommande(targetProduits, ingredients)
+	resolver := produitResolver{targets: contraintes.Associations, produits: data.produits, livraisons: livraisons}
+	accu := calculeDateCommande(resolver, ingredients)
 
 	if contraintes.Regroupe {
 		accu = accu.groupe()
@@ -226,5 +202,5 @@ func (ct RequeteContext) EtablitCommandeComplete(ingredients []DateIngredientQua
 		return out[i].JourCommande.Before(out[j].JourCommande)
 	})
 
-	return OutCommandeComplete{Commande: out, Ambiguites: ambiguites}, nil
+	return OutCommandeComplete{Commande: out}, nil
 }

@@ -634,6 +634,19 @@ func (s Server) SetDefautProduit(c echo.Context) error {
 // ----------------------------- Commandes ----------------------------------
 // --------------------------------------------------------------------------
 
+func (s Server) ProposeLienIngredientProduit(c echo.Context) error {
+	ct := s.Server.NewRequeteContext(c)
+	var params []controller.DateIngredientQuantites
+	if err := c.Bind(&params); err != nil {
+		return err
+	}
+	out, err := ct.ProposeLienIngredientProduit(params)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, out)
+}
+
 func (s Server) EtablitCommandeComplete(c echo.Context) error {
 	ct := s.Server.NewRequeteContext(c)
 	var params controller.InCommandeComplete
@@ -641,6 +654,19 @@ func (s Server) EtablitCommandeComplete(c echo.Context) error {
 		return err
 	}
 	out, err := ct.EtablitCommandeComplete(params.Ingredients, params.Contraintes)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, out)
+}
+
+func (s Server) ProposeLienIngredientLivraison(c echo.Context) error {
+	ct := s.Server.NewRequeteContext(c)
+	var params []controller.DateIngredientQuantites
+	if err := c.Bind(&params); err != nil {
+		return err
+	}
+	out, err := ct.ProposeLienIngredientLivraison(params)
 	if err != nil {
 		return err
 	}

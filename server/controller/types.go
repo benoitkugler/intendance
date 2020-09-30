@@ -57,18 +57,17 @@ type InSetDefautProduit struct {
 }
 
 type InCommandeComplete struct {
-	Ingredients []DateIngredientQuantites   `json:"ingredients"`
-	Contraintes CommandeCompleteContraintes `json:"contraintes"`
+	Ingredients []DateIngredientQuantites `json:"ingredients"`
+	Contraintes CommandeContraintes       `json:"contraintes"`
 }
 
 type OutCommandeComplete struct {
-	Commande   []CommandeCompleteItem `json:"commande"`
-	Ambiguites Ambiguites             `json:"ambiguites"`
+	Commande []CommandeCompleteItem `json:"commande"`
 }
 
 type InCommandeSimple struct {
 	Ingredients []DateIngredientQuantites `json:"ingredients"`
-	Contraintes CommandeSimpleContraintes `json:"contraintes"`
+	Contraintes CommandeContraintes       `json:"contraintes"`
 }
 
 type OutCommandeSimple struct {

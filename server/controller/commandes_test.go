@@ -52,8 +52,14 @@ func TestCommandeComplete(t *testing.T) {
 			},
 		},
 	}
-	contraintes := CommandeCompleteContraintes{
-		ContrainteProduits: map[int64]int64{
+
+	_, err = ct.ProposeLienIngredientProduit(ingredients)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	contraintes := CommandeContraintes{
+		Associations: map[int64]int64{
 			ing1.Id: produit1.Id,
 			ing2.Id: produit2.Id,
 		},
@@ -92,8 +98,14 @@ func TestCommandeSimple(t *testing.T) {
 			},
 		},
 	}
-	contraintes := CommandeSimpleContraintes{
-		ContrainteLivraisons: map[int64]int64{
+
+	_, err = ct.ProposeLienIngredientLivraison(ingredients)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	contraintes := CommandeContraintes{
+		Associations: map[int64]int64{
 			ing1.Id: livraison1.Id,
 			ing2.Id: livraison1.Id,
 			ing3.Id: livraison2.Id,
