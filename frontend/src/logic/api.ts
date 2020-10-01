@@ -301,7 +301,7 @@ export interface OutCommandeComplete {
   commande: CommandeCompleteItem[] | null;
 }
 // github.com/benoitkugler/intendance/server/controller.LivraisonsPossibles
-export type LivraisonsPossibles = { [key: number]: Livraison[] | null } | null;
+export type LivraisonsPossibles = { [key: number]: number } | null;
 // github.com/benoitkugler/intendance/server/controller.InCommandeSimple
 export interface InCommandeSimple {
   ingredients: DateIngredientQuantites[] | null;

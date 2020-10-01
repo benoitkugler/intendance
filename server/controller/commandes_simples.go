@@ -7,8 +7,9 @@ import (
 	"github.com/benoitkugler/intendance/server/models"
 )
 
-// LivraisonsPossibles indique les livraisons conseillées pour un ingrédient
-type LivraisonsPossibles map[int64][]models.Livraison // id_ingredient -> livraisons
+// LivraisonsPossibles propose une livraison conseillées pour un ingrédient,
+// en faisant éventuellement un choix arbitraire
+type LivraisonsPossibles map[int64]int64 // id_ingredient -> id_livraison
 
 // ProposeLienIngredientLivraison renvoie une association possible
 // pour les ingrédients donnés, en général incomplète.
@@ -26,8 +27,12 @@ func (ct RequeteContext) ProposeLienIngredientLivraison(ingredients []DateIngred
 	out := make(LivraisonsPossibles)
 	for idIngredient := range allIngredients {
 		// utilise les produits déjà associés
-		for _, produit := range data.associations[idIngredient] {
-			out[idIngredient] = append(out[idIngredient], livraisons[produit.IdLivraison])
+		if defauts := data.defauts[idIngredient]; len(defauts) > 0 {
+			// choisit arbitrairement une livraison par défaut
+			out[idIngredient] = defauts[0].IdLivraison
+		} else if prods := data.associations[idIngredient]; len(prods) > 0 {
+			// choisit arbitrairement une livraison
+			out[idIngredient] = prods[0].IdLivraison
 		}
 	}
 	return out, nil

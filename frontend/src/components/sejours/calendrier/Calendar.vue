@@ -9,8 +9,8 @@
       :events="events"
       :currentDay="currentDay"
       :hoverDay="hoverDay"
-      @editRepas="r => $emit('edit-repas', r)"
-      @addRepas="r => $emit('add-repas', r)"
+      @edit-repas="r => $emit('edit-repas', r)"
+      @add-repas="r => $emit('add-repas', r)"
       @change="o => $emit('change', o)"
       @hover="d => (hoverDay = d)"
     ></week>
@@ -23,8 +23,8 @@
       :events="events"
       :currentDay="currentDay"
       :hoverDay="hoverDay"
-      @editRepas="r => $emit('edit-repas', r)"
-      @addRepas="r => $emit('add-repas', r)"
+      @edit-repas="r => $emit('edit-repas', r)"
+      @add-repas="r => $emit('add-repas', r)"
       @change="o => $emit('change', o)"
       @hover="d => (hoverDay = d)"
     ></week>

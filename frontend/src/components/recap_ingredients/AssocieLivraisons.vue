@@ -1,12 +1,21 @@
 <template>
   <v-card>
     <v-card-text>
+      <v-btn @click="fetchHints">Hint</v-btn>
       <v-row>
         <v-col>
-          <livraison-ingredients :livraison="null"></livraison-ingredients>
+          <livraison-ingredients
+            :C="C"
+            :livraison="undefined"
+            :ingredients="getIngredientsByLivraison(undefined)"
+          ></livraison-ingredients>
         </v-col>
         <v-col v-for="livraison in livraisons" :key="livraison.id">
-          <livraison-ingredients :livraison="livraison"></livraison-ingredients>
+          <livraison-ingredients
+            :C="C"
+            :livraison="livraison"
+            :ingredients="getIngredientsByLivraison(livraison.id)"
+          ></livraison-ingredients>
         </v-col>
       </v-row>
     </v-card-text>
@@ -15,7 +24,7 @@
 
 <script lang="ts">
 import {
-  CommandeSimpleContraintes,
+  CommandeContraintes,
   DateIngredientQuantites,
   Ingredient
 } from "@/logic/api";
@@ -35,6 +44,10 @@ const AssocieLivraisonsProps = Vue.extend({
   components: { LivraisonIngredients }
 })
 export default class AssocieLivraisons extends AssocieLivraisonsProps {
+  loading = true;
+
+  private associations: { [key: number]: number } = {};
+
   get livraisons() {
     return Object.values(this.C.api.livraisons);
   }
@@ -47,6 +60,24 @@ export default class AssocieLivraisons extends AssocieLivraisonsProps {
       });
     });
     return Object.keys(tmp).map(idIng => this.C.api.ingredients[Number(idIng)]);
+  }
+
+  getIngredientsByLivraison(idLivraison: number | undefined) {
+    return this.ingredients.filter(
+      ing => this.associations[ing.id] === idLivraison
+    );
+  }
+
+  async fetchHints() {
+    const data = await this.C.api.ProposeLienIngredientLivraison(
+      this.dateIngredients
+    );
+    this.loading = false;
+    if (data === undefined) return;
+    for (const id in data || {}) {
+      // merge into current
+      Vue.set(this.associations, id, (data || {})[id]); //VRC
+    }
   }
 
   valide() {

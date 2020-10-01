@@ -110,9 +110,8 @@ import {
   Time,
   DateIngredientQuantites,
   Produit,
-  Ambiguites,
   CommandeCompleteItem,
-  CommandeCompleteContraintes
+  CommandeContraintes
 } from "@/logic/api";
 import { Watch } from "vue-property-decorator";
 import { Controller } from "@/logic/controller";
@@ -141,8 +140,8 @@ export default class PreviewCommande extends PreviewCommandeProps {
   formatDate = Formatter.formatDate;
   formatQuantite = Formatter.formatQuantite;
 
-  contraintes: CommandeCompleteContraintes = {
-    contrainte_produits: {},
+  contraintes: CommandeContraintes = {
+    associations: {},
     regroupe: false
   };
 
@@ -155,7 +154,7 @@ export default class PreviewCommande extends PreviewCommandeProps {
 
   @Watch("dateIngredients")
   onIngredientsChange() {
-    this.contraintes = { contrainte_produits: {}, regroupe: false };
+    this.contraintes = { associations: {}, regroupe: false };
     this.computeCommande();
   }
 
@@ -178,7 +177,7 @@ export default class PreviewCommande extends PreviewCommandeProps {
   }
 
   applyContraintes(contraintes: ContraintesProduits) {
-    this.contraintes.contrainte_produits = contraintes;
+    this.contraintes.associations = contraintes;
     this.showAmbiguites = false;
     this.computeCommande();
   }

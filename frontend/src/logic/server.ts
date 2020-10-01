@@ -13,7 +13,9 @@ import {
   Produit,
   DateIngredientQuantites,
   OutCommandeComplete,
-  OutCommandeSimple
+  OutCommandeSimple,
+  LivraisonsPossibles,
+  ProduitsPossibles
 } from "./api";
 import { Notifications } from "./notifications";
 import {
@@ -36,7 +38,7 @@ const host = devMode ? "http://localhost:1323" : window.location.origin;
 export const metaDev: Meta = {
   idUtilisateur: 1,
   token:
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJJZFByb3ByaWV0YWlyZSI6MSwiZXhwIjoxNjAxMzE1OTUyfQ.cnGpJ3Gvc2bl2RihhQYGBe0twvQANsLQcU1G6un6xHU"
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJJZFByb3ByaWV0YWlyZSI6MSwiZXhwIjoxNjAxODI3NDA0fQ.Pq5nU3KniX_o9wf9DSe5zuSguQ4ofsrVkCI874cRC2s"
 };
 
 export class API extends AbstractAPI {
@@ -256,6 +258,14 @@ export class API extends AbstractAPI {
   }
   protected onSuccessEtablitCommandeSimple(data: OutCommandeSimple): void {
     this.notifications.setMessage("Commande simplifiée établie.");
+  }
+  protected onSuccessProposeLienIngredientProduit(
+    data: ProduitsPossibles
+  ): void {}
+  protected onSuccessProposeLienIngredientLivraison(
+    data: LivraisonsPossibles
+  ): void {
+    this.notifications.spin = false;
   }
 
   // charge en parallèle les données nécessaires aux menus

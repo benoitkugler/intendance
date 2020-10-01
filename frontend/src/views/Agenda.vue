@@ -85,15 +85,15 @@
             :preferences="preferences"
             :activeJourOffset="activeJourOffset"
             @change="onChangeDay"
-            @addRepas="startAddRepasFromDate"
-            @editRepas="startEditRepas"
+            @add-repas="startAddRepasFromDate"
+            @edit-repas="startEditRepas"
           />
           <day
             v-else
             :C="C"
             :jourOffset="activeJourOffset"
-            @addRepas="startAddRepasFromHoraire"
-            @editRepas="startEditRepas"
+            @add-repas="startAddRepasFromHoraire"
+            @edit-repas="startEditRepas"
           ></day>
         </v-col>
       </v-row>

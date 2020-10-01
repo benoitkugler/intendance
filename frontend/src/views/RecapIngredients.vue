@@ -8,7 +8,7 @@
         :loading="loadingIngredients"
         :dateIngredients="dateIngredients"
         :origineIngredients="origineIngredients"
-        @goToIngredient="goToIngredient"
+        @go-to-ingredient="goToIngredient"
       >
       </result-ingredients>
     </v-col>
@@ -18,13 +18,13 @@
         :dateIngredients="dateIngredients"
       ></associe-livraisons>
     </v-col>
-    <v-col class="align-self-center" md="5" sm="12">
+    <!-- <v-col class="align-self-center" md="5" sm="12">
       <preview-commande
         :C="C"
         :dateIngredients="dateIngredients"
         @showOrigines="o => (origineIngredients = o)"
       ></preview-commande>
-    </v-col>
+    </v-col> -->
   </v-row>
 </template>
 
@@ -69,14 +69,12 @@ export default class RecapIngredients extends RecapIngredientsProps {
   }
 
   async mounted() {
-    let ps = [];
     if (Object.keys(this.C.api.ingredients || {}).length == 0) {
-      ps.push(this.C.api.GetIngredients);
+      await this.C.api.GetIngredients();
     }
     if (Object.keys(this.C.api.fournisseurs || {}).length == 0) {
-      ps.push(this.C.api.GetFournisseurs);
+      await this.C.api.GetFournisseurs();
     }
-    await Promise.all(ps);
   }
 
   onChange(critere: number[]) {
