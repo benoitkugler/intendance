@@ -110,20 +110,20 @@ type Repas struct {
 
 // sql: ADD UNIQUE(id_repas, id_ingredient)
 type RepasIngredient struct {
-	IdRepas int64 `json:"id_repas" sql_foreign:"CASCADE"`
+	IdRepas int64 `json:"id_repas" sql_on_delete:"CASCADE"`
 	LienIngredient
 }
 
 // sql: ADD UNIQUE(id_repas, id_recette)
 type RepasRecette struct {
-	IdRepas   int64 `json:"id_repas" sql_foreign:"CASCADE"`
+	IdRepas   int64 `json:"id_repas" sql_on_delete:"CASCADE"`
 	IdRecette int64 `json:"id_recette"`
 }
 
 // sql: ADD UNIQUE(id_repas, id_groupe)
 type RepasGroupe struct {
-	IdRepas  int64 `json:"id_repas" sql_foreign:"CASCADE"`
-	IdGroupe int64 `json:"id_groupe" sql_foreign:"CASCADE"`
+	IdRepas  int64 `json:"id_repas" sql_on_delete:"CASCADE"`
+	IdGroupe int64 `json:"id_groupe" sql_on_delete:"CASCADE"`
 }
 
 // Fournisseur définit un fournisseur.
@@ -178,7 +178,7 @@ type Produit struct {
 // sql: ADD UNIQUE(id_fournisseur, nom)
 type Livraison struct {
 	Id            int64 `json:"id"`
-	IdFournisseur int64 `json:"id_fournisseur" sql_foreign:"CASCADE"`
+	IdFournisseur int64 `json:"id_fournisseur" sql_on_delete:"CASCADE"`
 
 	Nom            string         `json:"nom"`
 	JoursLivraison JoursLivraison `json:"jours_livraison"` // jours possibles de livraison
@@ -189,7 +189,7 @@ type Livraison struct {
 // sql: ADD UNIQUE(id_ingredient, id_produit)
 type IngredientProduit struct {
 	IdIngredient int64 `json:"id_ingredient"`
-	IdProduit    int64 `json:"id_produit" sql_foreign:"CASCADE"`
+	IdProduit    int64 `json:"id_produit" sql_on_delete:"CASCADE"`
 
 	IdUtilisateur int64 `json:"id_utilisateur"` // ajouteur
 }
@@ -201,7 +201,7 @@ type DefautProduit struct {
 	IdUtilisateur int64 `json:"id_utilisateur"`
 	IdIngredient  int64 `json:"id_ingredient"`
 	IdFournisseur int64 `json:"id_fournisseur"`
-	IdProduit     int64 `json:"id_produit" sql_foreign:"CASCADE"`
+	IdProduit     int64 `json:"id_produit" sql_on_delete:"CASCADE"`
 }
 
 type Commande struct {
