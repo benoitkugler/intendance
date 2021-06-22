@@ -6,11 +6,11 @@
 
 - **Ingrédient** : désigne un composant d'une recette (ex : poivron, lait, etc.) On lui associe une unité (ex : kg, L, unité, ...), nécessaire pour le calcul des quantités.
 
-  - _Remarque: un même aliment peut se décliner en deux ingrédients, si plusieurs calibrages sont nécessaires. Par exemple, jus d'orange en brique de 25 cl (pour un goûter) / jus d'orange en vrac (petit déjeuner). Le jus d'orange en vrac n'est pas compatible avec des briques de 25cl, donc il faut deux ingrédients différents._
+  - _Remarque: un même aliment peut se décliner en deux ingrédients, si plusieurs calibrages sont nécessaires. Par exemple, jus d'orange en brique de 25 cl (pour un goûter) / jus d'orange en vrac (petit déjeuner) sont considérés comme distincts. Le jus d'orange en vrac n'est pas compatible avec des briques de 25cl, donc il faut deux ingrédients différents._
 
-  - _Remarque: Dans un deuxième temps, on peut associer à chaque ingrédient une catégorie (féculent, laitage, viande, etc.) et un nombre de calories, pour analyser et proposer des menus équilibrés._
+  - _Remarque: Dans un deuxième temps, on pourra associer à chaque ingrédient une catégorie (féculent, laitage, viande, etc.) et un nombre de calories, pour analyser et proposer des menus équilibrés._
 
-- **Recette** : une liste d'ingrédient / quantité pour une personne. Peut définir un mode d'emploi.
+- **Recette** : une liste d'ingrédients et quantités pour une personne. Peut définir un mode d'emploi.
 
 - **Menu** : les recettes (et ingrédients supplémentaires éventuels) se regroupent en un menu.
 
@@ -40,7 +40,7 @@ Il définit ensuite les dates de son séjour, les groupes du séjour et forme le
 
 Pour simplifier la gestion des recettes, un ingrédient défini son unité, et est utilisé ensuite en précisant un nombre qui se réfère à cette unité.
 Les produits associés à un ingrédient doivent être de la même unité.
-L'unité "Piece" est un cas particulier. Elle permet de ne pas vraiment spécifier d'unité, mais de renvoyer directement au produit.
+L'unité "Piece" est un cas particulier. Elle permet de ne pas vraiment spécifier d'unité, mais de renvoyer directement à l'unité spécifié par le produit.
 Les ingrédients à la pièce peuvent définir un conditionnement, qui devra être vérifié par tout produit associé.
 Exemples :
 
@@ -78,13 +78,21 @@ nécessaires pour le jeudi 12 octobre, et que Pomona livre avec 3 jours de déla
 
 ### Ajustement des commandes
 
+(TODO)
+
 Admettons qu'un ajustement de menu soit nécessaire en cours de séjour. Si aucune commande n'a été passé, pas de problème - il suffit d'effacer les anciennes commandes et d'en générer une nouvelle. En revanche, si une commande (effective) a déjà été passée, on peut proposer d'évaluer la différence entre l'ancienne commande et la nouvelle, et de n'ajouter que ce qui est nécessaire. <br/>
 _Remarque :_ Ce cas semble justifier l'intérêt de stocker dans la base de données les commandes (en plus de servir de mémo à l'intendant)
 
 ### _(bonus)_ Edition d'un bon de commande (pour chaque fournisseur)
 
+(TODO)
+
 Cette fonction nécessite d'enregistrer une référence fournisseur pour chaque produit. Ensuite, on peut facilement ajouter la génération d'un bon de commande au format Excel (ou même Pdf si besoin).
 
 ### _(bonus)_ calcul du coût énergétique / équilibre d'un menu
 
+(TODO)
+
 ### _(bonus)_ proposition (aléatoire) de menus équilibrés
+
+(TODO)
