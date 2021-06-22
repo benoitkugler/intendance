@@ -14,8 +14,8 @@ import (
 
 	"github.com/benoitkugler/intendance/logs"
 	"github.com/benoitkugler/intendance/server/models"
-	"github.com/labstack/echo"
-	"github.com/labstack/echo/middleware"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
 func main() {
@@ -65,7 +65,7 @@ func setup(e *echo.Echo, dev bool, s controller.Server) string {
 		fmt.Printf("Dev: %s\n", credences)
 		e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{Format: "${uri} => ${status} ${error}\n"}))
 	} else {
-		autoriseCORS(e) //FIXME:
+		autoriseCORS(e) // FIXME:
 		if err := s.DB.Ping(); err != nil {
 			log.Fatalf("DB not responding : %s", err)
 		}

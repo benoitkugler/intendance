@@ -1,3 +1,4 @@
 logs/secret.go
 
 **/node_modules/**/*
+.vscode/settings.json

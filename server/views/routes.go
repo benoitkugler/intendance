@@ -6,7 +6,7 @@ import (
 	"github.com/avct/uasurfer"
 	"github.com/benoitkugler/intendance/server/controller"
 	"github.com/benoitkugler/intendance/server/models"
-	"github.com/labstack/echo"
+	"github.com/labstack/echo/v4"
 )
 
 // Server expose l'API du serveur via des handler HTTP

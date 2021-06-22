@@ -35,8 +35,9 @@ type TimedIngredientQuantite struct {
 	Date time.Time `json:"date"`
 }
 
+// CommandeContraintes paramétrise la requête de commande
 type CommandeContraintes struct {
-	// Force l'utilisation la cible pour l'ingrédient (idIngredient -> idCible)
+	// Précise la cible à utiliser pour un ingrédient (idIngredient -> idCible)
 	Associations map[int64]int64 `json:"associations"`
 
 	// Si `true`, regroupe toutes les commandes
@@ -108,6 +109,11 @@ type targetResolver interface {
 	// id target est soit un produit soit une livraison
 	resolve(idIngredient int64) (idTarget int64, livraison models.Livraison)
 }
+
+var (
+	_ targetResolver = livraisonResolver{}
+	_ targetResolver = produitResolver{}
+)
 
 // Accumule les ingrédients en les regroupants par
 // (idTarget, date de commande)
