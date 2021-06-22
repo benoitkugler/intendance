@@ -1,8 +1,6 @@
 <template>
   <v-card @keyup.native.enter="$emit('edit', current)">
-    <v-card-title primary-title>
-      Détails de l'ingrédient
-    </v-card-title>
+    <v-card-title primary-title> Détails de l'ingrédient </v-card-title>
     <v-card-text>
       <v-form>
         <v-row>
@@ -72,19 +70,19 @@ import {
   IngredientOptions,
   EditMode,
   deepcopy,
-  enumStringToOptions
+  enumStringToOptions,
 } from "@/logic/types";
 import { DefautIngredient } from "./types";
 
 const EditIngredientProps = Vue.extend({
   props: {
     initialIngredient: Object as () => IngredientOptions | null,
-    mode: String as () => EditMode
-  }
+    mode: String as () => EditMode,
+  },
 });
 
 @Component({
-  components: { UniteField, ConditionnementField }
+  components: { UniteField, ConditionnementField },
 })
 export default class EditIngredient extends EditIngredientProps {
   current = this.copy(this.initialIngredient);
@@ -117,10 +115,10 @@ export default class EditIngredient extends EditIngredientProps {
     const items = enumStringToOptions(UniteLabels);
     if (this.current.unite == Unite.Piece) {
       // Pour le conditionnement, l'unité Pièce n'apporte aucune information
-      return items.filter(u => u.value != Unite.Piece);
+      return items.filter((u) => u.value != Unite.Piece);
     }
     // le conditionnement doit être compatible avec l'unité.
-    return items.filter(u => u.value == this.current.unite);
+    return items.filter((u) => u.value == this.current.unite);
   }
 
   @Watch("initialIngredient")

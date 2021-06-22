@@ -15,7 +15,7 @@ import {
   OutCommandeComplete,
   OutCommandeSimple,
   LivraisonsPossibles,
-  ProduitsPossibles
+  ProduitsPossibles,
 } from "./api";
 import { Notifications } from "./notifications";
 import {
@@ -29,7 +29,7 @@ import {
   Fournisseurs,
   Livraisons,
   OutLoggin,
-  Ingredients
+  Ingredients,
 } from "./api";
 
 export const devMode = process.env.NODE_ENV != "production";
@@ -38,7 +38,7 @@ const host = devMode ? "http://localhost:1323" : window.location.origin;
 export const metaDev: Meta = {
   idUtilisateur: 1,
   token:
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJJZFByb3ByaWV0YWlyZSI6MSwiZXhwIjoxNjAxODI3NDA0fQ.Pq5nU3KniX_o9wf9DSe5zuSguQ4ofsrVkCI874cRC2s"
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJJZFByb3ByaWV0YWlyZSI6MSwiZXhwIjoxNjI0NjQyNTA1fQ.tcD1ho6zfthW8STIP-Lxn-9J3EgqEQKNxO8y_3Mx0P0",
 };
 
 export class API extends AbstractAPI {
@@ -151,7 +151,7 @@ export class API extends AbstractAPI {
     const updatedSejour: SejourRepas = {
       ...data,
       repass: oldSejour.repass,
-      fournisseurs: oldSejour.fournisseurs
+      fournisseurs: oldSejour.fournisseurs,
     };
     this.sejours.sejours[data.id] = updatedSejour;
     this.notifications.setMessage("Sejour mis à jour.");
@@ -277,7 +277,7 @@ export class API extends AbstractAPI {
         this.rawGetUtilisateurs(),
         this.rawGetFournisseurs(),
         this.rawGetRecettes(), // recettes dépend des ingrédients
-        this.rawGetMenus() // menus dépends des recettes, ingrédients et utilisateurs
+        this.rawGetMenus(), // menus dépends des recettes, ingrédients et utilisateurs
       ]);
       this.ingredients = datas[0] || {};
       this.utilisateurs = datas[1] || {};

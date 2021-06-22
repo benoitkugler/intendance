@@ -28,12 +28,12 @@ const Props = Vue.extend({
     tooltipOff: String,
     value: Boolean,
     label: String,
-    disabled: Boolean
+    disabled: Boolean,
   },
   model: {
     prop: "value",
-    event: "input"
-  }
+    event: "input",
+  },
 });
 
 @Component

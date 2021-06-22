@@ -13,7 +13,7 @@
             :C="C"
             height="75vh"
             :state="state"
-            @change="idMenu => (state.selection.idMenu = idMenu)"
+            @change="(idMenu) => (state.selection.idMenu = idMenu)"
             @edit="startEditMenu"
             @new="startCreateMenu"
             ref="listeMenus"
@@ -36,7 +36,7 @@
           height="75vh"
           :C="C"
           :state="state"
-          @change="idRecette => (state.selection.idRecette = idRecette)"
+          @change="(idRecette) => (state.selection.idRecette = idRecette)"
           @edit="startEditRecette"
           @new="startCreateRecette"
           ref="listeRecettes"
@@ -57,7 +57,7 @@
           :C="C"
           :state="state"
           @change="
-            idIngredient => (state.selection.idIngredient = idIngredient)
+            (idIngredient) => (state.selection.idIngredient = idIngredient)
           "
           ref="listeIngredients"
         />
@@ -81,21 +81,21 @@ import {
   Ingredient,
   RecetteComplet,
   MenuComplet,
-  New
+  New,
 } from "../logic/api";
 import { IngredientOptions, EditMode, deepcopy } from "../logic/types";
 import {
   StateMenus,
   DefautRecette,
-  DefautMenu
+  DefautMenu,
 } from "../components/menus/types";
 import { Watch } from "vue-property-decorator";
 import { ClickOutside } from "vuetify/lib";
 
 const MenuProps = Vue.extend({
   props: {
-    C: Object as () => Controller
-  }
+    C: Object as () => Controller,
+  },
 });
 
 @Component({
@@ -104,13 +104,13 @@ const MenuProps = Vue.extend({
     ListeRecettes,
     ListeIngredients,
     EditMenu,
-    EditRecette
-  }
+    EditRecette,
+  },
 })
 export default class Menus extends MenuProps {
   state: StateMenus = {
     mode: "visu",
-    selection: { idMenu: null, idRecette: null, idIngredient: null }
+    selection: { idMenu: null, idRecette: null, idIngredient: null },
   };
 
   editMode: EditMode = "new"; // s'applique au menu, recette ou ingrédient

@@ -2,7 +2,7 @@
   <v-autocomplete
     label="Recettes"
     :value="recettes"
-    @change="v => $emit('change', v)"
+    @change="(v) => $emit('change', v)"
     chips
     multiple
     :items="items"
@@ -20,12 +20,12 @@ import { EnumItem } from "@/logic/types";
 const RecettesFieldsProps = Vue.extend({
   props: {
     C: Object as () => Controller,
-    recettes: Array as () => number[]
+    recettes: Array as () => number[],
   },
   model: {
     prop: "recettes",
-    event: "change"
-  }
+    event: "change",
+  },
 });
 
 @Component({})
@@ -43,7 +43,7 @@ export default class RecettesFields extends RecettesFieldsProps {
   }
 
   get items() {
-    return Object.values(this.C.api.recettes).map(rec => {
+    return Object.values(this.C.api.recettes).map((rec) => {
       return { text: rec.nom, value: rec.id };
     });
   }

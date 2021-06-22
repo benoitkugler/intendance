@@ -12,8 +12,8 @@ import { Notifications } from "../logic/notifications";
 
 const SpinnerSnackbarProps = Vue.extend({
   props: {
-    N: Object as () => Notifications
-  }
+    N: Object as () => Notifications,
+  },
 });
 
 @Component

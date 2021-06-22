@@ -22,8 +22,8 @@ import { Notifications } from "../logic/notifications";
 
 const SuccessSnackbarProps = Vue.extend({
   props: {
-    N: Object as () => Notifications
-  }
+    N: Object as () => Notifications,
+  },
 });
 
 @Component
@@ -40,7 +40,7 @@ export default class SuccessSnackbar extends SuccessSnackbarProps {
 
   get message() {
     return this.N.messages
-      .map(m => this.formatTime(m.time) + m.text)
+      .map((m) => this.formatTime(m.time) + m.text)
       .join("<br/>");
   }
 
@@ -49,7 +49,7 @@ export default class SuccessSnackbar extends SuccessSnackbarProps {
     const ti = datetime.toLocaleTimeString(undefined, {
       hour: "2-digit",
       minute: "2-digit",
-      second: "2-digit"
+      second: "2-digit",
     });
     return `<small><i>[${ti}]</i></small>  `;
   }

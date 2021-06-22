@@ -11,9 +11,7 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="red" @click="supprime">
-            Supprimer
-          </v-btn>
+          <v-btn color="red" @click="supprime"> Supprimer </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -56,7 +54,7 @@
                         <div
                           class="color-preview"
                           :style="{
-                            backgroundColor: (tmpGroupe || {}).couleur
+                            backgroundColor: (tmpGroupe || {}).couleur,
                           }"
                           v-on="props.on"
                         />
@@ -88,9 +86,7 @@
     </v-dialog>
 
     <v-toolbar dense color="secondary" class="my-1">
-      <v-toolbar-title class="px-2">
-        Groupes
-      </v-toolbar-title>
+      <v-toolbar-title class="px-2"> Groupes </v-toolbar-title>
       <v-spacer></v-spacer>
       <v-toolbar-items>
         <tooltip-btn
@@ -163,12 +159,12 @@ import { Watch } from "vue-property-decorator";
 const ListeGroupesProps = Vue.extend({
   props: {
     C: Object as () => Controller,
-    sejour: Object as () => Sejour | null
-  }
+    sejour: Object as () => Sejour | null,
+  },
 });
 
 @Component({
-  components: { TooltipBtn }
+  components: { TooltipBtn },
 })
 export default class ListeGroupes extends ListeGroupesProps {
   groupe: Groupe | null = null;
@@ -196,7 +192,7 @@ export default class ListeGroupes extends ListeGroupesProps {
     const sej = this.sejour;
     if (sej === null) return [];
     return Object.values(this.C.api.sejours.groupes).filter(
-      groupe => groupe.id_sejour == sej.id
+      (groupe) => groupe.id_sejour == sej.id
     );
   }
 
@@ -207,7 +203,7 @@ export default class ListeGroupes extends ListeGroupesProps {
       id_sejour: this.sejour.id,
       nom: "",
       nb_personnes: 0,
-      couleur: "#D1CA3D"
+      couleur: "#D1CA3D",
     };
     this.editMode = "new";
     this.showEdit = true;

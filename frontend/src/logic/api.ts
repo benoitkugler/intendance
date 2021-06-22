@@ -24,14 +24,14 @@ export enum Unite {
   Kilos = "Kg",
   Litres = "L",
   Piece = "P",
-  Zero = ""
+  Zero = "",
 }
 
 export const UniteLabels: { [key in Unite]: string } = {
   [Unite.Kilos]: "Kilos",
   [Unite.Litres]: "Litres",
   [Unite.Piece]: "Pièce(s)",
-  [Unite.Zero]: "Unité invalide"
+  [Unite.Zero]: "Unité invalide",
 };
 
 // github.com/benoitkugler/intendance/server/models.Categorie
@@ -127,7 +127,7 @@ export enum Horaire {
   Diner = 3,
   Gouter = 2,
   Midi = 1,
-  PetitDejeuner = 0
+  PetitDejeuner = 0,
 }
 
 export const HoraireLabels: { [key in Horaire]: string } = {
@@ -135,7 +135,7 @@ export const HoraireLabels: { [key in Horaire]: string } = {
   [Horaire.Diner]: "Dîner",
   [Horaire.Gouter]: "Goûter",
   [Horaire.Midi]: "Midi",
-  [Horaire.PetitDejeuner]: "Petit déjeuner"
+  [Horaire.PetitDejeuner]: "Petit déjeuner",
 };
 
 // github.com/benoitkugler/intendance/server/models.Repas
@@ -337,7 +337,7 @@ export abstract class AbstractAPI {
   protected async rawLoggin(params: InLoggin) {
     const fullUrl = this.baseUrl + "/api/loggin";
     const rep: AxiosResponse<OutLoggin> = await Axios.post(fullUrl, params, {
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
     });
     return rep.data;
   }
@@ -383,7 +383,7 @@ export abstract class AbstractAPI {
   protected async rawGetIngredients() {
     const fullUrl = this.baseUrl + "/api/ingredients";
     const rep: AxiosResponse<Ingredients> = await Axios.get(fullUrl, {
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
     });
     return rep.data;
   }
@@ -405,7 +405,7 @@ export abstract class AbstractAPI {
   protected async rawCreateIngredient(params: New<Ingredient>) {
     const fullUrl = this.baseUrl + "/api/ingredients";
     const rep: AxiosResponse<Ingredient> = await Axios.put(fullUrl, params, {
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
     });
     return rep.data;
   }
@@ -427,7 +427,7 @@ export abstract class AbstractAPI {
   protected async rawUpdateIngredient(params: Ingredient) {
     const fullUrl = this.baseUrl + "/api/ingredients";
     const rep: AxiosResponse<Ingredient> = await Axios.post(fullUrl, params, {
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
     });
     return rep.data;
   }
@@ -454,9 +454,9 @@ export abstract class AbstractAPI {
     const rep: AxiosResponse<Ingredients> = await Axios.delete(fullUrl, {
       params: {
         id: String(params["id"]),
-        check_produits: params["check_produits"] ? "ok" : ""
+        check_produits: params["check_produits"] ? "ok" : "",
       },
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
     });
     return rep.data;
   }
@@ -553,7 +553,7 @@ export abstract class AbstractAPI {
       [key: number]: RecetteComplet;
     } | null> = await Axios.delete(fullUrl, {
       params: { id: String(params["id"]) },
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
     });
     return rep.data;
   }
@@ -601,7 +601,7 @@ export abstract class AbstractAPI {
   protected async rawCreateMenu(params: New<MenuComplet>) {
     const fullUrl = this.baseUrl + "/api/menus";
     const rep: AxiosResponse<MenuComplet> = await Axios.put(fullUrl, params, {
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
     });
     return rep.data;
   }
@@ -623,7 +623,7 @@ export abstract class AbstractAPI {
   protected async rawUpdateMenu(params: MenuComplet) {
     const fullUrl = this.baseUrl + "/api/menus";
     const rep: AxiosResponse<MenuComplet> = await Axios.post(fullUrl, params, {
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
     });
     return rep.data;
   }
@@ -648,7 +648,7 @@ export abstract class AbstractAPI {
       [key: number]: MenuComplet;
     } | null> = await Axios.delete(fullUrl, {
       params: { id: String(params["id"]) },
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
     });
     return rep.data;
   }
@@ -672,7 +672,7 @@ export abstract class AbstractAPI {
   protected async rawGetSejours() {
     const fullUrl = this.baseUrl + "/api/sejours";
     const rep: AxiosResponse<Sejours> = await Axios.get(fullUrl, {
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
     });
     return rep.data;
   }
@@ -694,7 +694,7 @@ export abstract class AbstractAPI {
   protected async rawCreateSejour(params: New<Sejour>) {
     const fullUrl = this.baseUrl + "/api/sejours";
     const rep: AxiosResponse<Sejour> = await Axios.put(fullUrl, params, {
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
     });
     return rep.data;
   }
@@ -716,7 +716,7 @@ export abstract class AbstractAPI {
   protected async rawUpdateSejour(params: Sejour) {
     const fullUrl = this.baseUrl + "/api/sejours";
     const rep: AxiosResponse<Sejour> = await Axios.post(fullUrl, params, {
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
     });
     return rep.data;
   }
@@ -739,7 +739,7 @@ export abstract class AbstractAPI {
     const fullUrl = this.baseUrl + "/api/sejours";
     const rep: AxiosResponse<Sejours> = await Axios.delete(fullUrl, {
       params: { id: String(params["id"]) },
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
     });
     return rep.data;
   }
@@ -761,7 +761,7 @@ export abstract class AbstractAPI {
   protected async rawCreateGroupe(params: New<Groupe>) {
     const fullUrl = this.baseUrl + "/api/groupes";
     const rep: AxiosResponse<Groupe> = await Axios.put(fullUrl, params, {
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
     });
     return rep.data;
   }
@@ -783,7 +783,7 @@ export abstract class AbstractAPI {
   protected async rawUpdateGroupe(params: Groupe) {
     const fullUrl = this.baseUrl + "/api/groupes";
     const rep: AxiosResponse<Groupe> = await Axios.post(fullUrl, params, {
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
     });
     return rep.data;
   }
@@ -806,7 +806,7 @@ export abstract class AbstractAPI {
     const fullUrl = this.baseUrl + "/api/groupes";
     const rep: AxiosResponse<OutDeleteGroupe> = await Axios.delete(fullUrl, {
       params: { id: String(params["id"]) },
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
     });
     return rep.data;
   }
@@ -828,7 +828,7 @@ export abstract class AbstractAPI {
   protected async rawUpdateSejourFournisseurs(params: InSejourFournisseurs) {
     const fullUrl = this.baseUrl + "/api/sejours/fournisseurs";
     const rep: AxiosResponse<Sejours> = await Axios.post(fullUrl, params, {
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
     });
     return rep.data;
   }
@@ -850,7 +850,7 @@ export abstract class AbstractAPI {
   protected async rawCreateRepas(params: New<RepasComplet>) {
     const fullUrl = this.baseUrl + "/api/sejours/repas";
     const rep: AxiosResponse<Sejours> = await Axios.put(fullUrl, params, {
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
     });
     return rep.data;
   }
@@ -872,7 +872,7 @@ export abstract class AbstractAPI {
   protected async rawUpdateManyRepas(params: RepasComplet[] | null) {
     const fullUrl = this.baseUrl + "/api/sejours/repas";
     const rep: AxiosResponse<Sejours> = await Axios.post(fullUrl, params, {
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
     });
     return rep.data;
   }
@@ -895,7 +895,7 @@ export abstract class AbstractAPI {
     const fullUrl = this.baseUrl + "/api/sejours/repas";
     const rep: AxiosResponse<Sejours> = await Axios.delete(fullUrl, {
       params: { id: String(params["id"]) },
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
     });
     return rep.data;
   }
@@ -917,7 +917,7 @@ export abstract class AbstractAPI {
   protected async rawAssistantCreateRepas(params: InAssistantCreateRepass) {
     const fullUrl = this.baseUrl + "/api/sejours/assistant";
     const rep: AxiosResponse<Sejours> = await Axios.put(fullUrl, params, {
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
     });
     return rep.data;
   }
@@ -938,9 +938,8 @@ export abstract class AbstractAPI {
 
   protected async rawResoudIngredients(params: InResoudIngredients) {
     const fullUrl = this.baseUrl + "/api/resolution";
-    const rep: AxiosResponse<
-      DateIngredientQuantites[] | null
-    > = await Axios.post(fullUrl, params, { headers: this.getHeaders() });
+    const rep: AxiosResponse<DateIngredientQuantites[] | null> =
+      await Axios.post(fullUrl, params, { headers: this.getHeaders() });
     return rep.data;
   }
 
@@ -963,7 +962,7 @@ export abstract class AbstractAPI {
   protected async rawGetFournisseurs() {
     const fullUrl = this.baseUrl + "/api/fournisseurs";
     const rep: AxiosResponse<OutFournisseurs> = await Axios.get(fullUrl, {
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
     });
     return rep.data;
   }
@@ -1009,7 +1008,7 @@ export abstract class AbstractAPI {
   protected async rawUpdateFournisseur(params: Fournisseur) {
     const fullUrl = this.baseUrl + "/api/fournisseurs";
     const rep: AxiosResponse<Fournisseur> = await Axios.post(fullUrl, params, {
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
     });
     return rep.data;
   }
@@ -1032,7 +1031,7 @@ export abstract class AbstractAPI {
     const fullUrl = this.baseUrl + "/api/fournisseurs";
     const rep: AxiosResponse<OutFournisseurs> = await Axios.delete(fullUrl, {
       params: { id: String(params["id"]) },
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
     });
     return rep.data;
   }
@@ -1054,7 +1053,7 @@ export abstract class AbstractAPI {
   protected async rawCreateLivraison(params: New<Livraison>) {
     const fullUrl = this.baseUrl + "/api/livraisons";
     const rep: AxiosResponse<Livraison> = await Axios.put(fullUrl, params, {
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
     });
     return rep.data;
   }
@@ -1076,7 +1075,7 @@ export abstract class AbstractAPI {
   protected async rawUpdateLivraison(params: Livraison) {
     const fullUrl = this.baseUrl + "/api/livraisons";
     const rep: AxiosResponse<Livraison> = await Axios.post(fullUrl, params, {
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
     });
     return rep.data;
   }
@@ -1099,7 +1098,7 @@ export abstract class AbstractAPI {
     const fullUrl = this.baseUrl + "/api/livraisons";
     const rep: AxiosResponse<OutFournisseurs> = await Axios.delete(fullUrl, {
       params: { id: String(params["id"]) },
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
     });
     return rep.data;
   }
@@ -1122,7 +1121,7 @@ export abstract class AbstractAPI {
     const fullUrl = this.baseUrl + "/api/ingredient-produit";
     const rep: AxiosResponse<IngredientProduits> = await Axios.get(fullUrl, {
       params: { id: String(params["id"]) },
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
     });
     return rep.data;
   }
@@ -1198,7 +1197,7 @@ export abstract class AbstractAPI {
   protected async rawUpdateProduit(params: Produit) {
     const fullUrl = this.baseUrl + "/api/produits";
     const rep: AxiosResponse<Produit> = await Axios.post(fullUrl, params, {
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
     });
     return rep.data;
   }
@@ -1221,7 +1220,7 @@ export abstract class AbstractAPI {
     const fullUrl = this.baseUrl + "/api/produits";
     const rep: AxiosResponse<any> = await Axios.delete(fullUrl, {
       params: { id: String(params["id"]) },
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
     });
     return rep.data;
   }

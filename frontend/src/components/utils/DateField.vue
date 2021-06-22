@@ -31,14 +31,14 @@ import { Time } from "@/logic/api";
 const Props = Vue.extend({
   model: {
     prop: "currentDate",
-    event: "dateChanged"
+    event: "dateChanged",
   },
   props: {
     // Date as string
-    currentDate: (String as unknown) as () => Time,
+    currentDate: String as unknown as () => Time,
     label: String,
-    disabled: Boolean
-  }
+    disabled: Boolean,
+  },
 });
 
 @Component

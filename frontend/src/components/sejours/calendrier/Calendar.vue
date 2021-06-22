@@ -9,10 +9,10 @@
       :events="events"
       :currentDay="currentDay"
       :hoverDay="hoverDay"
-      @edit-repas="r => $emit('edit-repas', r)"
-      @add-repas="r => $emit('add-repas', r)"
-      @change="o => $emit('change', o)"
-      @hover="d => (hoverDay = d)"
+      @edit-repas="(r) => $emit('edit-repas', r)"
+      @add-repas="(r) => $emit('add-repas', r)"
+      @change="(o) => $emit('change', o)"
+      @hover="(d) => (hoverDay = d)"
     ></week>
     <week
       :C="C"
@@ -23,10 +23,10 @@
       :events="events"
       :currentDay="currentDay"
       :hoverDay="hoverDay"
-      @edit-repas="r => $emit('edit-repas', r)"
-      @add-repas="r => $emit('add-repas', r)"
-      @change="o => $emit('change', o)"
-      @hover="d => (hoverDay = d)"
+      @edit-repas="(r) => $emit('edit-repas', r)"
+      @add-repas="(r) => $emit('add-repas', r)"
+      @change="(o) => $emit('change', o)"
+      @hover="(d) => (hoverDay = d)"
     ></week>
   </div>
 </template>
@@ -55,7 +55,7 @@ type DragKind = "journee" | "repas";
 affiché en premier */
 function weekdaysFromStart(start: Date) {
   const d0 = start.getDay();
-  return _days.map(d => (d0 + d) % 7);
+  return _days.map((d) => (d0 + d) % 7);
 }
 
 const Props = Vue.extend({
@@ -63,16 +63,16 @@ const Props = Vue.extend({
     C: Object as () => Controller,
     sejour: Object as () => SejourRepas | null,
     preferences: Object as () => PreferencesAgenda,
-    activeJourOffset: Number as () => number | null
-  }
+    activeJourOffset: Number as () => number | null,
+  },
 });
 
 @Component({
   components: {
     TooltipBtn,
     ListeRepas,
-    Week
-  }
+    Week,
+  },
 })
 export default class Calendar extends Props {
   hoverDay = "";
@@ -82,7 +82,7 @@ export default class Calendar extends Props {
   dayTitle(date: string) {
     return new Date(date).toLocaleDateString("fr-FR", {
       weekday: "short",
-      day: "numeric"
+      day: "numeric",
     });
   }
 
@@ -120,7 +120,7 @@ export default class Calendar extends Props {
     const sejour = this.sejour;
     if (sejour == null) return {};
     let out: { [key: string]: RepasComplet[] } = {};
-    (sejour.repass || []).forEach(repas => {
+    (sejour.repass || []).forEach((repas) => {
       const d = toDateVuetify(
         this.C.offsetToDate(sejour.id, repas.jour_offset)
       );

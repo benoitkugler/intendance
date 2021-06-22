@@ -17,14 +17,14 @@ import ListeFournisseurs from "../components/fournisseurs/ListeFournisseurs.vue"
 
 const FournisseursProps = Vue.extend({
   props: {
-    C: Object as () => Controller
-  }
+    C: Object as () => Controller,
+  },
 });
 
 @Component({
   components: {
-    ListeFournisseurs
-  }
+    ListeFournisseurs,
+  },
 })
 export default class Fournisseurs extends FournisseursProps {
   mounted() {

@@ -49,7 +49,7 @@
           </v-tooltip>
         </v-toolbar-items>
       </v-toolbar>
-      <v-row justify="center">
+      <v-row justify="center" class="mt-2">
         <v-col class="col-4 align-self-center">
           <select-sejour
             :C="C"
@@ -115,8 +115,8 @@ import { Sejour, OptionsAssistantCreateRepass, New } from "../logic/api";
 
 const SejoursProps = Vue.extend({
   props: {
-    C: Object as () => Controller
-  }
+    C: Object as () => Controller,
+  },
 });
 
 @Component({
@@ -126,8 +126,8 @@ const SejoursProps = Vue.extend({
     SelectSejour,
     ListeFournisseurs,
     ListeGroupes,
-    AssistantCreateRepass
-  }
+    AssistantCreateRepass,
+  },
 })
 export default class Sejours extends SejoursProps {
   editModeSejour: EditMode = "new";
@@ -162,7 +162,7 @@ export default class Sejours extends SejoursProps {
       const diff = now - new Date(sejour.date_debut).valueOf();
       return Math.abs(diff);
     };
-    const criteres = sejours.map(sej => {
+    const criteres = sejours.map((sej) => {
       return { id: sej.id, distance: computeDistance(sej) };
     });
     const best = criteres.sort((a, b) => (a.distance < b.distance ? 1 : -1))[0];
@@ -182,7 +182,7 @@ export default class Sejours extends SejoursProps {
     const sejour: New<Sejour> = {
       nom: modif.nom,
       date_debut: modif.date_debut,
-      id_utilisateur: this.C.state.idUtilisateur
+      id_utilisateur: this.C.state.idUtilisateur,
     };
     const newSejour = await this.C.api.CreateSejour(sejour);
     if (this.C.notifications.getError() == null && newSejour != undefined) {
@@ -217,7 +217,7 @@ export default class Sejours extends SejoursProps {
     await this.C.api.AssistantCreateRepas({
       id_sejour: this.idSejour,
       options,
-      groupes_sorties: groupesSorties
+      groupes_sorties: groupesSorties,
     });
     this.showAssistantCreate = false;
   }

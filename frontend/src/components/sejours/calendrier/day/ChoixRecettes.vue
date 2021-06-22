@@ -43,12 +43,12 @@ import { searchFunction } from "../../../utils/utils";
 const ChoixRecettesProps = Vue.extend({
   props: {
     C: Object as () => Controller,
-    height: String
-  }
+    height: String,
+  },
 });
 
 @Component({
-  components: { Toolbar }
+  components: { Toolbar },
 })
 export default class ChoixRecettes extends ChoixRecettesProps {
   search = "";
@@ -57,7 +57,7 @@ export default class ChoixRecettes extends ChoixRecettesProps {
 
   get recettes() {
     const sf = searchFunction(this.search);
-    return Object.values(this.C.api.recettes).filter(recette =>
+    return Object.values(this.C.api.recettes).filter((recette) =>
       sf(recette.nom)
     );
   }

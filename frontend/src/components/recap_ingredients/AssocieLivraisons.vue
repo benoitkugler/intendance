@@ -26,7 +26,7 @@
 import {
   CommandeContraintes,
   DateIngredientQuantites,
-  Ingredient
+  Ingredient,
 } from "@/logic/api";
 import { Controller } from "@/logic/controller";
 import Vue from "vue";
@@ -36,12 +36,12 @@ import LivraisonIngredients from "./LivraisonIngredients.vue";
 const AssocieLivraisonsProps = Vue.extend({
   props: {
     C: Object as () => Controller,
-    dateIngredients: Array as () => DateIngredientQuantites[]
-  }
+    dateIngredients: Array as () => DateIngredientQuantites[],
+  },
 });
 
 @Component({
-  components: { LivraisonIngredients }
+  components: { LivraisonIngredients },
 })
 export default class AssocieLivraisons extends AssocieLivraisonsProps {
   loading = true;
@@ -54,17 +54,19 @@ export default class AssocieLivraisons extends AssocieLivraisonsProps {
 
   get ingredients() {
     const tmp: { [key: number]: boolean } = {};
-    this.dateIngredients.forEach(ings => {
-      (ings.ingredients || []).forEach(ing => {
+    this.dateIngredients.forEach((ings) => {
+      (ings.ingredients || []).forEach((ing) => {
         tmp[ing.ingredient.id] = true;
       });
     });
-    return Object.keys(tmp).map(idIng => this.C.api.ingredients[Number(idIng)]);
+    return Object.keys(tmp).map(
+      (idIng) => this.C.api.ingredients[Number(idIng)]
+    );
   }
 
   getIngredientsByLivraison(idLivraison: number | undefined) {
     return this.ingredients.filter(
-      ing => this.associations[ing.id] === idLivraison
+      (ing) => this.associations[ing.id] === idLivraison
     );
   }
 

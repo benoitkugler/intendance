@@ -3,7 +3,7 @@
     :disabled="disabled"
     :items="unites"
     :value="unite"
-    @change="args => $emit('change', args)"
+    @change="(args) => $emit('change', args)"
     :label="label"
   ></v-select>
 </template>
@@ -19,23 +19,23 @@ const UniteFieldProps = Vue.extend({
     unite: String,
     label: {
       type: String,
-      default: "Unité"
+      default: "Unité",
     },
     disabled: {
       type: Boolean,
-      default: false
+      default: false,
     },
     unites: {
       type: Array,
-      default: function() {
+      default: function () {
         return enumStringToOptions(UniteLabels);
-      }
-    }
+      },
+    },
   },
   model: {
     prop: "unite",
-    event: "change"
-  }
+    event: "change",
+  },
 });
 
 @Component({})

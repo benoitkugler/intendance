@@ -18,12 +18,12 @@ import { EnumItem } from "@/logic/types";
 
 const JoursLivraisonFieldProps = Vue.extend({
   props: {
-    jours: Array as () => JoursLivraison
+    jours: Array as () => JoursLivraison,
   },
   model: {
     prop: "jours",
-    event: "change"
-  }
+    event: "change",
+  },
 });
 @Component({})
 export default class JoursLivraisonField extends JoursLivraisonFieldProps {
@@ -42,8 +42,8 @@ export default class JoursLivraisonField extends JoursLivraisonFieldProps {
     return out;
   }
   set innerJours(v: number[]) {
-    const out: JoursLivraison = this.items.map(_ => false);
-    v.forEach(i => (out[i] = true));
+    const out: JoursLivraison = this.items.map((_) => false);
+    v.forEach((i) => (out[i] = true));
     this.$emit("change", out);
   }
 }

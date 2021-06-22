@@ -13,7 +13,7 @@ export enum DragKind {
   Menu = "menu",
   Groupe = "groupe",
   IdIngredient = "id-ingredient",
-  IdRecette = "id-recette"
+  IdRecette = "id-recette",
 }
 
 interface dragTypes {

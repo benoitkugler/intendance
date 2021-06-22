@@ -52,15 +52,15 @@
       :title="title"
       :showAdd="
         state.mode == 'visu' &&
-          state.selection.idMenu == null &&
-          state.selection.idRecette == null
+        state.selection.idMenu == null &&
+        state.selection.idRecette == null
       "
       @add="startCreateIngredient"
     ></toolbar>
     <v-list dense :max-height="height" class="overflow-y-auto" ref="list">
       <v-list-item-group
         :value="state.selection.idIngredient"
-        @change="args => $emit('change', args)"
+        @change="(args) => $emit('change', args)"
       >
         <v-list-item
           v-for="ingredient in ingredients"
@@ -71,7 +71,7 @@
           <template v-slot:default="props">
             <v-list-item-content
               draggable="true"
-              @dragstart="ev => onDragStart(ev, ingredient.ingredient)"
+              @dragstart="(ev) => onDragStart(ev, ingredient.ingredient)"
             >
               <v-list-item-title>
                 {{ ingredient.ingredient.nom }}
@@ -141,9 +141,9 @@ import { BaseList, ListKind } from "./shared";
   props: {
     kind: {
       type: String as () => ListKind,
-      default: "idIngredient"
-    }
-  }
+      default: "idIngredient",
+    },
+  },
 })
 export default class ListeIngredients extends BaseList {
   confirmeSupprime = false;
@@ -151,7 +151,7 @@ export default class ListeIngredients extends BaseList {
   showEditIngredient = false;
   editMode: EditMode = "new";
   editedIngredient: IngredientOptions = {
-    ingredient: { ...DefautIngredient, id: -1 }
+    ingredient: { ...DefautIngredient, id: -1 },
   };
 
   showEditProduits = false;
@@ -193,7 +193,7 @@ export default class ListeIngredients extends BaseList {
     const predicat = searchFunction(search);
     // cas spécial pour l'unité
     return ingredients
-      .filter(ing => {
+      .filter((ing) => {
         return search == ing.ingredient.unite || predicat(ing.ingredient.nom);
       })
       .sort((a, b) => Number(a.ingredient.nom < b.ingredient.nom));
@@ -228,7 +228,7 @@ export default class ListeIngredients extends BaseList {
     if (this.state.selection.idIngredient == null) return;
     this.C.api.DeleteIngredient({
       id: this.state.selection.idIngredient,
-      check_produits: checkProduits
+      check_produits: checkProduits,
     });
   }
 

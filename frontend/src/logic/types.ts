@@ -5,7 +5,7 @@ import {
   LienIngredient,
   NullInt64,
   Livraison,
-  New
+  New,
 } from "./api";
 
 export type DetailsSejour = Omit<Sejour, "id" | "id_utilisateur">;
@@ -46,7 +46,7 @@ export function defaultLivraison(): New<Livraison> {
     id_fournisseur: -1,
     jours_livraison: [true, true, true, true, true, false, false],
     delai_commande: 2,
-    anticipation: 1
+    anticipation: 1,
   };
 }
 

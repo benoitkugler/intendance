@@ -3,7 +3,7 @@
     :disabled="disabled"
     :items="horaires"
     :value="horaire"
-    @change="args => $emit('change', args)"
+    @change="(args) => $emit('change', args)"
     :label="label"
   >
     <template v-slot:item="props">
@@ -26,17 +26,17 @@ const HoraireFieldProps = Vue.extend({
     horaire: Number as () => Horaire,
     label: {
       type: String,
-      default: "Horaire"
+      default: "Horaire",
     },
     disabled: {
       type: Boolean,
-      default: false
-    }
+      default: false,
+    },
   },
   model: {
     prop: "horaire",
-    event: "change"
-  }
+    event: "change",
+  },
 });
 
 @Component({})

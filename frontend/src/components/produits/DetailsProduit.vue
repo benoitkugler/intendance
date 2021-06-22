@@ -88,14 +88,14 @@ const DetailsProduitProps = Vue.extend({
   props: {
     C: Object as () => Controller,
     // contraint le produit possible
-    produit: Object as () => Produit
-  }
+    produit: Object as () => Produit,
+  },
 });
 
 type VForm = Vue & { validate: () => boolean };
 
 @Component({
-  components: { ConditionnementField }
+  components: { ConditionnementField },
 })
 export default class DetailsProduit extends DetailsProduitProps {
   innerProduit: Produit = this.duplique();
@@ -116,10 +116,10 @@ export default class DetailsProduit extends DetailsProduitProps {
 
   get optionsLivraisons() {
     const items: EnumItem<number>[] = Object.values(this.C.api.livraisons).map(
-      livraison => {
+      (livraison) => {
         return {
           text: this.C.formatter.formatLivraison(livraison),
-          value: livraison.id
+          value: livraison.id,
         };
       }
     );
@@ -128,7 +128,7 @@ export default class DetailsProduit extends DetailsProduitProps {
 
   rules = {
     required: (v: any) => !!v || "Champ requis",
-    idRequired: (id: number) => id >= 0 || "Champ requis"
+    idRequired: (id: number) => id >= 0 || "Champ requis",
   };
 
   validate() {

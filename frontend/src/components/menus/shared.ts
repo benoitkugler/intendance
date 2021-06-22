@@ -10,8 +10,8 @@ const Props = Vue.extend({
     height: String,
     state: Object as () => StateMenus,
     kind: String as () => ListKind,
-    C: Object as () => Controller
-  }
+    C: Object as () => Controller,
+  },
 });
 
 @Component({})
@@ -30,7 +30,7 @@ export class BaseList extends Props {
     this.state.selection[this.kind] = idItem;
     try {
       this.$vuetify.goTo("." + this.classItem(idItem), {
-        container: this.$refs.list
+        container: this.$refs.list,
       });
     } catch {
       // élément inconnu, on ignore

@@ -35,7 +35,7 @@
       <v-col>
         <liste-lien-ingredients
           :C="C"
-          style="max-height: 60vh;"
+          style="max-height: 60vh"
           class="mt-0 pt-0 overflow-y-auto"
           subheader="Ingrédients"
           v-model="recette.ingredients"
@@ -61,12 +61,12 @@ const EditRecetteProps = Vue.extend({
   props: {
     C: Object as () => Controller,
     mode: String as () => EditMode,
-    initialRecette: Object as () => RecetteComplet
-  }
+    initialRecette: Object as () => RecetteComplet,
+  },
 });
 
 @Component({
-  components: { TooltipBtn, ListeLienIngredients }
+  components: { TooltipBtn, ListeLienIngredients },
 })
 export default class EditRecette extends EditRecetteProps {
   // recette actuellement éditée

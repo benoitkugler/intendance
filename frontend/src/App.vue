@@ -56,8 +56,8 @@ declare var process: {
     SuccessSnackbar,
     SpinnerSnackbar,
     NavigationBar,
-    Loggin
-  }
+    Loggin,
+  },
 })
 export default class App extends Vue {
   // a créer après le loggin
@@ -102,7 +102,7 @@ export default class App extends Vue {
       this.notifications
     );
     const currentPath = this.$router.currentRoute.path;
-    if (routes.map(r => r.path).indexOf(currentPath) == -1) {
+    if (routes.map((r) => r.path).indexOf(currentPath) == -1) {
       this.$router.push("/sejours");
     }
   }
@@ -117,7 +117,7 @@ export default class App extends Vue {
     if (!this.isLoggedIn) {
       title = "Intendance - Connexion";
     } else {
-      const route = this.$route as RouteType;
+      const route = this.$route as unknown as RouteType;
       title = "Intendance - " + route.meta.title;
     }
     return title;

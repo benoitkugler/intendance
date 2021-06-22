@@ -9,8 +9,8 @@ export default new Vuetify({
       light: {
         primary: "#e0a912",
         secondary: "#a5d0d9",
-        accent: "#e8d52c"
-      }
-    }
-  }
+        accent: "#e8d52c",
+      },
+    },
+  },
 });

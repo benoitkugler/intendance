@@ -20,8 +20,8 @@ import { EnumItem } from "@/logic/types";
 
 const IngredientFieldProps = Vue.extend({
   props: {
-    C: Object as () => Controller
-  }
+    C: Object as () => Controller,
+  },
 });
 
 @Component({})
@@ -41,7 +41,7 @@ export default class IngredientField extends IngredientFieldProps {
   }
 
   get items() {
-    return this.C.getAllIngredients().map(ing => {
+    return this.C.getAllIngredients().map((ing) => {
       return { text: ing.ingredient.nom, value: ing.ingredient.id };
     });
   }

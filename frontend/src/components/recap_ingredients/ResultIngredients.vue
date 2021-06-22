@@ -1,17 +1,15 @@
 <template>
   <v-card>
     <v-card-title primary-title class="secondary py-2 px-3">
-      <h3 class="headline mb-0 ">
-        Ingrédients nécessaires
-      </h3>
+      <h3 class="headline mb-0">Ingrédients nécessaires</h3>
     </v-card-title>
     <v-progress-linear indeterminate :active="loading"></v-progress-linear>
     <date-ingredients
       class="overflow-y-auto"
-      style="max-height: 75vh;"
+      style="max-height: 75vh"
       :date-ingredients="dateIngredients"
       :highlight="origineIngredients"
-      @go="id => $emit('go-to-ingredient', id)"
+      @go="(id) => $emit('go-to-ingredient', id)"
     ></date-ingredients>
   </v-card>
 </template>
@@ -28,12 +26,12 @@ const ResultIngredientsProps = Vue.extend({
   props: {
     loading: Boolean,
     dateIngredients: Array as () => DateIngredientQuantites[] | null,
-    origineIngredients: Array as () => TimedIngredientQuantite[]
-  }
+    origineIngredients: Array as () => TimedIngredientQuantite[],
+  },
 });
 
 @Component({
-  components: { DateIngredients }
+  components: { DateIngredients },
 })
 export default class ResultIngredients extends ResultIngredientsProps {}
 </script>

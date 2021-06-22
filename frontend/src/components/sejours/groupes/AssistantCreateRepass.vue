@@ -65,7 +65,7 @@
             </v-row>
           </v-col>
           <v-col>
-            <div class="overflow-y-auto" style="height:50vh;">
+            <div class="overflow-y-auto" style="height: 50vh">
               <v-row v-for="offset in offsets" :key="offset" no-gutters>
                 <v-col cols="3" class="align-self-center">
                   {{ formatOffset(offset) }}
@@ -101,8 +101,8 @@ import { Controller } from "@/logic/controller";
 
 const AssitantCreateRepassProps = Vue.extend({
   props: {
-    C: Object as () => Controller
-  }
+    C: Object as () => Controller,
+  },
 });
 
 @Component({})
@@ -111,7 +111,7 @@ export default class AssitantCreateRepass extends AssitantCreateRepassProps {
     duree: 7,
     cinquieme: [],
     with_gouter: true,
-    delete_existing: false
+    delete_existing: false,
   };
   groupesSorties: { [key: number]: number[] } = {};
 
@@ -122,7 +122,7 @@ export default class AssitantCreateRepass extends AssitantCreateRepassProps {
   }
 
   get groupes() {
-    return this.C.getGroupes().map(groupe => {
+    return this.C.getGroupes().map((groupe) => {
       return { text: groupe.nom, value: groupe.id };
     });
   }
@@ -138,7 +138,7 @@ export default class AssitantCreateRepass extends AssitantCreateRepassProps {
     return date.toLocaleDateString("fr-FR", {
       weekday: "long",
       day: "numeric",
-      month: "long"
+      month: "long",
     });
   }
 

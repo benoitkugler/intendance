@@ -1,8 +1,6 @@
 <template>
   <v-card @keyup.native.enter="$emit('edit', current)">
-    <v-card-title primary-title>
-      Détails de l'ingrédient
-    </v-card-title>
+    <v-card-title primary-title> Détails de l'ingrédient </v-card-title>
     <v-card-text>
       <v-form>
         <v-row>
@@ -44,12 +42,12 @@ import { Controller } from "@/logic/controller";
 const DetailsIngredientProps = Vue.extend({
   props: {
     C: Object as () => Controller,
-    ingredient: Object as () => LienIngredient
-  }
+    ingredient: Object as () => LienIngredient,
+  },
 });
 
 @Component({
-  components: { QuantiteRelative }
+  components: { QuantiteRelative },
 })
 export default class DetailsIngredient extends DetailsIngredientProps {
   current: LienIngredient = deepcopy(this.ingredient);

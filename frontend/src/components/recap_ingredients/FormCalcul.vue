@@ -11,7 +11,7 @@
       ></tooltip-btn>
     </v-card-title>
     <v-card-text>
-      <div class="px-2 overflow-y-auto" style="max-height: 74vh;">
+      <div class="px-2 overflow-y-auto" style="max-height: 74vh">
         <v-checkbox
           label="Tout le séjour"
           v-model="selectAll"
@@ -46,12 +46,12 @@ import { compareArrays, Debounce } from "../utils/utils";
 const FormCalculProps = Vue.extend({
   props: {
     C: Object as () => Controller,
-    sejour: Object as () => SejourRepas | null
-  }
+    sejour: Object as () => SejourRepas | null,
+  },
 });
 
 @Component({
-  components: { TooltipBtn }
+  components: { TooltipBtn },
 })
 export default class FormCalcul extends FormCalculProps {
   debounce = new Debounce(this.emitEvent, 500);
@@ -63,7 +63,7 @@ export default class FormCalcul extends FormCalculProps {
 
   set selectAll(b: boolean) {
     if (b) {
-      this.critere = this.choixJournees.map(v => v);
+      this.critere = this.choixJournees.map((v) => v);
     } else {
       this.critere = [];
     }
@@ -75,7 +75,7 @@ export default class FormCalcul extends FormCalculProps {
 
   get choixJournees(): number[] {
     if (this.sejour == null) return [];
-    const s = new Set((this.sejour.repass || []).map(rep => rep.jour_offset));
+    const s = new Set((this.sejour.repass || []).map((rep) => rep.jour_offset));
     const offsets = [...s];
     return offsets.sort((a, b) => a - b);
   }

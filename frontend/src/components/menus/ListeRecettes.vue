@@ -31,7 +31,7 @@
     <v-list dense :max-height="height" class="overflow-y-auto" ref="list">
       <v-list-item-group
         :value="state.selection.idRecette"
-        @change="args => $emit('change', args)"
+        @change="(args) => $emit('change', args)"
       >
         <v-list-item
           v-for="recette in recettes"
@@ -42,7 +42,7 @@
           <template v-slot:default="props">
             <v-list-item-content
               draggable="true"
-              @dragstart="ev => onDragStart(ev, recette)"
+              @dragstart="(ev) => onDragStart(ev, recette)"
             >
               <v-list-item-title>
                 <v-list-item-title>{{ recette.nom }}</v-list-item-title>
@@ -99,9 +99,9 @@ import { ListKind, BaseList } from "./shared";
   props: {
     kind: {
       type: String as () => ListKind,
-      default: "idRecette"
-    }
-  }
+      default: "idRecette",
+    },
+  },
 })
 export default class ListeRecettes extends BaseList {
   confirmeSupprime = false;
@@ -110,7 +110,7 @@ export default class ListeRecettes extends BaseList {
 
   private searchRecettes(recettes: Recette[], search: string) {
     const predicat = searchFunction(search);
-    return recettes.filter(recette => predicat(recette.nom));
+    return recettes.filter((recette) => predicat(recette.nom));
   }
 
   get recettes() {

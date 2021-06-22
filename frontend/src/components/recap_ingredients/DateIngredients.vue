@@ -16,7 +16,7 @@
           <liste-ingredients
             :ingredients="jour.ingredients"
             :highlights="getJourHighlights(jour)"
-            @go="id => $emit('go', id)"
+            @go="(id) => $emit('go', id)"
           ></liste-ingredients>
         </v-expansion-panel-content>
       </v-expansion-panel>
@@ -36,7 +36,7 @@ import ListeIngredients from "../utils/ListeIngredients.vue";
 import {
   DateIngredientQuantites,
   IngredientQuantite,
-  TimedIngredientQuantite
+  TimedIngredientQuantite,
 } from "@/logic/api";
 import { Formatter } from "@/logic/formatter";
 import { Crible } from "../utils/utils";
@@ -44,12 +44,12 @@ import { Crible } from "../utils/utils";
 const DateIngredientsProps = Vue.extend({
   props: {
     dateIngredients: Array as () => DateIngredientQuantites[],
-    highlight: Array as () => TimedIngredientQuantite[]
-  }
+    highlight: Array as () => TimedIngredientQuantite[],
+  },
 });
 
 @Component({
-  components: { ListeIngredients }
+  components: { ListeIngredients },
 })
 export default class DateIngredients extends DateIngredientsProps {
   formatDate = Formatter.formatDate;
@@ -63,7 +63,7 @@ export default class DateIngredients extends DateIngredientsProps {
     const out: number[] = [];
     this.dateIngredients.forEach((jour, i) => {
       const isConcerned =
-        this.highlight.filter(h => h.date == jour.date).length > 0;
+        this.highlight.filter((h) => h.date == jour.date).length > 0;
       if (isConcerned) {
         out.push(i);
       }
@@ -74,8 +74,8 @@ export default class DateIngredients extends DateIngredientsProps {
   getJourHighlights(jour: DateIngredientQuantites): Crible {
     const out: Crible = {};
     this.highlight
-      .filter(h => h.date == jour.date)
-      .forEach(h => {
+      .filter((h) => h.date == jour.date)
+      .forEach((h) => {
         out[h.ingredient.id] = true;
       });
     return out;

@@ -31,12 +31,12 @@ import Component from "vue-class-component";
 const QuantiteRelativeProps = Vue.extend({
   props: {
     quantite: Number,
-    unite: String
+    unite: String,
   },
   model: {
     prop: "quantite",
-    event: "change"
-  }
+    event: "change",
+  },
 });
 
 // Permet de modifier une quantité relative

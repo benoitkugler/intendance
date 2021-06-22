@@ -5,9 +5,7 @@
         <v-card-title primary-title color="warning">
           Confirmer la suppression
         </v-card-title>
-        <v-card-text>
-          Confirmez-vous la suppression de ce menu ?
-        </v-card-text>
+        <v-card-text> Confirmez-vous la suppression de ce menu ? </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn tile color="warning" @click="supprime">Supprimer</v-btn>
@@ -25,7 +23,7 @@
     <v-list dense :max-height="height" class="overflow-y-auto" ref="list">
       <v-list-item-group
         :value="state.selection.idMenu"
-        @change="args => $emit('change', args)"
+        @change="(args) => $emit('change', args)"
       >
         <v-list-item
           v-for="menu in menus"
@@ -87,9 +85,9 @@ import { BaseList, ListKind } from "./shared";
     C: Object as () => Controller,
     kind: {
       type: String as () => ListKind,
-      default: "idMenu"
-    }
-  }
+      default: "idMenu",
+    },
+  },
 })
 export default class ListeMenus extends BaseList {
   confirmeSupprime = false;

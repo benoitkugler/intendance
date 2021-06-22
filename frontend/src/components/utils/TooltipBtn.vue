@@ -7,7 +7,7 @@
         :icon="!!mdiIcon"
         :text="!mdiIcon"
         :color="color"
-        @click="e => $emit('click', e)"
+        @click="(e) => $emit('click', e)"
         :small="small"
       >
         <v-icon v-if="mdiIcon" :color="color">mdi-{{ mdiIcon }}</v-icon>
@@ -28,17 +28,17 @@ const Props = Vue.extend({
     mdiIcon: String,
     color: {
       type: String,
-      default: "black"
+      default: "black",
     },
     disabled: {
       type: Boolean,
-      default: false
+      default: false,
     },
     small: {
       type: Boolean,
-      default: false
-    }
-  }
+      default: false,
+    },
+  },
 });
 
 @Component

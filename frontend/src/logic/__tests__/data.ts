@@ -24,7 +24,7 @@ test("crud ingredient", async () => {
     conditionnement: { unite: Unite.Litres, quantite: 2 },
     callories: {},
     categorie: "",
-    unite: Unite.Piece
+    unite: Unite.Piece,
   });
   expect(C.notifications.getError()).toBeNull();
   expect(Object.keys(C.api.ingredients || {})).toHaveLength(l + 1);
@@ -41,7 +41,7 @@ test("crud ingredient", async () => {
     conditionnement: { unite: Unite.Kilos, quantite: 4 },
     callories: {},
     categorie: "nouvelle cat&gori",
-    unite: Unite.Piece
+    unite: Unite.Piece,
   });
   expect(C.notifications.getError()).toBeNull();
 
@@ -69,9 +69,9 @@ test("crud recette", async () => {
       {
         id_ingredient: ingId,
         cuisson: "buit",
-        quantite: 4
-      }
-    ]
+        quantite: 4,
+      },
+    ],
   });
   expect(C.notifications.getError()).toBeNull();
   expect(Object.keys(C.api.recettes)).toHaveLength(l + 1);
@@ -81,8 +81,8 @@ test("crud recette", async () => {
     {
       id_ingredient: ingId,
       cuisson: "buit",
-      quantite: 4
-    }
+      quantite: 4,
+    },
   ];
 
   recette = await C.api.UpdateRecette(recette);
@@ -103,7 +103,7 @@ test("crud menu", async () => {
     id_utilisateur: { Valid: true, Int64: metaDev.idUtilisateur },
     commentaire: "BAtter les oeufs en eige....",
     ingredients: [],
-    recettes: []
+    recettes: [],
   });
   expect(C.notifications.getError()).toBeNull();
   expect(Object.keys(C.api.menus)).toHaveLength(l + 1);
@@ -111,7 +111,7 @@ test("crud menu", async () => {
 
   const ingId = Number(Object.keys(C.api.ingredients || {})[0]);
 
-  let recette = await C.api.CreateRecette({
+  const recette = await C.api.CreateRecette({
     nom:
       "Gratin de semoule" +
       Math.random()
@@ -120,7 +120,7 @@ test("crud menu", async () => {
         .substr(0, 5),
     id_utilisateur: { Valid: true, Int64: metaDev.idUtilisateur },
     ingredients: [],
-    mode_emploi: ""
+    mode_emploi: "",
   });
   if (recette === undefined) return;
 
@@ -128,8 +128,8 @@ test("crud menu", async () => {
     {
       id_ingredient: ingId,
       cuisson: "buit",
-      quantite: 4
-    }
+      quantite: 4,
+    },
   ];
   menu.recettes = [recette.id];
 
@@ -148,7 +148,7 @@ test("crud sejour", async () => {
   let sejour = await C.api.CreateSejour({
     date_debut: new Date().toISOString() as Time,
     nom: "C2 Again !",
-    id_utilisateur: metaDev.idUtilisateur
+    id_utilisateur: metaDev.idUtilisateur,
   });
   expect(C.notifications.getError()).toBeNull();
   expect(Object.keys(C.api.sejours.sejours || {})).toHaveLength(l + 1);
@@ -176,7 +176,7 @@ test("crud groupe", async () => {
     id_sejour: sejourId,
     nom: "Moussaillons",
     couleur: "#787878",
-    nb_personnes: 0
+    nb_personnes: 0,
   });
   expect(C.notifications.getError()).toBeNull();
   expect(Object.keys(C.api.sejours.groupes || {})).toHaveLength(l + 1);
@@ -208,7 +208,7 @@ test("crud repas", async () => {
     anticipation: 0,
     groupes: [],
     recettes: [],
-    ingredients: []
+    ingredients: [],
   });
   expect(C.notifications.getError()).toBeNull();
 

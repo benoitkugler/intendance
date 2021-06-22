@@ -10,7 +10,7 @@ export const HorairesColors: { [key in Horaire]: string } = {
   [Horaire.Midi]: computeColor(Horaire.Midi),
   [Horaire.Gouter]: computeColor(Horaire.Gouter),
   [Horaire.Diner]: computeColor(Horaire.Diner),
-  [Horaire.Cinquieme]: computeColor(Horaire.Cinquieme)
+  [Horaire.Cinquieme]: computeColor(Horaire.Cinquieme),
 };
 
 export const HorairesIcons = {
@@ -18,7 +18,7 @@ export const HorairesIcons = {
   [Horaire.Midi]: "pasta",
   [Horaire.Gouter]: "cupcake",
   [Horaire.Diner]: "bowl-mix",
-  [Horaire.Cinquieme]: "glass-mug-variant"
+  [Horaire.Cinquieme]: "glass-mug-variant",
 };
 
 export const Days = [
@@ -28,7 +28,7 @@ export const Days = [
   "Jeudi",
   "Vendredi",
   "Samedi",
-  "Dimanche"
+  "Dimanche",
 ];
 
 export function sortByText<T extends { text: string }>(l: T[]) {
@@ -58,13 +58,13 @@ export function searchFunction(search: string) {
   // on essaie en mode RegExp
   try {
     const s = new RegExp(search, "i");
-    filterNom = nom => s.test(nom);
+    filterNom = (nom) => s.test(nom);
   } catch {
     const sl = search.toLowerCase();
     filterNom = (nom: string) => nom.includes(sl);
   }
 
-  return function(item: string) {
+  return function (item: string) {
     item = item.toLowerCase();
 
     // on essaie une recherche 'exacte'

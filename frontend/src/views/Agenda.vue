@@ -40,7 +40,7 @@
                   activeDay.toLocaleDateString("fr-FR", {
                     weekday: "long",
                     day: "numeric",
-                    month: "short"
+                    month: "short",
                   })
                 }}
               </span>
@@ -109,7 +109,7 @@ import {
   PreferencesAgenda,
   EditMode,
   DetailsRepas,
-  ViewMode
+  ViewMode,
 } from "../logic/types";
 
 import Calendar from "../components/sejours/calendrier/Calendar.vue";
@@ -123,8 +123,8 @@ import { RepasGroupe, RepasComplet, Horaire, New } from "../logic/api";
 
 const AgendaProps = Vue.extend({
   props: {
-    C: Object as () => Controller
-  }
+    C: Object as () => Controller,
+  },
 });
 
 @Component({
@@ -134,13 +134,13 @@ const AgendaProps = Vue.extend({
     FormPreferences,
     ToolbarSwitch,
     Day,
-    FormRepas
-  }
+    FormRepas,
+  },
 })
 export default class Agenda extends AgendaProps {
   showPreferences = false;
   preferences: PreferencesAgenda = {
-    startPremierJour: true
+    startPremierJour: true,
   };
 
   showEditFormRepas = false;
@@ -155,7 +155,7 @@ export default class Agenda extends AgendaProps {
     anticipation: 0,
     groupes: [],
     recettes: [],
-    ingredients: []
+    ingredients: [],
   };
 
   viewMode: ViewMode = "month";
@@ -228,7 +228,7 @@ export default class Agenda extends AgendaProps {
       anticipation: 0,
       groupes: [],
       recettes: [],
-      ingredients: []
+      ingredients: [],
     };
     this.editMode = "new";
     this.showEditFormRepas = true;
@@ -247,14 +247,14 @@ export default class Agenda extends AgendaProps {
     if (this.editMode == "new") {
       const newRepas: New<RepasComplet> = {
         ...repas,
-        id_sejour: this.sejour.id
+        id_sejour: this.sejour.id,
       };
       await this.C.api.CreateRepas(newRepas);
     } else {
       const repasFull = {
         ...repas,
         id_sejour: this.editedRepas.id_sejour,
-        id: this.editedRepas.id
+        id: this.editedRepas.id,
       };
       await this.C.api.UpdateManyRepas([repasFull]);
     }

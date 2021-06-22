@@ -1,8 +1,6 @@
 <template>
   <v-card>
-    <v-card-title primary-title>
-      Détails du fournisseur
-    </v-card-title>
+    <v-card-title primary-title> Détails du fournisseur </v-card-title>
     <v-card-text>
       <v-form>
         <v-text-field
@@ -38,8 +36,8 @@ import { deepcopy, EditMode } from "@/logic/types";
 const DetailsFournisseurProps = Vue.extend({
   props: {
     fournisseur: Object as () => New<Fournisseur> | null,
-    editMode: String as () => EditMode
-  }
+    editMode: String as () => EditMode,
+  },
 });
 
 @Component({})

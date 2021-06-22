@@ -5,7 +5,7 @@
     hide-details
     max-width="200"
     :value="idSejour"
-    @change="args => $emit('change', Number(args))"
+    @change="(args) => $emit('change', Number(args))"
     class="mx-2"
     outlined
   ></v-select>
@@ -21,18 +21,18 @@ const SelectSejourProps = Vue.extend({
   props: {
     C: Object as () => Controller,
     label: String,
-    idSejour: Number
+    idSejour: Number,
   },
   model: {
     prop: "idSejour",
-    event: "change"
-  }
+    event: "change",
+  },
 });
 
 @Component({})
 export default class SelectSejour extends SelectSejourProps {
   get sejours() {
-    const items = Object.values(this.C.api.sejours.sejours).map(sejour => {
+    const items = Object.values(this.C.api.sejours.sejours).map((sejour) => {
       return { value: sejour.id, text: sejour.nom };
     });
     return sortByText(items);

@@ -34,16 +34,16 @@ const ConditionnementFieldProps = Vue.extend({
   props: {
     conditionnement: Object as () => Conditionnement,
     disabled: Boolean,
-    allowedUnites: Array as () => EnumItem[]
+    allowedUnites: Array as () => EnumItem[],
   },
   model: {
     prop: "conditionnement",
-    event: "change"
-  }
+    event: "change",
+  },
 });
 
 @Component({
-  components: { UniteField }
+  components: { UniteField },
 })
 export default class ConditionnementField extends ConditionnementFieldProps {
   onChange() {

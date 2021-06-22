@@ -1,5 +1,5 @@
 <template>
-  <v-list dense style="border-radius: 0;" v-if="repass">
+  <v-list dense style="border-radius: 0" v-if="repass">
     <v-list-item-group>
       <v-list-item
         v-for="repas in repass"
@@ -41,14 +41,14 @@ import { DragKind, getDragData, setDragData } from "../../utils/utils_drag";
 import {
   formatNbOffset,
   compareRecettesIngredient,
-  ColorAnticipation
+  ColorAnticipation,
 } from "./utils";
 
 const ListeRepasProps = Vue.extend({
   props: {
     C: Object as () => Controller,
-    repass: Array as () => RepasComplet[]
-  }
+    repass: Array as () => RepasComplet[],
+  },
 });
 @Component({})
 export default class ListeRepas extends ListeRepasProps {
@@ -101,7 +101,7 @@ export default class ListeRepas extends ListeRepasProps {
     target = deepcopy(target);
     [origin.jour_offset, target.jour_offset] = [
       target.jour_offset,
-      origin.jour_offset
+      origin.jour_offset,
     ];
     await this.C.api.UpdateManyRepas([target, origin]);
   }

@@ -43,8 +43,8 @@ const ListeIngredientsProps = Vue.extend({
   props: {
     ingredients: Array as () => IngredientQuantite[],
     highlights: Object as () => Crible | undefined, // ids
-    hideLinks: Boolean
-  }
+    hideLinks: Boolean,
+  },
 });
 @Component({})
 export default class ListeIngredients extends ListeIngredientsProps {

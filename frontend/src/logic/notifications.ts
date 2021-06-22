@@ -24,7 +24,7 @@ export class Notifications {
   }
 
   get messages() {
-    return this._messages.map(v => ({ text: v.text, time: v.time }));
+    return this._messages.map((v) => ({ text: v.text, time: v.time }));
   }
 
   setMessage(message: string) {
@@ -33,7 +33,7 @@ export class Notifications {
     this.queueIndex++;
     this._messages.push({ text: message, id: index, time: new Date() });
     setTimeout(() => {
-      this._messages = this._messages.filter(v => v.id != index);
+      this._messages = this._messages.filter((v) => v.id != index);
     }, 4000);
   }
   clearMessages() {

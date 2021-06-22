@@ -79,12 +79,12 @@ const EditMenuProps = Vue.extend({
   props: {
     C: Object as () => Controller,
     mode: String as () => EditMode,
-    initialMenu: Object as () => New<MenuComplet>
-  }
+    initialMenu: Object as () => New<MenuComplet>,
+  },
 });
 
 @Component({
-  components: { TooltipBtn, ListeLienIngredients }
+  components: { TooltipBtn, ListeLienIngredients },
 })
 export default class EditMenu extends EditMenuProps {
   // menu actuellement édité
@@ -111,7 +111,7 @@ export default class EditMenu extends EditMenuProps {
 
   removeRecette(toRemove: Recette) {
     this.menu.recettes = (this.menu.recettes || []).filter(
-      idRecette => idRecette != toRemove.id
+      (idRecette) => idRecette != toRemove.id
     );
   }
 

@@ -15,7 +15,7 @@ import {
   Groupe,
   InResoudIngredients,
   Horaire,
-  New
+  New,
 } from "./api";
 
 /**  Object principal de stockage des données
@@ -43,7 +43,7 @@ export class Controller {
   }
 
   getAllIngredients(): IngredientOptions[] {
-    return Object.values(this.api.ingredients || {}).map(ing => {
+    return Object.values(this.api.ingredients || {}).map((ing) => {
       return { ingredient: ing };
     });
   }
@@ -61,14 +61,14 @@ export class Controller {
   }
 
   getMenuRecettes(menu: New<MenuComplet>) {
-    return (menu.recettes || []).map(id => this.api.recettes[id]);
+    return (menu.recettes || []).map((id) => this.api.recettes[id]);
   }
 
   getMenuIngredients(idMenu: number): IngredientOptions[] {
-    return (this.getMenu(idMenu).ingredients || []).map(ing => {
+    return (this.getMenu(idMenu).ingredients || []).map((ing) => {
       return {
         ingredient: (this.api.ingredients || {})[ing.id_ingredient],
-        options: ing
+        options: ing,
       };
     });
   }
@@ -79,10 +79,10 @@ export class Controller {
   }
 
   getRecetteIngredients(idRecette: number): IngredientOptions[] {
-    return (this.getRecette(idRecette).ingredients || []).map(ing => {
+    return (this.getRecette(idRecette).ingredients || []).map((ing) => {
       return {
         ingredient: (this.api.ingredients || {})[ing.id_ingredient],
-        options: ing
+        options: ing,
       };
     });
   }
@@ -99,7 +99,9 @@ export class Controller {
     const menus = Object.values(this.api.menus);
     const predicat = searchFunction(search);
     // on cherche dans le nom du menu, composé des recettes
-    return menus.filter(menu => predicat(this.formatter.formatMenuName(menu)));
+    return menus.filter((menu) =>
+      predicat(this.formatter.formatMenuName(menu))
+    );
   }
 
   offsetToDate(idSejour: number, offset: number) {
@@ -119,9 +121,9 @@ export class Controller {
   }
 
   iterateAllRepas(fn: (sejour: Sejour, rep: RepasComplet) => void) {
-    Object.values(this.api.sejours.sejours || {}).forEach(sejour => {
+    Object.values(this.api.sejours.sejours || {}).forEach((sejour) => {
       if (!sejour.repass) return;
-      sejour.repass.forEach(repas => {
+      sejour.repass.forEach((repas) => {
         fn(sejour, repas);
       });
     });
@@ -129,13 +131,13 @@ export class Controller {
 
   getRepasGroupes(repas: { groupes: RepasGroupe[] | null }): Groupe[] {
     return (repas.groupes || []).map(
-      rg => (this.api.sejours.groupes || {})[rg.id_groupe]
+      (rg) => (this.api.sejours.groupes || {})[rg.id_groupe]
     );
   }
 
   getRepasNbPersonnes(repas: DetailsRepas) {
     const nb = this.getRepasGroupes(repas)
-      .map(g => g.nb_personnes)
+      .map((g) => g.nb_personnes)
       .reduce((a, b) => a + b, repas.offset_personnes);
     return nb >= 0 ? nb : 0;
   }
@@ -150,7 +152,7 @@ export class Controller {
     const idS = this.state.idSejour;
     if (idS == null) return [];
     return Object.values(this.api.sejours.groupes).filter(
-      groupe => groupe.id_sejour == idS
+      (groupe) => groupe.id_sejour == idS
     );
   }
 
@@ -160,7 +162,7 @@ export class Controller {
       id_repas: idRepas,
       nb_personnes: nbPersonnes == undefined ? -1 : nbPersonnes,
       id_sejour: -1, // ignoré
-      jour_offset: [] // ignoré
+      jour_offset: [], // ignoré
     };
     return this.api.ResoudIngredients(params);
   }
@@ -171,7 +173,7 @@ export class Controller {
       id_repas: -1, // ignoré
       nb_personnes: -1, // ignoré
       id_sejour: idSejour,
-      jour_offset: jourOffsets // journées données
+      jour_offset: jourOffsets, // journées données
     };
     return this.api.ResoudIngredients(params);
   }
@@ -189,7 +191,7 @@ export class Controller {
                     Si vous souhaitez déplacer un repas sur cette journée,
                     veuillez d'abord <b>modifier la date de début</b> du séjour <b>${
                       sejour.nom
-                    }</b>`
+                    }</b>`,
       });
       return;
     }
@@ -210,13 +212,13 @@ export class Controller {
     if (offsetFrom === undefined) return;
     if (offsetFrom == offsetTo) return;
     const repasFrom = (sejour.repass || []).filter(
-      rep => rep.jour_offset == offsetFrom
+      (rep) => rep.jour_offset == offsetFrom
     );
     const repasTo = (sejour.repass || []).filter(
-      rep => rep.jour_offset == offsetTo
+      (rep) => rep.jour_offset == offsetTo
     );
-    repasFrom.forEach(m => (m.jour_offset = offsetTo));
-    repasTo.forEach(m => (m.jour_offset = offsetFrom));
+    repasFrom.forEach((m) => (m.jour_offset = offsetTo));
+    repasTo.forEach((m) => (m.jour_offset = offsetFrom));
     const modifs = repasFrom.concat(repasTo);
     if (modifs.length === 0) return;
     const out = await this.api.UpdateManyRepas(modifs);

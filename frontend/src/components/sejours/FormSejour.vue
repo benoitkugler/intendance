@@ -1,8 +1,6 @@
 <template>
   <v-card>
-    <v-card-title primary-title>
-      Détails du séjour
-    </v-card-title>
+    <v-card-title primary-title> Détails du séjour </v-card-title>
     <v-card-text>
       <v-form>
         <v-text-field
@@ -36,12 +34,12 @@ import { Watch } from "vue-property-decorator";
 const Props = Vue.extend({
   props: {
     sejour: Object as () => Sejour,
-    editMode: String as () => EditMode
-  }
+    editMode: String as () => EditMode,
+  },
 });
 
 @Component({
-  components: { DateField }
+  components: { DateField },
 })
 export default class FormSejour extends Props {
   tmpSejour: DetailsSejour = this.copy();

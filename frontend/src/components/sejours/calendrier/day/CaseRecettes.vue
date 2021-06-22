@@ -24,8 +24,8 @@ import { DragKind, getDragData } from "../../../utils/utils_drag";
 const CaseRecettesProps = Vue.extend({
   props: {
     C: Object as () => Controller,
-    recettes: Array as () => number[] | null
-  }
+    recettes: Array as () => number[] | null,
+  },
 });
 
 @Component({})

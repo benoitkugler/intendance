@@ -42,12 +42,12 @@ import Toolbar from "../../../utils/Toolbar.vue";
 const ChoixMenusProps = Vue.extend({
   props: {
     C: Object as () => Controller,
-    height: String
-  }
+    height: String,
+  },
 });
 
 @Component({
-  components: { Toolbar }
+  components: { Toolbar },
 })
 export default class ChoixMenus extends ChoixMenusProps {
   search = "";

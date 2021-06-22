@@ -74,7 +74,7 @@ import {
   DateIngredientQuantites,
   IngredientQuantite,
   RepasGroupe,
-  New
+  New,
 } from "@/logic/api";
 import { DetailsRepas, EditMode, toNullableId, deepcopy } from "@/logic/types";
 import DateField from "../utils/DateField.vue";
@@ -90,8 +90,8 @@ const Props = Vue.extend({
   props: {
     C: Object as () => Controller,
     initialRepas: Object as () => RepasComplet,
-    mode: String as () => EditMode
-  }
+    mode: String as () => EditMode,
+  },
 });
 
 @Component({
@@ -100,8 +100,8 @@ const Props = Vue.extend({
     HoraireField,
     TooltipBtn,
     RecettesFields,
-    ListeLienIngredients
-  }
+    ListeLienIngredients,
+  },
 })
 export default class FormRepas extends Props {
   repas: DetailsRepas = deepcopy(this.initialRepas);
@@ -116,16 +116,16 @@ export default class FormRepas extends Props {
   }
 
   get menus() {
-    return Object.values(this.C.api.menus).map(menu => {
+    return Object.values(this.C.api.menus).map((menu) => {
       return { text: this.C.formatter.formatMenuName(menu), value: menu.id };
     });
   }
 
   get groupes() {
-    return this.C.getGroupes().map(groupe => {
+    return this.C.getGroupes().map((groupe) => {
       const rg: RepasGroupe = {
         id_repas: this.initialRepas.id,
-        id_groupe: groupe.id
+        id_groupe: groupe.id,
       };
       return { text: groupe.nom, value: rg };
     });

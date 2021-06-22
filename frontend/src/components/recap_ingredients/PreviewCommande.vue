@@ -3,16 +3,14 @@
     <v-dialog v-model="showAmbiguites" max-width="800">
       <liste-ambiguites
         :C="C"
-        :ambiguites="ambiguites"
         @apply="applyContraintes"
+        :ambiguites="ambiguites"
       ></liste-ambiguites>
     </v-dialog>
 
     <v-card>
       <v-card-title primary-title class="secondary py-2 px-3">
-        <h3 class="headline mb-0 ">
-          Commande
-        </h3>
+        <h3 class="headline mb-0">Commande</h3>
         <v-spacer></v-spacer>
         <tooltip-btn
           tooltip="Résoudre les associations ingrédients / produits ambigües..."
@@ -47,7 +45,7 @@
         multiple
         accordion
         class="overflow-y-auto"
-        style="max-height: 75vh;"
+        style="max-height: 75vh"
       >
         <v-expansion-panel
           v-for="(commandeJour, i) in commandes"
@@ -111,7 +109,7 @@ import {
   DateIngredientQuantites,
   Produit,
   CommandeCompleteItem,
-  CommandeContraintes
+  CommandeContraintes,
 } from "@/logic/api";
 import { Watch } from "vue-property-decorator";
 import { Controller } from "@/logic/controller";
@@ -121,8 +119,8 @@ import { ContraintesProduits } from "./types";
 const PreviewCommandeProps = Vue.extend({
   props: {
     C: Object as () => Controller,
-    dateIngredients: Array as () => DateIngredientQuantites[]
-  }
+    dateIngredients: Array as () => DateIngredientQuantites[],
+  },
 });
 
 interface commandeJour {
@@ -131,7 +129,7 @@ interface commandeJour {
 }
 
 @Component({
-  components: { TooltipBtn, ListeAmbiguites }
+  components: { TooltipBtn, ListeAmbiguites },
 })
 export default class PreviewCommande extends PreviewCommandeProps {
   data: CommandeCompleteItem[] = [];
@@ -142,10 +140,10 @@ export default class PreviewCommande extends PreviewCommandeProps {
 
   contraintes: CommandeContraintes = {
     associations: {},
-    regroupe: false
+    regroupe: false,
   };
 
-  ambiguites: Ambiguites = {};
+  ambiguites = {};
   showAmbiguites = false;
 
   get nbAmbiguites() {
@@ -162,14 +160,14 @@ export default class PreviewCommande extends PreviewCommandeProps {
     this.loading = true;
     const res = await this.C.api.EtablitCommandeComplete({
       ingredients: this.dateIngredients,
-      contraintes: this.contraintes
+      contraintes: this.contraintes,
     });
     this.loading = false;
     if (res == undefined) {
       return;
     }
     this.data = res.commande || [];
-    this.ambiguites = res.ambiguites || {};
+    // this.ambiguites = res.ambiguites || {}; // TODO:
   }
 
   applyRegroupe() {
@@ -185,7 +183,7 @@ export default class PreviewCommande extends PreviewCommandeProps {
   // produit par jour
   get commandes() {
     const tmp: { [key: string]: CommandeCompleteItem[] } = {};
-    this.data.forEach(c => {
+    this.data.forEach((c) => {
       const current = tmp[c.jour_commande] || [];
       current.push(c);
       tmp[c.jour_commande] = current;

@@ -42,7 +42,7 @@
         <liste-repas
           :C="C"
           :repass="events[props.date]"
-          @edit="args => $emit('edit-repas', args)"
+          @edit="(args) => $emit('edit-repas', args)"
         ></liste-repas>
       </div>
     </template>
@@ -69,15 +69,15 @@ const Props = Vue.extend({
     dayHeight: String,
     events: Object as () => { [key: string]: RepasComplet[] },
     currentDay: String as () => string | null,
-    hoverDay: String
-  }
+    hoverDay: String,
+  },
 });
 
 @Component({
   components: {
     ListeRepas,
-    TooltipBtn
-  }
+    TooltipBtn,
+  },
 })
 export default class Week extends Props {
   dayTitle = Formatter.formatDate;

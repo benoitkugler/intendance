@@ -3,7 +3,7 @@ import {
   RecetteComplet,
   MenuComplet,
   Unite,
-  New
+  New,
 } from "@/logic/api";
 
 type ModeMenu = "visu" | "editMenu" | "editRecette" | "editIngredient";
@@ -22,19 +22,19 @@ export const DefautIngredient: New<Ingredient> = {
   unite: Unite.Litres,
   categorie: "",
   conditionnement: { unite: Unite.Litres, quantite: 0 },
-  callories: {}
+  callories: {},
 };
 
 export const DefautRecette: New<RecetteComplet> = {
   id_utilisateur: { Valid: true, Int64: -1 },
   ingredients: [],
   mode_emploi: "",
-  nom: ""
+  nom: "",
 };
 
 export const DefautMenu: New<MenuComplet> = {
   commentaire: "",
   id_utilisateur: { Valid: true, Int64: -1 },
   ingredients: [],
-  recettes: []
+  recettes: [],
 };

@@ -19,7 +19,7 @@ function extractIngredient(ingredient: LienIngredient): LienIngredient {
   return {
     id_ingredient: ingredient.id_ingredient,
     quantite: ingredient.quantite,
-    cuisson: ingredient.cuisson
+    cuisson: ingredient.cuisson,
   };
 }
 

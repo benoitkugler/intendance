@@ -52,12 +52,13 @@ import { InLoggin } from "../logic/api";
 import { LogginController } from "@/logic/server";
 import { Notifications } from "@/logic/notifications";
 
-const patternMail = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+const patternMail =
+  /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
 
 const LogginProps = Vue.extend({
   props: {
-    N: Object as () => Notifications
-  }
+    N: Object as () => Notifications,
+  },
 });
 
 @Component({})
@@ -71,7 +72,7 @@ export default class Loggin extends LogginProps {
     },
     mail: (s: string) => {
       return patternMail.test(s) || "L'adresse mail semble invalide.";
-    }
+    },
   };
   loading = false;
   formValid = false;

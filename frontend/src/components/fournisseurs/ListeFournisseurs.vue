@@ -149,8 +149,8 @@ import { Controller } from "@/logic/controller";
 
 const ListeFournisseursProps = Vue.extend({
   props: {
-    C: Object as () => Controller
-  }
+    C: Object as () => Controller,
+  },
 });
 
 interface treeItem {
@@ -167,7 +167,7 @@ type treeItemLivraison = treeItem & {
 };
 
 @Component({
-  components: { TooltipBtn, DetailsFournisseur, DetailsLivraison }
+  components: { TooltipBtn, DetailsFournisseur, DetailsLivraison },
 })
 export default class ListeFournisseurs extends ListeFournisseursProps {
   showConfirmeSupprimeFournisseur = false;
@@ -188,15 +188,15 @@ export default class ListeFournisseurs extends ListeFournisseursProps {
   get treeItems(): treeItemFournisseur[] {
     const fournisseurs = Object.values(this.C.api.fournisseurs);
     const livraisons = Object.values(this.C.api.livraisons);
-    return fournisseurs.map(fournisseur => {
-      const lvs = livraisons.filter(l => l.id_fournisseur == fournisseur.id);
-      const children = lvs.map(l => {
+    return fournisseurs.map((fournisseur) => {
+      const lvs = livraisons.filter((l) => l.id_fournisseur == fournisseur.id);
+      const children = lvs.map((l) => {
         return { isFournisseur: false, livraison: l };
       });
       return {
         fournisseur: fournisseur,
         children: children,
-        isFournisseur: true
+        isFournisseur: true,
       };
     });
   }

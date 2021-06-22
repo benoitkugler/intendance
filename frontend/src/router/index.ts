@@ -25,8 +25,8 @@ export const routes: RouteType[] = [
     meta: {
       title: "Sejours",
       tooltip: "Vue d'ensemble des séjours et des groupes.",
-      icon: "mdi-account-group"
-    }
+      icon: "mdi-account-group",
+    },
   },
   {
     path: "/agenda",
@@ -39,8 +39,8 @@ export const routes: RouteType[] = [
     meta: {
       title: "Agenda",
       tooltip: "Organisation du séjour.",
-      icon: "mdi-calendar-month"
-    }
+      icon: "mdi-calendar-month",
+    },
   },
   {
     path: "/recap",
@@ -53,8 +53,8 @@ export const routes: RouteType[] = [
     meta: {
       title: "Bilan des ingrédients",
       tooltip: "Calcule les ingrédients nécessaires au séjour.",
-      icon: "mdi-beaker-check"
-    }
+      icon: "mdi-beaker-check",
+    },
   },
   {
     path: "/menus",
@@ -67,8 +67,8 @@ export const routes: RouteType[] = [
     meta: {
       title: "Menus, recettes et ingrédients",
       tooltip: "Banque de données des menus, recettes et ingrédients.",
-      icon: "mdi-food-variant"
-    }
+      icon: "mdi-food-variant",
+    },
   },
   {
     path: "/fournisseurs",
@@ -83,14 +83,14 @@ export const routes: RouteType[] = [
     meta: {
       title: "Fournisseurs et produits",
       tooltip: "Banque de données des fournisseurs et leur produits.",
-      icon: "mdi-cart"
-    }
-  }
+      icon: "mdi-cart",
+    },
+  },
 ];
 
 const router = new VueRouter({
   mode: "history",
-  routes
+  routes,
 });
 
 export default router;

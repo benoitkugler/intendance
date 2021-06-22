@@ -8,7 +8,7 @@ import {
   Conditionnement,
   UniteLabels,
   Produit,
-  Livraison
+  Livraison,
 } from "./api";
 
 const Months = [
@@ -23,7 +23,7 @@ const Months = [
   "Septembre",
   "Octobre",
   "Novembre",
-  "Décembre"
+  "Décembre",
 ];
 
 export class Formatter {
@@ -43,7 +43,7 @@ export class Formatter {
     const recs = this.controller.getMenuRecettes(menu);
     if (recs.length == 0) return `(${menu.id})`;
     const nbIngs = (menu.ingredients || []).length;
-    let out = recs.map(rec => rec.nom || "").join(", ");
+    let out = recs.map((rec) => rec.nom || "").join(", ");
     if (nbIngs > 0) {
       out += ` - ${nbIngs} ing.`;
     }
@@ -66,7 +66,7 @@ export class Formatter {
     return date.toLocaleDateString("fr-FR", {
       weekday: "short",
       day: "numeric",
-      month: "short"
+      month: "short",
     });
   }
 

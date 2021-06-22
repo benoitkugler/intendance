@@ -83,12 +83,12 @@ const AssociationIngredientProps = Vue.extend({
   props: {
     C: Object as () => Controller,
     ingredient: Object as () => Ingredient | null,
-    activated: Boolean
-  }
+    activated: Boolean,
+  },
 });
 
 @Component({
-  components: { DetailsProduit, TooltipBtn }
+  components: { DetailsProduit, TooltipBtn },
 })
 export default class AssociationIngredient extends AssociationIngredientProps {
   formatConditionnement = Formatter.formatConditionnement;
@@ -108,7 +108,7 @@ export default class AssociationIngredient extends AssociationIngredientProps {
       conditionnement: cond,
       prix: 0,
       reference_fournisseur: "",
-      colisage: 1
+      colisage: 1,
     };
   }
 
@@ -137,7 +137,7 @@ export default class AssociationIngredient extends AssociationIngredientProps {
   private async loadProduits() {
     if (this.ingredient == null) return;
     const res = await this.C.api.GetIngredientProduits({
-      id: this.ingredient.id
+      id: this.ingredient.id,
     });
     if (res == undefined) return;
     this.ingredientProduits = res;
@@ -157,7 +157,7 @@ export default class AssociationIngredient extends AssociationIngredientProps {
     if (this.ingredient == null) return;
     const res = await this.C.api.AjouteIngredientProduit({
       produit: produit,
-      id_ingredient: this.ingredient.id
+      id_ingredient: this.ingredient.id,
     });
     if (res) {
       this.ingredientProduits = res;
@@ -176,7 +176,7 @@ export default class AssociationIngredient extends AssociationIngredientProps {
     const res = await this.C.api.SetDefautProduit({
       id_ingredient: this.ingredient.id,
       id_produit: produit.id,
-      on: newState
+      on: newState,
     });
     if (res) {
       this.ingredientProduits = res;

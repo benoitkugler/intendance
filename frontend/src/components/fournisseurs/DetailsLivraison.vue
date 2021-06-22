@@ -61,12 +61,12 @@ const DetailsLivraisonProps = Vue.extend({
   props: {
     C: Object as () => Controller,
     livraison: Object as () => New<Livraison> | null,
-    editMode: String as () => EditMode
-  }
+    editMode: String as () => EditMode,
+  },
 });
 
 @Component({
-  components: { JoursLivraisonField }
+  components: { JoursLivraisonField },
 })
 export default class DetailsLivraison extends DetailsLivraisonProps {
   innerLivraison = this.duplique();
@@ -82,14 +82,14 @@ export default class DetailsLivraison extends DetailsLivraisonProps {
   }
 
   get optionsFournisseurs(): EnumItem<number>[] {
-    const items = Object.values(this.C.api.fournisseurs).map(fourn => {
+    const items = Object.values(this.C.api.fournisseurs).map((fourn) => {
       return { text: fourn.nom, value: fourn.id };
     });
     return items;
   }
 
   rules = {
-    idRequired: (id: number) => id >= 0 || "Champ requis"
+    idRequired: (id: number) => id >= 0 || "Champ requis",
   };
 }
 </script>

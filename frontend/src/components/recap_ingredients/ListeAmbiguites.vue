@@ -7,7 +7,7 @@
       <b>par défaut</b>.
     </v-card-subtitle>
     <v-card-text>
-      <v-list class="overflow-y-auto" style="max-height: 55vh;">
+      <v-list class="overflow-y-auto" style="max-height: 55vh">
         <div v-for="(a, i) in items" :key="i">
           <v-list-item>
             <v-row>
@@ -44,15 +44,15 @@
 <script lang="ts">
 import Vue from "vue";
 import Component from "vue-class-component";
-import { Ambiguites, Ingredient, Produit } from "@/logic/api";
+import { Ingredient, Produit } from "@/logic/api";
 import { Controller } from "@/logic/controller";
 import { ContraintesProduits } from "./types";
 
 const ListeAmbiguitesProps = Vue.extend({
   props: {
     C: Object as () => Controller,
-    ambiguites: Object as () => Ambiguites
-  }
+    // ambiguites: Object as () => Ambiguites
+  },
 });
 
 interface Amb {
@@ -65,11 +65,12 @@ export default class ListeAmbiguites extends ListeAmbiguitesProps {
   contraintes: ContraintesProduits = {};
 
   get items(): Amb[] {
-    const ambs = this.ambiguites || {};
-    return Object.keys(ambs).map(idIngredient => {
-      const ing = this.C.getIngredient(Number(idIngredient));
-      return { ingredient: ing, produits: ambs[Number(idIngredient)] || [] };
-    });
+    return []; // TODO:
+    // const ambs = this.ambiguites || {};
+    // return Object.keys(ambs).map(idIngredient => {
+    //   const ing = this.C.getIngredient(Number(idIngredient));
+    //   return { ingredient: ing, produits: ambs[Number(idIngredient)] || [] };
+    // });
   }
 
   formatProduit = this.C.formatter.formatProduit;

@@ -8,7 +8,7 @@ Vue.config.productionTip = false;
 // Workaround annoying warnings
 const ignoreWarnMessage =
   "The .native modifier for v-on is only valid on components but it was used on <div>.";
-Vue.config.warnHandler = function(msg, vm, trace) {
+Vue.config.warnHandler = function (msg, vm, trace) {
   // `trace` is the component hierarchy trace
   if (msg === ignoreWarnMessage) {
     return;
@@ -20,5 +20,5 @@ Vue.config.warnHandler = function(msg, vm, trace) {
 new Vue({
   router,
   vuetify,
-  render: h => h(App)
+  render: (h) => h(App),
 }).$mount("#app");

@@ -46,8 +46,8 @@ import { routes } from "../router/index";
 
 const Props = Vue.extend({
   props: {
-    isLoggedIn: Boolean
-  }
+    isLoggedIn: Boolean,
+  },
 });
 
 @Component

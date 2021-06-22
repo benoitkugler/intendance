@@ -42,8 +42,8 @@ import AssocieLivraisons from "@/components/recap_ingredients/AssocieLivraisons.
 
 const RecapIngredientsProps = Vue.extend({
   props: {
-    C: Object as () => Controller
-  }
+    C: Object as () => Controller,
+  },
 });
 
 @Component({
@@ -51,8 +51,8 @@ const RecapIngredientsProps = Vue.extend({
     FormCalcul,
     ResultIngredients,
     PreviewCommande,
-    AssocieLivraisons
-  }
+    AssocieLivraisons,
+  },
 })
 export default class RecapIngredients extends RecapIngredientsProps {
   showFormCalcul = false;

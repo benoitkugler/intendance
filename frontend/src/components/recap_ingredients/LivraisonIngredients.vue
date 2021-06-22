@@ -26,12 +26,12 @@ const LivraisonIngredientsProps = Vue.extend({
   props: {
     livraison: Object as () => Livraison | undefined, // undefined pour les ingrédient non associés
     ingredients: Array as () => Ingredient[],
-    C: Object as () => Controller
+    C: Object as () => Controller,
   },
   model: {
     prop: "ingredients",
-    event: "change"
-  }
+    event: "change",
+  },
 });
 
 @Component({})

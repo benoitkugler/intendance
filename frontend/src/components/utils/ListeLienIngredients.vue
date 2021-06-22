@@ -107,16 +107,16 @@ const ListeLienIngredientsProps = Vue.extend({
     subheader: String,
     showAdd: Boolean,
     ingredients: Array as () => LienIngredient[] | null,
-    chips: Boolean
+    chips: Boolean,
   },
   model: {
     prop: "ingredients",
-    event: "change"
-  }
+    event: "change",
+  },
 });
 
 @Component({
-  components: { DetailsIngredient, TooltipBtn, IngredientField }
+  components: { DetailsIngredient, TooltipBtn, IngredientField },
 })
 export default class ListeLienIngredients extends ListeLienIngredientsProps {
   showEditIngredient = false;
@@ -138,7 +138,7 @@ export default class ListeLienIngredients extends ListeLienIngredientsProps {
   editIngredientDone(edited: LienIngredient) {
     const ings = this.ingredients || [];
     const index = ings.findIndex(
-      ing => ing.id_ingredient == edited.id_ingredient
+      (ing) => ing.id_ingredient == edited.id_ingredient
     );
     if (index == -1) {
       // nouvel ingrédient
@@ -153,7 +153,7 @@ export default class ListeLienIngredients extends ListeLienIngredientsProps {
 
   removeIngredient(toRemove: LienIngredient) {
     const ings = (this.ingredients || []).filter(
-      ing => ing.id_ingredient != toRemove.id_ingredient
+      (ing) => ing.id_ingredient != toRemove.id_ingredient
     );
     this.$emit("change", ings);
   }
@@ -179,7 +179,7 @@ export default class ListeLienIngredients extends ListeLienIngredientsProps {
   addIngredient(idIngredient: number) {
     const ingredients = this.ingredients || [];
     const matchingIngredients = ingredients.filter(
-      r => r.id_ingredient == idIngredient
+      (r) => r.id_ingredient == idIngredient
     );
     let newIngredient: LienIngredient;
     if (matchingIngredients.length > 0) {
@@ -188,7 +188,7 @@ export default class ListeLienIngredients extends ListeLienIngredientsProps {
       newIngredient = {
         id_ingredient: idIngredient,
         quantite: 0,
-        cuisson: ""
+        cuisson: "",
       };
     }
     this.editedIngredient = newIngredient;

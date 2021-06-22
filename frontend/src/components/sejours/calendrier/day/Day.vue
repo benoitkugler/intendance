@@ -22,7 +22,7 @@
 
     <v-row no-gutters>
       <v-col cols="8">
-        <div class="overflow-y-auto" style="height: 77vh;">
+        <div class="overflow-y-auto" style="height: 77vh">
           <v-list dense>
             <v-list-item-group color="primary">
               <div v-for="(horaire, i) in horaires" :key="horaire.value">
@@ -95,8 +95,10 @@
                         <case-recettes
                           :C="C"
                           :recettes="repas.recettes"
-                          @add="idRecette => addRecette(repas, idRecette)"
-                          @remove="idRecette => removeRecette(repas, idRecette)"
+                          @add="(idRecette) => addRecette(repas, idRecette)"
+                          @remove="
+                            (idRecette) => removeRecette(repas, idRecette)
+                          "
                         ></case-recettes>
                       </v-col>
                       <v-col class="align-self-center">
@@ -161,7 +163,7 @@ import {
   toDateVuetify,
   formatNbOffset,
   compareRecettesIngredient,
-  ColorAnticipation
+  ColorAnticipation,
 } from "../utils";
 import { Controller } from "@/logic/controller";
 import {
@@ -170,7 +172,7 @@ import {
   IngredientQuantite,
   Horaire,
   HoraireLabels,
-  New
+  New,
 } from "@/logic/api";
 import { deepcopy, enumIntToOptions } from "@/logic/types";
 import { HorairesColors, HorairesIcons } from "../../../utils/utils";
@@ -181,8 +183,8 @@ import ListeLienIngredients from "../../../utils/ListeLienIngredients.vue";
 const DayProps = Vue.extend({
   props: {
     C: Object as () => Controller,
-    jourOffset: Number as () => number | null
-  }
+    jourOffset: Number as () => number | null,
+  },
 });
 @Component({
   components: {
@@ -192,8 +194,8 @@ const DayProps = Vue.extend({
     ChoixRecettes,
     ChoixIngredients,
     CaseRecettes,
-    ListeLienIngredients
-  }
+    ListeLienIngredients,
+  },
 })
 export default class Day extends DayProps {
   colorAnticipation = ColorAnticipation;
@@ -247,7 +249,7 @@ export default class Day extends DayProps {
   getGroupes(repas: RepasComplet) {
     const grs = this.C.getRepasGroupes(repas);
     const maxChar = 8;
-    return grs.map(groupe => {
+    return grs.map((groupe) => {
       const g: Groupe = deepcopy(groupe);
       g.nom = g.nom.substr(0, maxChar) + (g.nom.length <= maxChar ? "" : ".");
       return groupe;
@@ -287,12 +289,12 @@ export default class Day extends DayProps {
       anticipation: data.repas.anticipation,
       groupes: [{ id_groupe: data.idGroupe, id_repas: -1 }],
       recettes: data.repas.recettes,
-      ingredients: data.repas.ingredients
+      ingredients: data.repas.ingredients,
     });
 
     if (out === undefined) return;
     data.repas.groupes = (data.repas.groupes || []).filter(
-      g => g.id_groupe != data.idGroupe
+      (g) => g.id_groupe != data.idGroupe
     );
     if (data.repas.groupes.length == 0 && data.repas.offset_personnes == 0) {
       // le repas est maintenant vide, on le supprime
@@ -335,21 +337,21 @@ export default class Day extends DayProps {
 
     // on enlève le groupe
     data.repas.groupes = (data.repas.groupes || []).filter(
-      g => g.id_groupe != data.idGroupe
+      (g) => g.id_groupe != data.idGroupe
     );
 
     // on l'ajoute à la cible
     target = deepcopy(target); // force deepcopy
     target.groupes = (target.groupes || []).concat({
       id_repas: target.id,
-      id_groupe: data.idGroupe
+      id_groupe: data.idGroupe,
     });
 
     if (data.repas.groupes.length == 0 && data.repas.offset_personnes == 0) {
       // le repas est maintenant vide, on le supprime
       await Promise.all([
         this.C.api.DeleteRepas(data.repas),
-        this.C.api.UpdateManyRepas([target])
+        this.C.api.UpdateManyRepas([target]),
       ]);
     } else {
       await this.C.api.UpdateManyRepas([data.repas, target]);
@@ -380,7 +382,7 @@ export default class Day extends DayProps {
   }
 
   async removeRecette(repas: RepasComplet, toRemove: number) {
-    repas.recettes = (repas.recettes || []).filter(idR => idR != toRemove);
+    repas.recettes = (repas.recettes || []).filter((idR) => idR != toRemove);
     await this.C.api.UpdateManyRepas([repas]);
   }
 

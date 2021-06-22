@@ -11,7 +11,7 @@
             label="Rechercher"
             placeholder="Tappez..."
             :value="search"
-            @input="s => $emit('change', s)"
+            @input="(s) => $emit('change', s)"
             hide-details
             dense
             class="mt-3 mb-1"
@@ -55,17 +55,17 @@ const ToolbarProps = Vue.extend({
     search: String,
     elevation: {
       type: Number,
-      default: undefined
-    }
+      default: undefined,
+    },
   },
   model: {
     prop: "search",
-    event: "change"
-  }
+    event: "change",
+  },
 });
 
 @Component({
-  components: { TooltipBtn }
+  components: { TooltipBtn },
 })
 export default class Toolbar extends ToolbarProps {
   showSearch = false;

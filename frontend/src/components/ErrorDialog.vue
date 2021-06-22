@@ -23,8 +23,8 @@ import { Notifications } from "../logic/notifications";
 
 const ErrorDialogProps = Vue.extend({
   props: {
-    N: Object as () => Notifications
-  }
+    N: Object as () => Notifications,
+  },
 });
 
 @Component

@@ -63,12 +63,12 @@ import { Watch } from "vue-property-decorator";
 const ListeFournisseursProps = Vue.extend({
   props: {
     C: Object as () => Controller,
-    sejour: Object as () => SejourRepas | null
-  }
+    sejour: Object as () => SejourRepas | null,
+  },
 });
 
 @Component({
-  components: { TooltipBtn }
+  components: { TooltipBtn },
 })
 export default class ListeFournisseurs extends ListeFournisseursProps {
   idsFournisseurs: number[] = [];
@@ -80,7 +80,7 @@ export default class ListeFournisseurs extends ListeFournisseursProps {
 
   private initialIdsFournisseurs() {
     if (this.sejour == null) return [];
-    return (this.sejour.fournisseurs || []).map(f => f.id_fournisseur);
+    return (this.sejour.fournisseurs || []).map((f) => f.id_fournisseur);
   }
 
   get allFournisseurs() {
@@ -89,15 +89,15 @@ export default class ListeFournisseurs extends ListeFournisseursProps {
 
   select(lieu: string) {
     this.idsFournisseurs = this.allFournisseurs
-      .filter(f => f.lieu == lieu)
-      .map(f => f.id);
+      .filter((f) => f.lieu == lieu)
+      .map((f) => f.id);
   }
 
   save() {
     if (this.sejour == null) return;
     this.C.api.UpdateSejourFournisseurs({
       id_sejour: this.sejour.id,
-      ids_fournisseurs: this.idsFournisseurs
+      ids_fournisseurs: this.idsFournisseurs,
     });
   }
 }
