@@ -116,7 +116,7 @@ import { Controller } from "@/logic/controller";
 import { Formatter } from "@/logic/formatter";
 import { ContraintesProduits } from "./types";
 
-const PreviewCommandeProps = Vue.extend({
+const PreviewCommandeCompleteProps = Vue.extend({
   props: {
     C: Object as () => Controller,
     dateIngredients: Array as () => DateIngredientQuantites[],
@@ -131,7 +131,7 @@ interface commandeJour {
 @Component({
   components: { TooltipBtn, ListeAmbiguites },
 })
-export default class PreviewCommande extends PreviewCommandeProps {
+export default class PreviewCommandeComplete extends PreviewCommandeCompleteProps {
   data: CommandeCompleteItem[] = [];
   loading = false;
 

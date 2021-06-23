@@ -1,31 +1,53 @@
 <template>
-  <v-row class="fill-height px-2">
-    <v-col md="3" sm="6" class="align-self-center">
-      <form-calcul :C="C" :sejour="sejour" @change="onChange"></form-calcul>
-    </v-col>
-    <v-col md="4" sm="6" class="align-self-center">
-      <result-ingredients
-        :loading="loadingIngredients"
-        :dateIngredients="dateIngredients"
-        :origineIngredients="origineIngredients"
-        @go-to-ingredient="goToIngredient"
-      >
-      </result-ingredients>
-    </v-col>
-    <v-col class="align-self-center" md="5" sm="12">
+  <div>
+    <v-dialog v-model="showEditAssociationsLivraisons" max-width="800">
       <associe-livraisons
         :C="C"
         :dateIngredients="dateIngredients"
+        @valide="etablitCommandeSimple"
       ></associe-livraisons>
-    </v-col>
-    <!-- <v-col class="align-self-center" md="5" sm="12">
-      <preview-commande
-        :C="C"
-        :dateIngredients="dateIngredients"
-        @showOrigines="o => (origineIngredients = o)"
-      ></preview-commande>
-    </v-col> -->
-  </v-row>
+    </v-dialog>
+
+    <v-row class="fill-height px-2 mt-0">
+      <v-col md="3" sm="6" class="align-self-center">
+        <form-calcul :C="C" :sejour="sejour" @change="onChange"></form-calcul>
+      </v-col>
+      <v-col md="4" sm="6" class="align-self-center">
+        <result-ingredients
+          :loading="loadingIngredients"
+          :dateIngredients="dateIngredients"
+          :origineIngredients="origineIngredients"
+          @go-to-ingredient="goToIngredient"
+        >
+        </result-ingredients>
+      </v-col>
+      <v-col class="align-self-center" md="5" sm="12">
+        <v-tabs v-model="modeCommande" grow>
+          <v-tab> Par fournisseurs </v-tab>
+          <v-tab> Par produits </v-tab>
+        </v-tabs>
+
+        <v-tabs-items v-model="modeCommande">
+          <v-tab-item>
+            <preview-commande-simple
+              :C="C"
+              :commande="commandeSimple"
+              @showOrigines="(o) => (origineIngredients = o)"
+              @editAssociations="showEditAssociationsLivraisons = true"
+            ></preview-commande-simple>
+          </v-tab-item>
+          <v-tab-item>
+            TODO:
+            <!-- <preview-commande
+            :C="C"
+            :dateIngredients="dateIngredients"
+            @showOrigines="(o) => (origineIngredients = o)"
+          ></preview-commande> -->
+          </v-tab-item>
+        </v-tabs-items>
+      </v-col>
+    </v-row>
+  </div>
 </template>
 
 <script lang="ts">
@@ -34,11 +56,17 @@ import Component from "vue-class-component";
 
 import FormCalcul from "../components/recap_ingredients/FormCalcul.vue";
 import ResultIngredients from "../components/recap_ingredients/ResultIngredients.vue";
-import PreviewCommande from "../components/recap_ingredients/PreviewCommande.vue";
+import PreviewCommandeComplete from "../components/recap_ingredients/PreviewCommandeComplete.vue";
+import PreviewCommandeSimple from "../components/recap_ingredients/PreviewCommandeSimple.vue";
 
 import { Controller } from "../logic/controller";
-import { DateIngredientQuantites, TimedIngredientQuantite } from "../logic/api";
+import {
+  CommandeSimpleItem,
+  DateIngredientQuantites,
+  TimedIngredientQuantite,
+} from "../logic/api";
 import AssocieLivraisons from "@/components/recap_ingredients/AssocieLivraisons.vue";
+import AssociationIngredient from "@/components/produits/AssociationIngredient.vue";
 
 const RecapIngredientsProps = Vue.extend({
   props: {
@@ -50,19 +78,27 @@ const RecapIngredientsProps = Vue.extend({
   components: {
     FormCalcul,
     ResultIngredients,
-    PreviewCommande,
+    PreviewCommandeComplete,
+    PreviewCommandeSimple,
     AssocieLivraisons,
   },
 })
 export default class RecapIngredients extends RecapIngredientsProps {
+  showEditAssociationsLivraisons = false;
   showFormCalcul = false;
   loadingIngredients = false;
   dateIngredients: DateIngredientQuantites[] = [];
 
   origineIngredients: TimedIngredientQuantite[] = [];
 
+  regroupe = false; // TODO:
+
   // pour pouvoir raffraichir la requête
   critere: number[] = [];
+
+  commandeSimple: CommandeSimpleItem[] = [];
+
+  modeCommande = 0; // 0 = simple, 1 = complète
 
   get sejour() {
     return this.C.getSejour();
@@ -95,10 +131,26 @@ export default class RecapIngredients extends RecapIngredientsProps {
       return;
     }
     this.dateIngredients = res;
+    this.origineIngredients = []; // reset the highlights
   }
 
   goToIngredient(id: number) {
     this.$router.push({ name: "menus", query: { idIngredient: String(id) } });
+  }
+
+  async etablitCommandeSimple(associations: { [key: number]: number }) {
+    this.showEditAssociationsLivraisons = false;
+    const res = await this.C.api.EtablitCommandeSimple({
+      ingredients: this.dateIngredients,
+      contraintes: {
+        associations: associations,
+        regroupe: this.regroupe,
+      },
+    });
+    if (!res) {
+      return;
+    }
+    this.commandeSimple = res.commande || [];
   }
 }
 </script>

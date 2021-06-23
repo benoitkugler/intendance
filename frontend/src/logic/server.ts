@@ -261,10 +261,13 @@ export class API extends AbstractAPI {
   }
   protected onSuccessProposeLienIngredientProduit(
     data: ProduitsPossibles
-  ): void {}
+  ): void {
+    this.notifications.setMessage("Proposition d'association chargée.");
+  }
   protected onSuccessProposeLienIngredientLivraison(
     data: LivraisonsPossibles
   ): void {
+    this.notifications.setMessage("Proposition d'associations chargée.");
     this.notifications.spin = false;
   }
 

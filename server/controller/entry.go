@@ -171,7 +171,7 @@ func (ct RequeteContext) UpdateIngredient(ig models.Ingredient) (models.Ingredie
 	}
 	for _, prod := range produits {
 		contrainte := ContrainteIngredientProduit{ingredient: ig, produit: prod}
-		if err := contrainte.Check(); err != nil {
+		if err = contrainte.Check(); err != nil {
 			return ig, err
 		}
 	}
@@ -225,7 +225,7 @@ func (ct RequeteContext) DeleteIngredient(id int64, checkProduits bool) error {
 			return check
 		}
 
-		err = models.DeleteIngredientProduitsByIdIngredients(tx, id)
+		_, err = models.DeleteIngredientProduitsByIdIngredients(tx, id)
 		if err != nil {
 			return ErrorSQL(err)
 		}
@@ -280,13 +280,13 @@ func (ct RequeteContext) UpdateRecette(in RecetteComplet) (RecetteComplet, error
 	if err != nil {
 		return in, err
 	}
-	//TODO: notification aux utilisateurs avec possibilité de copie
+	// TODO: notification aux utilisateurs avec possibilité de copie
 	in.Recette, err = in.Recette.Update(tx)
 	if err != nil {
 		return in, tx.rollback(err)
 	}
 
-	err = models.DeleteRecetteIngredientsByIdRecettes(tx, in.Recette.Id)
+	_, err = models.DeleteRecetteIngredientsByIdRecettes(tx, in.Recette.Id)
 	if err != nil {
 		return in, tx.rollback(err)
 	}
@@ -317,14 +317,14 @@ func (ct RequeteContext) DeleteRecette(id int64) error {
 	if err != nil {
 		return tx.rollback(err)
 	}
-	//TODO: notification aux utilisateurs avec possibilité de copie
+	// TODO: notification aux utilisateurs avec possibilité de copie
 	// nécessite de rassembler les données nécessaires à la re-création
 	if L := len(ids); L > 0 {
 		_ = tx.rollback(err)
 		return fmt.Errorf(`Cette recette est présente dans <b>%d menu(s)</b>.
 		Si vous souhaitez vraiment la supprimer, il faudra d'abord l'en retirer.`, L)
 	}
-	err = models.DeleteRecetteIngredientsByIdRecettes(tx, id)
+	_, err = models.DeleteRecetteIngredientsByIdRecettes(tx, id)
 	if err != nil {
 		return tx.rollback(err)
 	}
@@ -380,13 +380,13 @@ func (ct RequeteContext) UpdateMenu(in MenuComplet) (MenuComplet, error) {
 	if err != nil {
 		return in, err
 	}
-	//TODO: notification aux utilisateurs avec possibilité de copie
+	// TODO: notification aux utilisateurs avec possibilité de copie
 	in.Menu, err = in.Menu.Update(tx)
 	if err != nil {
 		return in, tx.rollback(err)
 	}
 
-	err = models.DeleteMenuRecettesByIdMenus(tx, in.Id)
+	_, err = models.DeleteMenuRecettesByIdMenus(tx, in.Id)
 	if err != nil {
 		return in, tx.rollback(err)
 	}
@@ -396,7 +396,7 @@ func (ct RequeteContext) UpdateMenu(in MenuComplet) (MenuComplet, error) {
 		return in, tx.rollback(err)
 	}
 
-	err = models.DeleteMenuIngredientsByIdMenus(tx, in.Id)
+	_, err = models.DeleteMenuIngredientsByIdMenus(tx, in.Id)
 	if err != nil {
 		return in, tx.rollback(err)
 	}
@@ -417,11 +417,11 @@ func (ct RequeteContext) DeleteMenu(id int64) error {
 		return err
 	}
 	// supression des liens
-	err = models.DeleteMenuRecettesByIdMenus(tx, id)
+	_, err = models.DeleteMenuRecettesByIdMenus(tx, id)
 	if err != nil {
 		return tx.rollback(err)
 	}
-	err = models.DeleteMenuIngredientsByIdMenus(tx, id)
+	_, err = models.DeleteMenuIngredientsByIdMenus(tx, id)
 	if err != nil {
 		return tx.rollback(err)
 	}
@@ -550,10 +550,10 @@ func (ct RequeteContext) UpdateManyRepas(repass []RepasComplet) error {
 	cribleRepasRecettes := map[models.RepasRecette]bool{}       // pour respecter l'unicité
 	cribleRepasIngredients := map[models.RepasIngredient]bool{} // pour respecter l'unicité
 	for _, repas := range repass {
-		if err := ct.proprioRepas(repas.Id); err != nil {
+		if err = ct.proprioRepas(repas.Id); err != nil {
 			return tx.rollback(err)
 		}
-		if _, err := repas.Repas.Update(tx.Tx); err != nil {
+		if _, err = repas.Repas.Update(tx.Tx); err != nil {
 			return tx.rollback(err)
 		}
 		repasIds = append(repasIds, repas.Id)
@@ -569,7 +569,7 @@ func (ct RequeteContext) UpdateManyRepas(repass []RepasComplet) error {
 	}
 
 	// mise à jour des groupes
-	err = models.DeleteRepasGroupesByIdRepass(tx, repasIds...)
+	_, err = models.DeleteRepasGroupesByIdRepass(tx, repasIds...)
 	if err != nil {
 		return tx.rollback(err)
 	}
@@ -582,7 +582,7 @@ func (ct RequeteContext) UpdateManyRepas(repass []RepasComplet) error {
 	}
 
 	// mise à jour des recettes
-	err = models.DeleteRepasRecettesByIdRepass(tx, repasIds...)
+	_, err = models.DeleteRepasRecettesByIdRepass(tx, repasIds...)
 	if err != nil {
 		return tx.rollback(err)
 	}
@@ -595,7 +595,7 @@ func (ct RequeteContext) UpdateManyRepas(repass []RepasComplet) error {
 	}
 
 	// mise à jour des ingredients
-	err = models.DeleteRepasIngredientsByIdRepass(tx, repasIds...)
+	_, err = models.DeleteRepasIngredientsByIdRepass(tx, repasIds...)
 	if err != nil {
 		return tx.rollback(err)
 	}

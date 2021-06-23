@@ -55,7 +55,7 @@ func (ct RequeteContext) InitiateRepas(params InAssistantCreateRepass) error {
 	if params.Options.DeleteExisting {
 		// on supprime tous les repas liés au séjour
 		// lien repas-groupes
-		_, err := tx.Exec(`DELETE FROM repas_groupes WHERE id_repas = 
+		_, err = tx.Exec(`DELETE FROM repas_groupes WHERE id_repas = 
 			ANY(SELECT id_repas FROM sejours WHERE id = $1)`, params.IdSejour)
 		if err != nil {
 			return tx.rollback(err)

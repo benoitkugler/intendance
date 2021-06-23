@@ -9,6 +9,7 @@ import {
   UniteLabels,
   Produit,
   Livraison,
+  Date_,
 } from "./api";
 
 const Months = [
@@ -60,7 +61,7 @@ export class Formatter {
     return `appartient à ${prop.prenom_nom}`;
   };
 
-  static formatDate(dateString: Time) {
+  static formatDate(dateString: Time | Date_) {
     const date = new Date(dateString);
     if (isNaN(date.valueOf())) return "";
     return date.toLocaleDateString("fr-FR", {

@@ -180,9 +180,9 @@ func (s Server) ResoudIngredientsRepas(idRepas, nbPersonnes int64) ([]Ingredient
 		return nil, ErrorSQL(err)
 	}
 	// idIngredient -> quantité pour le nombre de personnes souhaité
-	quantites := quantites{}
-	data.resoudRepas(idRepas, nbPersonnes, quantites)
-	out := data.formatQuantites(quantites)
+	qts := quantites{}
+	data.resoudRepas(idRepas, nbPersonnes, qts)
+	out := data.formatQuantites(qts)
 	return out, nil
 }
 

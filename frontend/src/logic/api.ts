@@ -307,12 +307,15 @@ export interface InCommandeSimple {
   ingredients: DateIngredientQuantites[] | null;
   contraintes: CommandeContraintes;
 }
+// github.com/benoitkugler/intendance/server/controller.IngredientQuantiteOrigines
+export type IngredientQuantiteOrigines = {
+  origines: TimedIngredientQuantite[] | null;
+} & IngredientQuantite;
 // github.com/benoitkugler/intendance/server/controller.CommandeSimpleItem
 export interface CommandeSimpleItem {
   livraison: Livraison;
   jour_commande: Time;
-  Ingredients: IngredientQuantite[] | null;
-  origines: TimedIngredientQuantite[] | null;
+  ingredients: IngredientQuantiteOrigines[] | null;
 }
 // github.com/benoitkugler/intendance/server/controller.OutCommandeSimple
 export interface OutCommandeSimple {
@@ -358,9 +361,8 @@ export abstract class AbstractAPI {
 
   protected async rawGetUtilisateurs() {
     const fullUrl = this.baseUrl + "/api/utilisateurs";
-    const rep: AxiosResponse<{
-      [key: number]: Utilisateur;
-    } | null> = await Axios.get(fullUrl, { headers: this.getHeaders() });
+    const rep: AxiosResponse<{ [key: number]: Utilisateur } | null> =
+      await Axios.get(fullUrl, { headers: this.getHeaders() });
     return rep.data;
   }
 
@@ -477,9 +479,8 @@ export abstract class AbstractAPI {
 
   protected async rawGetRecettes() {
     const fullUrl = this.baseUrl + "/api/recettes";
-    const rep: AxiosResponse<{
-      [key: number]: RecetteComplet;
-    } | null> = await Axios.get(fullUrl, { headers: this.getHeaders() });
+    const rep: AxiosResponse<{ [key: number]: RecetteComplet } | null> =
+      await Axios.get(fullUrl, { headers: this.getHeaders() });
     return rep.data;
   }
 
@@ -549,12 +550,11 @@ export abstract class AbstractAPI {
 
   protected async rawDeleteRecette(params: { id: number }) {
     const fullUrl = this.baseUrl + "/api/recettes";
-    const rep: AxiosResponse<{
-      [key: number]: RecetteComplet;
-    } | null> = await Axios.delete(fullUrl, {
-      params: { id: String(params["id"]) },
-      headers: this.getHeaders(),
-    });
+    const rep: AxiosResponse<{ [key: number]: RecetteComplet } | null> =
+      await Axios.delete(fullUrl, {
+        params: { id: String(params["id"]) },
+        headers: this.getHeaders(),
+      });
     return rep.data;
   }
 
@@ -576,9 +576,8 @@ export abstract class AbstractAPI {
 
   protected async rawGetMenus() {
     const fullUrl = this.baseUrl + "/api/menus";
-    const rep: AxiosResponse<{
-      [key: number]: MenuComplet;
-    } | null> = await Axios.get(fullUrl, { headers: this.getHeaders() });
+    const rep: AxiosResponse<{ [key: number]: MenuComplet } | null> =
+      await Axios.get(fullUrl, { headers: this.getHeaders() });
     return rep.data;
   }
 
@@ -644,12 +643,11 @@ export abstract class AbstractAPI {
 
   protected async rawDeleteMenu(params: { id: number }) {
     const fullUrl = this.baseUrl + "/api/menus";
-    const rep: AxiosResponse<{
-      [key: number]: MenuComplet;
-    } | null> = await Axios.delete(fullUrl, {
-      params: { id: String(params["id"]) },
-      headers: this.getHeaders(),
-    });
+    const rep: AxiosResponse<{ [key: number]: MenuComplet } | null> =
+      await Axios.delete(fullUrl, {
+        params: { id: String(params["id"]) },
+        headers: this.getHeaders(),
+      });
     return rep.data;
   }
 

@@ -47,10 +47,13 @@ type CommandeSimpleItem struct {
 	JourCommande time.Time `json:"jour_commande"`
 
 	// liste groupée des ingrédients à commander
-	// (un même ingrédient n'y apparait qu'une fois)
-	Ingredients []IngredientQuantite
+	// (un même ingrédient n'y apparait qu'une fois),
+	// avec les ingrédients donnant lieu à cet item
+	Ingredients []IngredientQuantiteOrigines `json:"ingredients"`
+}
 
-	// ingrédients donnant lieu à cet item
+type IngredientQuantiteOrigines struct {
+	IngredientQuantite
 	Origines []TimedIngredientQuantite `json:"origines"`
 }
 
@@ -66,11 +69,19 @@ func (l livraisonResolver) resolve(idIngredient int64) (idTarget int64, livraiso
 
 // regroupe les ingrédients par id (en sommant les quantités);
 // les date de demande sont ignorées
-func regroupeIngredients(l []TimedIngredientQuantite) map[int64]float64 {
-	out := map[int64]float64{} // id ingredient -> quantité
+func regroupeIngredients(l []TimedIngredientQuantite, base models.Ingredients) (out []IngredientQuantiteOrigines) {
+	tmp := map[int64]IngredientQuantiteOrigines{} // id ingredient -> quantité
 	for _, ing := range l {
-		out[ing.Ingredient.Id] += ing.Quantite
+		v := tmp[ing.Ingredient.Id]
+		v.Quantite += ing.Quantite
+		v.Origines = append(v.Origines, ing)
+		v.Ingredient = base[ing.Ingredient.Id]
+		tmp[ing.Ingredient.Id] = v
 	}
+	for _, v := range tmp {
+		out = append(out, v)
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i].Ingredient.Id < out[j].Ingredient.Id })
 	return out
 }
 
@@ -100,9 +111,10 @@ func (ct RequeteContext) EtablitCommandeSimple(ingredients []DateIngredientQuant
 	// on ré-organise les données
 	var out []CommandeSimpleItem
 	for key, value := range accu {
-		item := CommandeSimpleItem{Livraison: livraisons[key.idTarget], JourCommande: key.dateCommande, Origines: value}
-		for idIngredient, quantite := range regroupeIngredients(value) {
-			item.Ingredients = append(item.Ingredients, IngredientQuantite{Ingredient: allIngredients[idIngredient], Quantite: quantite})
+		item := CommandeSimpleItem{
+			Livraison:    livraisons[key.idTarget],
+			JourCommande: key.dateCommande,
+			Ingredients:  regroupeIngredients(value, allIngredients),
 		}
 		out = append(out, item)
 	}

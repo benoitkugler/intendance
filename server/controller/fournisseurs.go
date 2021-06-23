@@ -153,7 +153,7 @@ func (ct RequeteContext) DeleteFournisseur(idFournisseur int64) error {
 	}
 
 	// sejours
-	err = models.DeleteSejourFournisseursByIdFournisseurs(tx, idFournisseur)
+	_, err = models.DeleteSejourFournisseursByIdFournisseurs(tx, idFournisseur)
 	if err != nil {
 		return tx.rollback(err)
 	}
@@ -186,7 +186,7 @@ func (ct RequeteContext) DeleteFournisseur(idFournisseur int64) error {
 	// livraisons par cascade
 
 	// utilisateurs
-	err = models.DeleteUtilisateurFournisseursByIdFournisseurs(tx, idFournisseur)
+	_, err = models.DeleteUtilisateurFournisseursByIdFournisseurs(tx, idFournisseur)
 	if err != nil {
 		return tx.rollback(err)
 	}
@@ -208,7 +208,7 @@ func (ct RequeteContext) UpdateSejourFournisseurs(idSejour int64, idsFournisseur
 	}
 
 	// reset les fournisseurs du séjour ...
-	err = models.DeleteSejourFournisseursByIdSejours(tx, idSejour)
+	_, err = models.DeleteSejourFournisseursByIdSejours(tx, idSejour)
 	if err != nil {
 		return tx.rollback(err)
 	}
@@ -259,7 +259,7 @@ func (ct RequeteContext) DeleteLivraison(idLivraison int64) error {
 		return ErrorSQL(err)
 	}
 
-	if err := ct.checkLivraisonFournisseur(livraison); err != nil {
+	if err = ct.checkLivraisonFournisseur(livraison); err != nil {
 		return err
 	}
 

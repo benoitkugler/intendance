@@ -92,11 +92,11 @@ func (ct RequeteContext) AjouteIngredientProduit(idIngredient int64, produit mod
 	// pour définir l'unité utilisée.
 	// Pour les autres, les unités du produit et de l'ingrédient doivent être identiques.
 	contrainte2 := ContrainteIngredientProduit{ingredient: ing, produit: produit}
-	if err := contrainte2.Check(); err != nil {
+	if err = contrainte2.Check(); err != nil {
 		return produit, err
 	}
 
-	if _, err := ct.checkFournisseurs(produit); err != nil {
+	if _, err = ct.checkFournisseurs(produit); err != nil {
 		return produit, err
 	}
 
@@ -119,16 +119,16 @@ func (ct RequeteContext) AjouteIngredientProduit(idIngredient int64, produit mod
 // UpdateProduit modifie un produit, sous réserve qu'il ne soit pas encore utilisé dans une commande.
 func (ct RequeteContext) UpdateProduit(produit models.Produit) (out models.Produit, err error) {
 	contrainte := ContrainteProduit{produit: produit}
-	if err := contrainte.Check(); err != nil {
+	if err = contrainte.Check(); err != nil {
 		return out, err
 	}
 
-	if _, err := ct.checkFournisseurs(produit); err != nil {
+	if _, err = ct.checkFournisseurs(produit); err != nil {
 		return out, err
 	}
 
 	// vérification de la présence dans les commandes
-	if err := ct.checkCommandes(produit); err != nil {
+	if err = ct.checkCommandes(produit); err != nil {
 		return out, err
 	}
 
@@ -145,7 +145,7 @@ func (ct RequeteContext) UpdateProduit(produit models.Produit) (out models.Produ
 	}
 	for _, ing := range ings {
 		contrainte := ContrainteIngredientProduit{ingredient: ing, produit: produit}
-		if err := contrainte.Check(); err != nil {
+		if err = contrainte.Check(); err != nil {
 			return out, err
 		}
 	}
@@ -161,15 +161,15 @@ func (ct RequeteContext) DeleteProduit(idProduit int64) error {
 		return ErrorSQL(err)
 	}
 
-	if _, err := ct.checkFournisseurs(produit); err != nil {
+	if _, err = ct.checkFournisseurs(produit); err != nil {
 		return err
 	}
 
-	if err := ct.checkProprioAllIngredient(produit); err != nil {
+	if err = ct.checkProprioAllIngredient(produit); err != nil {
 		return err
 	}
 
-	if err := ct.checkCommandes(produit); err != nil {
+	if err = ct.checkCommandes(produit); err != nil {
 		return err
 	}
 

@@ -1,13 +1,26 @@
 <template>
   <v-card>
+    <v-card-title primary-title>
+      Association avec les fournisseurs
+      <v-spacer></v-spacer>
+      <tooltip-btn
+        tooltip="Charger une proposition d'association utilisant vos préférences"
+        @click="fetchHints"
+        color="accent"
+        >Choix automatique
+      </tooltip-btn>
+    </v-card-title>
+    <v-card-subtitle>
+      Cliquez-déposez pour associer un ingrédient à un fournisseur.
+    </v-card-subtitle>
     <v-card-text>
-      <v-btn @click="fetchHints">Hint</v-btn>
       <v-row>
         <v-col>
           <livraison-ingredients
             :C="C"
             :livraison="undefined"
             :ingredients="getIngredientsByLivraison(undefined)"
+            @swap-ingredient="(id) => swapIngredient(undefined, id)"
           ></livraison-ingredients>
         </v-col>
         <v-col v-for="livraison in livraisons" :key="livraison.id">
@@ -15,10 +28,17 @@
             :C="C"
             :livraison="livraison"
             :ingredients="getIngredientsByLivraison(livraison.id)"
+            @swap-ingredient="(id) => swapIngredient(livraison, id)"
           ></livraison-ingredients>
         </v-col>
       </v-row>
     </v-card-text>
+    <v-card-actions>
+      <v-spacer />
+      <v-btn :disabled="!isAssociationsFilled" color="success" @click="valide"
+        >Editer la commande</v-btn
+      >
+    </v-card-actions>
   </v-card>
 </template>
 
@@ -27,10 +47,12 @@ import {
   CommandeContraintes,
   DateIngredientQuantites,
   Ingredient,
+  Livraison,
 } from "@/logic/api";
 import { Controller } from "@/logic/controller";
 import Vue from "vue";
 import Component from "vue-class-component";
+import TooltipBtn from "../utils/TooltipBtn.vue";
 import LivraisonIngredients from "./LivraisonIngredients.vue";
 
 const AssocieLivraisonsProps = Vue.extend({
@@ -41,11 +63,10 @@ const AssocieLivraisonsProps = Vue.extend({
 });
 
 @Component({
-  components: { LivraisonIngredients },
+  components: { LivraisonIngredients, TooltipBtn },
 })
 export default class AssocieLivraisons extends AssocieLivraisonsProps {
   loading = true;
-
   private associations: { [key: number]: number } = {};
 
   get livraisons() {
@@ -61,6 +82,13 @@ export default class AssocieLivraisons extends AssocieLivraisonsProps {
     });
     return Object.keys(tmp).map(
       (idIng) => this.C.api.ingredients[Number(idIng)]
+    );
+  }
+
+  get isAssociationsFilled() {
+    return (
+      this.ingredients.filter((ing) => this.associations[ing.id] === undefined)
+        .length === 0
     );
   }
 
@@ -82,10 +110,16 @@ export default class AssocieLivraisons extends AssocieLivraisonsProps {
     }
   }
 
+  swapIngredient(livraisonCible: Livraison | undefined, idIngredient: number) {
+    if (livraisonCible === undefined) {
+      Vue.delete(this.associations, idIngredient); // VRC
+    } else {
+      Vue.set(this.associations, idIngredient, livraisonCible.id); // VRC
+    }
+  }
+
   valide() {
-    // TODO: construire out
-    const out: { [key: number]: number } = {};
-    this.$emit("valide", out);
+    this.$emit("valide", this.associations);
   }
 }
 </script>
