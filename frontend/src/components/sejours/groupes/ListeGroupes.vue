@@ -99,6 +99,9 @@
       </v-toolbar-items>
     </v-toolbar>
     <v-list dense max-height="75vh" class="overflow-y-auto">
+      <v-list-item v-if="groupes.length === 0">
+        <v-list-item-content><i> Aucun groupe.</i> </v-list-item-content>
+      </v-list-item>
       <v-list-item-group v-model="groupe" mandatory>
         <v-list-item
           v-for="groupe in groupes"
