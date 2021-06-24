@@ -14,6 +14,9 @@
       </v-toolbar-items>
     </v-toolbar>
     <v-list dense max-height="75vh" class="overflow-y-auto">
+      <v-list-item v-if="allFournisseurs.length === 0">
+        <v-list-item-content><i> Aucun fournisseur.</i> </v-list-item-content>
+      </v-list-item>
       <v-list-item-group v-model="idsFournisseurs" multiple>
         <template v-for="(fournisseur, i) in allFournisseurs">
           <v-list-item :key="i" :value="fournisseur.id">

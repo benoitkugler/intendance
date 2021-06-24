@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="fill-height">
     <v-dialog v-model="showEditParametresSimple" max-width="800">
       <options-commande-simple
         :C="C"
@@ -8,7 +8,7 @@
       ></options-commande-simple>
     </v-dialog>
 
-    <v-row class="fill-height px-2 mt-0">
+    <v-row v-if="sejour !== null" class="fill-height px-2 mt-0">
       <v-col md="3" sm="6" class="align-self-center">
         <form-calcul :C="C" :sejour="sejour" @change="onChange"></form-calcul>
       </v-col>
@@ -47,6 +47,20 @@
         </v-tabs-items>
       </v-col>
     </v-row>
+    <v-container v-else fluid class="fill-height">
+      <v-row no-gutters class="fill-height">
+        <v-col v-if="sejour == null" class="align-self-center">
+          <v-alert
+            class="align-self-center"
+            color="secondary"
+            :value="true"
+            transition="fade-transition"
+          >
+            Veuillez choisir un séjour via l'onglet <b>Séjours</b>
+          </v-alert>
+        </v-col>
+      </v-row>
+    </v-container>
   </div>
 </template>
 

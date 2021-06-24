@@ -58,6 +58,9 @@
       @add="startCreateIngredient"
     ></toolbar>
     <v-list dense :max-height="height" class="overflow-y-auto" ref="list">
+      <v-list-item v-if="ingredients.length === 0">
+        <v-list-item-content><i> Aucun ingrédient.</i> </v-list-item-content>
+      </v-list-item>
       <v-list-item-group
         :value="state.selection.idIngredient"
         @change="(args) => $emit('change', args)"

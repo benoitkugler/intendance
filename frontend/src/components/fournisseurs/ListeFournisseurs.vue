@@ -66,6 +66,9 @@
       </v-toolbar-items>
     </v-toolbar>
 
+    <v-list-item v-if="treeItems.length === 0">
+      <v-list-item-content><i> Aucun fournisseur.</i> </v-list-item-content>
+    </v-list-item>
     <v-treeview :items="treeItems" dense class="my-2" open-on-click>
       <template v-slot:label="props">
         <!-- Fournisseur -->
