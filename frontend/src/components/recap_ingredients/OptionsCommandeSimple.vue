@@ -83,7 +83,7 @@ export default class OptionsCommandeSimple extends OptionsCommandeSimpleProps {
   };
 
   get livraisons() {
-    return Object.values(this.C.api.livraisons);
+    return this.C.getSejourLivraisons();
   }
 
   get ingredients() {

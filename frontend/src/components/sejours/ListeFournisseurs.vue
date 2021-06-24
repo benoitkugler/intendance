@@ -7,7 +7,7 @@
       <v-spacer></v-spacer>
       <v-toolbar-items>
         <tooltip-btn
-          tooltip="Sauvegarder les fournisseurs sélectionnés au séjour"
+          tooltip="Associer les fournisseurs sélectionnés au séjour"
           mdi-icon="content-save"
           @click="save"
         ></tooltip-btn>
@@ -22,7 +22,6 @@
                 <v-checkbox
                   :input-value="props.active"
                   :true-value="fournisseur.id"
-                  @click="props.toggle"
                 ></v-checkbox>
               </v-list-item-action>
               <v-list-item-content>

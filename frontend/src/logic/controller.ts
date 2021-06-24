@@ -245,4 +245,17 @@ export class Controller {
     if (out === undefined) return;
     this.notifications.setMessage("Le repas a été déplacé avec succès.");
   }
+
+  /** Renvoie les fournisseurs (livraisons en fait) associées au séjour courant */
+  getSejourLivraisons() {
+    const sejour = this.getSejour();
+    if (sejour === null) return [];
+    const hasFournisseur = (idFournisseur: number) =>
+      (sejour.fournisseurs || []).findIndex(
+        (sj) => sj.id_fournisseur == idFournisseur
+      ) != -1;
+    return Object.values(this.api.livraisons).filter((liv) =>
+      hasFournisseur(liv.id_fournisseur)
+    );
+  }
 }

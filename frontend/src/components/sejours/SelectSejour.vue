@@ -8,7 +8,15 @@
     @change="(args) => $emit('change', Number(args))"
     class="mx-2"
     outlined
-  ></v-select>
+  >
+    <template v-slot:no-data>
+      <v-list-item>
+        <v-list-item-content>
+          Aucun séjour n'est encore déclaré.
+        </v-list-item-content>
+      </v-list-item>
+    </template>
+  </v-select>
 </template>
 
 <script lang="ts">
