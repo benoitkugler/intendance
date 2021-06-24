@@ -37,15 +37,8 @@ func main() {
 
 	e := echo.New()
 
-	adress := setup(e, *dev, server.Server)
+	setup(e, *dev, server.Server)
 
-	// erreurs explicites, même en production
-	e.HTTPErrorHandler = func(err error, c echo.Context) {
-		err = echo.NewHTTPError(400, err.Error())
-		e.DefaultHTTPErrorHandler(err, c)
-	}
-
-	e.Group("/static", middleware.Gzip()).Static("/*", "server/static")
 	routes(e, server)
 
 	if err := server.DB.Ping(); err != nil {
@@ -58,6 +51,7 @@ func main() {
 		return
 	}
 
+	adress := getAdress(*dev)
 	e.Logger.Fatal(e.Start(adress))
 }
 
@@ -70,10 +64,14 @@ func autoriseCORS(e *echo.Echo) {
 	fmt.Println("CORS activé.")
 }
 
-func setup(e *echo.Echo, dev bool, s controller.Server) string {
-	var adress string
+func setup(e *echo.Echo, dev bool, s controller.Server) {
+	// erreurs explicites, même en production
+	e.HTTPErrorHandler = func(err error, c echo.Context) {
+		err = echo.NewHTTPError(400, err.Error())
+		e.DefaultHTTPErrorHandler(err, c)
+	}
+
 	if dev {
-		adress = "localhost:1323"
 		autoriseCORS(e)
 		credences, err := s.GetDevToken()
 		if err != nil {
@@ -83,6 +81,14 @@ func setup(e *echo.Echo, dev bool, s controller.Server) string {
 		e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{Format: "${uri} => ${status} ${error}\n"}))
 	} else {
 		autoriseCORS(e) // FIXME:
+	}
+}
+
+func getAdress(dev bool) string {
+	var adress string
+	if dev {
+		adress = "localhost:1323"
+	} else {
 		host := os.Getenv("IP")
 		port, err := strconv.Atoi(os.Getenv("PORT"))
 		if err != nil {
@@ -97,6 +103,8 @@ func setup(e *echo.Echo, dev bool, s controller.Server) string {
 }
 
 func routes(e *echo.Echo, s views.Server) {
+	e.Group("/static", middleware.Gzip()).Static("/*", "server/static")
+
 	for _, route := range []string{
 		"/",
 		"/sejours",
