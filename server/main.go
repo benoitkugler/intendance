@@ -20,12 +20,19 @@ import (
 
 func main() {
 	dev := flag.Bool("dev", false, "localhost + DB dev")
+	dry := flag.Bool("dry", false, "run the setup and exit")
 	flag.Parse()
 
-	db, err := models.ConnectDB(logs.DB_DEV)
+	creds := logs.DB_PROD
+	if *dev {
+		creds = logs.DB_DEV
+	}
+	db, err := models.ConnectDB(creds)
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer db.Close()
+
 	server := views.Server{Server: controller.Server{DB: db, Dev: *dev}}
 
 	e := echo.New()
@@ -40,6 +47,16 @@ func main() {
 
 	e.Group("/static", middleware.Gzip()).Static("/*", "server/static")
 	routes(e, server)
+
+	if err := server.DB.Ping(); err != nil {
+		log.Fatalf("DB not responding : %s", err)
+	}
+	fmt.Println("DB OK.")
+
+	if *dry {
+		fmt.Println("Setup done, exit.")
+		return
+	}
 
 	e.Logger.Fatal(e.Start(adress))
 }
@@ -66,11 +83,6 @@ func setup(e *echo.Echo, dev bool, s controller.Server) string {
 		e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{Format: "${uri} => ${status} ${error}\n"}))
 	} else {
 		autoriseCORS(e) // FIXME:
-		if err := s.DB.Ping(); err != nil {
-			log.Fatalf("DB not responding : %s", err)
-		}
-		fmt.Println("DB OK.")
-
 		host := os.Getenv("IP")
 		port, err := strconv.Atoi(os.Getenv("PORT"))
 		if err != nil {
