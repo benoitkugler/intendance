@@ -1,11 +1,11 @@
 <template>
   <div>
-    <v-dialog v-model="showEditAssociationsLivraisons" max-width="800">
-      <associe-livraisons
+    <v-dialog v-model="showEditParametresSimple" max-width="800">
+      <options-commande-simple
         :C="C"
         :dateIngredients="dateIngredients"
         @valide="etablitCommandeSimple"
-      ></associe-livraisons>
+      ></options-commande-simple>
     </v-dialog>
 
     <v-row class="fill-height px-2 mt-0">
@@ -33,11 +33,11 @@
               :C="C"
               :commande="commandeSimple"
               @showOrigines="(o) => (origineIngredients = o)"
-              @editAssociations="showEditAssociationsLivraisons = true"
+              @editParametres="showEditParametresSimple = true"
             ></preview-commande-simple>
           </v-tab-item>
           <v-tab-item>
-            TODO:
+            TODO
             <!-- <preview-commande
             :C="C"
             :dateIngredients="dateIngredients"
@@ -61,11 +61,12 @@ import PreviewCommandeSimple from "../components/recap_ingredients/PreviewComman
 
 import { Controller } from "../logic/controller";
 import {
+  CommandeContraintes,
   CommandeSimpleItem,
   DateIngredientQuantites,
   TimedIngredientQuantite,
 } from "../logic/api";
-import AssocieLivraisons from "@/components/recap_ingredients/AssocieLivraisons.vue";
+import OptionsCommandeSimple from "@/components/recap_ingredients/OptionsCommandeSimple.vue";
 import AssociationIngredient from "@/components/produits/AssociationIngredient.vue";
 
 const RecapIngredientsProps = Vue.extend({
@@ -80,18 +81,16 @@ const RecapIngredientsProps = Vue.extend({
     ResultIngredients,
     PreviewCommandeComplete,
     PreviewCommandeSimple,
-    AssocieLivraisons,
+    OptionsCommandeSimple,
   },
 })
 export default class RecapIngredients extends RecapIngredientsProps {
-  showEditAssociationsLivraisons = false;
+  showEditParametresSimple = false;
   showFormCalcul = false;
   loadingIngredients = false;
   dateIngredients: DateIngredientQuantites[] = [];
 
   origineIngredients: TimedIngredientQuantite[] = [];
-
-  regroupe = false; // TODO:
 
   // pour pouvoir raffraichir la requête
   critere: number[] = [];
@@ -138,14 +137,11 @@ export default class RecapIngredients extends RecapIngredientsProps {
     this.$router.push({ name: "menus", query: { idIngredient: String(id) } });
   }
 
-  async etablitCommandeSimple(associations: { [key: number]: number }) {
-    this.showEditAssociationsLivraisons = false;
+  async etablitCommandeSimple(options: CommandeContraintes) {
+    this.showEditParametresSimple = false;
     const res = await this.C.api.EtablitCommandeSimple({
       ingredients: this.dateIngredients,
-      contraintes: {
-        associations: associations,
-        regroupe: this.regroupe,
-      },
+      contraintes: options,
     });
     if (!res) {
       return;

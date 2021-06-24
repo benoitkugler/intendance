@@ -48,7 +48,8 @@ export function compareArrays<T>(a: T[], b: T[]) {
   return true;
 }
 
-// Renvoie un prédicat correspondant à la recherche de `search`
+/** Renvoie un prédicat correspondant à la recherche de `search`
+dans une string */
 export function searchFunction(search: string) {
   // recherche vide : tout match
   if (!search) return (item: string) => true;

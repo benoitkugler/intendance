@@ -1,13 +1,13 @@
 <template>
   <v-card>
     <v-card-title primary-title>
-      Association avec les fournisseurs
+      Options de la commande
       <v-spacer></v-spacer>
       <tooltip-btn
         tooltip="Charger une proposition d'association utilisant vos préférences"
         @click="fetchHints"
         color="accent"
-        >Choix automatique
+        >Choix automatique des fournisseurs
       </tooltip-btn>
     </v-card-title>
     <v-card-subtitle>
@@ -15,22 +15,23 @@
     </v-card-subtitle>
     <v-card-text>
       <v-row>
-        <v-col>
-          <livraison-ingredients
-            :C="C"
-            :livraison="undefined"
-            :ingredients="getIngredientsByLivraison(undefined)"
-            @swap-ingredient="(id) => swapIngredient(undefined, id)"
-          ></livraison-ingredients>
-        </v-col>
-        <v-col v-for="livraison in livraisons" :key="livraison.id">
-          <livraison-ingredients
-            :C="C"
-            :livraison="livraison"
-            :ingredients="getIngredientsByLivraison(livraison.id)"
-            @swap-ingredient="(id) => swapIngredient(livraison, id)"
-          ></livraison-ingredients>
-        </v-col>
+        <v-autocomplete
+          hide-no-data
+          hide-selected
+          label="Produits"
+          placeholder="Taper pour rechercher un autre produit..."
+          prepend-icon="mdi-database-search"
+          return-object
+        ></v-autocomplete>
+      </v-row>
+      <v-row>
+        <v-switch
+          label="Regroupe au premier jour de commande"
+          v-model="options.regroupe"
+          class="my-auto pt-0"
+          persistent-hint
+          hint="Regroupe toutes les commandes sur le premier jour, au lieu d'étaler au mieux."
+        ></v-switch>
       </v-row>
     </v-card-text>
     <v-card-actions>
@@ -55,7 +56,7 @@ import Component from "vue-class-component";
 import TooltipBtn from "../utils/TooltipBtn.vue";
 import LivraisonIngredients from "./LivraisonIngredients.vue";
 
-const AssocieLivraisonsProps = Vue.extend({
+const OptionsCommandeCompleteProps = Vue.extend({
   props: {
     C: Object as () => Controller,
     dateIngredients: Array as () => DateIngredientQuantites[],
@@ -65,9 +66,13 @@ const AssocieLivraisonsProps = Vue.extend({
 @Component({
   components: { LivraisonIngredients, TooltipBtn },
 })
-export default class AssocieLivraisons extends AssocieLivraisonsProps {
+export default class OptionsCommandeComplete extends OptionsCommandeCompleteProps {
   loading = true;
-  private associations: { [key: number]: number } = {};
+
+  private options = {
+    associations: {} as { [key: number]: number },
+    regroupe: false,
+  };
 
   get livraisons() {
     return Object.values(this.C.api.livraisons);
@@ -87,14 +92,15 @@ export default class AssocieLivraisons extends AssocieLivraisonsProps {
 
   get isAssociationsFilled() {
     return (
-      this.ingredients.filter((ing) => this.associations[ing.id] === undefined)
-        .length === 0
+      this.ingredients.filter(
+        (ing) => this.options.associations[ing.id] === undefined
+      ).length === 0
     );
   }
 
   getIngredientsByLivraison(idLivraison: number | undefined) {
     return this.ingredients.filter(
-      (ing) => this.associations[ing.id] === idLivraison
+      (ing) => this.options.associations[ing.id] === idLivraison
     );
   }
 
@@ -106,20 +112,20 @@ export default class AssocieLivraisons extends AssocieLivraisonsProps {
     if (data === undefined) return;
     for (const id in data || {}) {
       // merge into current
-      Vue.set(this.associations, id, (data || {})[id]); //VRC
+      Vue.set(this.options.associations, id, (data || {})[id]); //VRC
     }
   }
 
   swapIngredient(livraisonCible: Livraison | undefined, idIngredient: number) {
     if (livraisonCible === undefined) {
-      Vue.delete(this.associations, idIngredient); // VRC
+      Vue.delete(this.options.associations, idIngredient); // VRC
     } else {
-      Vue.set(this.associations, idIngredient, livraisonCible.id); // VRC
+      Vue.set(this.options.associations, idIngredient, livraisonCible.id); // VRC
     }
   }
 
   valide() {
-    this.$emit("valide", this.associations);
+    this.$emit("valide", this.options);
   }
 }
 </script>

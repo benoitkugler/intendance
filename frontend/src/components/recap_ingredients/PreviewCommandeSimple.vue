@@ -4,10 +4,10 @@
       Commande par fournisseurs
       <v-spacer></v-spacer>
       <tooltip-btn
-        tooltip="Modifier les associations entre ingrédients et fournisseurs"
+        tooltip="Modifier les paramètres de la commande"
         mdi-icon="cogs"
         small
-        @click="editAssociations"
+        @click="editParametres"
       ></tooltip-btn>
     </v-card-title>
     <v-progress-linear indeterminate :active="loading"></v-progress-linear>
@@ -65,7 +65,7 @@
       </v-expansion-panel>
     </v-expansion-panels>
     <div v-if="commandes.length == 0" class="py-8 pa-2 font-italic text-center">
-      <v-btn color="success" outlined @click="editAssociations"
+      <v-btn color="success" outlined @click="editParametres"
         >Etablir la commande</v-btn
       >
     </div>
@@ -77,7 +77,6 @@ import Vue from "vue";
 import Component from "vue-class-component";
 
 import TooltipBtn from "../utils/TooltipBtn.vue";
-import ListeAmbiguites from "./ListeAmbiguites.vue";
 
 import {
   Time,
@@ -115,7 +114,7 @@ interface commandeItem {
 }
 
 @Component({
-  components: { TooltipBtn, ListeAmbiguites },
+  components: { TooltipBtn },
 })
 export default class PreviewCommandeSimple extends PreviewCommandeSimpleProps {
   loading = false;
@@ -156,8 +155,8 @@ export default class PreviewCommandeSimple extends PreviewCommandeSimpleProps {
     this.$emit("showOrigines", item.origines);
   }
 
-  editAssociations() {
-    this.$emit("editAssociations");
+  editParametres() {
+    this.$emit("editParametres");
   }
 
   expandIngredientsJour(commande: commandeJour): commandeItem[] {

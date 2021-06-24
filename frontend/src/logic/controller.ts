@@ -104,6 +104,11 @@ export class Controller {
     );
   }
 
+  // TODO: replace by API call
+  async searchProduit(search: string) {
+    return [];
+  }
+
   offsetToDate(idSejour: number, offset: number) {
     const sejour = (this.api.sejours.sejours || {})[idSejour];
     const dateDebut = new Date(sejour.date_debut);
