@@ -273,6 +273,10 @@ export interface InSetDefautProduit {
   id_produit: number;
   on: boolean;
 }
+// github.com/benoitkugler/intendance/server/controller.InRechercheProduit
+export interface InRechercheProduit {
+  recherche: string;
+}
 // github.com/benoitkugler/intendance/server/controller.ProduitsPossibles
 export type ProduitsPossibles = { [key: number]: Produit[] | null } | null;
 // github.com/benoitkugler/intendance/server/controller.CommandeContraintes
@@ -1236,6 +1240,28 @@ export abstract class AbstractAPI {
   }
 
   protected abstract onSuccessDeleteProduit(data: any): void;
+
+  protected async rawRechercheProduit() {
+    const fullUrl = this.baseUrl + "/api/produits/search";
+    const rep: AxiosResponse<Produit[] | null> = await Axios.delete(fullUrl, {
+      headers: this.getHeaders(),
+    });
+    return rep.data;
+  }
+
+  // wraps rawRechercheProduit and handles the error
+  async RechercheProduit() {
+    this.startRequest();
+    try {
+      const out = await this.rawRechercheProduit();
+      this.onSuccessRechercheProduit(out);
+      return out;
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  protected abstract onSuccessRechercheProduit(data: Produit[] | null): void;
 
   protected async rawProposeLienIngredientProduit(
     params: DateIngredientQuantites[] | null

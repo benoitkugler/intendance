@@ -43,7 +43,7 @@ INSERT INTO public.produits
     VALUES (1, 2, 'Orange (jus)', '{"unite": "L", "quantite": 2}', 5, '', 0);
 
 INSERT INTO public.produits
-    VALUES (2, 1, 'C', '{"unite": "Kg", "quantite": 2}', 0.45, '', 0);
+    VALUES (2, 1, 'C', '{"unite": "Kg", "quantite": 2}', 0.45, 'test0678', 0);
 
 INSERT INTO public.produits
     VALUES (3, 3, 'Tomate espagne', '{"unite": "Kg", "quantite": 1}', 5, '', 0);

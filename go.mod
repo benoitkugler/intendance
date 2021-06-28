@@ -3,6 +3,7 @@ module github.com/benoitkugler/intendance
 go 1.16
 
 require (
+	github.com/agnivade/levenshtein v1.1.1 // indirect
 	github.com/avct/uasurfer v0.0.0-20191028135549-26b5daa857f1
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/labstack/echo/v4 v4.3.0

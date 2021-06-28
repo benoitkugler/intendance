@@ -2,7 +2,10 @@ package models
 
 import (
 	"math"
+	"strings"
 	"time"
+
+	"github.com/agnivade/levenshtein"
 )
 
 const jourDuration = 24 * time.Hour
@@ -24,6 +27,25 @@ func (p Produit) ColisageNeeded(quantite float64) int64 {
 		nb = nb - reste + colisage
 	}
 	return nb
+}
+
+var noSpace = strings.NewReplacer(" ", "")
+
+// Match renvoie la pertinence du produit pour la recherche donnée
+// (higher is better, 0 == non match)
+func (p Produit) Match(pattern string) int {
+	lowerNom, lowerPattern := strings.ToLower(p.Nom), strings.ToLower(pattern)
+	var score int
+	if noSpace.Replace(strings.ToLower(p.ReferenceFournisseur)) == noSpace.Replace(lowerPattern) {
+		score += 10
+	}
+	if strings.Contains(lowerNom, lowerPattern) {
+		score += 5
+	}
+	if dist := levenshtein.ComputeDistance(lowerNom, lowerPattern); dist < 6 {
+		score += (6 - dist) / 2
+	}
+	return score
 }
 
 // BestJour remonte jusqu'au premier jour de livraison possible

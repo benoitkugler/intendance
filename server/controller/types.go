@@ -93,6 +93,7 @@ type RepasComplet struct {
 	Recettes    models.Ids             `json:"recettes"`
 	Ingredients models.LienIngredients `json:"ingredients"`
 }
+
 type SejourRepas struct {
 	models.Sejour
 	Fournisseurs []models.SejourFournisseur `json:"fournisseurs"`
@@ -142,4 +143,8 @@ type InAssistantCreateRepass struct {
 	IdSejour       int64                        `json:"id_sejour"`
 	Options        OptionsAssistantCreateRepass `json:"options"`
 	GroupesSorties map[int][]int64              `json:"groupes_sorties"` // offset -> ids_groupes
+}
+
+type InRechercheProduit struct {
+	Recherche string `json:"recherche"`
 }

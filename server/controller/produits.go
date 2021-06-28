@@ -3,6 +3,7 @@ package controller
 import (
 	"fmt"
 	"sort"
+	"strings"
 
 	"github.com/benoitkugler/intendance/server/models"
 )
@@ -221,4 +222,59 @@ func (ct RequeteContext) SetDefautProduit(idIngredient int64, idProduit int64, o
 		}
 	}
 	return tx.Commit()
+}
+
+// RechercheProduit effectue une recherche par chaine dans l'ensemble des
+// produits accessibles à l'utilisateur courant, par pertinence.
+// Pour des raisons de performances, le nombre de résultats renvoyé est limité.
+func (ct RequeteContext) RechercheProduit(search InRechercheProduit) ([]models.Produit, error) {
+	const limitResults = 100
+
+	pattern := strings.TrimSpace(search.Recherche)
+	if pattern == "" {
+		return nil, nil
+	}
+
+	fourn, err := ct.loadFournisseurs()
+	if err != nil {
+		return nil, err
+	}
+
+	livraisons, err := ct.loadLivraisons(fourn)
+	if err != nil {
+		return nil, err
+	}
+
+	tmp, err := models.SelectProduitsByIdLivraisons(ct.DB, livraisons.Ids()...)
+	if err != nil {
+		return nil, ErrorSQL(err)
+	}
+
+	type rankedProduit struct {
+		produit models.Produit
+		score   int
+	}
+
+	var ranked []rankedProduit
+	for _, prod := range tmp {
+		if score := prod.Match(pattern); score != 0 {
+			ranked = append(ranked, rankedProduit{produit: prod, score: score})
+		}
+	}
+
+	if len(ranked) > limitResults {
+		ranked = ranked[:limitResults]
+	}
+
+	sort.Slice(ranked, func(i, j int) bool { return ranked[i].produit.Id < ranked[j].produit.Id }) // déterministe
+	sort.SliceStable(ranked, func(i, j int) bool {
+		return ranked[i].score > ranked[j].score // meilleur score en premier
+	})
+
+	out := make([]models.Produit, len(ranked))
+	for i, v := range ranked {
+		out[i] = v.produit
+	}
+
+	return out, nil
 }

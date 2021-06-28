@@ -630,6 +630,20 @@ func (s Server) SetDefautProduit(c echo.Context) error {
 	return c.JSON(200, out)
 }
 
+func (s Server) RechercheProduit(c echo.Context) error {
+	ct := s.Server.NewRequeteContext(c)
+	var search controller.InRechercheProduit
+	if err := c.Bind(&search); err != nil {
+		return err
+	}
+
+	out, err := ct.RechercheProduit(search)
+	if err != nil {
+		return err
+	}
+	return c.JSON(200, out)
+}
+
 // --------------------------------------------------------------------------
 // ----------------------------- Commandes ----------------------------------
 // --------------------------------------------------------------------------

@@ -64,3 +64,23 @@ func TestDefault(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestRechercheProduit(t *testing.T) {
+	s, ct := setupTest(t)
+	defer s.DB.Close()
+
+	searchs := []string{
+		"tomate",
+		"tommate espagne",
+		"test 0678",
+	}
+	for _, search := range searchs {
+		out, err := ct.RechercheProduit(InRechercheProduit{Recherche: search})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(out) == 0 {
+			t.Fatal("expected results for", search)
+		}
+	}
+}
