@@ -36,9 +36,9 @@ export const devMode = process.env.NODE_ENV != "production";
 const host = devMode ? "http://localhost:1323" : window.location.origin;
 
 export const metaDev: Meta = {
-  idUtilisateur: 1,
+  idUtilisateur: 2,
   token:
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJJZFByb3ByaWV0YWlyZSI6MSwiZXhwIjoxNjI0NjQyNTA1fQ.tcD1ho6zfthW8STIP-Lxn-9J3EgqEQKNxO8y_3Mx0P0",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJJZFByb3ByaWV0YWlyZSI6MiwiZXhwIjoxNjI1MjM0MDY3fQ.hGSPyl4McaFjn1gJnnrpvBt4_p65PMbbSdnhk2iQHac",
 };
 
 export class API extends AbstractAPI {
@@ -268,6 +268,10 @@ export class API extends AbstractAPI {
     data: LivraisonsPossibles
   ): void {
     this.notifications.setMessage("Proposition d'associations chargée.");
+    this.notifications.spin = false;
+  }
+
+  onSuccessRechercheProduit(data: Produit[]) {
     this.notifications.spin = false;
   }
 

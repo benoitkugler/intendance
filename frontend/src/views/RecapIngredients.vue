@@ -8,6 +8,14 @@
       ></options-commande-simple>
     </v-dialog>
 
+    <v-dialog v-model="showEditParametresComplete" max-width="800">
+      <options-commande-complete
+        :C="C"
+        :dateIngredients="dateIngredients"
+        @valide="etablitCommandeComplete"
+      ></options-commande-complete>
+    </v-dialog>
+
     <v-row v-if="sejour !== null" class="fill-height px-2 mt-0">
       <v-col md="3" sm="6" class="align-self-center">
         <form-calcul :C="C" :sejour="sejour" @change="onChange"></form-calcul>
@@ -37,12 +45,12 @@
             ></preview-commande-simple>
           </v-tab-item>
           <v-tab-item>
-            TODO
-            <!-- <preview-commande
-            :C="C"
-            :dateIngredients="dateIngredients"
-            @showOrigines="(o) => (origineIngredients = o)"
-          ></preview-commande> -->
+            <preview-commande-complete
+              :C="C"
+              :commande="commandeComplete"
+              @showOrigines="(o) => (origineIngredients = o)"
+              @editParametres="showEditParametresComplete = true"
+            ></preview-commande-complete>
           </v-tab-item>
         </v-tabs-items>
       </v-col>
@@ -72,15 +80,17 @@ import FormCalcul from "../components/recap_ingredients/FormCalcul.vue";
 import ResultIngredients from "../components/recap_ingredients/ResultIngredients.vue";
 import PreviewCommandeComplete from "../components/recap_ingredients/PreviewCommandeComplete.vue";
 import PreviewCommandeSimple from "../components/recap_ingredients/PreviewCommandeSimple.vue";
+import OptionsCommandeSimple from "@/components/recap_ingredients/OptionsCommandeSimple.vue";
+import OptionsCommandeComplete from "@/components/recap_ingredients/OptionsCommandeComplete.vue";
 
 import { Controller } from "../logic/controller";
 import {
+  CommandeCompleteItem,
   CommandeContraintes,
   CommandeSimpleItem,
   DateIngredientQuantites,
   TimedIngredientQuantite,
 } from "../logic/api";
-import OptionsCommandeSimple from "@/components/recap_ingredients/OptionsCommandeSimple.vue";
 import AssociationIngredient from "@/components/produits/AssociationIngredient.vue";
 
 const RecapIngredientsProps = Vue.extend({
@@ -96,20 +106,23 @@ const RecapIngredientsProps = Vue.extend({
     PreviewCommandeComplete,
     PreviewCommandeSimple,
     OptionsCommandeSimple,
+    OptionsCommandeComplete,
   },
 })
 export default class RecapIngredients extends RecapIngredientsProps {
   showEditParametresSimple = false;
+  showEditParametresComplete = false;
+
   showFormCalcul = false;
   loadingIngredients = false;
   dateIngredients: DateIngredientQuantites[] = [];
 
   origineIngredients: TimedIngredientQuantite[] = [];
-
   // pour pouvoir raffraichir la requête
   critere: number[] = [];
 
   commandeSimple: CommandeSimpleItem[] = [];
+  commandeComplete: CommandeCompleteItem[] = [];
 
   modeCommande = 0; // 0 = simple, 1 = complète
 
@@ -161,6 +174,18 @@ export default class RecapIngredients extends RecapIngredientsProps {
       return;
     }
     this.commandeSimple = res.commande || [];
+  }
+
+  async etablitCommandeComplete(options: CommandeContraintes) {
+    this.showEditParametresComplete = false;
+    const res = await this.C.api.EtablitCommandeComplete({
+      ingredients: this.dateIngredients,
+      contraintes: options,
+    });
+    if (!res) {
+      return;
+    }
+    this.commandeComplete = res.commande || [];
   }
 }
 </script>

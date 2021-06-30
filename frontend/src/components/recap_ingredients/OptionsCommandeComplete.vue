@@ -7,22 +7,37 @@
         tooltip="Charger une proposition d'association utilisant vos préférences"
         @click="fetchHints"
         color="accent"
-        >Choix automatique des fournisseurs
+        >Choix automatique des produits
       </tooltip-btn>
     </v-card-title>
     <v-card-subtitle>
-      Cliquez-déposez pour associer un ingrédient à un fournisseur.
+      Choisissez le produit à associer un ingrédient.
     </v-card-subtitle>
     <v-card-text>
       <v-row>
-        <v-autocomplete
-          hide-no-data
-          hide-selected
-          label="Produits"
-          placeholder="Taper pour rechercher un autre produit..."
-          prepend-icon="mdi-database-search"
-          return-object
-        ></v-autocomplete>
+        <v-col>
+          <v-list class="overflow-y-auto" style="max-height: 53vh">
+            <div v-for="(a, i) in ingredients" :key="i">
+              <v-list-item>
+                <v-row>
+                  <v-col cols="3" class="align-self-center">
+                    <b>{{ a.nom }}</b>
+                  </v-col>
+                  <v-col class="align-self-center">
+                    <choix-produit
+                      :C="C"
+                      :idProduit="produitForIngredient(a.id)"
+                      @change="(v) => setProduitForIngredient(a.id, v)"
+                      :hints="hints[a.id]"
+                    >
+                    </choix-produit>
+                  </v-col>
+                </v-row>
+              </v-list-item>
+              <v-divider></v-divider>
+            </div>
+          </v-list>
+        </v-col>
       </v-row>
       <v-row>
         <v-switch
@@ -49,11 +64,14 @@ import {
   DateIngredientQuantites,
   Ingredient,
   Livraison,
+  Produit,
 } from "@/logic/api";
 import { Controller } from "@/logic/controller";
 import Vue from "vue";
 import Component from "vue-class-component";
+import { Watch } from "vue-property-decorator";
 import TooltipBtn from "../utils/TooltipBtn.vue";
+import ChoixProduit from "./ChoixProduit.vue";
 import LivraisonIngredients from "./LivraisonIngredients.vue";
 
 const OptionsCommandeCompleteProps = Vue.extend({
@@ -64,19 +82,17 @@ const OptionsCommandeCompleteProps = Vue.extend({
 });
 
 @Component({
-  components: { LivraisonIngredients, TooltipBtn },
+  components: { LivraisonIngredients, TooltipBtn, ChoixProduit },
 })
 export default class OptionsCommandeComplete extends OptionsCommandeCompleteProps {
-  loading = true;
-
+  loadingSearch = false;
+  search: string | null = null;
   private options = {
     associations: {} as { [key: number]: number },
     regroupe: false,
   };
 
-  get livraisons() {
-    return Object.values(this.C.api.livraisons);
-  }
+  hints: { [key: number]: Produit[] } = {};
 
   get ingredients() {
     const tmp: { [key: number]: boolean } = {};
@@ -105,23 +121,28 @@ export default class OptionsCommandeComplete extends OptionsCommandeCompleteProp
   }
 
   async fetchHints() {
-    const data = await this.C.api.ProposeLienIngredientLivraison(
+    const data = await this.C.api.ProposeLienIngredientProduit(
       this.dateIngredients
     );
-    this.loading = false;
     if (data === undefined) return;
     for (const id in data || {}) {
       // merge into current
-      Vue.set(this.options.associations, id, (data || {})[id]); //VRC
+      const produits: Produit[] = (data || {})[id] || [];
+      Vue.set(this.hints, id, produits); //VRC
+
+      // choisit la première proposition par défaut
+      if (produits.length != 0) {
+        this.options.associations[id] = produits[0].id;
+      }
     }
   }
 
-  swapIngredient(livraisonCible: Livraison | undefined, idIngredient: number) {
-    if (livraisonCible === undefined) {
-      Vue.delete(this.options.associations, idIngredient); // VRC
-    } else {
-      Vue.set(this.options.associations, idIngredient, livraisonCible.id); // VRC
-    }
+  produitForIngredient(idIngredient: number) {
+    return this.options.associations[idIngredient];
+  }
+
+  setProduitForIngredient(idIngredient: number, idProduit: number | null) {
+    Vue.set(this.options.associations, idIngredient, idProduit); //VRC
   }
 
   valide() {

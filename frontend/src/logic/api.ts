@@ -349,7 +349,7 @@ export abstract class AbstractAPI {
     return rep.data;
   }
 
-  // wraps rawLoggin and handles the error
+  /** Loggin wraps rawLoggin and handles the error */
   async Loggin(params: InLoggin) {
     this.startRequest();
     try {
@@ -370,7 +370,7 @@ export abstract class AbstractAPI {
     return rep.data;
   }
 
-  // wraps rawGetUtilisateurs and handles the error
+  /** GetUtilisateurs wraps rawGetUtilisateurs and handles the error */
   async GetUtilisateurs() {
     this.startRequest();
     try {
@@ -394,7 +394,7 @@ export abstract class AbstractAPI {
     return rep.data;
   }
 
-  // wraps rawGetIngredients and handles the error
+  /** GetIngredients wraps rawGetIngredients and handles the error */
   async GetIngredients() {
     this.startRequest();
     try {
@@ -416,7 +416,7 @@ export abstract class AbstractAPI {
     return rep.data;
   }
 
-  // wraps rawCreateIngredient and handles the error
+  /** CreateIngredient wraps rawCreateIngredient and handles the error */
   async CreateIngredient(params: New<Ingredient>) {
     this.startRequest();
     try {
@@ -438,7 +438,7 @@ export abstract class AbstractAPI {
     return rep.data;
   }
 
-  // wraps rawUpdateIngredient and handles the error
+  /** UpdateIngredient wraps rawUpdateIngredient and handles the error */
   async UpdateIngredient(params: Ingredient) {
     this.startRequest();
     try {
@@ -467,7 +467,7 @@ export abstract class AbstractAPI {
     return rep.data;
   }
 
-  // wraps rawDeleteIngredient and handles the error
+  /** DeleteIngredient wraps rawDeleteIngredient and handles the error */
   async DeleteIngredient(params: { id: number; check_produits: boolean }) {
     this.startRequest();
     try {
@@ -488,7 +488,7 @@ export abstract class AbstractAPI {
     return rep.data;
   }
 
-  // wraps rawGetRecettes and handles the error
+  /** GetRecettes wraps rawGetRecettes and handles the error */
   async GetRecettes() {
     this.startRequest();
     try {
@@ -514,7 +514,7 @@ export abstract class AbstractAPI {
     return rep.data;
   }
 
-  // wraps rawCreateRecette and handles the error
+  /** CreateRecette wraps rawCreateRecette and handles the error */
   async CreateRecette(params: New<RecetteComplet>) {
     this.startRequest();
     try {
@@ -538,7 +538,7 @@ export abstract class AbstractAPI {
     return rep.data;
   }
 
-  // wraps rawUpdateRecette and handles the error
+  /** UpdateRecette wraps rawUpdateRecette and handles the error */
   async UpdateRecette(params: RecetteComplet) {
     this.startRequest();
     try {
@@ -562,7 +562,7 @@ export abstract class AbstractAPI {
     return rep.data;
   }
 
-  // wraps rawDeleteRecette and handles the error
+  /** DeleteRecette wraps rawDeleteRecette and handles the error */
   async DeleteRecette(params: { id: number }) {
     this.startRequest();
     try {
@@ -585,7 +585,7 @@ export abstract class AbstractAPI {
     return rep.data;
   }
 
-  // wraps rawGetMenus and handles the error
+  /** GetMenus wraps rawGetMenus and handles the error */
   async GetMenus() {
     this.startRequest();
     try {
@@ -609,7 +609,7 @@ export abstract class AbstractAPI {
     return rep.data;
   }
 
-  // wraps rawCreateMenu and handles the error
+  /** CreateMenu wraps rawCreateMenu and handles the error */
   async CreateMenu(params: New<MenuComplet>) {
     this.startRequest();
     try {
@@ -631,7 +631,7 @@ export abstract class AbstractAPI {
     return rep.data;
   }
 
-  // wraps rawUpdateMenu and handles the error
+  /** UpdateMenu wraps rawUpdateMenu and handles the error */
   async UpdateMenu(params: MenuComplet) {
     this.startRequest();
     try {
@@ -655,7 +655,7 @@ export abstract class AbstractAPI {
     return rep.data;
   }
 
-  // wraps rawDeleteMenu and handles the error
+  /** DeleteMenu wraps rawDeleteMenu and handles the error */
   async DeleteMenu(params: { id: number }) {
     this.startRequest();
     try {
@@ -679,7 +679,7 @@ export abstract class AbstractAPI {
     return rep.data;
   }
 
-  // wraps rawGetSejours and handles the error
+  /** GetSejours wraps rawGetSejours and handles the error */
   async GetSejours() {
     this.startRequest();
     try {
@@ -701,7 +701,7 @@ export abstract class AbstractAPI {
     return rep.data;
   }
 
-  // wraps rawCreateSejour and handles the error
+  /** CreateSejour wraps rawCreateSejour and handles the error */
   async CreateSejour(params: New<Sejour>) {
     this.startRequest();
     try {
@@ -723,7 +723,7 @@ export abstract class AbstractAPI {
     return rep.data;
   }
 
-  // wraps rawUpdateSejour and handles the error
+  /** UpdateSejour wraps rawUpdateSejour and handles the error */
   async UpdateSejour(params: Sejour) {
     this.startRequest();
     try {
@@ -746,7 +746,7 @@ export abstract class AbstractAPI {
     return rep.data;
   }
 
-  // wraps rawDeleteSejour and handles the error
+  /** DeleteSejour wraps rawDeleteSejour and handles the error */
   async DeleteSejour(params: { id: number }) {
     this.startRequest();
     try {
@@ -768,7 +768,7 @@ export abstract class AbstractAPI {
     return rep.data;
   }
 
-  // wraps rawCreateGroupe and handles the error
+  /** CreateGroupe wraps rawCreateGroupe and handles the error */
   async CreateGroupe(params: New<Groupe>) {
     this.startRequest();
     try {
@@ -790,7 +790,7 @@ export abstract class AbstractAPI {
     return rep.data;
   }
 
-  // wraps rawUpdateGroupe and handles the error
+  /** UpdateGroupe wraps rawUpdateGroupe and handles the error */
   async UpdateGroupe(params: Groupe) {
     this.startRequest();
     try {
@@ -813,7 +813,7 @@ export abstract class AbstractAPI {
     return rep.data;
   }
 
-  // wraps rawDeleteGroupe and handles the error
+  /** DeleteGroupe wraps rawDeleteGroupe and handles the error */
   async DeleteGroupe(params: { id: number }) {
     this.startRequest();
     try {
@@ -835,7 +835,7 @@ export abstract class AbstractAPI {
     return rep.data;
   }
 
-  // wraps rawUpdateSejourFournisseurs and handles the error
+  /** UpdateSejourFournisseurs wraps rawUpdateSejourFournisseurs and handles the error */
   async UpdateSejourFournisseurs(params: InSejourFournisseurs) {
     this.startRequest();
     try {
@@ -857,7 +857,7 @@ export abstract class AbstractAPI {
     return rep.data;
   }
 
-  // wraps rawCreateRepas and handles the error
+  /** CreateRepas wraps rawCreateRepas and handles the error */
   async CreateRepas(params: New<RepasComplet>) {
     this.startRequest();
     try {
@@ -879,7 +879,7 @@ export abstract class AbstractAPI {
     return rep.data;
   }
 
-  // wraps rawUpdateManyRepas and handles the error
+  /** UpdateManyRepas wraps rawUpdateManyRepas and handles the error */
   async UpdateManyRepas(params: RepasComplet[] | null) {
     this.startRequest();
     try {
@@ -902,7 +902,7 @@ export abstract class AbstractAPI {
     return rep.data;
   }
 
-  // wraps rawDeleteRepas and handles the error
+  /** DeleteRepas wraps rawDeleteRepas and handles the error */
   async DeleteRepas(params: { id: number }) {
     this.startRequest();
     try {
@@ -924,7 +924,7 @@ export abstract class AbstractAPI {
     return rep.data;
   }
 
-  // wraps rawAssistantCreateRepas and handles the error
+  /** AssistantCreateRepas wraps rawAssistantCreateRepas and handles the error */
   async AssistantCreateRepas(params: InAssistantCreateRepass) {
     this.startRequest();
     try {
@@ -945,7 +945,7 @@ export abstract class AbstractAPI {
     return rep.data;
   }
 
-  // wraps rawResoudIngredients and handles the error
+  /** ResoudIngredients wraps rawResoudIngredients and handles the error */
   async ResoudIngredients(params: InResoudIngredients) {
     this.startRequest();
     try {
@@ -969,7 +969,7 @@ export abstract class AbstractAPI {
     return rep.data;
   }
 
-  // wraps rawGetFournisseurs and handles the error
+  /** GetFournisseurs wraps rawGetFournisseurs and handles the error */
   async GetFournisseurs() {
     this.startRequest();
     try {
@@ -993,7 +993,7 @@ export abstract class AbstractAPI {
     return rep.data;
   }
 
-  // wraps rawCreateFournisseur and handles the error
+  /** CreateFournisseur wraps rawCreateFournisseur and handles the error */
   async CreateFournisseur(params: New<Fournisseur>) {
     this.startRequest();
     try {
@@ -1015,7 +1015,7 @@ export abstract class AbstractAPI {
     return rep.data;
   }
 
-  // wraps rawUpdateFournisseur and handles the error
+  /** UpdateFournisseur wraps rawUpdateFournisseur and handles the error */
   async UpdateFournisseur(params: Fournisseur) {
     this.startRequest();
     try {
@@ -1038,7 +1038,7 @@ export abstract class AbstractAPI {
     return rep.data;
   }
 
-  // wraps rawDeleteFournisseur and handles the error
+  /** DeleteFournisseur wraps rawDeleteFournisseur and handles the error */
   async DeleteFournisseur(params: { id: number }) {
     this.startRequest();
     try {
@@ -1060,7 +1060,7 @@ export abstract class AbstractAPI {
     return rep.data;
   }
 
-  // wraps rawCreateLivraison and handles the error
+  /** CreateLivraison wraps rawCreateLivraison and handles the error */
   async CreateLivraison(params: New<Livraison>) {
     this.startRequest();
     try {
@@ -1082,7 +1082,7 @@ export abstract class AbstractAPI {
     return rep.data;
   }
 
-  // wraps rawUpdateLivraison and handles the error
+  /** UpdateLivraison wraps rawUpdateLivraison and handles the error */
   async UpdateLivraison(params: Livraison) {
     this.startRequest();
     try {
@@ -1105,7 +1105,7 @@ export abstract class AbstractAPI {
     return rep.data;
   }
 
-  // wraps rawDeleteLivraison and handles the error
+  /** DeleteLivraison wraps rawDeleteLivraison and handles the error */
   async DeleteLivraison(params: { id: number }) {
     this.startRequest();
     try {
@@ -1128,7 +1128,7 @@ export abstract class AbstractAPI {
     return rep.data;
   }
 
-  // wraps rawGetIngredientProduits and handles the error
+  /** GetIngredientProduits wraps rawGetIngredientProduits and handles the error */
   async GetIngredientProduits(params: { id: number }) {
     this.startRequest();
     try {
@@ -1156,7 +1156,7 @@ export abstract class AbstractAPI {
     return rep.data;
   }
 
-  // wraps rawAjouteIngredientProduit and handles the error
+  /** AjouteIngredientProduit wraps rawAjouteIngredientProduit and handles the error */
   async AjouteIngredientProduit(params: InAjouteIngredientProduit) {
     this.startRequest();
     try {
@@ -1182,7 +1182,7 @@ export abstract class AbstractAPI {
     return rep.data;
   }
 
-  // wraps rawSetDefautProduit and handles the error
+  /** SetDefautProduit wraps rawSetDefautProduit and handles the error */
   async SetDefautProduit(params: InSetDefautProduit) {
     this.startRequest();
     try {
@@ -1204,7 +1204,7 @@ export abstract class AbstractAPI {
     return rep.data;
   }
 
-  // wraps rawUpdateProduit and handles the error
+  /** UpdateProduit wraps rawUpdateProduit and handles the error */
   async UpdateProduit(params: Produit) {
     this.startRequest();
     try {
@@ -1227,7 +1227,7 @@ export abstract class AbstractAPI {
     return rep.data;
   }
 
-  // wraps rawDeleteProduit and handles the error
+  /** DeleteProduit wraps rawDeleteProduit and handles the error */
   async DeleteProduit(params: { id: number }) {
     this.startRequest();
     try {
@@ -1241,19 +1241,21 @@ export abstract class AbstractAPI {
 
   protected abstract onSuccessDeleteProduit(data: any): void;
 
-  protected async rawRechercheProduit() {
+  protected async rawRechercheProduit(params: InRechercheProduit) {
     const fullUrl = this.baseUrl + "/api/produits/search";
-    const rep: AxiosResponse<Produit[] | null> = await Axios.delete(fullUrl, {
-      headers: this.getHeaders(),
-    });
+    const rep: AxiosResponse<Produit[] | null> = await Axios.post(
+      fullUrl,
+      params,
+      { headers: this.getHeaders() }
+    );
     return rep.data;
   }
 
-  // wraps rawRechercheProduit and handles the error
-  async RechercheProduit() {
+  /** RechercheProduit wraps rawRechercheProduit and handles the error */
+  async RechercheProduit(params: InRechercheProduit) {
     this.startRequest();
     try {
-      const out = await this.rawRechercheProduit();
+      const out = await this.rawRechercheProduit(params);
       this.onSuccessRechercheProduit(out);
       return out;
     } catch (error) {
@@ -1275,7 +1277,7 @@ export abstract class AbstractAPI {
     return rep.data;
   }
 
-  // wraps rawProposeLienIngredientProduit and handles the error
+  /** ProposeLienIngredientProduit wraps rawProposeLienIngredientProduit and handles the error */
   async ProposeLienIngredientProduit(params: DateIngredientQuantites[] | null) {
     this.startRequest();
     try {
@@ -1301,7 +1303,7 @@ export abstract class AbstractAPI {
     return rep.data;
   }
 
-  // wraps rawEtablitCommandeComplete and handles the error
+  /** EtablitCommandeComplete wraps rawEtablitCommandeComplete and handles the error */
   async EtablitCommandeComplete(params: InCommandeComplete) {
     this.startRequest();
     try {
@@ -1329,7 +1331,7 @@ export abstract class AbstractAPI {
     return rep.data;
   }
 
-  // wraps rawProposeLienIngredientLivraison and handles the error
+  /** ProposeLienIngredientLivraison wraps rawProposeLienIngredientLivraison and handles the error */
   async ProposeLienIngredientLivraison(
     params: DateIngredientQuantites[] | null
   ) {
@@ -1357,7 +1359,7 @@ export abstract class AbstractAPI {
     return rep.data;
   }
 
-  // wraps rawEtablitCommandeSimple and handles the error
+  /** EtablitCommandeSimple wraps rawEtablitCommandeSimple and handles the error */
   async EtablitCommandeSimple(params: InCommandeSimple) {
     this.startRequest();
     try {

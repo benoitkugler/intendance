@@ -1,47 +1,19 @@
 <template>
   <div>
-    <v-dialog v-model="showAmbiguites" max-width="800">
-      <liste-ambiguites
-        :C="C"
-        @apply="applyContraintes"
-        :ambiguites="ambiguites"
-      ></liste-ambiguites>
-    </v-dialog>
-
     <v-card>
-      <v-card-title primary-title class="secondary py-2 px-3">
-        <h3 class="headline mb-0">Commande</h3>
+      <v-card-title class="secondary py-2 px-3">
+        Commande par produits
         <v-spacer></v-spacer>
         <tooltip-btn
-          tooltip="Résoudre les associations ingrédients / produits ambigües..."
-          :disabled="nbAmbiguites == 0"
-          @click="showAmbiguites = true"
-        >
-          <transition name="slide-fade" mode="out-in" duration="200">
-            <v-avatar
-              v-if="nbAmbiguites > 0"
-              color="accent"
-              :size="30"
-              class="mr-2"
-            >
-              {{ nbAmbiguites }}
-            </v-avatar>
-            <v-icon v-else>mdi-check</v-icon>
-          </transition>
-          Ambiguités
-        </tooltip-btn>
-        <v-divider vertical class="mr-2"></v-divider>
-        <v-switch
-          label="Regroupe"
-          v-model="contraintes.regroupe"
-          @change="applyRegroupe"
-          hide-details
-          class="my-auto pt-0"
-        ></v-switch>
+          tooltip="Modifier les paramètres de la commande"
+          mdi-icon="cogs"
+          small
+          @click="editParametres"
+        ></tooltip-btn>
       </v-card-title>
-      <v-progress-linear indeterminate :active="loading"></v-progress-linear>
+
       <v-expansion-panels
-        :value="dateIngredients.map((_, i) => i)"
+        :value="commandes.map((_, i) => i)"
         multiple
         accordion
         class="overflow-y-auto"
@@ -90,8 +62,13 @@
           </v-expansion-panel-content>
         </v-expansion-panel>
       </v-expansion-panels>
-      <div v-if="commandes.length == 0" class="pa-2 font-italic">
-        La commande est vide.
+      <div
+        v-if="commandes.length == 0"
+        class="py-8 pa-2 font-italic text-center"
+      >
+        <v-btn color="success" outlined @click="editParametres"
+          >Etablir la commande</v-btn
+        >
       </div>
     </v-card>
   </div>
@@ -102,7 +79,6 @@ import Vue from "vue";
 import Component from "vue-class-component";
 
 import TooltipBtn from "../utils/TooltipBtn.vue";
-import ListeAmbiguites from "./ListeAmbiguites.vue";
 
 import {
   Time,
@@ -129,56 +105,13 @@ interface commandeJour {
 }
 
 @Component({
-  components: { TooltipBtn, ListeAmbiguites },
+  components: { TooltipBtn },
 })
 export default class PreviewCommandeComplete extends PreviewCommandeCompleteProps {
   data: CommandeCompleteItem[] = [];
-  loading = false;
 
   formatDate = Formatter.formatDate;
   formatQuantite = Formatter.formatQuantite;
-
-  contraintes: CommandeContraintes = {
-    associations: {},
-    regroupe: false,
-  };
-
-  ambiguites = {};
-  showAmbiguites = false;
-
-  get nbAmbiguites() {
-    return Object.keys(this.ambiguites || {}).length;
-  }
-
-  @Watch("dateIngredients")
-  onIngredientsChange() {
-    this.contraintes = { associations: {}, regroupe: false };
-    this.computeCommande();
-  }
-
-  private async computeCommande() {
-    this.loading = true;
-    const res = await this.C.api.EtablitCommandeComplete({
-      ingredients: this.dateIngredients,
-      contraintes: this.contraintes,
-    });
-    this.loading = false;
-    if (res == undefined) {
-      return;
-    }
-    this.data = res.commande || [];
-    // this.ambiguites = res.ambiguites || {}; // TODO:
-  }
-
-  applyRegroupe() {
-    this.computeCommande();
-  }
-
-  applyContraintes(contraintes: ContraintesProduits) {
-    this.contraintes.associations = contraintes;
-    this.showAmbiguites = false;
-    this.computeCommande();
-  }
 
   // produit par jour
   get commandes() {
@@ -209,6 +142,10 @@ export default class PreviewCommandeComplete extends PreviewCommandeCompleteProp
 
   showOrigines(item: CommandeCompleteItem) {
     this.$emit("showOrigines", item.origines);
+  }
+
+  editParametres() {
+    this.$emit("editParametres");
   }
 }
 </script>

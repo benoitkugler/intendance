@@ -33,14 +33,13 @@ type cacheIngredientProduits struct {
 
 // charge en (seulement) 3 requêtes les infos nécessaires
 // à l'établissement d'une commande
-// se restreint aux produits associés aux livraisons données
-func (ct RequeteContext) newCacheIngredientProduits(idsIngredients models.Ids, livraisons models.Livraisons) (cacheIngredientProduits, error) {
+// se restreint aux produits associés aux livraisons données ou demandé explicitement
+func (ct RequeteContext) newCacheIngredientProduits(idsIngredients models.Ids, livraisons models.Livraisons, idProduits models.Ids) (cacheIngredientProduits, error) {
 	out := cacheIngredientProduits{ // initialization des map
 		produits:     make(models.Produits),
 		associations: make(map[int64][]models.Produit),
 		defauts:      make(map[int64][]models.Produit),
 	}
-
 	rows, err := ct.DB.Query(`SELECT ingredient_produits.* FROM ingredient_produits 
 	JOIN produits ON ingredient_produits.id_produit = produits.id 
 	WHERE ingredient_produits.id_ingredient = ANY($1)
@@ -56,9 +55,11 @@ func (ct RequeteContext) newCacheIngredientProduits(idsIngredients models.Ids, l
 
 	rows, err = ct.DB.Query(`SELECT produits.* FROM produits 
 	JOIN ingredient_produits ON ingredient_produits.id_produit = produits.id 
-	WHERE ingredient_produits.id_ingredient = ANY($1)
-	AND produits.id_livraison = ANY($2)`,
-		idsIngredients.AsSQL(), livraisons.Ids().AsSQL())
+	WHERE ingredient_produits.id_ingredient = ANY($1) AND produits.id_livraison = ANY($2)
+	UNION 
+	SELECT * FROM produits WHERE id = ANY($3)
+	`,
+		idsIngredients.AsSQL(), livraisons.Ids().AsSQL(), idProduits.AsSQL())
 	if err != nil {
 		return cacheIngredientProduits{}, ErrorSQL(err)
 	}
@@ -86,19 +87,19 @@ func (ct RequeteContext) newCacheIngredientProduits(idsIngredients models.Ids, l
 // pour les ingrédients donnés, en général incomplète.
 // Le client doit la complèter avant d'utiliser `EtablitCommandeComplete`.
 func (ct RequeteContext) ProposeLienIngredientProduit(ingredients []DateIngredientQuantites) (ProduitsPossibles, error) {
-	livraisons, allIngredients, err := ct.fetchDataCommande(ingredients)
+	dc, err := ct.fetchDataCommande(ingredients)
 	if err != nil {
 		return nil, err
 	}
 
 	// on récupére les données des produits
-	data, err := ct.newCacheIngredientProduits(allIngredients.Ids(), livraisons)
+	data, err := ct.newCacheIngredientProduits(dc.ingredients.Ids(), dc.livraisons, nil)
 	if err != nil {
 		return nil, err
 	}
 
 	targetProduits := make(ProduitsPossibles)
-	for idIngredient := range allIngredients {
+	for idIngredient := range dc.ingredients {
 		// on récupère les produits associés
 		produits := data.associations[idIngredient]
 		if len(produits) > 1 {
@@ -148,25 +149,25 @@ func aggregeIngredients(l []TimedIngredientQuantite) (float64, error) {
 // respectant la date d'utilisation et le délai de livraison.
 // Tous les ingrédients doivent être associés à un produit par le client.
 func (ct RequeteContext) EtablitCommandeComplete(ingredients []DateIngredientQuantites, contraintes CommandeContraintes) (OutCommandeComplete, error) {
-	livraisons, allIngredients, err := ct.fetchDataCommande(ingredients)
+	dc, err := ct.fetchDataCommande(ingredients)
 	if err != nil {
 		return OutCommandeComplete{}, err
 	}
 
-	err = contraintes.checkAssociations(allIngredients)
+	idProduits, err := contraintes.checkAssociations(dc.ingredients)
 	if err != nil {
 		return OutCommandeComplete{}, err
 	}
 
 	// on récupére les données des produits
-	data, err := ct.newCacheIngredientProduits(allIngredients.Ids(), livraisons)
+	data, err := ct.newCacheIngredientProduits(dc.ingredients.Ids(), dc.livraisons, idProduits)
 	if err != nil {
 		return OutCommandeComplete{}, err
 	}
 
 	// on ajuste les dates de commandes
 
-	resolver := produitResolver{targets: contraintes.Associations, produits: data.produits, livraisons: livraisons}
+	resolver := produitResolver{targets: contraintes.Associations, produits: data.produits, livraisons: dc.livraisons}
 	accu := calculeDateCommande(resolver, ingredients)
 
 	if contraintes.Regroupe {
@@ -187,9 +188,10 @@ func (ct RequeteContext) EtablitCommandeComplete(ingredients []DateIngredientQua
 			for _, ing := range value {
 				chunks = append(chunks, "<b>"+ing.Ingredient.Nom+"</b>")
 			}
-			return OutCommandeComplete{}, fmt.Errorf(`Le conditionnement du produit <b>%s</b> est invalide : <i>%0.3f</i> <br/>
+			fourn := dc.getFournisseur(prod)
+			return OutCommandeComplete{}, fmt.Errorf(`Le conditionnement du produit <b>%s</b> (%s) est invalide : <i>%0.3f</i> <br/>
 			Ingrédients liés : %s
-			`, prod.Nom, prod.Conditionnement.Quantite, strings.Join(chunks, ", "))
+			`, prod.Nom, fourn.Nom, prod.Conditionnement.Quantite, strings.Join(chunks, ", "))
 		}
 		colisage := prod.ColisageNeeded(total)
 		out = append(out, CommandeCompleteItem{Produit: prod, JourCommande: key.dateCommande, Quantite: colisage, Origines: value})

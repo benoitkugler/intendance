@@ -170,7 +170,7 @@ func routes(e *echo.Echo, s views.Server) {
 	e.POST("/api/ingredient-produit-defaut", s.SetDefautProduit, tokenMid)
 	e.POST("/api/produits", s.UpdateProduit, tokenMid)
 	e.DELETE("/api/produits", s.DeleteProduit, tokenMid)
-	e.DELETE("/api/produits/search", s.RechercheProduit, tokenMid)
+	e.POST("/api/produits/search", s.RechercheProduit, tokenMid)
 
 	e.POST("/api/commande/hint_produits", s.ProposeLienIngredientProduit, tokenMid)
 	e.POST("/api/commande/complete", s.EtablitCommandeComplete, tokenMid)

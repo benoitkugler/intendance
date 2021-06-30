@@ -46,14 +46,17 @@ type CommandeContraintes struct {
 }
 
 // vérifie que toutes les correspondances ingrédient -> target
-// sont fournies par le client
-func (c CommandeContraintes) checkAssociations(ingredients models.Ingredients) error {
+// sont fournies par le client, et renvoie les ids correspondants
+func (c CommandeContraintes) checkAssociations(ingredients models.Ingredients) (models.Ids, error) {
+	var out models.Ids
 	for _, ingredient := range ingredients {
-		if _, ok := c.Associations[ingredient.Id]; !ok {
-			return fmt.Errorf("L'ingrédient %s n'est associé à aucune cible !", ingredient.Nom)
+		idProduit, ok := c.Associations[ingredient.Id]
+		if !ok {
+			return nil, fmt.Errorf("L'ingrédient %s n'est associé à aucune cible !", ingredient.Nom)
 		}
+		out = append(out, idProduit)
 	}
-	return nil
+	return out, nil
 }
 
 type timedTarget struct {
@@ -86,23 +89,33 @@ func (ts timedTargets) groupe() timedTargets {
 	return out
 }
 
-func (ct RequeteContext) fetchDataCommande(ingredients []DateIngredientQuantites) (models.Livraisons, models.Ingredients, error) {
-	fourns, err := ct.loadFournisseurs()
+type dataCommande struct {
+	fournisseurs models.Fournisseurs
+	livraisons   models.Livraisons
+	ingredients  models.Ingredients
+}
+
+func (ct RequeteContext) fetchDataCommande(ingredients []DateIngredientQuantites) (out dataCommande, err error) {
+	out.fournisseurs, err = ct.loadFournisseurs()
 	if err != nil {
-		return nil, nil, err
+		return out, err
 	}
-	livraisons, err := ct.loadLivraisons(fourns)
+	out.livraisons, err = ct.loadLivraisons(out.fournisseurs)
 	if err != nil {
-		return nil, nil, err
+		return out, err
 	}
 
-	allIngredients := models.Ingredients{}
+	out.ingredients = models.Ingredients{}
 	for _, iq := range ingredients {
 		for _, ing := range iq.Ingredients {
-			allIngredients[ing.Ingredient.Id] = ing.Ingredient
+			out.ingredients[ing.Ingredient.Id] = ing.Ingredient
 		}
 	}
-	return livraisons, allIngredients, nil
+	return out, nil
+}
+
+func (dc dataCommande) getFournisseur(produit models.Produit) models.Fournisseur {
+	return dc.fournisseurs[dc.livraisons[produit.IdLivraison].IdFournisseur]
 }
 
 type targetResolver interface {
