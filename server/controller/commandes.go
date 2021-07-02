@@ -89,14 +89,23 @@ func (ts timedTargets) groupe() timedTargets {
 	return out
 }
 
+type IngredientsSejour struct {
+	Ingredients []DateIngredientQuantites `json:"ingredients"`
+	IdSejour    int64                     `json:"id_sejour"`
+}
+
 type dataCommande struct {
 	fournisseurs models.Fournisseurs
 	livraisons   models.Livraisons
 	ingredients  models.Ingredients
 }
 
-func (ct RequeteContext) fetchDataCommande(ingredients []DateIngredientQuantites) (out dataCommande, err error) {
-	out.fournisseurs, err = ct.loadFournisseurs()
+func (ct RequeteContext) fetchDataCommande(params IngredientsSejour) (out dataCommande, err error) {
+	if err = ct.proprioSejour(models.Sejour{Id: params.IdSejour}, false); err != nil {
+		return out, err
+	}
+
+	out.fournisseurs, err = ct.loadFournisseursBySejour(params.IdSejour)
 	if err != nil {
 		return out, err
 	}
@@ -106,7 +115,7 @@ func (ct RequeteContext) fetchDataCommande(ingredients []DateIngredientQuantites
 	}
 
 	out.ingredients = models.Ingredients{}
-	for _, iq := range ingredients {
+	for _, iq := range params.Ingredients {
 		for _, ing := range iq.Ingredients {
 			out.ingredients[ing.Ingredient.Id] = ing.Ingredient
 		}

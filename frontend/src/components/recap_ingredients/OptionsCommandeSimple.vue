@@ -113,9 +113,11 @@ export default class OptionsCommandeSimple extends OptionsCommandeSimpleProps {
   }
 
   async fetchHints() {
-    const data = await this.C.api.ProposeLienIngredientLivraison(
-      this.dateIngredients
-    );
+    if (this.C.state.idSejour == null) return;
+    const data = await this.C.api.ProposeLienIngredientLivraison({
+      id_sejour: this.C.state.idSejour,
+      ingredients: this.dateIngredients,
+    });
     this.loading = false;
     if (data === undefined) return;
     for (const id in data || {}) {

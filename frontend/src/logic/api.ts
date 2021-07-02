@@ -275,7 +275,13 @@ export interface InSetDefautProduit {
 }
 // github.com/benoitkugler/intendance/server/controller.InRechercheProduit
 export interface InRechercheProduit {
+  id_sejour: number;
   recherche: string;
+}
+// github.com/benoitkugler/intendance/server/controller.IngredientsSejour
+export interface IngredientsSejour {
+  ingredients: DateIngredientQuantites[] | null;
+  id_sejour: number;
 }
 // github.com/benoitkugler/intendance/server/controller.ProduitsPossibles
 export type ProduitsPossibles = { [key: number]: Produit[] | null } | null;
@@ -285,10 +291,9 @@ export interface CommandeContraintes {
   regroupe: boolean;
 }
 // github.com/benoitkugler/intendance/server/controller.InCommandeComplete
-export interface InCommandeComplete {
-  ingredients: DateIngredientQuantites[] | null;
+export type InCommandeComplete = {
   contraintes: CommandeContraintes;
-}
+} & IngredientsSejour;
 // github.com/benoitkugler/intendance/server/controller.TimedIngredientQuantite
 export type TimedIngredientQuantite = {
   date: Time;
@@ -307,10 +312,9 @@ export interface OutCommandeComplete {
 // github.com/benoitkugler/intendance/server/controller.LivraisonsPossibles
 export type LivraisonsPossibles = { [key: number]: number } | null;
 // github.com/benoitkugler/intendance/server/controller.InCommandeSimple
-export interface InCommandeSimple {
-  ingredients: DateIngredientQuantites[] | null;
+export type InCommandeSimple = {
   contraintes: CommandeContraintes;
-}
+} & IngredientsSejour;
 // github.com/benoitkugler/intendance/server/controller.IngredientQuantiteOrigines
 export type IngredientQuantiteOrigines = {
   origines: TimedIngredientQuantite[] | null;
@@ -1265,9 +1269,7 @@ export abstract class AbstractAPI {
 
   protected abstract onSuccessRechercheProduit(data: Produit[] | null): void;
 
-  protected async rawProposeLienIngredientProduit(
-    params: DateIngredientQuantites[] | null
-  ) {
+  protected async rawProposeLienIngredientProduit(params: IngredientsSejour) {
     const fullUrl = this.baseUrl + "/api/commande/hint_produits";
     const rep: AxiosResponse<ProduitsPossibles> = await Axios.post(
       fullUrl,
@@ -1278,7 +1280,7 @@ export abstract class AbstractAPI {
   }
 
   /** ProposeLienIngredientProduit wraps rawProposeLienIngredientProduit and handles the error */
-  async ProposeLienIngredientProduit(params: DateIngredientQuantites[] | null) {
+  async ProposeLienIngredientProduit(params: IngredientsSejour) {
     this.startRequest();
     try {
       const out = await this.rawProposeLienIngredientProduit(params);
@@ -1319,9 +1321,7 @@ export abstract class AbstractAPI {
     data: OutCommandeComplete
   ): void;
 
-  protected async rawProposeLienIngredientLivraison(
-    params: DateIngredientQuantites[] | null
-  ) {
+  protected async rawProposeLienIngredientLivraison(params: IngredientsSejour) {
     const fullUrl = this.baseUrl + "/api/commande/hint_livraisons";
     const rep: AxiosResponse<LivraisonsPossibles> = await Axios.post(
       fullUrl,
@@ -1332,9 +1332,7 @@ export abstract class AbstractAPI {
   }
 
   /** ProposeLienIngredientLivraison wraps rawProposeLienIngredientLivraison and handles the error */
-  async ProposeLienIngredientLivraison(
-    params: DateIngredientQuantites[] | null
-  ) {
+  async ProposeLienIngredientLivraison(params: IngredientsSejour) {
     this.startRequest();
     try {
       const out = await this.rawProposeLienIngredientLivraison(params);

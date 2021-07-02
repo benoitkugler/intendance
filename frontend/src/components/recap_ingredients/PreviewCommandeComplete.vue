@@ -29,6 +29,8 @@
             class="py-0"
           >
             <b>{{ formatDate(commandeJour.date) }}</b>
+            <v-spacer></v-spacer>
+            <i class="text-right">{{ formatPrix(commandeJour.prix) }} </i>
           </v-expansion-panel-header>
           <v-expansion-panel-content>
             <v-simple-table dense fixed-header>
@@ -96,11 +98,13 @@ const PreviewCommandeCompleteProps = Vue.extend({
   props: {
     C: Object as () => Controller,
     dateIngredients: Array as () => DateIngredientQuantites[],
+    commande: Array as () => CommandeCompleteItem[],
   },
 });
 
 interface commandeJour {
   date: Time;
+  prix: number; // total pour la journée
   produits: CommandeCompleteItem[];
 }
 
@@ -108,22 +112,24 @@ interface commandeJour {
   components: { TooltipBtn },
 })
 export default class PreviewCommandeComplete extends PreviewCommandeCompleteProps {
-  data: CommandeCompleteItem[] = [];
-
   formatDate = Formatter.formatDate;
   formatQuantite = Formatter.formatQuantite;
+  formatPrix = Formatter.formatPrix;
 
   // produit par jour
   get commandes() {
     const tmp: { [key: string]: CommandeCompleteItem[] } = {};
-    this.data.forEach((c) => {
+    this.commande.forEach((c) => {
       const current = tmp[c.jour_commande] || [];
       current.push(c);
       tmp[c.jour_commande] = current;
     });
     const out: commandeJour[] = [];
     for (const time in tmp) {
-      out.push({ date: time as Time, produits: tmp[time] });
+      const produits = tmp[time];
+      let total = 0;
+      produits.forEach((item) => (total += item.produit.prix * item.quantite));
+      out.push({ date: time as Time, produits: produits, prix: total });
     }
     return out.sort(
       (a, b) => new Date(a.date).valueOf() - new Date(b.date).valueOf()

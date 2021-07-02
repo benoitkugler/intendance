@@ -165,8 +165,10 @@ export default class RecapIngredients extends RecapIngredientsProps {
   }
 
   async etablitCommandeSimple(options: CommandeContraintes) {
+    if (this.sejour == null) return;
     this.showEditParametresSimple = false;
     const res = await this.C.api.EtablitCommandeSimple({
+      id_sejour: this.sejour.id,
       ingredients: this.dateIngredients,
       contraintes: options,
     });
@@ -177,8 +179,11 @@ export default class RecapIngredients extends RecapIngredientsProps {
   }
 
   async etablitCommandeComplete(options: CommandeContraintes) {
+    if (this.sejour == null) return;
+
     this.showEditParametresComplete = false;
     const res = await this.C.api.EtablitCommandeComplete({
+      id_sejour: this.sejour.id,
       ingredients: this.dateIngredients,
       contraintes: options,
     });

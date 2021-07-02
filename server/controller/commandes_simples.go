@@ -12,10 +12,10 @@ import (
 type LivraisonsPossibles map[int64]int64 // id_ingredient -> id_livraison
 
 // ProposeLienIngredientLivraison renvoie une association possible
-// pour les ingrédients donnés, en général incomplète.
+// pour les ingrédients donnés, en général incomplète. Les livraisons sont restreintes au séjour courant.
 // Le client doit la complèter avant d'utiliser `EtablitCommandeSimple`.
-func (ct RequeteContext) ProposeLienIngredientLivraison(ingredients []DateIngredientQuantites) (LivraisonsPossibles, error) {
-	dc, err := ct.fetchDataCommande(ingredients)
+func (ct RequeteContext) ProposeLienIngredientLivraison(params InAssocieIngredients) (LivraisonsPossibles, error) {
+	dc, err := ct.fetchDataCommande(params)
 	if err != nil {
 		return nil, err
 	}
@@ -88,23 +88,23 @@ func regroupeIngredients(l []TimedIngredientQuantite, base models.Ingredients) (
 // EtablitCommandeSimple regroupe chaque ingrédient par fournisseur, en précisant
 // une date de commande respectant les délais de livraisons.
 // Tous les ingrédients doivent être associés à une livraison par le client.
-func (ct RequeteContext) EtablitCommandeSimple(ingredients []DateIngredientQuantites, contraintes CommandeContraintes) (OutCommandeSimple, error) {
-	dc, err := ct.fetchDataCommande(ingredients)
+func (ct RequeteContext) EtablitCommandeSimple(params InCommandeSimple) (OutCommandeSimple, error) {
+	dc, err := ct.fetchDataCommande(params.IngredientsSejour)
 	if err != nil {
 		return OutCommandeSimple{}, err
 	}
 
 	// on vérifie que toutes les correspondances ingrédient -> livraisons
 	// sont fournies par le client
-	_, err = contraintes.checkAssociations(dc.ingredients)
+	_, err = params.Contraintes.checkAssociations(dc.ingredients)
 	if err != nil {
 		return OutCommandeSimple{}, err
 	}
 
-	resolver := livraisonResolver{livraisons: dc.livraisons, targets: contraintes.Associations}
-	accu := calculeDateCommande(resolver, ingredients)
+	resolver := livraisonResolver{livraisons: dc.livraisons, targets: params.Contraintes.Associations}
+	accu := calculeDateCommande(resolver, params.Ingredients)
 
-	if contraintes.Regroupe {
+	if params.Contraintes.Regroupe {
 		accu = accu.groupe()
 	}
 

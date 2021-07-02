@@ -13,11 +13,20 @@ const jourDuration = 24 * time.Hour
 // ColisageNeeded renvoie le nombre nécessaire d'exemplaire
 // du produit pour obtenir (au mieux) `quantite`
 // (exprimée dans l'unité du produit).
+// Le cas particulier des ingrédients à la pièce est indiqué par `isUnitePieces`.
+// Si oui, `quantite` est interprétée directement comme le nombre de produits
+// à utiliser.
 // Le colisage est pris en compte (c'est à dire que le résultat
 // est un multiple du colisage du produit).
-func (p Produit) ColisageNeeded(quantite float64) int64 {
+func (p Produit) ColisageNeeded(quantite float64, isUnitePieces bool) int64 {
+	nbFloat := quantite / p.Conditionnement.Quantite
+	if isUnitePieces {
+		nbFloat = quantite
+	}
+
 	// arrondi au supérieur pour ne pas manquer
-	nb := int64(math.Ceil(quantite / p.Conditionnement.Quantite))
+	nb := int64(math.Ceil(nbFloat))
+
 	colisage := p.Colisage
 	if colisage == 0 { // la valeur par défaut pour le colisage est de 1
 		colisage = 1

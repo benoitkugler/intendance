@@ -75,6 +75,10 @@ export class Formatter {
     return v.toFixed(2);
   }
 
+  static formatPrix(v: number) {
+    return `${v.toFixed(2)} €`;
+  }
+
   static formatConditionnement(c: Conditionnement) {
     return Formatter.formatQuantite(c.quantite) + " " + UniteLabels[c.unite];
   }

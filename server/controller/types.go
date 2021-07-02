@@ -57,17 +57,19 @@ type InSetDefautProduit struct {
 }
 
 type InCommandeComplete struct {
-	Ingredients []DateIngredientQuantites `json:"ingredients"`
-	Contraintes CommandeContraintes       `json:"contraintes"`
+	IngredientsSejour
+	Contraintes CommandeContraintes `json:"contraintes"`
 }
 
 type OutCommandeComplete struct {
 	Commande []CommandeCompleteItem `json:"commande"`
 }
 
+type InAssocieIngredients = IngredientsSejour
+
 type InCommandeSimple struct {
-	Ingredients []DateIngredientQuantites `json:"ingredients"`
-	Contraintes CommandeContraintes       `json:"contraintes"`
+	IngredientsSejour
+	Contraintes CommandeContraintes `json:"contraintes"`
 }
 
 type OutCommandeSimple struct {
@@ -146,5 +148,8 @@ type InAssistantCreateRepass struct {
 }
 
 type InRechercheProduit struct {
+	// se restreint aux produits des fournisseurs du séjour
+	// -1 signifie tous les fournisseurs autorisés
+	IdSejour  int64  `json:"id_sejour"`
 	Recherche string `json:"recherche"`
 }

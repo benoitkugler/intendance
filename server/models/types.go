@@ -8,6 +8,8 @@ type Unite string
 
 func (u Unite) String() string {
 	switch u {
+	case Zero:
+		return "<unité manquante>"
 	case Litres:
 		return "L"
 	case Kilos:
@@ -15,7 +17,7 @@ func (u Unite) String() string {
 	case Piece:
 		return "Pièce(s)"
 	}
-	return "unité inconnue"
+	return "<unité inconnue>"
 }
 
 // Categorie permet de classer les ingrédients

@@ -279,6 +279,8 @@ ALTER TABLE utilisateur_fournisseurs ADD FOREIGN KEY(id_utilisateur) REFERENCES 
 ALTER TABLE utilisateur_fournisseurs ADD FOREIGN KEY(id_fournisseur) REFERENCES fournisseurs ;
 ALTER TABLE utilisateurs  ADD UNIQUE(mail);
 ALTER TABLE ingredients  ADD UNIQUE(nom);
+ALTER TABLE ingredients  ADD CHECK(conditionnement->>'unite' = '' OR conditionnement->>'unite' = unite);
+ALTER TABLE ingredients  ADD CHECK(conditionnement->>'unite' != '' OR (conditionnement->'quantite')::real = 0);
 ALTER TABLE recette_ingredients  ADD UNIQUE(id_recette, id_ingredient);
 ALTER TABLE menu_ingredients  ADD UNIQUE(id_menu, id_ingredient);
 ALTER TABLE menu_recettes  ADD UNIQUE(id_menu, id_recette);

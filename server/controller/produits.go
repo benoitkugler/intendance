@@ -235,7 +235,15 @@ func (ct RequeteContext) RechercheProduit(search InRechercheProduit) ([]models.P
 		return nil, nil
 	}
 
-	fourn, err := ct.loadFournisseurs()
+	var (
+		fourn models.Fournisseurs
+		err   error
+	)
+	if idSejour := search.IdSejour; idSejour >= 0 {
+		fourn, err = ct.loadFournisseursBySejour(search.IdSejour)
+	} else {
+		fourn, err = ct.loadFournisseurs()
+	}
 	if err != nil {
 		return nil, err
 	}

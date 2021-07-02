@@ -17,6 +17,17 @@ func (ct RequeteContext) loadFournisseurs() (models.Fournisseurs, error) {
 	return out, ErrorSQL(err)
 }
 
+func (ct RequeteContext) loadFournisseursBySejour(idSejour int64) (models.Fournisseurs, error) {
+	rows, err := ct.DB.Query(`SELECT fournisseurs.* FROM fournisseurs 
+		JOIN sejour_fournisseurs ON sejour_fournisseurs.id_fournisseur = fournisseurs.id 
+		WHERE sejour_fournisseurs.id_sejour = $1`, idSejour)
+	if err != nil {
+		return nil, ErrorSQL(err)
+	}
+	out, err := models.ScanFournisseurs(rows)
+	return out, ErrorSQL(err)
+}
+
 // renvoie les livraisons des fournisseurs donnés
 func (ct RequeteContext) loadLivraisons(fournisseurs models.Fournisseurs) (models.Livraisons, error) {
 	livraisons, err := models.SelectLivraisonsByIdFournisseurs(ct.DB, fournisseurs.Ids()...)
@@ -212,6 +223,10 @@ func (ct RequeteContext) UpdateSejourFournisseurs(idSejour int64, idsFournisseur
 	if err != nil {
 		return tx.rollback(err)
 	}
+
+	// enlève les doublons potentiels
+	idsFournisseurs = models.Ids(idsFournisseurs).AsSet().Keys()
+
 	sf := make([]models.SejourFournisseur, len(idsFournisseurs))
 	for i, id := range idsFournisseurs {
 		sf[i] = models.SejourFournisseur{IdUtilisateur: ct.IdProprietaire, IdSejour: idSejour, IdFournisseur: id}

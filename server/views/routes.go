@@ -650,7 +650,7 @@ func (s Server) RechercheProduit(c echo.Context) error {
 
 func (s Server) ProposeLienIngredientProduit(c echo.Context) error {
 	ct := s.Server.NewRequeteContext(c)
-	var params []controller.DateIngredientQuantites
+	var params controller.InAssocieIngredients
 	if err := c.Bind(&params); err != nil {
 		return err
 	}
@@ -667,7 +667,7 @@ func (s Server) EtablitCommandeComplete(c echo.Context) error {
 	if err := c.Bind(&params); err != nil {
 		return err
 	}
-	out, err := ct.EtablitCommandeComplete(params.Ingredients, params.Contraintes)
+	out, err := ct.EtablitCommandeComplete(params)
 	if err != nil {
 		return err
 	}
@@ -676,7 +676,7 @@ func (s Server) EtablitCommandeComplete(c echo.Context) error {
 
 func (s Server) ProposeLienIngredientLivraison(c echo.Context) error {
 	ct := s.Server.NewRequeteContext(c)
-	var params []controller.DateIngredientQuantites
+	var params controller.InAssocieIngredients
 	if err := c.Bind(&params); err != nil {
 		return err
 	}
@@ -693,7 +693,7 @@ func (s Server) EtablitCommandeSimple(c echo.Context) error {
 	if err := c.Bind(&params); err != nil {
 		return err
 	}
-	out, err := ct.EtablitCommandeSimple(params.Ingredients, params.Contraintes)
+	out, err := ct.EtablitCommandeSimple(params)
 	if err != nil {
 		return err
 	}

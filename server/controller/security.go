@@ -55,7 +55,7 @@ func (ct RequeteContext) proprioSejour(sejour models.Sejour, checkProprioField b
 	row := ct.DB.QueryRow("SELECT id_utilisateur FROM sejours WHERE id = $1", sejour.Id)
 	var trueProp int64
 	if err := row.Scan(&trueProp); err != nil {
-		return ErrorSQL(err)
+		return ErrorSQL(fmt.Errorf("can't load sejour utilisateur: %s", err))
 	}
 	if trueProp != ct.IdProprietaire {
 		return fmt.Errorf(`Votre requête est impossible car le <b>séjour</b> 

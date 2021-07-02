@@ -20,6 +20,9 @@ type Utilisateur struct {
 // Les recettes et menus peuvent n'être liés à aucun propriétaire, et sont alors éditable par tout le monde.
 //
 // sql: ADD UNIQUE(nom)
+// sql: ADD CHECK(conditionnement->>'unite' = '' OR conditionnement->>'unite' = unite)
+// sql: ADD CHECK(conditionnement->>'unite' != '' OR (conditionnement->'quantite')::real = 0)
+// sql: ADD CHECK(conditionnement->>'unite' = '' OR unite = 'P')
 type Ingredient struct {
 	Id    int64  `json:"id"`
 	Nom   string `json:"nom"`

@@ -326,9 +326,13 @@ export class LogginController {
     Cookie.set("token", out.token, { expires: out.expires });
     Cookie.set("id_utilisateur", out.utilisateur, { expires: out.expires });
 
-    notifications.setMessage(
-      `Connecté sous le nom de <b>${out.utilisateur.prenom_nom}</b>.`
-    );
+    if (out.erreur == "") {
+      notifications.setMessage(
+        `Connecté sous le nom de <b>${out.utilisateur.prenom_nom}</b>.`
+      );
+    } else {
+      notifications.spin = false;
+    }
     return out;
   }
 

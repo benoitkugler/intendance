@@ -25,7 +25,7 @@ var testsColisage = []testColisage{
 func TestColisage(t *testing.T) {
 	for _, test := range testsColisage {
 		p := Produit{Conditionnement: Conditionnement{Quantite: test.cond}, Colisage: test.col}
-		got := p.ColisageNeeded(test.dem)
+		got := p.ColisageNeeded(test.dem, false)
 		if got != test.exp {
 			t.Errorf("expected %d, got %d", test.exp, got)
 		}

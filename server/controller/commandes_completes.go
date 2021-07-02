@@ -86,8 +86,9 @@ func (ct RequeteContext) newCacheIngredientProduits(idsIngredients models.Ids, l
 // ProposeLienIngredientProduit renvoie une association possible
 // pour les ingrédients donnés, en général incomplète.
 // Le client doit la complèter avant d'utiliser `EtablitCommandeComplete`.
-func (ct RequeteContext) ProposeLienIngredientProduit(ingredients []DateIngredientQuantites) (ProduitsPossibles, error) {
-	dc, err := ct.fetchDataCommande(ingredients)
+// Les produits possibles sont restreint au séjour demandé.
+func (ct RequeteContext) ProposeLienIngredientProduit(params InAssocieIngredients) (ProduitsPossibles, error) {
+	dc, err := ct.fetchDataCommande(params)
 	if err != nil {
 		return nil, err
 	}
@@ -148,13 +149,13 @@ func aggregeIngredients(l []TimedIngredientQuantite) (float64, error) {
 // EtablitCommandeComplete associe à chaque ingrédient un produit (avec une quantité) et un jour de commande
 // respectant la date d'utilisation et le délai de livraison.
 // Tous les ingrédients doivent être associés à un produit par le client.
-func (ct RequeteContext) EtablitCommandeComplete(ingredients []DateIngredientQuantites, contraintes CommandeContraintes) (OutCommandeComplete, error) {
-	dc, err := ct.fetchDataCommande(ingredients)
+func (ct RequeteContext) EtablitCommandeComplete(params InCommandeComplete) (OutCommandeComplete, error) {
+	dc, err := ct.fetchDataCommande(params.IngredientsSejour)
 	if err != nil {
 		return OutCommandeComplete{}, err
 	}
 
-	idProduits, err := contraintes.checkAssociations(dc.ingredients)
+	idProduits, err := params.Contraintes.checkAssociations(dc.ingredients)
 	if err != nil {
 		return OutCommandeComplete{}, err
 	}
@@ -167,10 +168,10 @@ func (ct RequeteContext) EtablitCommandeComplete(ingredients []DateIngredientQua
 
 	// on ajuste les dates de commandes
 
-	resolver := produitResolver{targets: contraintes.Associations, produits: data.produits, livraisons: dc.livraisons}
-	accu := calculeDateCommande(resolver, ingredients)
+	resolver := produitResolver{targets: params.Contraintes.Associations, produits: data.produits, livraisons: dc.livraisons}
+	accu := calculeDateCommande(resolver, params.Ingredients)
 
-	if contraintes.Regroupe {
+	if params.Contraintes.Regroupe {
 		accu = accu.groupe()
 	}
 
@@ -178,11 +179,22 @@ func (ct RequeteContext) EtablitCommandeComplete(ingredients []DateIngredientQua
 	// toutes les demandes ont étés regroupées en produit,
 	// on peut maitenant calculer le nombre de produit nécessaire
 	for key, value := range accu {
+		if len(value) == 0 {
+			continue
+		}
+		ingredient := value[0].Ingredient
+
 		total, err := aggregeIngredients(value)
 		if err != nil {
 			return OutCommandeComplete{}, err
 		}
 		prod := data.produits[key.idTarget]
+
+		err = ContrainteIngredientProduit{ingredient: ingredient, produit: prod}.Check()
+		if err != nil {
+			return OutCommandeComplete{}, err
+		}
+
 		if prod.Conditionnement.Quantite <= 0 {
 			var chunks []string
 			for _, ing := range value {
@@ -193,7 +205,7 @@ func (ct RequeteContext) EtablitCommandeComplete(ingredients []DateIngredientQua
 			Ingrédients liés : %s
 			`, prod.Nom, fourn.Nom, prod.Conditionnement.Quantite, strings.Join(chunks, ", "))
 		}
-		colisage := prod.ColisageNeeded(total)
+		colisage := prod.ColisageNeeded(total, ingredient.Unite == models.Piece)
 		out = append(out, CommandeCompleteItem{Produit: prod, JourCommande: key.dateCommande, Quantite: colisage, Origines: value})
 	}
 

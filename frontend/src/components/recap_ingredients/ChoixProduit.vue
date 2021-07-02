@@ -60,6 +60,7 @@ export default class ChoixProduit extends ChoixProduitProps {
 
   @Watch("search")
   async _(val: string) {
+    if (this.C.state.idSejour == null) return;
     // Items have already been loaded
     if (this.idProduit != null) return;
 
@@ -69,7 +70,10 @@ export default class ChoixProduit extends ChoixProduitProps {
     this.isLoading = true;
 
     // Lazily load input items
-    const res = await this.C.api.RechercheProduit({ recherche: val });
+    const res = await this.C.api.RechercheProduit({
+      recherche: val,
+      id_sejour: this.C.state.idSejour,
+    });
     this.isLoading = false;
     if (res === undefined) {
       return;

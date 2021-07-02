@@ -121,9 +121,12 @@ export default class OptionsCommandeComplete extends OptionsCommandeCompleteProp
   }
 
   async fetchHints() {
-    const data = await this.C.api.ProposeLienIngredientProduit(
-      this.dateIngredients
-    );
+    if (this.C.state.idSejour == null) return;
+    const data = await this.C.api.ProposeLienIngredientProduit({
+      id_sejour: this.C.state.idSejour,
+      ingredients: this.dateIngredients,
+    });
+
     if (data === undefined) return;
     for (const id in data || {}) {
       // merge into current
